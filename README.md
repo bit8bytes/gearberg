@@ -12,7 +12,9 @@ Mockup generated with [Claude Design](https://www.anthropic.com/news/claude-desi
 
 **Rentals** — Check items out to people, set due dates, and track partial checkouts.
 
-Future developments will be import and export of data into CSV files. This will make it easy to switch back to paper or use any other desired provider.
+Future developments will be *import* and *export* of data into CSV files. This will make it easy to switch back to paper or use any other desired provider.
+
+For more information see current specification [here](SPECS.md)
 
 ## Self-hosting
 
