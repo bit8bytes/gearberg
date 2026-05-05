@@ -49,9 +49,13 @@ The first increment comes without login because the software will be self-hosted
 | M2.14 | A user can filter rentals by status (draft, active, returned) |
 | M2.15 | A user can view overdue rentals (active rentals past their expected return date) |
 | M2.16 | A user can view a single rental in detail |
-| M2.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440)`) |
+| M2.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440) x (1 - discount_rate)`) |
 | M2.18 | A user can view the total net cost of a rental and the total including VAT (rate from company settings) as a display-only line |
 | M2.19 | A user cannot delete a customer that has draft or active rentals |
+| M2.20 | A user can generate an invoice for an active rental |
+| M2.21 | A user can see previously generated invoices of customers on the customer detail page (see M2.3) |
+| M2.22 | A user can generate a quote for a draft rental |
+| M2.23 | A user can enter a discount (in %) when generating an invoice or quote |
 
 ### Milestone 3: Import & Export
 
@@ -61,6 +65,7 @@ The first increment comes without login because the software will be self-hosted
 | M3.2 | A user can export all inventory items using CSV |
 | M3.3 | A user can export all rentals using CSV |
 | M3.4 | A user can export all customers using CSV |
+| M3.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser |
 
 ## Product Data
 
