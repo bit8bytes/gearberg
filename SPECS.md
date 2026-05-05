@@ -67,6 +67,19 @@ The first increment comes without login because the software will be self-hosted
 | M3.4 | A user can export all customers using CSV |
 | M3.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser |
 
+### Milestone 4: Login
+
+| ID | Name |
+| - | - |
+| M4.1 | A server operator can create a user with `gearberg admin create-user --email=<email> --password=<password>` |
+| M4.2 | A server operator can reset any user's password with `gearberg admin reset-password --email=<email> --password=<password>` |
+| M4.3 | A user can log in with email and password |
+| M4.4 | A user can log out |
+| M4.5 | A user can change their own password |
+| M4.6 | An unauthenticated user is redirected to the login page |
+| M4.7 | When started with `gearberg serve --no-auth`, the server skips authentication and all routes are accessible without login |
+
+
 ## Product Data
 
 ### Companies
