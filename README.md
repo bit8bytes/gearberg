@@ -14,11 +14,16 @@ Mockup generated with [Claude Design](https://www.anthropic.com/news/claude-desi
 
 Future developments will be *import* and *export* of data into CSV files. This will make it easy to switch back to paper or use any other desired provider.
 
-For more information see current specification [here](SPECS.md)
+For more information see current specification [here](./wiki/SPECS.md).
 
 ## Self-hosting
 
 Self-hosting will be provided via binary for the major platforms. Container hosting will be available too. Two databases will be supported, SQLite and PostgreSQL.
+
+## Development
+
+We follow the [Leitfaden zur Entwicklung
+sicherer Webanwendungen](https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Studien/Webanwendungen/Webanw_Auftragnehmer.pdf?__blob=publicationFile&v=1) from the [Bundesamt für Sicherheit in der Informationstechnik (BSI)](https://www.bsi.bund.de/EN) to ensure secure software. There is no English translation yet, but we will document all steps in English. Find more info in our [wiki](./wiki/).
 
 ## License
 
