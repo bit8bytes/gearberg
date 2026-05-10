@@ -13,7 +13,6 @@ pkgs.mkShellNoCC {
     sqlc
     alejandra
     tailwindcss_4
-    go-task
     reflex
     watchman
     golangci-lint
