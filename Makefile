@@ -12,3 +12,8 @@ confirm:
 .PHONY: dev
 dev:
 	go run ./cmd/app
+
+## lint: run linters
+.PHONY: lint
+lint:
+	golangci-lint run --fix ./...

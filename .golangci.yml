@@ -1,0 +1,40 @@
+version: "2"
+
+formaters:
+  default: none
+  enable:
+    - gofmt
+    - goimports
+    - gofumpt
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - prealloc
+    - govet
+    - gosec
+    - godot
+    - cyclop
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocritic
+    - misspell
+    - noctx
+    - nilerr
+    - revive
+    - wrapcheck
+    - bodyclose
+    - sqlclosecheck
+    - rowserrcheck
+  settings:
+    gosec:
+      excludes:
+        - G104  # Unhandled errors (errcheck handles this better)
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - vendor
