@@ -1,0 +1,32 @@
+version: "2"
+
+sql:
+  - engine: "sqlite"
+    queries: "database/queries/sqlite/companies.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "companies"
+        out: "database/queries/gen/companies"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "database/queries/sqlite/company_settings.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "companysettings"
+        out: "database/queries/gen/companysettings"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "database/queries/sqlite/equipment_categories.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "equipmentcategories"
+        out: "database/queries/gen/equipmentcategories"
+        emit_interface: true
+        omit_unused_structs: true

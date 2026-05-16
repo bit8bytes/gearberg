@@ -1,0 +1,7 @@
+CREATE TABLE users (id INTEGER PRIMARY KEY);
+
+CREATE TABLE posts (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+) STRICT;
