@@ -23,6 +23,7 @@ go.work.sum
 
 # Go vendor folder
 vendor
+# Queries are generated on demand
 database/queries/gen/**
 
 # env files (allow .example files)
@@ -39,3 +40,6 @@ workdir
 
 # nixos
 .direnv
+
+# Tailwindcss generated on demand
+assets/dist/index.css

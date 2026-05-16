@@ -1,0 +1,107 @@
+@import "tailwindcss";
+@plugin "./daisyui.mjs";
+@plugin "./daisyui-theme.mjs" {
+  name: "gearberg";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* surfaces */
+  --color-base-100: #ffffff;          /* card / panel */
+  --color-base-200: #f5f4f0;          /* app background */
+  --color-base-300: #f0ede8;          /* stripe / hover */
+  --color-base-content: #1e1c18;      /* primary text */
+
+  /* primary — orange accent */
+  --color-primary: #e07c3a;
+  --color-primary-content: #ffffff;
+
+  /* secondary — warm muted */
+  --color-secondary: #4a4845;
+  --color-secondary-content: #f5f4f0;
+
+  /* accent — softer orange tint */
+  --color-accent: #fef0e6;
+  --color-accent-content: #e07c3a;
+
+  /* neutral — warm grey */
+  --color-neutral: #7a7670;
+  --color-neutral-content: #ffffff;
+
+  /* info / success / warning / error */
+  --color-info: #6b8fb5;
+  --color-info-content: #ffffff;
+  --color-success: #4a9e6b;
+  --color-success-content: #ffffff;
+  --color-warning: #e07c3a;
+  --color-warning-content: #ffffff;
+  --color-error: #d94f4f;
+  --color-error-content: #ffffff;
+
+  /* border radius — keep things squarish, almost wireframe */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.375rem;
+
+  /* base sizes */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  /* border size — slightly heavier for the sketched look */
+  --border: 1.5px;
+
+  /* effects */
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-content: var(--color-primary-content);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-content: var(--color-secondary-content);
+  --color-accent: var(--color-accent);
+  --color-accent-content: var(--color-accent-content);
+  --color-neutral: var(--color-neutral);
+  --color-neutral-content: var(--color-neutral-content);
+  --color-base-100: var(--color-base-100);
+  --color-base-200: var(--color-base-200);
+  --color-base-300: var(--color-base-300);
+  --color-base-content: var(--color-base-content);
+  --color-info: var(--color-info);
+  --color-info-content: var(--color-info-content);
+  --color-success: var(--color-success);
+  --color-success-content: var(--color-success-content);
+  --color-warning: var(--color-warning);
+  --color-warning-content: var(--color-warning-content);
+  --color-error: var(--color-error);
+  --color-error-content: var(--color-error-content);
+}
+
+@font-face {
+  font-family: 'Caveat';
+  src: url('/dist/Caveat-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: optional;
+}
+
+@layer base {
+  body {
+    font-family: 'Space Mono', ui-monospace, monospace;
+    letter-spacing: 0.005em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: 2.5rem;   }
+  h2 { font-size: 2rem;     }
+  h3 { font-size: 1.625rem; }
+  h4 { font-size: 1.375rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem;     }
+}
