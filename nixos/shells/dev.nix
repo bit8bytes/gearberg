@@ -16,6 +16,7 @@ pkgs.mkShellNoCC {
     reflex
     watchman
     golangci-lint
+    go-licenses
   ];
   shellHook = ''
     echo "Welcome to the dev shell! All required tools are available."
