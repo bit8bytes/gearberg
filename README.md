@@ -1,6 +1,6 @@
 # gearberg
 
-Self-hostable inventory management. Free as in freedom.
+Self-hostable inventory and rental management. Free as in freedom.
 
 ![mockup](/mockup/gearberg.png)
 
