@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "*.tmpl": "html"
+  },
+  "[html]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+  },
+  "[nix]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "html.suggest.html5": true,
+}
