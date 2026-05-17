@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg) [![CI](https://github.com/bit8bytes/gearberg/actions/workflows/ci.yml/badge.svg)](https://github.com/bit8bytes/gearberg/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-e07c3a?labelColor=e07c3a&color=e07c3a&logoColor=ffffff)](./LICENSE)
+
 # gearberg
 
 Self-hostable inventory and rental management. Free as in freedom.
