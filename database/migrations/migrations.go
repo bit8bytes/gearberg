@@ -7,5 +7,6 @@ package migrations
 import "embed"
 
 // EmbedFS holds all embedded SQL migration files for single-binary deployments.
+//
 //go:embed "sqlite/*.sql"
 var EmbedFS embed.FS

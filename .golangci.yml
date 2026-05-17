@@ -1,7 +1,6 @@
 version: "2"
 
 formatters:
-  default: none
   enable:
     - gofmt
     - goimports
@@ -36,7 +35,3 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-
-exclusions:
-  paths:
-    - vendor
