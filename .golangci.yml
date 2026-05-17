@@ -1,6 +1,6 @@
 version: "2"
 
-formaters:
+formatters:
   default: none
   enable:
     - gofmt
@@ -36,5 +36,7 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-dirs:
+
+exclusions:
+  paths:
     - vendor
