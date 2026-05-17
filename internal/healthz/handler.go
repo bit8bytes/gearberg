@@ -35,10 +35,12 @@ func (h *Handler) Routes(mux *http.ServeMux) {
 
 func (h *Handler) get(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response{
+	if err := json.NewEncoder(w).Encode(response{
 		Status:          "ok",
 		AppRevision:     h.appRevision,
 		DatabaseVersion: h.databaseVersion,
 		Timestamp:       time.Now().UTC(),
-	})
+	}); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
