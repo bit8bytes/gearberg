@@ -1,0 +1,53 @@
+{{ define "header" }}
+<header class="border-b border-base-300">
+  <div class="navbar bg-black">
+    <div class="flex-1 flex flex-row items-center gap-6">
+      <h2 class="text-white"><a href="/companies/{{ .Input.CompanyID }}/inventory">Gear<span class="text-primary">berg</span></a></h2>
+      <ul class="text-white">
+        <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Input.CompanyID) }}text-primary{{ end }}" href="/companies/{{ .Input.CompanyID }}/inventory">Inventory</a></li>
+      </ul>
+    </div>
+    <div class="flex gap-2">
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
+          <div class="bg-neutral text-neutral-content w-24 rounded-full">
+            <span>gb</span>
+          </div>
+        </div>
+        <ul
+          tabindex="-1"
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
+          <div class="flex items-center gap-1">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
+              <div class="bg-neutral text-neutral-content w-24 rounded-full">
+                <span>gb</span>
+              </div>
+            </div>
+            Gearberg
+          </div>
+          <div class="border border-base-200"></div>
+          <li>
+            <a href="/companies/{{ .Input.CompanyID }}/inventory" class="{{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Input.CompanyID) }}text-primary{{ end }}">
+              {{ template "inventory-icon" . }}
+              Inventory
+            </a>
+          </li>
+          <div class="border border-base-200"></div>
+          <li>
+            <a href="/" class="{{ if eq $.URL.Path "/companies" }}text-primary{{ end }}">
+              {{ template "companies-icon" . }}
+              All Companies
+            </a>
+          </li>
+          <li>
+            <a href="/companies/{{ .Input.CompanyID }}" class="{{ if eq $.URL.Path (printf "/companies/%v" .Input.CompanyID) }}text-primary{{ end }}">
+              {{ template "settings-icon" . }}
+              Settings
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+{{ end }}

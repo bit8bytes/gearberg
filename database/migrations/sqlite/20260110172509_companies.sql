@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE companies (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
+  name TEXT UNIQUE NOT NULL,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 ) STRICT;

@@ -1,0 +1,35 @@
+{{ define "title" }}Inventory{{ end }}
+
+{{ define "page" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
+    <div>
+      <h3>All Items</h3>
+      <div>
+        <span>0 items</span>
+        •
+        <span>{{ len .Output.Categories }} categories</span>
+      </div>
+    </div>
+    <div>
+      <a href="/companies/{{ .Input.CompanyID }}/inventory/add" tabindex="0" class="btn btn-primary">Add Item</a>
+    </div>
+  </div>
+</div>
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
+    <form method="get" action="/companies/{{ .Input.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-2 flex-nowrap">
+      {{ range .Output.Categories }}
+      <input class="btn rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
+        {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
+      {{ end }}
+      <button type="submit" class="btn rounded-full">{{ template "filter-icon" . }}Filter</button>
+    </form>
+  </div>
+</div>
+<div class="max-w-5xl mx-auto px-8 py-6">
+  {{ range .Output.Inventory }}
+    {{ .ID }}
+  {{ end }}
+</div>
+{{ end }}

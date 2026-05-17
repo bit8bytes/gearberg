@@ -1,0 +1,34 @@
+{{define "body"}}
+  {{ template "header" . }}
+  <div class="drawer lg:drawer-open min-h-[calc(100vh-4rem)]">
+    <input id="settings-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content flex flex-col max-w-5xl mx-auto w-full">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-base-300 lg:hidden">
+        <label for="settings-drawer" class="btn btn-ghost drawer-button">
+          {{ template "menu-icon" . }}
+          Settings
+        </label>
+      </div>
+      <main class="flex-1 p-8">{{ template "page" . }}</main>
+    </div>
+    <div class="drawer-side z-10">
+      <label for="settings-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <aside class="w-56 shrink-0 border-r border-base-300 pt-8 px-3 flex flex-col gap-0.5 bg-base-100 min-h-full">
+        <p class="px-3 pb-2 text-xs font-medium text-neutral uppercase tracking-wider">Company</p>
+        <a href="/companies/{{ .Input.CompanyID }}"
+           class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-general" . }}hover:bg-base-200{{ end }}">
+          General
+        </a>
+        <a href="/companies/{{ .Input.CompanyID }}/settings"
+           class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-billing" . }}hover:bg-base-200{{ end }}">
+          Billing &amp; Tax
+        </a>
+        <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories"
+           class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-categories" . }}hover:bg-base-200{{ end }}">
+          Equipment Categories
+        </a>
+      </aside>
+    </div>
+  </div>
+  {{ template "footer" . }}
+{{end}}

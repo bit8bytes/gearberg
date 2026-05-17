@@ -4,7 +4,7 @@
 erDiagram
   companies {
     string id PK
-    string name
+    string name "UNIQUE NOT NULL"
     datetime created_at
     datetime updated_at
   }
@@ -22,7 +22,7 @@ erDiagram
   equipment_categories {
     string id PK
     string company_id FK "nullable; ON DELETE CASCADE"
-    string name
+    string name "UNIQUE NOT NULL"
     datetime created_at
     datetime updated_at
   }

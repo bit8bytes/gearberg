@@ -14,12 +14,12 @@ confirm:
 ## run/web: run the web application with live reload
 .PHONY: run/web
 run/web:
-	reflex -s -r '\.(go|tmpl|css|js)$$' -- go run -tags sqlite ./cmd/web
+	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web
 
 ## dev: start development server (web + tailwind watch)
 .PHONY: dev
 dev:
-	$(MAKE) -j2 run/web tailwind
+	$(MAKE) -j2 tailwind run/web
 
 ## lint: run linters
 .PHONY: lint
@@ -58,7 +58,7 @@ build: verify
 ## tailwind: run Tailwind CSS in watch mode
 .PHONY: tailwind
 tailwind:
-	tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --watch --minify
+	tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --watch
 
 ## tailwind/build: build Tailwind CSS once (no watch)
 .PHONY: tailwind/build
