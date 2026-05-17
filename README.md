@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg) [![CI](https://github.com/bit8bytes/gearberg/actions/workflows/ci.yml/badge.svg)](https://github.com/bit8bytes/gearberg/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg)
 
 # gearberg
 
