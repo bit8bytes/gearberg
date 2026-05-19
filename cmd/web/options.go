@@ -16,33 +16,48 @@ type options struct {
 	DbDsn    string // SECRET
 }
 
-// parseOptions parses command-line flags and returns Options.
-func parseOptions() (*options, error) {
+func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
+	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
+	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
+}
+
+func parseServeOptions(args []string) (*options, error) {
 	cfg := &options{}
+	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	registerCommonFlags(fs, cfg)
+	fs.BoolVar(&cfg.Version, "version", false, "print version and exit")
+	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
+	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 
-	flag.BoolVar(&cfg.Version, "version", false, "show application version")
-	flag.Var(&cfg.LogLevel, "log-level", "Log level (debug|info|warn|error)")
-	flag.IntVar(&cfg.Port, "port", 8080, "Port to listen on (without -domain)")
-
-	flag.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
-
-	flag.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database dsn")
-
-	flag.Parse()
+	if err := fs.Parse(args); err != nil {
+		return nil, err
+	}
 
 	modes := []string{"off", "local"}
 	if !slices.Contains(modes, cfg.TLSMode) {
 		return nil, fmt.Errorf("tls-mode must be one of: %v", modes)
 	}
-
 	if cfg.TLSMode == "local" {
 		return nil, fmt.Errorf("tls-mode 'local' is not supported yet")
 	}
-
 	if cfg.TLSMode == "off" {
 		if err := validatePort(cfg.Port); err != nil {
 			return nil, fmt.Errorf("invalid port: %w", err)
 		}
+	}
+
+	return cfg, nil
+}
+
+func parseVerifyOptions(args []string) (*options, error) {
+	cfg := &options{LogLevel: logLevel{level: slog.LevelError}}
+	fs := flag.NewFlagSet("verify", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	registerCommonFlags(fs, cfg)
+
+	if err := fs.Parse(args); err != nil {
+		return nil, err
 	}
 
 	return cfg, nil

@@ -14,7 +14,7 @@ confirm:
 ## run/web: run the web application with live reload
 .PHONY: run/web
 run/web:
-	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web
+	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web serve
 
 ## dev: start development server (web + tailwind watch)
 .PHONY: dev

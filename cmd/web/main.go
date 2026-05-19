@@ -17,13 +17,17 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 type application struct {
@@ -36,15 +40,40 @@ type application struct {
 
 func main() {
 	if err := run(); err != nil {
-		log.Fatalf("error running app: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 }
 
 func run() error {
+	if len(os.Args) < 2 {
+		printUsage()
+		return nil
+	}
+
+	cmd, args := os.Args[1], os.Args[2:]
+	switch cmd {
+	case "serve":
+		return runServe(args)
+	case "verify":
+		return runVerify(args)
+	default:
+		printUsage()
+		return fmt.Errorf("unknown command %q", cmd)
+	}
+}
+
+func printUsage() {
+	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n  verify  check configuration and database connectivity\n\nRun 'gearberg <command> -help' for command flags.\n")
+}
+
+func runServe(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	options, err := parseOptions()
+	options, err := parseServeOptions(args)
+	if errors.Is(err, flag.ErrHelp) {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("parse options: %w", err)
 	}
@@ -82,4 +111,28 @@ func run() error {
 	}
 
 	return app.serve(ctx)
+}
+
+func runVerify(args []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	options, err := parseVerifyOptions(args)
+	if errors.Is(err, flag.ErrHelp) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("parse options: %w", err)
+	}
+
+	log := setupLogger(options.LogLevel.Level())
+
+	db, err := setupDatabase(ctx, options)
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer db.Close()
+
+	log.InfoContext(ctx, "ok", "db_version", databaseVersion)
+	return nil
 }
