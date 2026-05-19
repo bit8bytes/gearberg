@@ -8,11 +8,11 @@ The first increment comes without login because the software will be self-hosted
 
 ### Settings
 
-| ID | Name |
-| - | - |
-| M0.1 | A user can configure company name, currency, VAT rate, and timezone |
-| M0.2 | A user can create, update, and delete inventory categories |
-| M0.3 | A user cannot delete a category that is assigned to one or more inventory items |
+| ID | Name | Done |
+| - | - | - |
+| M0.1 | A user can configure company name, currency, VAT rate, and timezone | 100 % |
+| M0.2 | A user can create, update, and delete inventory categories | 100 % |
+| M0.3 | A user cannot delete a category that is assigned to one or more inventory items | 100 % |
 
 ### Milestone 1: Inventory
 
