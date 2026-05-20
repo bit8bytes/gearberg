@@ -1,5 +1,3 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg)
-
 # gearberg
 
 Self-hostable inventory and rental management. Free as in freedom.
@@ -23,6 +21,8 @@ For more information see current specification [here](./wiki/SPECS.md).
 Self-hosting will be provided via binary for the major platforms. Container hosting will be available too. Two databases will be supported, SQLite and PostgreSQL.
 
 ## Development
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg)
 
 We follow the [Leitfaden zur Entwicklung
 sicherer Webanwendungen](https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Studien/Webanwendungen/Webanw_Auftragnehmer.pdf?__blob=publicationFile&v=1) from the [Bundesamt für Sicherheit in der Informationstechnik (BSI)](https://www.bsi.bund.de/EN) to ensure secure software. There is no English translation yet, but we will document all steps in English. Find more info in our [wiki](./wiki/).
