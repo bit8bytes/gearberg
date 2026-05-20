@@ -3,16 +3,29 @@ package categories
 import (
 	"context"
 	"fmt"
+
+	"github.com/bit8bytes/gearberg/database"
 )
+
+// Options holds configuration for the equipment category service.
+type Options struct {
+	MaxCategories int
+}
 
 // Service implements business logic for equipment equipmentCategories.
 type Service struct {
 	repo *Repository
+	opts Options
 }
 
-// NewService returns a new Service backed by repo.
-func NewService(repo *Repository) *Service {
-	return &Service{repo: repo}
+// NewService returns a new Service backed by repo with the given options.
+func NewService(repo *Repository, opts Options) *Service {
+	return &Service{repo: repo, opts: opts}
+}
+
+// MaxCategories returns the configured maximum number of categories per company.
+func (s *Service) MaxCategories() int {
+	return s.opts.MaxCategories
 }
 
 // GetByCompanyID returns all equipmentCategories belonging to companyID.
@@ -33,8 +46,16 @@ func (s *Service) GetByID(ctx context.Context, id string) (*EquipmentCategory, e
 	return category, nil
 }
 
-// Create creates a new equipment category.
+// Create creates a new equipment category, enforcing the configured MaxCategories limit per company.
 func (s *Service) Create(ctx context.Context, c CreateEquipmentCategory) (*EquipmentCategory, error) {
+	count, err := s.repo.Count(ctx, c.CompanyID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create equipment category: %w", err)
+	}
+	if count >= int64(s.opts.MaxCategories) {
+		return nil, fmt.Errorf("failed to create equipment category: %w", database.ErrLimitExceeded)
+	}
+
 	category, err := s.repo.Create(ctx, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create equipment category: %w", err)

@@ -5,7 +5,13 @@
 <div class="max-w-xl">
   <div class="flex items-center justify-between mb-1">
     <h2 class="heading heading--md">Equipment Categories</h2>
+    {{ if ge (len .Output.Categories) .Output.MaxCategories }}
+    <div class="tooltip" data-tip="Maximum of {{ .Output.MaxCategories }} categories reached">
+      <button class="btn btn-primary" disabled>New Category</button>
+    </div>
+    {{ else }}
     <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories/new" class="btn btn-primary">New Category</a>
+    {{ end }}
   </div>
   <p class="text-sm text-neutral mb-6">Categories used to classify rental equipment.</p>
 

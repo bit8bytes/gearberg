@@ -58,3 +58,7 @@ RETURNING
 -- name: DeleteEquipmentCategory :exec
 DELETE FROM equipment_categories
 WHERE id = ?;
+
+-- name: CountEquipmentCategoriesByCompanyID :one
+SELECT COUNT(*) FROM equipment_categories
+WHERE company_id = ?;

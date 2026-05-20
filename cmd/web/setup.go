@@ -151,7 +151,7 @@ func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.T
 	settings.NewHandler(csSvc, cache).Routes(m)
 
 	ecRepo := categories.NewRepository(db)
-	ecSvc := categories.NewService(ecRepo)
+	ecSvc := categories.NewService(ecRepo, categories.Options{MaxCategories: opts.MaxCategories})
 	ecHandler := categories.NewHandler(ecSvc, cache)
 	ecHandler.Routes(m)
 

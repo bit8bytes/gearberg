@@ -9,12 +9,13 @@ import (
 )
 
 type options struct {
-	Version      bool
-	LogLevel     logLevel
-	Port         int
-	TLSMode      string
-	DbDsn        string // SECRET
-	MaxCompanies int
+	Version       bool
+	LogLevel      logLevel
+	Port          int
+	TLSMode       string
+	DbDsn         string // SECRET
+	MaxCompanies  int
+	MaxCategories int
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
@@ -31,6 +32,7 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.IntVar(&cfg.MaxCompanies, "max-companies", 1, "maximum number of companies allowed")
+	fs.IntVar(&cfg.MaxCategories, "max-categories", 25, "maximum number of equipment categories per company")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
@@ -51,6 +53,9 @@ func parseServeOptions(args []string) (*options, error) {
 
 	if cfg.MaxCompanies <= 0 {
 		return nil, fmt.Errorf("max companies must be greater than 0")
+	}
+	if cfg.MaxCategories <= 0 {
+		return nil, fmt.Errorf("max categories must be greater than 0")
 	}
 
 	return cfg, nil

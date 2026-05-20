@@ -71,8 +71,9 @@ type listCategoriesInput struct {
 }
 
 type listCategoriesOutput struct {
-	CompanyID  string
-	Categories []EquipmentCategory
+	CompanyID     string
+	Categories    []EquipmentCategory
+	MaxCategories int
 }
 
 func (h *Handler) listCategories(ctx context.Context, in *listCategoriesInput) (*listCategoriesOutput, error) {
@@ -80,7 +81,11 @@ func (h *Handler) listCategories(ctx context.Context, in *listCategoriesInput) (
 	if err != nil {
 		return nil, fmt.Errorf("listCategories: %w", err)
 	}
-	return &listCategoriesOutput{CompanyID: in.CompanyID, Categories: equipmentCategories}, nil
+	return &listCategoriesOutput{
+		CompanyID:     in.CompanyID,
+		Categories:    equipmentCategories,
+		MaxCategories: h.svc.MaxCategories(),
+	}, nil
 }
 
 type categoryFormInput struct {
@@ -109,6 +114,10 @@ func (h *Handler) createCategory(ctx context.Context, in *categoryFormInput) (*c
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
 			return nil, &forma.ValidationError{Field: map[string]string{"name": "A category with this name already exists."}}
+		}
+		if errors.Is(err, database.ErrLimitExceeded) {
+			limit := h.svc.MaxCategories()
+			return nil, &forma.ValidationError{Field: map[string]string{"name": fmt.Sprintf("Category limit reached. Only %d categories allowed per company.", limit)}}
 		}
 		return nil, fmt.Errorf("createCategory: %w", err)
 	}

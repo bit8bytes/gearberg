@@ -24,6 +24,15 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+// Count returns the number of equipment categories belonging to companyID.
+func (r *Repository) Count(ctx context.Context, companyID string) (int64, error) {
+	n, err := r.equipmentCategories.CountEquipmentCategoriesByCompanyID(ctx, sql.NullString{String: companyID, Valid: true})
+	if err != nil {
+		return 0, fmt.Errorf("Count: %w", err)
+	}
+	return n, nil
+}
+
 // GetByCompanyID returns all equipmentCategories belonging to companyID.
 func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) ([]EquipmentCategory, error) {
 	rows, err := r.equipmentCategories.GetEquipmentCategoriesByCompanyID(ctx, sql.NullString{String: companyID, Valid: true})
