@@ -75,7 +75,8 @@ func (h *Handler) deleteCompanyForm(ctx context.Context, in *deleteCompanyFormIn
 type listCompaniesInput struct{}
 
 type listCompaniesOutput struct {
-	Companies []Company
+	Companies    []Company
+	MaxCompanies int
 }
 
 func (h *Handler) listCompanies(ctx context.Context, _ *listCompaniesInput) (*listCompaniesOutput, error) {
@@ -83,7 +84,7 @@ func (h *Handler) listCompanies(ctx context.Context, _ *listCompaniesInput) (*li
 	if err != nil {
 		return nil, fmt.Errorf("listCompanies: %w", err)
 	}
-	return &listCompaniesOutput{Companies: companies}, nil
+	return &listCompaniesOutput{Companies: companies, MaxCompanies: h.svc.MaxCompanies()}, nil
 }
 
 type createCompanyInput struct {

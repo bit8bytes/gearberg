@@ -2,7 +2,13 @@
 <div class="flex-1 max-w-xs mx-auto mt-8 px-4">
   <div class="flex items-center justify-between mb-6">
     <h1>Companies</h1>
+    {{ if ge (len .Output.Companies) .Output.MaxCompanies }}
+    <div class="tooltip" data-tip="Maximum of {{ .Output.MaxCompanies }} companies reached">
+      <button class="btn btn-primary" disabled>+ New</button>
+    </div>
+    {{ else }}
     <a href="/companies/new" class="btn btn-primary">+ New</a>
+    {{ end }}
   </div>
 
   {{ with .Output.Companies }}
@@ -21,7 +27,6 @@
   <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
     {{ template "companies-icon" . }}
     <p class="text-sm">No companies yet.</p>
-    <a href="/companies/new" class="btn btn-primary btn-sm">Create your first company</a>
   </div>
   {{ end }}
 </div>
