@@ -35,15 +35,14 @@ func (h *Handler) Routes(m *forma.HTML) {
 		Template: h.cache[pages.EquipmentCategoriesNew.File],
 	}, h.getCategoryNew)
 
-	forma.Postf(m, forma.Operationf[categoryFormOutput]{
-		Operation: forma.Operation{
+	forma.Postf(m,
+		forma.Operation{
 			Path:     "/companies/{company_id}/settings/equipment-categories/new",
 			Template: h.cache[pages.EquipmentCategoriesNew.File],
 		},
-		Redirect: func(o *categoryFormOutput) string {
+		func(o *categoryFormOutput) string {
 			return fmt.Sprintf("/companies/%s/settings/equipment-categories", o.CompanyID)
-		},
-	}, h.createCategory)
+		}, h.createCategory)
 
 	forma.Get(m, forma.Operation{
 		Path:     "/companies/{company_id}/settings/equipment-categories/{id}",
@@ -55,15 +54,13 @@ func (h *Handler) Routes(m *forma.HTML) {
 		Template: h.cache[pages.EquipmentCategoriesDetail.File],
 	}, h.updateCategory)
 
-	forma.Postf(m, forma.Operationf[categoryFormOutput]{
-		Operation: forma.Operation{
-			Path:     "/companies/{company_id}/settings/equipment-categories/{id}/delete",
-			Template: h.cache[pages.EquipmentCategoriesDetail.File],
-		},
-		Redirect: func(o *categoryFormOutput) string {
+	forma.Postf(m, forma.Operation{
+		Path:     "/companies/{company_id}/settings/equipment-categories/{id}/delete",
+		Template: h.cache[pages.EquipmentCategoriesDetail.File],
+	},
+		func(o *categoryFormOutput) string {
 			return fmt.Sprintf("/companies/%s/settings/equipment-categories", o.CompanyID)
-		},
-	}, h.deleteCategory)
+		}, h.deleteCategory)
 }
 
 type listCategoriesInput struct {

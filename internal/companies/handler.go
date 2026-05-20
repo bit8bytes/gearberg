@@ -36,11 +36,12 @@ func (h *Handler) Routes(m *forma.HTML) {
 		Template: h.cache[pages.CompaniesNew.File],
 	}, h.getCompanyNew)
 
-	forma.Post(m, forma.Operation{
-		Path:        "/companies/new",
-		Template:    h.cache[pages.CompaniesNew.File],
-		RedirectURL: "/companies",
-	}, h.createCompany)
+	forma.Postf(m, forma.Operation{
+		Path:     "/companies/new",
+		Template: h.cache[pages.CompaniesNew.File],
+	},
+		func(o *companyFormOutput) string { return "/companies" },
+		h.createCompany)
 
 	forma.Get(m, forma.Operation{
 		Path:     "/companies/{company_id}",
@@ -52,11 +53,12 @@ func (h *Handler) Routes(m *forma.HTML) {
 		Template: h.cache[pages.CompanySettingsCompany.File],
 	}, h.updateCompany)
 
-	forma.Post(m, forma.Operation{
-		Path:        "/companies/{company_id}/delete",
-		Template:    h.cache[pages.CompanySettingsCompany.File],
-		RedirectURL: "/companies",
-	}, h.deleteCompanyForm)
+	forma.Postf(m, forma.Operation{
+		Path:     "/companies/{company_id}/delete",
+		Template: h.cache[pages.CompanySettingsCompany.File],
+	},
+		func(o *deleteCompanyFormOutput) string { return "/companies" },
+		h.deleteCompanyForm)
 }
 
 type deleteCompanyFormInput struct {

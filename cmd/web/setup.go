@@ -126,7 +126,7 @@ func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.T
 
 	healthz.NewHandler(revision, databaseVersion).Routes(mux)
 
-	formaConfig := forma.DefaultConfig()
+	formaConfig := forma.Config{}
 	formaConfig.Logger = logger
 	formaConfig.ErrorTemplate = cache[pages.Error.File]
 	m := forma.New(formago.New(mux), formaConfig)
