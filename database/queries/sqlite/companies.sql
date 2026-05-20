@@ -41,3 +41,6 @@ RETURNING
 -- name: DeleteByID :exec
 DELETE FROM companies
 WHERE id = ?;
+
+-- name: CountCompanies :one
+SELECT COUNT(*) FROM companies;

@@ -64,7 +64,6 @@ func (h *Handler) Routes(m *forma.HTML) {
 			return fmt.Sprintf("/companies/%s/settings/equipment-categories", o.CompanyID)
 		},
 	}, h.deleteCategory)
-
 }
 
 type listCategoriesInput struct {

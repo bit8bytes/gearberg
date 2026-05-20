@@ -105,6 +105,10 @@ func (h *Handler) createCompany(ctx context.Context, in *createCompanyInput) (*c
 		if errors.Is(err, database.ErrUniqueConstraint) {
 			return nil, &forma.ValidationError{Field: map[string]string{"name": "A company with this name already exists."}}
 		}
+		if errors.Is(err, database.ErrLimitExceeded) {
+			limit := h.svc.MaxCompanies()
+			return nil, &forma.ValidationError{Field: map[string]string{"name": fmt.Sprintf("Company limit reached. Only %d company allowed.", limit)}}
+		}
 		return nil, fmt.Errorf("createCompany: %w", err)
 	}
 	return &companyFormOutput{}, nil

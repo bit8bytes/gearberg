@@ -23,6 +23,15 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+// Count returns the total number of companies.
+func (r *Repository) Count(ctx context.Context) (int64, error) {
+	n, err := r.companies.CountCompanies(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count companies: %w", err)
+	}
+	return n, nil
+}
+
 // GetAll returns all companies.
 func (r *Repository) GetAll(ctx context.Context) ([]Company, error) {
 	companies, err := r.companies.GetAll(ctx)

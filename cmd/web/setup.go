@@ -121,7 +121,7 @@ func setupDatabase(ctx context.Context, options *options) (*sql.DB, error) {
 	return db, nil
 }
 
-func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.Template) http.Handler {
+func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.Template, opts *options) http.Handler {
 	mux := http.NewServeMux()
 
 	healthz.NewHandler(revision, databaseVersion).Routes(mux)
@@ -142,7 +142,7 @@ func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.T
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
 	companyRepo := companies.NewRepository(db)
-	companySvc := companies.NewService(companyRepo)
+	companySvc := companies.NewService(companyRepo, companies.Options{MaxCompanies: opts.MaxCompanies})
 	companyHandler := companies.NewHandler(companySvc, cache)
 	companyHandler.Routes(m)
 

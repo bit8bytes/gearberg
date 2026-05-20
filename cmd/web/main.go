@@ -100,7 +100,7 @@ func runServe(args []string) error {
 		}
 	}(db)
 
-	handlers := setupHandlers(log, db, cache)
+	handlers := setupHandlers(log, db, cache, options)
 
 	app := &application{
 		logger:   log,
@@ -131,7 +131,11 @@ func runVerify(args []string) error {
 	if err != nil {
 		return fmt.Errorf("database: %w", err)
 	}
-	defer db.Close()
+	defer func(appDb *sql.DB) {
+		if err := appDb.Close(); err != nil {
+			log.InfoContext(ctx, "close database", "error", err.Error())
+		}
+	}(db)
 
 	log.InfoContext(ctx, "ok", "db_version", databaseVersion)
 	return nil
