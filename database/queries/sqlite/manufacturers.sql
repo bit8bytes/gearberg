@@ -1,5 +1,9 @@
+-- name: CountByCompanyID :one
+SELECT COUNT(*) FROM manufacturers
+WHERE company_id = ?;
+
 -- name: Create :one
-INSERT INTO equipment_categories (
+INSERT INTO manufacturers (
     id,
     company_id,
     name
@@ -13,25 +17,6 @@ INSERT INTO equipment_categories (
     name,
     created_at;
 
--- name: GetByID :one
-SELECT
-    id,
-    company_id,
-    name,
-    updated_at,
-    created_at
-FROM equipment_categories
-WHERE id = ?;
-
--- name: GetAll :many
-SELECT
-    id,
-    company_id,
-    name,
-    updated_at,
-    created_at
-FROM equipment_categories;
-
 -- name: GetByCompanyID :many
 SELECT
     id,
@@ -39,11 +24,21 @@ SELECT
     name,
     updated_at,
     created_at
-FROM equipment_categories
+FROM manufacturers
 WHERE company_id = ?;
 
+-- name: GetByID :one
+SELECT
+    id,
+    company_id,
+    name,
+    updated_at,
+    created_at
+FROM manufacturers
+WHERE id = ?;
+
 -- name: Update :one
-UPDATE equipment_categories
+UPDATE manufacturers
 SET
     name = ?,
     updated_at = unixepoch()
@@ -56,9 +51,5 @@ RETURNING
     created_at;
 
 -- name: Delete :exec
-DELETE FROM equipment_categories
+DELETE FROM manufacturers
 WHERE id = ?;
-
--- name: CountByCompanyID :one
-SELECT COUNT(*) FROM equipment_categories
-WHERE company_id = ?;

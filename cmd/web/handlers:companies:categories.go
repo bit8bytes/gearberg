@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
@@ -22,6 +23,14 @@ type equipmentCategoryData struct {
 	CompanyID string
 	Category  *categories.EquipmentCategory
 	ID        string
+	ReturnTo  string
+}
+
+func safeReturnTo(s string) string {
+	if strings.HasPrefix(s, "/") && !strings.HasPrefix(s, "//") {
+		return s
+	}
+	return ""
 }
 
 func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Request) *appError {
@@ -49,15 +58,17 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 
 func (app *application) getEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *appError {
 	id := r.PathValue("company_id")
+	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 	data := app.newTemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{CompanyID: id}
+	data.Data = equipmentCategoryData{CompanyID: id, ReturnTo: returnTo}
 	return app.render(w, r, http.StatusOK, pages.EquipmentCategoriesNew, data)
 }
 
 func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *appError {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
+	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := categories.Parse(r)
 	if err != nil {
@@ -67,7 +78,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 	reRender := func(f *categories.Form) *appError {
 		data := app.newTemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{CompanyID: id}
+		data.Data = equipmentCategoryData{CompanyID: id, ReturnTo: returnTo}
 		return app.render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesNew, data)
 	}
 
@@ -97,7 +108,11 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		}
 	}
 
-	http.Redirect(w, r, "/companies/"+url.PathEscape(id)+"/settings/equipment-categories", http.StatusSeeOther)
+	dest := "/companies/" + url.PathEscape(id) + "/settings/equipment-categories"
+	if returnTo != "" {
+		dest = returnTo
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }
 
@@ -105,6 +120,7 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	catID := r.PathValue("id")
+	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 
 	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
 	if err != nil {
@@ -117,7 +133,7 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 
 	data := app.newTemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID}
+	data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID, ReturnTo: returnTo}
 	return app.render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
 }
 
@@ -125,6 +141,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	catID := r.PathValue("id")
+	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := categories.Parse(r)
 	if err != nil {
@@ -134,7 +151,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	reRender := func(f *categories.Form) *appError {
 		data := app.newTemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{CompanyID: companyID, ID: catID}
+		data.Data = equipmentCategoryData{CompanyID: companyID, ID: catID, ReturnTo: returnTo}
 		return app.render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
@@ -142,7 +159,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		return reRender(&form)
 	}
 
-	category, err := app.services.equipmentcategories.Update(ctx, categories.UpdateEquipmentCategory{
+	_, err = app.services.equipmentcategories.Update(ctx, categories.UpdateEquipmentCategory{
 		ID:   catID,
 		Name: form.Name,
 	})
@@ -158,18 +175,33 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	data := app.newTemplateData(r)
-	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID}
-	return app.render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
+	dest := "/companies/" + url.PathEscape(companyID) + "/settings/equipment-categories/" + url.PathEscape(catID)
+	if returnTo != "" {
+		dest = returnTo
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	return nil
 }
 
 func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *http.Request) *appError {
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	catID := r.PathValue("id")
+	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	if err := app.services.equipmentcategories.Delete(ctx, catID); err != nil {
+		if errors.Is(err, database.ErrForeignKeyViolation) {
+			category, fetchErr := app.services.equipmentcategories.GetByID(ctx, catID)
+			if fetchErr != nil {
+				return &appError{Error: fetchErr, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
+			}
+			f := &categories.Form{}
+			f.AddError("delete", "Cannot delete: this category is assigned to one or more inventory items.")
+			data := app.newTemplateData(r)
+			data.Form = f
+			data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID, ReturnTo: returnTo}
+			return app.render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
+		}
 		return &appError{
 			Error:   err,
 			Message: "Failed to delete equipment category.",
@@ -177,6 +209,10 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 		}
 	}
 
-	http.Redirect(w, r, "/companies/"+url.PathEscape(companyID)+"/settings/equipment-categories", http.StatusSeeOther)
+	dest := "/companies/" + url.PathEscape(companyID) + "/settings/equipment-categories"
+	if returnTo != "" {
+		dest = returnTo
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }

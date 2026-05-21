@@ -30,3 +30,13 @@ sql:
         out: "database/queries/gen/equipmentcategories"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "database/queries/sqlite/inventory.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "inventory"
+        out: "database/queries/gen/inventory"
+        emit_interface: true
+        omit_unused_structs: true
