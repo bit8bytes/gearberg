@@ -61,7 +61,7 @@ func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request)
 		return reRender(&form)
 	}
 
-	_, err = app.services.companies.Create(ctx, companies.CreateCompany{
+	company, err := app.services.companies.Create(ctx, companies.CreateCompany{
 		ID:   ksuid.New().String(),
 		Name: form.Name,
 	})
@@ -82,7 +82,7 @@ func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	http.Redirect(w, r, "/companies", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/companies/%s/inventory", company.ID), http.StatusSeeOther)
 	return nil
 }
 
