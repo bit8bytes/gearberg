@@ -19,7 +19,7 @@ func (app *application) serve(ctx context.Context) error {
 func (app *application) newServer(ctx context.Context) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", app.options.Port),
-		Handler:           http.TimeoutHandler(app.handlers, time.Second*20, ""),
+		Handler:           http.TimeoutHandler(app.routes(), time.Second*20, ""),
 		MaxHeaderBytes:    524_288,
 		IdleTimeout:       time.Minute,
 		BaseContext:       func(_ net.Listener) context.Context { return ctx },

@@ -1,4 +1,4 @@
--- name: CreateCompanySettings :one
+-- name: Create :one
 INSERT INTO company_settings (
     id,
     company_id,
@@ -19,7 +19,7 @@ INSERT INTO company_settings (
     timezone,
     created_at;
 
--- name: GetCompanySettingsByID :one
+-- name: GetByID :one
 SELECT
     id,
     company_id,
@@ -31,7 +31,7 @@ SELECT
 FROM company_settings
 WHERE id = ?;
 
--- name: GetCompanySettingsByCompanyID :one
+-- name: GetByCompanyID :one
 SELECT
     id,
     company_id,
@@ -43,7 +43,7 @@ SELECT
 FROM company_settings
 WHERE company_id = ?;
 
--- name: UpdateCompanySettings :one
+-- name: Update :one
 UPDATE company_settings
 SET
     currency = ?,
@@ -60,6 +60,6 @@ RETURNING
     updated_at,
     created_at;
 
--- name: DeleteCompanySettings :exec
+-- name: Delete :exec
 DELETE FROM company_settings
 WHERE id = ?;

@@ -49,8 +49,14 @@ var (
 	// EquipmentCategoriesDetail is the category detail/edit page.
 	EquipmentCategoriesDetail = newPage("pages/companies/categories/detail.tmpl", layouts.Center)
 
-	// Inventory is the inventory page.
+	// Inventory is the inventory list page.
 	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)
+
+	// InventoryNew is the create-item form page.
+	InventoryNew = newPage("pages/inventory/new.tmpl", layouts.Center)
+
+	// InventoryDetail is the item detail/edit page.
+	InventoryDetail = newPage("pages/inventory/detail.tmpl", layouts.Center)
 
 	// NotFound is the 404 page.
 	NotFound = newPage("pages/not-found.tmpl", layouts.Center)

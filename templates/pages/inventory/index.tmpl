@@ -6,30 +6,94 @@
     <div>
       <h3>All Items</h3>
       <div>
-        <span>0 items</span>
+        <span>{{ len .Data.Inventories }} items</span>
         •
-        <span>{{ len .Output.Categories }} categories</span>
+        <span>{{ len .Data.Categories }} categories</span>
       </div>
     </div>
     <div>
-      <a href="/companies/{{ .Input.CompanyID }}/inventory/add" tabindex="0" class="btn btn-primary">Add Item</a>
+      {{ if eq (len .Data.Categories) 0 }}
+      <div class="tooltip tooltip-left" data-tip="Create a category first">
+        <a tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item</a>
+      </div>
+      {{ else }}
+      <a href="/companies/{{ .Data.CompanyID }}/inventory/new" tabindex="0" class="btn btn-primary">+ Add Item</a>
+      {{ end }}
     </div>
   </div>
 </div>
 <div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
-    <form method="get" action="/companies/{{ .Input.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-2 flex-nowrap">
-      {{ range .Output.Categories }}
+  {{ if ne (len .Data.Categories) 0 }}
+  <div class="max-w-5xl mx-auto px-4 h-14 flex gap-1 items-center overflow-x-auto scrollbar-none">
+    <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}" class="btn rounded-full">+</a>
+    <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-1 flex-nowrap">
+      {{ range .Data.Categories }}
       <input class="btn rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
         {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
+      {{ end }}
+      {{ if $.Data.SortBy }}
+      <input type="hidden" name="sort" value="{{ $.Data.SortBy }}">
+      <input type="hidden" name="dir" value="{{ $.Data.SortDir }}">
       {{ end }}
       <button type="submit" class="btn rounded-full">{{ template "filter-icon" . }}Filter</button>
     </form>
   </div>
+  {{ end }}
 </div>
-<div class="max-w-5xl mx-auto px-8 py-6">
-  {{ range .Output.Inventory }}
-    {{ .ID }}
+<div class="max-w-5xl w-full mx-auto">
+  {{ if .Data.Inventories }}
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>
+          {{ if eq .Data.SortBy "name" }}{{ if eq .Data.SortDir "desc" }}
+          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=asc" class="link link-hover">NAME ↓</a>
+          {{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=desc" class="link link-hover">NAME ↑</a>
+          {{ end }}{{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=asc" class="link link-hover">NAME</a>
+          {{ end }}
+        </th>
+        <th>
+          {{ if eq .Data.SortBy "category" }}{{ if eq .Data.SortDir "desc" }}
+          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=asc" class="link link-hover">CATEGORY ↓</a>
+          {{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=desc" class="link link-hover">CATEGORY ↑</a>
+          {{ end }}{{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=asc" class="link link-hover">CATEGORY</a>
+          {{ end }}
+        </th>
+        <th>
+          {{ if eq .Data.SortBy "stock" }}{{ if eq .Data.SortDir "desc" }}
+          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=asc" class="link link-hover">STOCK ↓</a>
+          {{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=desc" class="link link-hover">STOCK ↑</a>
+          {{ end }}{{ else }}
+          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=asc" class="link link-hover">STOCK</a>
+          {{ end }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Data.Inventories }}
+      <tr>
+        <td><a href="/companies/{{ $.Data.CompanyID }}/inventory/{{ .ID }}" class="link link-hover">{{ .Name }}</a></td>
+        <td><a href="/companies/{{ $.Data.CompanyID }}/settings/equipment-categories/{{ .CategoryID }}?return_to={{ $.URL.Path }}" class="link link-hover">{{ .CategoryName }}</a></td>
+        <td>{{ .TotalStock }}</td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+  {{ else }}
+  <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+    {{ if eq (len .Data.Categories) 0 }}
+      <p class="text-sm">No items yet. <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ .URL.Path }}" class="link">Create a category</a> to get started.</p>
+    {{ else if .Data.Filtered }}
+      <p class="text-sm">No items found for the selected categories.</p>
+    {{ else }}
+      <p class="text-sm">No items yet. <a href="/companies/{{ .Data.CompanyID }}/inventory/new" class="link">Add your first item.</a></p>
+    {{ end }}
+  </div>
   {{ end }}
 </div>
 {{ end }}

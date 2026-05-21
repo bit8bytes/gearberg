@@ -16,18 +16,19 @@ The first increment comes without login because the software will be self-hosted
 
 ### Milestone 1: Inventory
 
-| ID | Name |
-| - | - |
-| M1.1 | A user can create, update, and delete inventory items |
-| M1.2 | A user can full text search inventory by name |
-| M1.3 | A user can filter inventory by category |
-| M1.4 | A user can view inventory in a list |
-| M1.5 | A user can see the total quantity of an inventory item |
-| M1.6 | A user can view a single inventory item in detail |
-| M1.7 | A user can sort inventory by name, category, stock, or price |
-| M1.8 | A user can upload an image for an inventory item |
-| M1.9 | A user can see how many units of an item are currently available (not rented out) |
-| M1.10 | A user cannot delete an inventory item that has draft or active rental line items |
+| ID | Name | Done |
+| - | - | - |
+| M1.1 | A user can create, update, and delete inventory items | 100 % |
+| M1.2 | A user can full text search inventory by name | 0 % |
+| M1.3 | A user can filter inventory by category | 100 % |
+| M1.4 | A user can view inventory in a list | 100 % |
+| M1.5 | A user can see the total quantity of an inventory item | 100 % |
+| M1.6 | A user can view a single inventory item in detail | 100 % |
+| M1.7 | A user can sort inventory by name, category, stock, or price | 80
+ % |
+| M1.8 | A user can upload an image for an inventory item | 0 % |
+| M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
+| M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
 
 ### Milestone 2: Rentals
 

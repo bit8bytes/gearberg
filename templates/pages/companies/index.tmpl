@@ -2,8 +2,8 @@
 <div class="flex-1 max-w-xs mx-auto mt-8 px-4">
   <div class="flex items-center justify-between mb-6">
     <h1>Companies</h1>
-    {{ if ge (len .Output.Companies) .Output.MaxCompanies }}
-    <div class="tooltip" data-tip="Maximum of {{ .Output.MaxCompanies }} companies reached">
+    {{ if ge (len .Data.Companies) .Data.MaxCompanies }}
+    <div class="tooltip" data-tip="Maximum of {{ .Data.MaxCompanies }} companies reached">
       <button class="btn btn-primary" disabled>+ New</button>
     </div>
     {{ else }}
@@ -11,7 +11,7 @@
     {{ end }}
   </div>
 
-  {{ with .Output.Companies }}
+  {{ with .Data.Companies }}
   <ul class="flex flex-col divide-y divide-base-300 border border-base-300 rounded-box overflow-hidden">
     {{ range . }}
     <li>

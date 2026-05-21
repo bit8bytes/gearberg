@@ -133,3 +133,20 @@ func Float64(f sql.NullFloat64) float64 {
 	}
 	return 0
 }
+
+// Float64Ptr returns a pointer to the float64 value of f, or nil if not valid.
+func Float64Ptr(f sql.NullFloat64) *float64 {
+	if !f.Valid {
+		return nil
+	}
+	v := f.Float64
+	return &v
+}
+
+// NullFloat64Ptr converts a *float64 to sql.NullFloat64.
+func NullFloat64Ptr(v *float64) sql.NullFloat64 {
+	if v == nil {
+		return sql.NullFloat64{}
+	}
+	return sql.NullFloat64{Float64: *v, Valid: true}
+}

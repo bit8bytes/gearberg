@@ -164,7 +164,8 @@ func SessionStore(db *sql.DB, cleanUpInterval time.Duration) (scs.Store, error) 
 
 // NormalizeError maps driver-specific SQLite errors to package-level sentinels.
 // SQLITE_CONSTRAINT_UNIQUE returns [ErrUniqueConstraint];
-// SQLITE_CONSTRAINT_PRIMARYKEY returns [ErrPrimaryKeyConstraint].
+// SQLITE_CONSTRAINT_PRIMARYKEY returns [ErrPrimaryKeyConstraint];
+// SQLITE_CONSTRAINT_FOREIGNKEY returns [ErrForeignKeyViolation].
 // All other errors are returned unchanged.
 func NormalizeError(err error) error {
 	var sqliteErr *sqlite.Error
@@ -176,6 +177,13 @@ func NormalizeError(err error) error {
 			return ErrPrimaryKeyConstraint
 		case sqlite3.SQLITE_CONSTRAINT_FOREIGNKEY:
 			return ErrForeignKeyViolation
+		case sqlite3.SQLITE_CONSTRAINT_TRIGGER:
+			// SQLite enforces some FK constraints via triggers; in that case the
+			// driver reports SQLITE_CONSTRAINT_TRIGGER instead of
+			// SQLITE_CONSTRAINT_FOREIGNKEY.
+			if strings.Contains(sqliteErr.Error(), "FOREIGN KEY") {
+				return ErrForeignKeyViolation
+			}
 		}
 	}
 	return err

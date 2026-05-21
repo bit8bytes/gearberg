@@ -8,24 +8,19 @@ import (
 	"io/fs"
 	"log"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/bit8bytes/gearberg/assets"
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/companies"
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
 	"github.com/bit8bytes/gearberg/internal/companies/settings"
-	"github.com/bit8bytes/gearberg/internal/healthz"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	"github.com/bit8bytes/gearberg/templates"
 	"github.com/bit8bytes/gearberg/templates/pages"
-	"github.com/tobiasgleiter/forma"
-	"github.com/tobiasgleiter/forma/adapters/formago"
 )
 
 func setupLogger(l slog.Level) *slog.Logger {
@@ -121,52 +116,30 @@ func setupDatabase(ctx context.Context, options *options) (*sql.DB, error) {
 	return db, nil
 }
 
-func setupHandlers(logger *slog.Logger, db *sql.DB, cache map[string]*template.Template, opts *options) http.Handler {
-	mux := http.NewServeMux()
+type services struct {
+	companies           *companies.Service
+	companysettings     *settings.Service
+	equipmentcategories *categories.Service
+	inventory           *inventory.Service
+}
 
-	healthz.NewHandler(revision, databaseVersion).Routes(mux)
-
-	formaConfig := forma.Config{}
-	formaConfig.Logger = logger
-	formaConfig.ErrorTemplate = cache[pages.Error.File]
-	m := forma.New(formago.New(mux), formaConfig)
-
-	forma.Get(m, forma.Operation{
-		Path:     "/",
-		Template: cache[pages.NotFound.File],
-	}, func(_ context.Context, _ *struct{}) (*struct{}, error) {
-		return nil, nil
-	})
-	mux.Handle("GET /{$}", http.RedirectHandler("/companies", http.StatusSeeOther))
-	mux.Handle("GET /dist/", assets.ServeStaticFiles())
-	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
-
+func setupServices(db *sql.DB, opts *options) *services {
 	companyRepo := companies.NewRepository(db)
 	companySvc := companies.NewService(companyRepo, companies.Options{MaxCompanies: opts.MaxCompanies})
-	companyHandler := companies.NewHandler(companySvc, cache)
-	companyHandler.Routes(m)
 
-	csRepo := settings.NewRepository(db)
-	csSvc := settings.NewService(csRepo)
-	settings.NewHandler(csSvc, cache).Routes(m)
+	companysettingsRepo := settings.NewRepository(db)
+	companysettingsSvc := settings.NewService(companysettingsRepo)
 
-	ecRepo := categories.NewRepository(db)
-	ecSvc := categories.NewService(ecRepo, categories.Options{MaxCategories: opts.MaxCategories})
-	ecHandler := categories.NewHandler(ecSvc, cache)
-	ecHandler.Routes(m)
+	equipmentcategoriesRepo := categories.NewRepository(db)
+	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.MaxCategories})
 
-	inventoryService := inventory.NewService(ecSvc)
-	inventoryHandler := inventory.NewHandler(inventoryService, cache)
-	inventoryHandler.Routes(m)
+	inventoryRepo := inventory.NewRepository(db)
+	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc)
 
-	antiCSRF := http.NewCrossOriginProtection()
-	logRequest := newRequestLogger(logger)
-	recoverPanic := newPanicRecoverer(logger)
-
-	return withTrace(
-		recoverPanic.handler(
-			logRequest.handler(
-				withSecurityHeaders(
-					withMaxBodySize(
-						antiCSRF.Handler(mux))))))
+	return &services{
+		companies:           companySvc,
+		companysettings:     companysettingsSvc,
+		equipmentcategories: equipmentcategoriesSvc,
+		inventory:           inventorySvc,
+	}
 }
