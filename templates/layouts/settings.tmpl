@@ -15,15 +15,15 @@
       <label for="settings-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
       <aside class="w-56 shrink-0 border-r border-base-300 pt-8 px-3 flex flex-col gap-0.5 bg-base-100 min-h-full">
         <p class="px-3 pb-2 text-xs font-medium text-neutral uppercase tracking-wider">Company</p>
-        <a href="/companies/{{ .Input.CompanyID }}"
+        <a href="/companies/{{ .Data.CompanyID }}"
            class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-general" . }}hover:bg-base-200{{ end }}">
           General
         </a>
-        <a href="/companies/{{ .Input.CompanyID }}/settings"
+        <a href="/companies/{{ .Data.CompanyID }}/settings"
            class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-billing" . }}hover:bg-base-200{{ end }}">
           Billing &amp; Tax
         </a>
-        <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories"
+        <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories"
            class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-categories" . }}hover:bg-base-200{{ end }}">
           Equipment Categories
         </a>

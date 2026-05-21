@@ -4,28 +4,28 @@
 <div class="flex-1 max-w-xs mx-auto mt-8">
   <div class="flex items-center justify-between mb-6">
     <h1 class="">New Category</h1>
-    <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories" class="btn">Back</a>
+    <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories" class="btn">Back</a>
   </div>
 
-  <form method="POST" action="/companies/{{ .Input.CompanyID }}/settings/equipment-categories/new" class="flex flex-col gap-4" novalidate>
+  <form method="POST" action="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input
         id="name"
         type="text"
         name="name"
-        value="{{ .Input.Name }}"
+        value="{{ .Form.Name }}"
         maxlength="100"
         class="input"
       />
-      {{ with index .Errors "name" }}
+      {{ with index .Form.Errors "name" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>
 
     <div class="flex gap-2">
       <button type="submit" class="btn btn-primary">Create</button>
-      <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories" class="btn">Cancel</a>
+      <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories" class="btn">Cancel</a>
     </div>
   </form>
 </div>

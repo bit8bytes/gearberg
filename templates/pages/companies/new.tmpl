@@ -11,11 +11,11 @@
         id="name"
         type="text"
         name="name"
-        value="{{ .Input.Name }}"
+        value="{{ .Form.Name }}"
         maxlength="100"
         class="input"
       />
-      {{ with index .Errors "name" }}
+      {{ with index .Form.Errors "name" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>

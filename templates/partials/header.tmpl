@@ -2,9 +2,9 @@
 <header class="border-b border-base-300">
   <div class="navbar bg-black">
     <div class="flex-1 flex flex-row items-center gap-6">
-      <h2 class="text-white"><a href="/companies/{{ .Input.CompanyID }}/inventory">Gear<span class="text-primary">berg</span></a></h2>
+      <h2 class="text-white"><a href="/companies/{{ .Data.CompanyID }}/inventory">Gear<span class="text-primary">berg</span></a></h2>
       <ul class="text-white">
-        <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Input.CompanyID) }}text-primary{{ end }}" href="/companies/{{ .Input.CompanyID }}/inventory">Inventory</a></li>
+        <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Data.CompanyID) }}text-primary{{ end }}" href="/companies/{{ .Data.CompanyID }}/inventory">Inventory</a></li>
       </ul>
     </div>
     <div class="flex gap-2">
@@ -27,7 +27,7 @@
           </div>
           <div class="border border-base-200"></div>
           <li>
-            <a href="/companies/{{ .Input.CompanyID }}/inventory" class="{{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Input.CompanyID) }}text-primary{{ end }}">
+            <a href="/companies/{{ .Data.CompanyID }}/inventory" class="{{ if inPath $.URL.Path (printf "/companies/%v/inventory" .Data.CompanyID) }}text-primary{{ end }}">
               {{ template "inventory-icon" . }}
               Inventory
             </a>
@@ -40,7 +40,7 @@
             </a>
           </li>
           <li>
-            <a href="/companies/{{ .Input.CompanyID }}" class="{{ if eq $.URL.Path (printf "/companies/%v" .Input.CompanyID) }}text-primary{{ end }}">
+            <a href="/companies/{{ .Data.CompanyID }}" class="{{ if eq $.URL.Path (printf "/companies/%v" .Data.CompanyID) }}text-primary{{ end }}">
               {{ template "settings-icon" . }}
               Settings
             </a>

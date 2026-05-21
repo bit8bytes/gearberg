@@ -5,9 +5,9 @@ go 1.26.2
 require (
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
+	github.com/bit8bytes/toolbox v0.7.8
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/segmentio/ksuid v1.0.4
-	github.com/tobiasgleiter/forma v0.2.0
 	golang.org/x/sync v0.20.0
 	modernc.org/sqlite v1.50.1
 )

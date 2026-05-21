@@ -6,18 +6,18 @@
   <h2 class="mb-1">General</h2>
   <p class="text-sm text-neutral mb-6">Company name and basic information.</p>
 
-  <form method="POST" action="/companies/{{ .Input.CompanyID }}" class="flex flex-col gap-4" novalidate>
+  <form method="POST" action="/companies/{{ .Data.CompanyID }}" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input
         id="name"
         type="text"
         name="name"
-        value="{{ if .Output }}{{ if .Output.Company }}{{ .Output.Company.Name }}{{ end }}{{ else }}{{ .Input.Name }}{{ end }}"
+        value="{{ if .Data.Company }}{{ .Data.Company.Name }}{{ else }}{{ .Form.Name }}{{ end }}"
         maxlength="100"
         class="input"
       />
-      {{ with index .Errors "name" }}
+      {{ with index .Form.Errors "name" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>
@@ -42,7 +42,7 @@
       <form method="dialog">
         <button class="btn">Cancel</button>
       </form>
-      <form method="POST" action="/companies/{{ .Input.CompanyID }}/delete">
+      <form method="POST" action="/companies/{{ .Data.CompanyID }}/delete">
         <button type="submit" class="btn btn-error">Delete</button>
       </form>
     </div>

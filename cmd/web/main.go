@@ -23,7 +23,6 @@ import (
 	"html/template"
 	"log"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,7 +34,7 @@ type application struct {
 	options  *options
 	cache    map[string]*template.Template
 	db       *sql.DB
-	handlers http.Handler
+	services *services
 }
 
 func main() {
@@ -100,14 +99,14 @@ func runServe(args []string) error {
 		}
 	}(db)
 
-	handlers := setupHandlers(log, db, cache, options)
+	services := setupServices(db, options)
 
 	app := &application{
 		logger:   log,
 		options:  options,
 		cache:    cache,
 		db:       db,
-		handlers: handlers,
+		services: services,
 	}
 
 	return app.serve(ctx)

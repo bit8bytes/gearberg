@@ -6,10 +6,10 @@
   <h2 class="mb-1">Billing &amp; Tax</h2>
   <p class="text-sm text-neutral mb-6">Currency, VAT rate, and timezone for this company.</p>
 
-  <form method="POST" action="/companies/{{ .Input.CompanyID }}/settings" class="flex flex-col gap-4" novalidate>
+  <form method="POST" action="/companies/{{ .Data.CompanyID }}/settings" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="currency">Currency</label>
-      {{ $currency := "" }}{{ if .Output }}{{ if .Output.Settings }}{{ $currency = .Output.Settings.Currency }}{{ end }}{{ else }}{{ $currency = .Input.Currency }}{{ end }}
+      {{ $currency := "" }}{{ if .Data.Settings }}{{ $currency = .Data.Settings.Currency }}{{ else }}{{ $currency = .Form.Currency }}{{ end }}
       <select id="currency" name="currency" class="select">
         <option value="" disabled {{ if eq $currency "" }}selected{{ end }}>Select currency</option>
         <option value="USD" {{ if eq $currency "USD" }}selected{{ end }}>USD – US Dollar</option>
@@ -38,7 +38,7 @@
         <option value="AED" {{ if eq $currency "AED" }}selected{{ end }}>AED – UAE Dirham</option>
         <option value="SAR" {{ if eq $currency "SAR" }}selected{{ end }}>SAR – Saudi Riyal</option>
       </select>
-      {{ with index .Errors "currency" }}
+      {{ with index .Form.Errors "currency" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>
@@ -49,21 +49,21 @@
         id="vat_rate"
         type="number"
         name="vat_rate"
-        value="{{ if .Output }}{{ if .Output.Settings }}{{ .Output.Settings.VatRate }}{{ end }}{{ else }}{{ .Input.VatRate }}{{ end }}"
+        value="{{ if .Data.Settings }}{{ .Data.Settings.VatRate }}{{ else }}{{ .Form.VatRate }}{{ end }}"
         min="0"
         max="1"
         step="0.01"
         placeholder="e.g. 0.19"
         class="input"
       />
-      {{ with index .Errors "vat_rate" }}
+      {{ with index .Form.Errors "vat_rate" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>
 
     <div class="flex flex-col gap-1">
       <label for="timezone">Timezone</label>
-      {{ $timezone := "" }}{{ if .Output }}{{ if .Output.Settings }}{{ $timezone = .Output.Settings.Timezone }}{{ end }}{{ else }}{{ $timezone = .Input.Timezone }}{{ end }}
+      {{ $timezone := "" }}{{ if .Data.Settings }}{{ $timezone = .Data.Settings.Timezone }}{{ else }}{{ $timezone = .Form.Timezone }}{{ end }}
       <select id="timezone" name="timezone" class="select">
         <option value="" disabled {{ if eq $timezone "" }}selected{{ end }}>Select timezone</option>
         <optgroup label="Africa">
@@ -140,7 +140,7 @@
           <option value="UTC" {{ if eq $timezone "UTC" }}selected{{ end }}>UTC</option>
         </optgroup>
       </select>
-      {{ with index .Errors "timezone" }}
+      {{ with index .Form.Errors "timezone" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>

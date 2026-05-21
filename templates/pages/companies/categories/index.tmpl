@@ -5,21 +5,21 @@
 <div class="max-w-xl">
   <div class="flex items-center justify-between mb-1">
     <h2 class="heading heading--md">Equipment Categories</h2>
-    {{ if ge (len .Output.Categories) .Output.MaxCategories }}
-    <div class="tooltip" data-tip="Maximum of {{ .Output.MaxCategories }} categories reached">
+    {{ if ge (len .Data.Categories) .Data.MaxCategories }}
+    <div class="tooltip" data-tip="Maximum of {{ .Data.MaxCategories }} categories reached">
       <button class="btn btn-primary" disabled>New Category</button>
     </div>
     {{ else }}
-    <a href="/companies/{{ .Input.CompanyID }}/settings/equipment-categories/new" class="btn btn-primary">New Category</a>
+    <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new" class="btn btn-primary">New Category</a>
     {{ end }}
   </div>
   <p class="text-sm text-neutral mb-6">Categories used to classify rental equipment.</p>
 
-  {{ if .Output.Categories }}
+  {{ if .Data.Categories }}
   <ul class="flex flex-col gap-2">
-    {{ range .Output.Categories }}
+    {{ range .Data.Categories }}
     <li class="flex items-center justify-between p-3 rounded border border-base-300">
-      <a href="/companies/{{ $.Input.CompanyID }}/settings/equipment-categories/{{ .ID }}" class="hover:underline">{{ .Name }}</a>
+      <a href="/companies/{{ $.Data.CompanyID }}/settings/equipment-categories/{{ .ID }}" class="hover:underline">{{ .Name }}</a>
     </li>
     {{ end }}
   </ul>

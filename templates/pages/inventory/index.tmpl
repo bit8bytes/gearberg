@@ -6,20 +6,20 @@
     <div>
       <h3>All Items</h3>
       <div>
-        <span>0 items</span>
+        <span>{{ len .Data.Inventories }} items</span>
         •
-        <span>{{ len .Output.Categories }} categories</span>
+        <span>{{ len .Data.Categories }} categories</span>
       </div>
     </div>
     <div>
-      <a href="/companies/{{ .Input.CompanyID }}/inventory/add" tabindex="0" class="btn btn-primary">Add Item</a>
+      <a href="/companies/{{ .Data.CompanyID }}/inventory/add" tabindex="0" class="btn btn-primary">Add Item</a>
     </div>
   </div>
 </div>
 <div class="w-full bg-base-100 border-b border-base-200">
   <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
-    <form method="get" action="/companies/{{ .Input.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-2 flex-nowrap">
-      {{ range .Output.Categories }}
+    <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-2 flex-nowrap">
+      {{ range .Data.Categories }}
       <input class="btn rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
         {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
       {{ end }}
@@ -28,7 +28,7 @@
   </div>
 </div>
 <div class="max-w-5xl mx-auto px-8 py-6">
-  {{ range .Output.Inventory }}
+  {{ range .Data.Inventories }}
     {{ .ID }}
   {{ end }}
 </div>
