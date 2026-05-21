@@ -25,7 +25,7 @@ func NewRepository(db *sql.DB) *Repository {
 
 // GetByCompanyID returns the settings for companyID, or nil when none exist yet.
 func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) (*CompanySettings, error) {
-	row, err := r.settings.GetCompanySettingsByCompanyID(ctx, companyID)
+	row, err := r.settings.GetByCompanyID(ctx, companyID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -38,13 +38,13 @@ func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) (*Com
 // Upsert creates settings when none exist for the company, or updates the existing row.
 // The ID field in u is used only on insert; on update the existing row's ID is kept.
 func (r *Repository) Upsert(ctx context.Context, u UpsertCompanySettings) (*CompanySettings, error) {
-	existing, err := r.settings.GetCompanySettingsByCompanyID(ctx, u.CompanyID)
+	existing, err := r.settings.GetByCompanyID(ctx, u.CompanyID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("Upsert: %w", err)
 	}
 
 	if errors.Is(err, sql.ErrNoRows) {
-		row, err := r.settings.CreateCompanySettings(ctx, gencs.CreateCompanySettingsParams{
+		row, err := r.settings.Create(ctx, gencs.CreateParams{
 			ID:        u.ID,
 			CompanyID: u.CompanyID,
 			Currency:  u.Currency,
@@ -63,7 +63,7 @@ func (r *Repository) Upsert(ctx context.Context, u UpsertCompanySettings) (*Comp
 		}, nil
 	}
 
-	row, err := r.settings.UpdateCompanySettings(ctx, gencs.UpdateCompanySettingsParams{
+	row, err := r.settings.Update(ctx, gencs.UpdateParams{
 		ID:       existing.ID,
 		Currency: u.Currency,
 		VatRate:  u.VatRate,

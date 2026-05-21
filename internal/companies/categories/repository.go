@@ -26,7 +26,7 @@ func NewRepository(db *sql.DB) *Repository {
 
 // Count returns the number of equipment categories belonging to companyID.
 func (r *Repository) Count(ctx context.Context, companyID string) (int64, error) {
-	n, err := r.equipmentCategories.CountEquipmentCategoriesByCompanyID(ctx, sql.NullString{String: companyID, Valid: true})
+	n, err := r.equipmentCategories.CountByCompanyID(ctx, companyID)
 	if err != nil {
 		return 0, fmt.Errorf("Count: %w", err)
 	}
@@ -35,7 +35,7 @@ func (r *Repository) Count(ctx context.Context, companyID string) (int64, error)
 
 // GetByCompanyID returns all equipmentCategories belonging to companyID.
 func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) ([]EquipmentCategory, error) {
-	rows, err := r.equipmentCategories.GetEquipmentCategoriesByCompanyID(ctx, sql.NullString{String: companyID, Valid: true})
+	rows, err := r.equipmentCategories.GetByCompanyID(ctx, companyID)
 	if err != nil {
 		return nil, fmt.Errorf("GetByCompanyID: %w", err)
 	}
@@ -48,7 +48,7 @@ func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) ([]Eq
 
 // GetByID returns the category with id, or database.ErrNotFound when it does not exist.
 func (r *Repository) GetByID(ctx context.Context, id string) (*EquipmentCategory, error) {
-	row, err := r.equipmentCategories.GetEquipmentCategoryByID(ctx, id)
+	row, err := r.equipmentCategories.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, database.ErrNotFound
@@ -61,9 +61,9 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*EquipmentCategory
 
 // Create inserts a new equipment category.
 func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*EquipmentCategory, error) {
-	row, err := r.equipmentCategories.CreateEquipmentCategory(ctx, genec.CreateEquipmentCategoryParams{
+	row, err := r.equipmentCategories.Create(ctx, genec.CreateParams{
 		ID:        c.ID,
-		CompanyID: sql.NullString{String: c.CompanyID, Valid: true},
+		CompanyID: c.CompanyID,
 		Name:      c.Name,
 	})
 	if err != nil {
@@ -71,7 +71,7 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 	}
 	m := EquipmentCategory{
 		ID:        row.ID,
-		CompanyID: database.String(row.CompanyID),
+		CompanyID: row.CompanyID,
 		Name:      row.Name,
 	}
 	return &m, nil
@@ -79,7 +79,7 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 
 // Update updates the name of the category identified by u.ID.
 func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*EquipmentCategory, error) {
-	row, err := r.equipmentCategories.UpdateEquipmentCategory(ctx, genec.UpdateEquipmentCategoryParams{
+	row, err := r.equipmentCategories.Update(ctx, genec.UpdateParams{
 		ID:   u.ID,
 		Name: u.Name,
 	})
@@ -93,7 +93,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*Eq
 // Delete removes the category. Returns database.ErrForeignKeyViolation when inventory
 // items are still assigned to the category.
 func (r *Repository) Delete(ctx context.Context, id string) error {
-	if err := r.equipmentCategories.DeleteEquipmentCategory(ctx, id); err != nil {
+	if err := r.equipmentCategories.Delete(ctx, id); err != nil {
 		return fmt.Errorf("Delete: %w", database.NormalizeError(err))
 	}
 	return nil
@@ -102,7 +102,7 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 func toModel(row genec.EquipmentCategory) EquipmentCategory {
 	return EquipmentCategory{
 		ID:        row.ID,
-		CompanyID: database.String(row.CompanyID),
+		CompanyID: row.CompanyID,
 		Name:      row.Name,
 	}
 }
