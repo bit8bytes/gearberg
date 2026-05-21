@@ -12,8 +12,14 @@ func NewContext(ctx context.Context, id string) context.Context {
 	return context.WithValue(ctx, key, id)
 }
 
-// FromContext returns the trace ID stored in ctx, or an empty string if none.
-func FromContext(ctx context.Context) string {
+// From returns the trace ID stored in ctx, or an empty string if none.
+func From(ctx context.Context) Trace {
 	v, _ := ctx.Value(key).(string)
-	return v
+	return Trace(v)
+}
+
+type Trace string
+
+func (t *Trace) String() string {
+	return string(*t)
 }

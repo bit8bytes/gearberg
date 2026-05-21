@@ -8,8 +8,8 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/bit8bytes/gearberg/internal/tokens"
 	"github.com/bit8bytes/gearberg/internal/trace"
-	"github.com/bit8bytes/gearberg/pkgs/tokens"
 )
 
 func withTrace(next http.Handler) http.Handler {
@@ -76,7 +76,7 @@ func (pr *panicRecoverer) handler(next http.Handler) http.Handler {
 					panicErr = fmt.Errorf("panic: %v", err)
 				}
 
-				traceID := trace.FromContext(r.Context())
+				traceID := trace.From(r.Context())
 
 				pr.logger.Error("recover from panic",
 					slog.String("type", "panic"),
@@ -85,7 +85,7 @@ func (pr *panicRecoverer) handler(next http.Handler) http.Handler {
 					slog.String("stack", string(stack)),
 					slog.String("method", r.Method),
 					slog.String("url", r.URL.String()),
-					slog.String("trace_id", traceID),
+					slog.String("trace_id", traceID.String()),
 					slog.String("remote_addr", r.RemoteAddr),
 					slog.String("user_agent", r.UserAgent()),
 				)

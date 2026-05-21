@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/bit8bytes/gearberg/internal/trace"
 	"github.com/bit8bytes/gearberg/templates/pages"
 )
 
@@ -17,6 +18,7 @@ type appError struct {
 	Error   error
 	Message string
 	Code    int
+	TraceID string
 }
 
 // appHandler is an http.HandlerFunc variant that returns an *appError instead of writing error
@@ -28,10 +30,13 @@ type appHandler func(http.ResponseWriter, *http.Request) *appError
 func (app *application) handleHTML(fn appHandler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(w, r); err != nil {
+			traceID := trace.From(r.Context())
+			err.TraceID = traceID.String()
 			app.logger.ErrorContext(r.Context(), "handler error",
 				slog.Int("status", err.Code),
 				slog.String("message", err.Message),
 				slog.Any("err", err.Error),
+				slog.String("trace_id", err.TraceID),
 			)
 			if renderErr := app.render(w, r, err.Code, pages.Error, err); renderErr != nil {
 				app.logger.ErrorContext(r.Context(), "render error page", slog.Any("err", renderErr.Error))
