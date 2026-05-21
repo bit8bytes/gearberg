@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/trace"
 	"github.com/bit8bytes/gearberg/templates/pages"
 )
@@ -103,6 +104,8 @@ type templateData struct {
 	// URL passes the current request URL with query parameters to the template.
 	// It is used for highlighting the active navigation path.
 	URL *url.URL
+	// Nonce is the per-request CSP nonce injected into script and style tags.
+	Nonce nonce.Nonce
 }
 
 // newTemplateData builds the base template data shared by every page: the request URL
@@ -110,6 +113,7 @@ type templateData struct {
 // and the binary revision (for cache-busting static assets).
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		URL: r.URL,
+		URL:   r.URL,
+		Nonce: nonce.From(r.Context()),
 	}
 }

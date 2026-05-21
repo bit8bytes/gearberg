@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/tokens"
 	"github.com/bit8bytes/gearberg/internal/trace"
 )
@@ -15,6 +16,13 @@ import (
 func withTrace(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := trace.NewContext(r.Context(), tokens.Generate().Hex())
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func withNonce(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := nonce.NewContext(r.Context(), tokens.Generate().Hex())
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -113,6 +121,21 @@ func withSecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-XSS-Protection", "0")
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000;")
+
+		nonceID := nonce.From(r.Context())
+		w.Header().Set("Content-Security-Policy", fmt.Sprintf(
+			"default-src 'self'; "+
+				"img-src 'self' data:;"+
+				"style-src 'nonce-%s'; "+
+				"script-src 'nonce-%s' 'strict-dynamic'; "+
+				"font-src 'self'; "+
+				"connect-src 'self'; "+
+				"form-action 'self'; "+
+				"frame-ancestors 'none'; "+
+				"object-src 'none'; "+
+				"base-uri 'self';",
+			nonceID, nonceID.String(),
+		))
 
 		next.ServeHTTP(w, r)
 	})

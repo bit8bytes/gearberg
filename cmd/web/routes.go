@@ -39,9 +39,10 @@ func (app *application) routes() http.Handler {
 	recoverPanic := newPanicRecoverer(app.logger)
 
 	return withTrace(
-		recoverPanic.handler(
-			logRequest.handler(
-				withSecurityHeaders(
-					withMaxBodySize(
-						antiCSRF.Handler(mux))))))
+		withNonce(
+			recoverPanic.handler(
+				logRequest.handler(
+					withSecurityHeaders(
+						withMaxBodySize(
+							antiCSRF.Handler(mux)))))))
 }
