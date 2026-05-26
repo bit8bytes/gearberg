@@ -15,7 +15,7 @@
   <ul class="flex flex-col divide-y divide-base-300 border border-base-300 rounded-box overflow-hidden">
     {{ range . }}
     <li>
-      <a href="/companies/{{ .ID }}/inventory" class="flex items-center gap-3 px-4 py-3 hover:bg-base-200 transition-colors">
+      <a href="/companies/{{ .ID }}/inventory" class="list-item-link">
         {{ template "companies-icon" . }}
         <span class="flex-1 font-medium">{{ .Name }}</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-base-content/40"><path d="m9 18 6-6-6-6"/></svg>

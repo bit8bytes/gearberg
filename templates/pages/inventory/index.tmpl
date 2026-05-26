@@ -25,18 +25,17 @@
 <div class="w-full bg-base-100 border-b border-base-200">
   {{ if ne (len .Data.Categories) 0 }}
   <div class="max-w-5xl mx-auto px-4 h-14 flex gap-1 items-center overflow-x-auto scrollbar-none">
-    <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}" class="btn rounded-full">+</a>
-    <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" class="flex items-center gap-1 flex-nowrap">
+    <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-nowrap">
       {{ range .Data.Categories }}
-      <input class="btn rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
-        {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
+      <input class="btn btn-sm rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
+      {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
       {{ end }}
       {{ if $.Data.SortBy }}
       <input type="hidden" name="sort" value="{{ $.Data.SortBy }}">
       <input type="hidden" name="dir" value="{{ $.Data.SortDir }}">
       {{ end }}
-      <button type="submit" class="btn rounded-full">{{ template "filter-icon" . }}Filter</button>
     </form>
+    <a  class="btn btn-sm btn-ghost rounded-full" href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}">+</a>
   </div>
   {{ end }}
 </div>
