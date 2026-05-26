@@ -33,6 +33,12 @@ buildpkgs.buildGoModule {
     CGO_ENABLED = "0";
   };
 
+  # After the build, we rename the binary to allow
+  # users to call it e.g. nix run github:bit8bytes/gearberg
+  postInstall = ''
+    mv $out/bin/web $out/bin/gearberg
+  '';
+
   doCheck = true;
   checkFlags = ["-short"];
 
