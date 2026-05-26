@@ -17,6 +17,7 @@ pkgs.mkShellNoCC {
     watchman
     golangci-lint
     go-licenses
+    git
   ];
   shellHook = ''
     echo "Welcome to the dev shell! All required tools are available."
