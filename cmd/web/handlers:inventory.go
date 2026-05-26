@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
@@ -69,15 +70,16 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		}
 	}
 
-	baseURL := "/companies/" + url.PathEscape(id) + "/inventory?"
+	var baseURL strings.Builder
+	baseURL.WriteString("/companies/" + url.PathEscape(id) + "/inventory?")
 	for i, c := range selectedCategories {
 		if i > 0 {
-			baseURL += "&"
+			baseURL.WriteString("&")
 		}
-		baseURL += "category=" + url.QueryEscape(c)
+		baseURL.WriteString("category=" + url.QueryEscape(c))
 	}
 	if len(selectedCategories) > 0 {
-		baseURL += "&"
+		baseURL.WriteString("&")
 	}
 
 	data := app.newTemplateData(r)
@@ -88,7 +90,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		Filtered:    len(selectedCategories) > 0,
 		SortBy:      sortBy,
 		SortDir:     sortDir,
-		SortBaseURL: template.URL(baseURL), // #nosec G203 — baseURL is built with url.PathEscape/url.QueryEscape
+		SortBaseURL: template.URL(baseURL.String()), // #nosec G203 — baseURL is built with url.PathEscape/url.QueryEscape
 	}
 	return app.render(w, r, http.StatusOK, pages.Inventory, data)
 }

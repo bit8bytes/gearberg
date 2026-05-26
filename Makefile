@@ -39,9 +39,14 @@ license:
 test:
 	go test -shuffle=on -short -tags sqlite -vet=off -race -timeout 15s -covermode=atomic -coverprofile=/tmp/profile.out ./...
 
+## fix: run go fix
+.PHONY: fix
+fix:
+	go fix ./...
+
 ## verify: run tests, linters, and verify dependencies
 .PHONY: verify
-verify: lint license test
+verify: fix lint license test
 	go mod verify
 
 ## sqlc: generate source code from SQL
