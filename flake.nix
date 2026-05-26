@@ -20,5 +20,13 @@
         pkgs = nixpkgs-unstable.legacyPackages.${system};
       };
     });
+
+    # Go binary built with Nix. Used by the systemd service in web.service.nix.
+    packages = forAllSystems (system: {
+      default = import ./nixos/web.nix {
+        buildpkgs = nixpkgs-unstable.legacyPackages.${system};
+        version = self.rev or self.dirtyRev or "dev";
+      };
+    });
   };
 }

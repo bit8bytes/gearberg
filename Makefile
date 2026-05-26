@@ -107,3 +107,13 @@ tailwind:
 .PHONY: tailwind/build
 tailwind/build:
 	tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --minify
+
+## nix/check: check if the Nix build works
+.PHONY: nix/check
+nix/check:
+	nix flake check --all-systems
+
+## nix/build: build the Go binary with Nix
+.PHONY: nix/build
+nix/build:
+	nix build
