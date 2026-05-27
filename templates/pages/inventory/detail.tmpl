@@ -7,7 +7,20 @@
     <a href="/companies/{{ .Data.CompanyID }}/inventory" class="btn">Back</a>
   </div>
 
-  <form method="POST" class="mt-4 flex flex-col gap-4" novalidate>
+  <form method="POST" enctype="multipart/form-data" class="mt-4 flex flex-col gap-4" novalidate>
+
+    <div class="flex flex-col gap-1">
+      <label>Photo</label>
+      <label for="image" class="cursor-pointer w-24 h-24 rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-image-preview>
+        {{ if and .Data.Item .Data.Item.ImageURL }}
+        <img class="w-full h-full object-cover" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
+        {{ else }}
+        {{ template "camera-icon" . }}
+        <img class="hidden w-full h-full object-cover" data-image-preview-img alt="Preview" />
+        {{ end }}
+      </label>
+      <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
+    </div>
 
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>

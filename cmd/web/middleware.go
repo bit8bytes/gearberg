@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/nonce"
+	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/tokens"
 	"github.com/bit8bytes/gearberg/internal/trace"
 )
@@ -109,6 +110,28 @@ func (pr *panicRecoverer) handler(next http.Handler) http.Handler {
 func withMaxBodySize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 32<<20)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// withCheckQuota gates the request on the company's storage quota. It extracts
+// company_id from the path and returns 507 Insufficient Storage when the quota
+// is already exhausted. Requests without a company_id are passed through.
+func (app *application) withCheckQuota(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		companyID := r.PathValue("company_id")
+		if companyID == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if err := app.services.storageManager.CheckQuota(r.Context(), companyID, 0); err != nil {
+			if errors.Is(err, storage.ErrStorageQuotaExceeded) {
+				http.Error(w, "Storage quota exceeded.", http.StatusInsufficientStorage)
+				return
+			}
+			http.Error(w, "Failed to check storage quota.", http.StatusInternalServerError)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

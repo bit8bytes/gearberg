@@ -7,6 +7,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies"
+	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
 )
@@ -87,8 +88,9 @@ func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request)
 }
 
 type settingsCompanyData struct {
-	Company   *companies.Company
-	CompanyID string
+	Company      *companies.Company
+	CompanyID    string
+	StorageUsage storage.Usage
 }
 
 func (app *application) getSettingsCompany(w http.ResponseWriter, r *http.Request) *appError {
@@ -104,9 +106,18 @@ func (app *application) getSettingsCompany(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	usage, err := app.services.storageManager.Info(ctx, id)
+	if err != nil {
+		return &appError{
+			Error:   err,
+			Message: "Failed to retrieve storage info.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
 	data := app.newTemplateData(r)
 	data.Form = &companies.Form{}
-	data.Data = settingsCompanyData{Company: company, CompanyID: id}
+	data.Data = settingsCompanyData{Company: company, CompanyID: id, StorageUsage: usage}
 	return app.render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
 }
 
@@ -146,9 +157,18 @@ func (app *application) postSettingsCompany(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
+	usage, err := app.services.storageManager.Info(ctx, id)
+	if err != nil {
+		return &appError{
+			Error:   err,
+			Message: "Failed to retrieve storage info.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
 	data := app.newTemplateData(r)
 	data.Form = &companies.Form{}
-	data.Data = settingsCompanyData{Company: company, CompanyID: id}
+	data.Data = settingsCompanyData{Company: company, CompanyID: id, StorageUsage: usage}
 	return app.render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
 }
 

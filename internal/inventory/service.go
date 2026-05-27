@@ -103,6 +103,14 @@ func (s *Service) Update(ctx context.Context, u UpdateInventory) (*Inventory, er
 	return item, nil
 }
 
+// SetImage links or unlinks a storage object from an inventory item.
+func (s *Service) SetImage(ctx context.Context, si SetImage) error {
+	if err := s.repo.SetImage(ctx, si); err != nil {
+		return fmt.Errorf("SetImage: %w", err)
+	}
+	return nil
+}
+
 // Delete removes an inventory item.
 func (s *Service) Delete(ctx context.Context, id string) error {
 	if err := s.repo.Delete(ctx, id); err != nil {

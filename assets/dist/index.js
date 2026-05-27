@@ -14,3 +14,21 @@ document.addEventListener("change", (e) => {
     form.submit();
   }
 });
+
+// In-place image preview
+// Trigger: <input data-image-input> inside a container with <label data-image-preview>
+document.addEventListener("change", (e) => {
+  const input = e.target.closest("[data-image-input]");
+  if (!input || !input.files[0]) return;
+  const preview = input.closest("form").querySelector("[data-image-preview]");
+  if (!preview) return;
+  const img = preview.querySelector("[data-image-preview-img]");
+  const placeholder = preview.querySelector("[data-image-placeholder]");
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    img.src = ev.target.result;
+    img.classList.remove("hidden");
+    if (placeholder) placeholder.classList.add("hidden");
+  };
+  reader.readAsDataURL(input.files[0]);
+});

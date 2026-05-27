@@ -99,7 +99,10 @@ func runServe(args []string) error {
 		}
 	}(db)
 
-	services := setupServices(db, options)
+	services, err := setupServices(db, options, log)
+	if err != nil {
+		return fmt.Errorf("setup services: %w", err)
+	}
 
 	app := &application{
 		logger:   log,

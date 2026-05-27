@@ -9,13 +9,15 @@ import (
 )
 
 type options struct {
-	Version       bool
-	LogLevel      logLevel
-	Port          int
-	TLSMode       string
-	DbDsn         string // SECRET
-	MaxCompanies  int
-	MaxCategories int
+	Version         bool
+	LogLevel        logLevel
+	Port            int
+	TLSMode         string
+	DbDsn           string // SECRET
+	StorageDSN      string
+	MaxCompanies    int
+	MaxCategories   int
+	MaxStorageBytes int64
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
@@ -33,6 +35,8 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.IntVar(&cfg.MaxCompanies, "max-companies", 1, "maximum number of companies allowed")
 	fs.IntVar(&cfg.MaxCategories, "max-categories", 25, "maximum number of equipment categories per company")
+	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
+	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per company (default 1 GiB)")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
@@ -51,6 +55,9 @@ func parseServeOptions(args []string) (*options, error) {
 		}
 	}
 
+	if cfg.StorageDSN == "" {
+		return nil, fmt.Errorf("storage-dsn is required")
+	}
 	if cfg.MaxCompanies <= 0 {
 		return nil, fmt.Errorf("max companies must be greater than 0")
 	}
@@ -126,7 +133,7 @@ func (l logLevel) Level() slog.Level {
 
 // envOr returns the value of the environment variable key, or fallback if not set.
 func envOr(key, fallback string) string {
-	if v, ok := os.LookupEnv(key); ok {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
 		return v
 	}
 	return fallback

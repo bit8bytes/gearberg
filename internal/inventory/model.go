@@ -3,18 +3,20 @@ package inventory
 
 // Inventory represents a single inventory item.
 type Inventory struct {
-	ID             string
-	CompanyID      string
-	Name           string
-	CategoryID     string
-	CategoryName   string
-	ManufacturerID string
-	TotalStock     int64
-	PurchasePrice  *float64
-	RentalPrice    *float64
-	Notes          string
-	CreatedAt      int64
-	UpdatedAt      int64
+	ID              string
+	CompanyID       string
+	Name            string
+	CategoryID      string
+	CategoryName    string
+	ManufacturerID  string
+	StorageObjectID *string
+	ImageURL        string
+	TotalStock      int64
+	PurchasePrice   *float64
+	RentalPrice     *float64
+	Notes           string
+	CreatedAt       int64
+	UpdatedAt       int64
 }
 
 // CreateInventory holds the data required to create a new inventory item.
@@ -38,4 +40,10 @@ type UpdateInventory struct {
 	PurchasePrice *float64
 	RentalPrice   *float64
 	Notes         string
+}
+
+// SetImage links or unlinks a storage object from an inventory item.
+type SetImage struct {
+	ID              string
+	StorageObjectID *string
 }

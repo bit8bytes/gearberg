@@ -44,6 +44,7 @@
   <table class="table w-full">
     <thead>
       <tr>
+        <th></th>
         <th>
           {{ if eq .Data.SortBy "name" }}{{ if eq .Data.SortDir "desc" }}
           <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=asc" class="link link-hover">NAME ↓</a>
@@ -76,7 +77,14 @@
     <tbody>
       {{ range .Data.Inventories }}
       <tr>
-        <td><a href="/companies/{{ $.Data.CompanyID }}/inventory/{{ .ID }}" class="link link-hover">{{ .Name }}</a></td>
+        <td class="w-16 items-center">
+          <div class="w-12 h-12 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
+            {{ if .ImageURL }}
+            <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-cover" />
+            {{ end }}
+          </div>
+        </td>
+        <td class="w-1/2"><a href="/companies/{{ $.Data.CompanyID }}/inventory/{{ .ID }}" class="link link-hover">{{ .Name }}</a></td>
         <td><a href="/companies/{{ $.Data.CompanyID }}/settings/equipment-categories/{{ .CategoryID }}?return_to={{ $.URL.Path }}" class="link link-hover">{{ .CategoryName }}</a></td>
         <td>{{ .TotalStock }}</td>
       </tr>

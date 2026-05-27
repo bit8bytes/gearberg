@@ -2,6 +2,7 @@ package inventory
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,26 +10,36 @@ import (
 	"github.com/bit8bytes/toolbox/validator"
 )
 
+const maxUploadBytes = 10 << 20 // 10 MiB
+
 // Form holds the parsed form input and validation state for inventory create/update requests.
 type Form struct {
-	Name       string
-	CategoryID string
-	TotalStock string
-	Notes      string
+	Name        string
+	CategoryID  string
+	TotalStock  string
+	Notes       string
+	Image       multipart.File // nil when no file was uploaded
+	ImageHeader *multipart.FileHeader
 	validator.Validator
 }
 
-// Parse reads the inventory form fields from r.
+// Parse reads the inventory form fields from r, including an optional image upload.
 func Parse(r *http.Request) (Form, error) {
-	if err := r.ParseForm(); err != nil {
+	if err := r.ParseMultipartForm(maxUploadBytes); err != nil { //nolint:gosec // maxUploadBytes is a bounded constant (10 MiB)
 		return Form{}, fmt.Errorf("parse form: %w", err)
 	}
-	return Form{
+	f := Form{
 		Name:       strings.TrimSpace(r.PostForm.Get("name")),
 		CategoryID: strings.TrimSpace(r.PostForm.Get("category_id")),
 		TotalStock: strings.TrimSpace(r.PostForm.Get("total_stock")),
 		Notes:      strings.TrimSpace(r.PostForm.Get("notes")),
-	}, nil
+	}
+	file, header, err := r.FormFile("image")
+	if err == nil {
+		f.Image = file
+		f.ImageHeader = header
+	}
+	return f, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.

@@ -10,6 +10,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /{$}", http.RedirectHandler("/companies", http.StatusSeeOther))
+	mux.HandleFunc("GET /media/{id}", app.handleHTML(app.getMedia))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
@@ -21,9 +22,9 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /companies/{company_id}/delete", app.handleHTML(app.postDeleteCompany))
 	mux.HandleFunc("GET /companies/{company_id}/inventory", app.handleHTML(app.getInventory))
 	mux.HandleFunc("GET /companies/{company_id}/inventory/new", app.handleHTML(app.getInventoryNew))
-	mux.HandleFunc("POST /companies/{company_id}/inventory/new", app.handleHTML(app.postInventoryNew))
+	mux.Handle("POST /companies/{company_id}/inventory/new", app.withCheckQuota(app.handleHTML(app.postInventoryNew)))
 	mux.HandleFunc("GET /companies/{company_id}/inventory/{id}", app.handleHTML(app.getInventoryItem))
-	mux.HandleFunc("POST /companies/{company_id}/inventory/{id}", app.handleHTML(app.postInventoryItem))
+	mux.Handle("POST /companies/{company_id}/inventory/{id}", app.withCheckQuota(app.handleHTML(app.postInventoryItem)))
 	mux.HandleFunc("POST /companies/{company_id}/inventory/{id}/delete", app.handleHTML(app.postDeleteInventoryItem))
 	mux.HandleFunc("GET /companies/{company_id}/settings", app.handleHTML(app.getCompanySettings))
 	mux.HandleFunc("POST /companies/{company_id}/settings", app.handleHTML(app.postCompanySettings))

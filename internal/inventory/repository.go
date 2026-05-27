@@ -56,19 +56,31 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
 	m := Inventory{
-		ID:             row.ID,
-		CompanyID:      row.CompanyID,
-		Name:           row.Name,
-		CategoryID:     row.CategoryID,
-		ManufacturerID: database.String(row.ManufacturerID),
-		TotalStock:     row.TotalStock,
-		PurchasePrice:  database.Float64Ptr(row.PurchasePrice),
-		RentalPrice:    database.Float64Ptr(row.RentalPrice),
-		Notes:          database.String(row.Notes),
-		CreatedAt:      row.CreatedAt,
-		UpdatedAt:      row.UpdatedAt,
+		ID:              row.ID,
+		CompanyID:       row.CompanyID,
+		Name:            row.Name,
+		CategoryID:      row.CategoryID,
+		ManufacturerID:  database.String(row.ManufacturerID),
+		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		TotalStock:      row.TotalStock,
+		PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
+		RentalPrice:     database.Float64Ptr(row.RentalPrice),
+		Notes:           database.String(row.Notes),
+		CreatedAt:       row.CreatedAt,
+		UpdatedAt:       row.UpdatedAt,
 	}
 	return &m, nil
+}
+
+// SetImage links or unlinks a storage object from an inventory item.
+func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
+	if err := r.inventory.UpdateStorageObject(ctx, geninv.UpdateStorageObjectParams{
+		ID:              s.ID,
+		StorageObjectID: database.NullString(s.StorageObjectID),
+	}); err != nil {
+		return fmt.Errorf("SetImage: %w", err)
+	}
+	return nil
 }
 
 // Create inserts a new inventory item.
@@ -87,16 +99,17 @@ func (r *Repository) Create(ctx context.Context, c CreateInventory) (*Inventory,
 		return nil, fmt.Errorf("Create: %w", database.NormalizeError(err))
 	}
 	m := Inventory{
-		ID:             row.ID,
-		CompanyID:      row.CompanyID,
-		Name:           row.Name,
-		CategoryID:     row.CategoryID,
-		ManufacturerID: database.String(row.ManufacturerID),
-		TotalStock:     row.TotalStock,
-		PurchasePrice:  database.Float64Ptr(row.PurchasePrice),
-		RentalPrice:    database.Float64Ptr(row.RentalPrice),
-		Notes:          database.String(row.Notes),
-		CreatedAt:      row.CreatedAt,
+		ID:              row.ID,
+		CompanyID:       row.CompanyID,
+		Name:            row.Name,
+		CategoryID:      row.CategoryID,
+		ManufacturerID:  database.String(row.ManufacturerID),
+		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		TotalStock:      row.TotalStock,
+		PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
+		RentalPrice:     database.Float64Ptr(row.RentalPrice),
+		Notes:           database.String(row.Notes),
+		CreatedAt:       row.CreatedAt,
 	}
 	return &m, nil
 }
@@ -116,17 +129,18 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 		return nil, fmt.Errorf("Update: %w", database.NormalizeError(err))
 	}
 	m := Inventory{
-		ID:             row.ID,
-		CompanyID:      row.CompanyID,
-		Name:           row.Name,
-		CategoryID:     row.CategoryID,
-		ManufacturerID: database.String(row.ManufacturerID),
-		TotalStock:     row.TotalStock,
-		PurchasePrice:  database.Float64Ptr(row.PurchasePrice),
-		RentalPrice:    database.Float64Ptr(row.RentalPrice),
-		Notes:          database.String(row.Notes),
-		CreatedAt:      row.CreatedAt,
-		UpdatedAt:      row.UpdatedAt,
+		ID:              row.ID,
+		CompanyID:       row.CompanyID,
+		Name:            row.Name,
+		CategoryID:      row.CategoryID,
+		ManufacturerID:  database.String(row.ManufacturerID),
+		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		TotalStock:      row.TotalStock,
+		PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
+		RentalPrice:     database.Float64Ptr(row.RentalPrice),
+		Notes:           database.String(row.Notes),
+		CreatedAt:       row.CreatedAt,
+		UpdatedAt:       row.UpdatedAt,
 	}
 	return &m, nil
 }
@@ -142,17 +156,18 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 
 func toListModel(row geninv.GetByCompanyIDRow) Inventory {
 	return Inventory{
-		ID:             row.ID,
-		CompanyID:      row.CompanyID,
-		Name:           row.Name,
-		CategoryID:     row.CategoryID,
-		CategoryName:   row.CategoryName,
-		ManufacturerID: database.String(row.ManufacturerID),
-		TotalStock:     row.TotalStock,
-		PurchasePrice:  database.Float64Ptr(row.PurchasePrice),
-		RentalPrice:    database.Float64Ptr(row.RentalPrice),
-		Notes:          database.String(row.Notes),
-		CreatedAt:      row.CreatedAt,
-		UpdatedAt:      row.UpdatedAt,
+		ID:              row.ID,
+		CompanyID:       row.CompanyID,
+		Name:            row.Name,
+		CategoryID:      row.CategoryID,
+		CategoryName:    row.CategoryName,
+		ManufacturerID:  database.String(row.ManufacturerID),
+		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		TotalStock:      row.TotalStock,
+		PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
+		RentalPrice:     database.Float64Ptr(row.RentalPrice),
+		Notes:           database.String(row.Notes),
+		CreatedAt:       row.CreatedAt,
+		UpdatedAt:       row.UpdatedAt,
 	}
 }
