@@ -40,3 +40,13 @@ sql:
         out: "database/queries/gen/inventory"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "database/queries/sqlite/storage.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "storage"
+        out: "database/queries/gen/storage"
+        emit_interface: true
+        omit_unused_structs: true

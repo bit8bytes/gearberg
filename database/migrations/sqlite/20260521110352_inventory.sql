@@ -6,7 +6,7 @@ CREATE TABLE inventory (
   category_id TEXT NOT NULL REFERENCES equipment_categories(id) ON DELETE RESTRICT,
   manufacturer_id TEXT REFERENCES manufacturers(id) ON DELETE RESTRICT,
   name TEXT NOT NULL,
-  image_key TEXT,
+  storage_object_id TEXT DEFAULT NULL REFERENCES storage_objects(id) ON DELETE SET NULL,
   total_stock INTEGER NOT NULL DEFAULT 1,
   purchase_price REAL,
   rental_price REAL,

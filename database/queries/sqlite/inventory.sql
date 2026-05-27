@@ -29,6 +29,7 @@ INSERT INTO inventory (
     name,
     category_id,
     manufacturer_id,
+    storage_object_id,
     total_stock,
     purchase_price,
     rental_price,
@@ -43,6 +44,7 @@ SELECT
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
+    i.storage_object_id,
     i.total_stock,
     i.purchase_price,
     i.rental_price,
@@ -60,6 +62,7 @@ SELECT
     name,
     category_id,
     manufacturer_id,
+    storage_object_id,
     total_stock,
     purchase_price,
     rental_price,
@@ -87,12 +90,18 @@ RETURNING
     name,
     category_id,
     manufacturer_id,
+    storage_object_id,
     total_stock,
     purchase_price,
     rental_price,
     notes,
     updated_at,
     created_at;
+
+-- name: UpdateStorageObject :exec
+UPDATE inventory
+SET storage_object_id = sqlc.arg(storage_object_id)
+WHERE id = sqlc.arg(id);
 
 -- name: Delete :exec
 DELETE FROM inventory
