@@ -4,8 +4,8 @@
 {{ define "page" }}
 <div class="text-center">
   <h1>Error</h1>
-  <p>{{ if .Message }}{{ .Message }}{{ else }}Something went wrong. Please try again later.{{ end }}</p>
-  {{ if .TraceID }}<p class="text-muted"><small>Trace ID: {{ .TraceID }}</small></p>{{ end }}
+  <p>{{ if .Data.Message }}{{ .Data.Message }}{{ else }}Something went wrong. Please try again later.{{ end }}</p>
+  {{ if .Data.TraceID }}<p class="text-muted"><small>Trace ID: {{ .Data.TraceID }}</small></p>{{ end }}
   <br>
   <a href="/" class="btn btn-primary">Go to Home</a>
 </div>

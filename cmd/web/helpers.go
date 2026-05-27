@@ -39,7 +39,9 @@ func (app *application) handleHTML(fn appHandler) http.HandlerFunc {
 				slog.Any("err", err.Error),
 				slog.String("trace_id", err.TraceID),
 			)
-			if renderErr := app.render(w, r, err.Code, pages.Error, err); renderErr != nil {
+			errData := app.newTemplateData(r)
+			errData.Data = err
+			if renderErr := app.render(w, r, err.Code, pages.Error, errData); renderErr != nil {
 				app.logger.ErrorContext(r.Context(), "render error page", slog.Any("err", renderErr.Error))
 				http.Error(w, err.Message, err.Code)
 			}
