@@ -30,55 +30,55 @@ The first increment comes without login because the software will be self-hosted
 | M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
 | M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
 
-### Milestone 2: Rentals
+### Milestone 2: Import & Export
 
 | ID | Name |
 | - | - |
-| M2.1 | A user can create, update, and delete customers |
-| M2.2 | A user can view customers in a list |
-| M2.3 | A user can view a single customer in detail |
-| M2.4 | A user can view the rental history of a customer |
-| M2.5 | A user can start (create) a draft rental for an existing customer |
-| M2.6 | A user can add or remove inventory items from a draft rental |
-| M2.7 | A user can increase or decrease the quantity of an item in a draft rental |
-| M2.8 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
-| M2.9 | A user can set a checkout date and expected return date on a draft rental |
-| M2.10 | A user can finalize a draft rental (transitions to active) |
-| M2.11 | A user can mark an active rental as returned (sets return date, transitions to returned) |
-| M2.12 | A user can update or delete a draft rental |
-| M2.13 | A user can view all rentals in a list |
-| M2.14 | A user can filter rentals by status (draft, active, returned) |
-| M2.15 | A user can view overdue rentals (active rentals past their expected return date) |
-| M2.16 | A user can view a single rental in detail |
-| M2.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440) x (1 - discount_rate)`) |
-| M2.18 | A user can view the total net cost of a rental and the total including VAT (rate from company settings) as a display-only line |
-| M2.19 | A user cannot delete a customer that has draft or active rentals |
-| M2.20 | A user can generate an invoice for an active rental |
-| M2.21 | A user can see previously generated invoices of customers on the customer detail page (see M2.3) |
-| M2.22 | A user can generate a quote for a draft rental |
-| M2.23 | A user can enter a discount (in %) when generating an invoice or quote |
+| M2.1 | A user can import new inventory items using CSV |
+| M2.2 | A user can export all inventory items using CSV |
+| M2.3 | A user can export all rentals using CSV |
+| M2.4 | A user can export all customers using CSV |
+| M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser |
 
-### Milestone 3: Import & Export
+### Milestone 3: Login
 
 | ID | Name |
 | - | - |
-| M3.1 | A user can import new inventory items using CSV |
-| M3.2 | A user can export all inventory items using CSV |
-| M3.3 | A user can export all rentals using CSV |
-| M3.4 | A user can export all customers using CSV |
-| M3.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser |
+| M3.1 | A server operator can create a user with `gearberg admin create-user --email=<email> --password=<password>` |
+| M3.2 | A server operator can reset any user's password with `gearberg admin reset-password --email=<email> --password=<password>` |
+| M3.3 | A user can log in with email and password |
+| M3.4 | A user can log out |
+| M3.5 | A user can change their own password |
+| M3.6 | An unauthenticated user is redirected to the login page |
+| M3.7 | When started with `gearberg serve --no-auth`, the server skips authentication and all routes are accessible without login |
 
-### Milestone 4: Login
+### Milestone 4: Rentals
 
 | ID | Name |
 | - | - |
-| M4.1 | A server operator can create a user with `gearberg admin create-user --email=<email> --password=<password>` |
-| M4.2 | A server operator can reset any user's password with `gearberg admin reset-password --email=<email> --password=<password>` |
-| M4.3 | A user can log in with email and password |
-| M4.4 | A user can log out |
-| M4.5 | A user can change their own password |
-| M4.6 | An unauthenticated user is redirected to the login page |
-| M4.7 | When started with `gearberg serve --no-auth`, the server skips authentication and all routes are accessible without login |
+| M4.1 | A user can create, update, and delete customers |
+| M4.2 | A user can view customers in a list |
+| M4.3 | A user can view a single customer in detail |
+| M4.4 | A user can view the rental history of a customer |
+| M4.5 | A user can start (create) a draft rental for an existing customer |
+| M4.6 | A user can add or remove inventory items from a draft rental |
+| M4.7 | A user can increase or decrease the quantity of an item in a draft rental |
+| M4.8 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
+| M4.9 | A user can set a checkout date and expected return date on a draft rental |
+| M4.10 | A user can finalize a draft rental (transitions to active) |
+| M4.11 | A user can mark an active rental as returned (sets return date, transitions to returned) |
+| M4.12 | A user can update or delete a draft rental |
+| M4.13 | A user can view all rentals in a list |
+| M4.14 | A user can filter rentals by status (draft, active, returned) |
+| M4.15 | A user can view overdue rentals (active rentals past their expected return date) |
+| M4.16 | A user can view a single rental in detail |
+| M4.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440) x (1 - discount_rate)`) |
+| M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from company settings) as a display-only line |
+| M4.19 | A user cannot delete a customer that has draft or active rentals |
+| M4.20 | A user can generate an invoice for an active rental |
+| M4.21 | A user can see previously generated invoices of customers on the customer detail page (see M4.3) |
+| M4.22 | A user can generate a quote for a draft rental |
+| M4.23 | A user can enter a discount (in %) when generating an invoice or quote |
 
 
 ## Product Data
