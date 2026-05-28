@@ -23,6 +23,7 @@ type inventoryData struct {
 	Categories  []categories.EquipmentCategory
 	Inventories []inventory.Inventory
 	Filtered    bool
+	Query       string
 	SortBy      string
 	SortDir     string
 	SortBaseURL template.URL
@@ -62,10 +63,11 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 	}
 
 	selectedCategories := r.URL.Query()["category"]
+	q := r.URL.Query().Get("q")
 
 	sortBy, sortDir := parseSortParams(r.URL.Query())
 
-	items, err := app.services.inventory.GetFiltered(ctx, id, selectedCategories, sortBy, sortDir)
+	items, err := app.services.inventory.GetFiltered(ctx, id, selectedCategories, sortBy, sortDir, q)
 	if err != nil {
 		return &appError{
 			Error:   err,
@@ -91,13 +93,17 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 	if len(selectedCategories) > 0 {
 		baseURL.WriteString("&")
 	}
+	if q != "" {
+		baseURL.WriteString("q=" + url.QueryEscape(q) + "&")
+	}
 
 	data := app.newTemplateData(r)
 	data.Data = inventoryData{
 		CompanyID:   id,
 		Categories:  cats,
 		Inventories: items,
-		Filtered:    len(selectedCategories) > 0,
+		Filtered:    len(selectedCategories) > 0 || q != "",
+		Query:       q,
 		SortBy:      sortBy,
 		SortDir:     sortDir,
 		SortBaseURL: template.URL(baseURL.String()), // #nosec G203 — baseURL is built with url.PathEscape/url.QueryEscape

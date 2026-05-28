@@ -33,15 +33,33 @@ func (r *Repository) Count(ctx context.Context, companyID string) (int64, error)
 	return n, nil
 }
 
-// GetByCompanyID returns all inventory items belonging to companyID.
-func (r *Repository) GetByCompanyID(ctx context.Context, companyID string) ([]Inventory, error) {
-	rows, err := r.inventory.GetByCompanyID(ctx, companyID)
+// List returns inventory items for companyID. When query is non-empty, only items
+// whose name contains query (case-insensitive) are returned.
+func (r *Repository) List(ctx context.Context, companyID, query string) ([]Inventory, error) {
+	rows, err := r.inventory.ListByCompanyID(ctx, geninv.ListByCompanyIDParams{
+		CompanyID: companyID,
+		Query:     query,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("GetByCompanyID: %w", err)
+		return nil, fmt.Errorf("List: %w", err)
 	}
 	result := make([]Inventory, len(rows))
 	for i, row := range rows {
-		result[i] = toListModel(row)
+		result[i] = Inventory{
+			ID:              row.ID,
+			CompanyID:       row.CompanyID,
+			Name:            row.Name,
+			CategoryID:      row.CategoryID,
+			CategoryName:    row.CategoryName,
+			ManufacturerID:  database.String(row.ManufacturerID),
+			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			TotalStock:      row.TotalStock,
+			PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
+			RentalPrice:     database.Float64Ptr(row.RentalPrice),
+			Notes:           database.String(row.Notes),
+			CreatedAt:       row.CreatedAt,
+			UpdatedAt:       row.UpdatedAt,
+		}
 	}
 	return result, nil
 }
@@ -152,22 +170,4 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("Delete: %w", database.NormalizeError(err))
 	}
 	return nil
-}
-
-func toListModel(row geninv.GetByCompanyIDRow) Inventory {
-	return Inventory{
-		ID:              row.ID,
-		CompanyID:       row.CompanyID,
-		Name:            row.Name,
-		CategoryID:      row.CategoryID,
-		CategoryName:    row.CategoryName,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Float64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
-	}
 }

@@ -23,9 +23,12 @@
   </div>
 </div>
 <div class="w-full bg-base-100 border-b border-base-200">
-  {{ if ne (len .Data.Categories) 0 }}
   <div class="max-w-5xl mx-auto px-4 h-14 flex gap-1 items-center overflow-x-auto scrollbar-none">
     <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-nowrap">
+      <label class="input input-sm">
+        <span class="flex text-secondary opacity-50 [&>svg]:w-4 [&>svg]:h-4">{{ template "search-icon" . }}</span>
+        <input type="search" name="q" placeholder="Search" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
+      </label>
       {{ range .Data.Categories }}
       <input class="btn btn-sm rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
       {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
@@ -35,9 +38,10 @@
       <input type="hidden" name="dir" value="{{ $.Data.SortDir }}">
       {{ end }}
     </form>
-    <a  class="btn btn-sm btn-ghost rounded-full" href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}">+</a>
+    {{ if ne (len .Data.Categories) 0 }}
+    <a class="btn btn-sm btn-ghost rounded-full" href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}">+</a>
+    {{ end }}
   </div>
-  {{ end }}
 </div>
 <div class="max-w-5xl w-full mx-auto">
   {{ if .Data.Inventories }}
@@ -95,6 +99,8 @@
   <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
     {{ if eq (len .Data.Categories) 0 }}
       <p class="text-sm">No items yet. <a href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ .URL.Path }}" class="link">Create a category</a> to get started.</p>
+    {{ else if .Data.Query }}
+      <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
     {{ else if .Data.Filtered }}
       <p class="text-sm">No items found for the selected categories.</p>
     {{ else }}

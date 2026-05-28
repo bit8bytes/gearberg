@@ -36,7 +36,7 @@ INSERT INTO inventory (
     notes,
     created_at;
 
--- name: GetByCompanyID :many
+-- name: ListByCompanyID :many
 SELECT
     i.id,
     i.company_id,
@@ -53,7 +53,7 @@ SELECT
     i.created_at
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
-WHERE i.company_id = ?;
+WHERE i.company_id = ? AND (sqlc.arg(query) = '' OR i.name LIKE '%' || sqlc.arg(query) || '%');
 
 -- name: GetByID :one
 SELECT

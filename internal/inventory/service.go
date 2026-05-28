@@ -26,20 +26,13 @@ func NewService(repo *Repository, cats CategoryLister) *Service {
 	return &Service{repo: repo, categories: cats}
 }
 
-// GetAll returns all inventory items for companyID.
-func (s *Service) GetAll(ctx context.Context, companyID string) ([]Inventory, error) {
-	items, err := s.repo.GetByCompanyID(ctx, companyID)
-	if err != nil {
-		return nil, fmt.Errorf("GetAll: %w", err)
-	}
-	return items, nil
-}
-
 // GetFiltered returns inventory items for companyID, narrowed to the given
 // category names and sorted by sortBy ("name", "category", "stock") in sortDir
-// ("asc", "desc"). Empty values leave results unfiltered / in DB order.
-func (s *Service) GetFiltered(ctx context.Context, companyID string, categoryNames []string, sortBy, sortDir string) ([]Inventory, error) {
-	items, err := s.repo.GetByCompanyID(ctx, companyID)
+// ("asc", "desc"). When query is non-empty, only items whose name contains the
+// query string (case-insensitive) are returned. Empty values leave results
+// unfiltered / in DB order.
+func (s *Service) GetFiltered(ctx context.Context, companyID string, categoryNames []string, sortBy, sortDir, query string) ([]Inventory, error) {
+	items, err := s.repo.List(ctx, companyID, query)
 	if err != nil {
 		return nil, fmt.Errorf("GetFiltered: %w", err)
 	}
