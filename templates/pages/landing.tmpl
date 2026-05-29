@@ -85,12 +85,13 @@
         <div class="card-body">
           <h3 class="card-title text-xl text-primary font-bold">
             {{ template "open-source-icon" . }}
-            Open Source
+            Open Source.
           </h3>
-          <p>Licensed under AGPL v3. Self-host it, audit it, contribute to it. No vendor lock-in, no hidden fees.</p>
-          <div class="card-actions mt-2">
-            <a href="https://github.com/bit8bytes/gearberg" class="btn btn-sm btn-outline" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-          </div>
+          <p>Licensed under AGPL v3. 
+            Self-host it, audit it, contribute to it. 
+            No vendor lock-in, no hidden fees.
+            <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a>
+          </p>
         </div>
       </div>
 
@@ -221,8 +222,15 @@
 </main>
 
 {{/* Footer */}}
-<footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
-  <p>Copyright &copy; {{ .Data.Year }} Gearberg &mdash; Licensed under <a href="https://github.com/bit8bytes/gearberg" class="link" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
+<footer class="footer footer-horizontal footer-center bg-base-200 text-base-content rounded p-10">
+  <nav class="grid grid-flow-col gap-4">
+    <a href="mailto:gleiter.tobias@outlook.de" class="link link-hover">Contact</a>
+    <a href="/imprint" class="link link-hover">Imprint</a>
+    <a href="/privacy" class="link link-hover">Privacy Policy</a>
+  </nav>
+  <aside>
+    <p>Copyright &copy; {{ .Data.Year }} Gearberg &mdash; Licensed under <a href="https://github.com/bit8bytes/gearberg" class="link" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
+  </aside>
 </footer>
 
 {{/* Scroll to top */}}

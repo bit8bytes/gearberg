@@ -21,6 +21,8 @@ func (app *application) routes() http.Handler {
 	})
 
 	mux.HandleFunc("/", app.handleHTML(app.getLanding))
+	mux.HandleFunc("GET /imprint", app.handleHTML(app.getImprint))
+	mux.HandleFunc("GET /privacy", app.handleHTML(app.getPrivacy))
 
 	antiCSRF := http.NewCrossOriginProtection()
 	logRequest := newRequestLogger(app.logger)
@@ -43,4 +45,12 @@ func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *appE
 		Year: time.Now().Year(),
 	}
 	return app.render(w, r, http.StatusOK, pages.Landing, data)
+}
+
+func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *appError {
+	return app.render(w, r, http.StatusOK, pages.Imprint, app.newTemplateData(r))
+}
+
+func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *appError {
+	return app.render(w, r, http.StatusOK, pages.Privacy, app.newTemplateData(r))
 }

@@ -61,6 +61,12 @@ var (
 	// InventoryDetail is the item detail/edit page.
 	InventoryDetail = newPage("pages/inventory/detail.tmpl", layouts.Center)
 
+	// Imprint is the legal imprint page.
+	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
+
+	// Privacy is the privacy policy page.
+	Privacy = newPage("pages/privacy.tmpl", layouts.Landing)
+
 	// NotFound is the 404 page.
 	NotFound = newPage("pages/not-found.tmpl", layouts.Center)
 
