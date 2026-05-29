@@ -8,6 +8,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	geninv "github.com/bit8bytes/gearberg/database/queries/gen/inventory"
+	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
 // Repository provides data access for inventory items.
@@ -33,19 +34,26 @@ func (r *Repository) Count(ctx context.Context, companyID string) (int64, error)
 	return n, nil
 }
 
-// List returns inventory items for companyID. When query is non-empty, only items
-// whose name contains query (case-insensitive) are returned.
-func (r *Repository) List(ctx context.Context, companyID, query string) ([]Inventory, error) {
-	rows, err := r.inventory.ListByCompanyID(ctx, geninv.ListByCompanyIDParams{
-		CompanyID: companyID,
-		Query:     query,
+// List returns a page of inventory items for companyID. When query is non-empty, only
+// items whose name contains query (case-insensitive) are returned. When category is
+// non-empty, only items in that category are returned. Returns total matching count.
+func (r *Repository) List(ctx context.Context, companyID, query, category string, f pagination.Filters) ([]Inventory, int, error) {
+	rows, err := r.inventory.List(ctx, geninv.ListParams{
+		CompanyID:  companyID,
+		NameQuery:  query,
+		Category:   category,
+		PageOffset: int64(f.Offset()),
+		PageLimit:  int64(f.Limit()),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("List: %w", err)
+		return nil, 0, fmt.Errorf("List: %w", err)
 	}
-	result := make([]Inventory, len(rows))
-	for i, row := range rows {
-		result[i] = Inventory{
+
+	var totalRecords int64
+	items := make([]Inventory, 0, len(rows))
+	for _, row := range rows {
+		totalRecords = row.TotalRecords
+		items = append(items, Inventory{
 			ID:              row.ID,
 			CompanyID:       row.CompanyID,
 			Name:            row.Name,
@@ -57,11 +65,11 @@ func (r *Repository) List(ctx context.Context, companyID, query string) ([]Inven
 			PurchasePrice:   database.Float64Ptr(row.PurchasePrice),
 			RentalPrice:     database.Float64Ptr(row.RentalPrice),
 			Notes:           database.String(row.Notes),
-			CreatedAt:       row.CreatedAt,
 			UpdatedAt:       row.UpdatedAt,
-		}
+			CreatedAt:       row.CreatedAt,
+		})
 	}
-	return result, nil
+	return items, int(totalRecords), nil
 }
 
 // GetByID returns the inventory item with id, or database.ErrNotFound when it does not exist.

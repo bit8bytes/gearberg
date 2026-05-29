@@ -6,7 +6,7 @@
     <div>
       <h3>All Items</h3>
       <div>
-        <span>{{ len .Data.Inventories }} items</span>
+        <span>{{ .Data.Pagination.TotalRecords }} items</span>
         •
         <span>{{ len .Data.Categories }} categories</span>
       </div>
@@ -25,57 +25,31 @@
 <div class="w-full bg-base-100 border-b border-base-200">
   <div class="max-w-5xl mx-auto px-4 h-14 flex gap-1 items-center overflow-x-auto scrollbar-none">
     <form method="get" action="/companies/{{ .Data.CompanyID }}/inventory" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-nowrap">
-      <label class="input input-sm">
+      <label class="input input-sm w-xs shrink-0">
         <span class="flex text-secondary opacity-50 [&>svg]:w-4 [&>svg]:h-4">{{ template "search-icon" . }}</span>
         <input type="search" name="q" placeholder="Search" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
       </label>
-      {{ range .Data.Categories }}
-      <input class="btn btn-sm rounded-full" type="checkbox" name="category" value="{{ .Name }}" aria-label="{{ .Name }}"
-      {{ if inQuery ($.URL.Query) "category" .Name }}checked{{ end }}/>
-      {{ end }}
-      {{ if $.Data.SortBy }}
-      <input type="hidden" name="sort" value="{{ $.Data.SortBy }}">
-      <input type="hidden" name="dir" value="{{ $.Data.SortDir }}">
-      {{ end }}
+      <select name="category" class="select select-sm">
+        <option value="">All categories</option>
+        {{ range .Data.Categories }}
+        <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
+        {{ end }}
+      </select>
     </form>
     {{ if ne (len .Data.Categories) 0 }}
     <a class="btn btn-sm btn-ghost rounded-full" href="/companies/{{ .Data.CompanyID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}">+</a>
     {{ end }}
   </div>
 </div>
-<div class="max-w-5xl w-full mx-auto">
+<div class="max-w-5xl w-full mx-auto mb-16">
   {{ if .Data.Inventories }}
   <table class="table w-full">
     <thead>
       <tr>
         <th></th>
-        <th>
-          {{ if eq .Data.SortBy "name" }}{{ if eq .Data.SortDir "desc" }}
-          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=asc" class="link link-hover">NAME ↓</a>
-          {{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=desc" class="link link-hover">NAME ↑</a>
-          {{ end }}{{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=name&amp;dir=asc" class="link link-hover">NAME</a>
-          {{ end }}
-        </th>
-        <th>
-          {{ if eq .Data.SortBy "category" }}{{ if eq .Data.SortDir "desc" }}
-          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=asc" class="link link-hover">CATEGORY ↓</a>
-          {{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=desc" class="link link-hover">CATEGORY ↑</a>
-          {{ end }}{{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=category&amp;dir=asc" class="link link-hover">CATEGORY</a>
-          {{ end }}
-        </th>
-        <th>
-          {{ if eq .Data.SortBy "stock" }}{{ if eq .Data.SortDir "desc" }}
-          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=asc" class="link link-hover">STOCK ↓</a>
-          {{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=desc" class="link link-hover">STOCK ↑</a>
-          {{ end }}{{ else }}
-          <a href="{{ .Data.SortBaseURL }}sort=stock&amp;dir=asc" class="link link-hover">STOCK</a>
-          {{ end }}
-        </th>
+        <th>NAME</th>
+        <th>CATEGORY</th>
+        <th>STOCK</th>
       </tr>
     </thead>
     <tbody>
@@ -95,6 +69,25 @@
       {{ end }}
     </tbody>
   </table>
+  {{ if gt .Data.Pagination.LastPage 1 }}
+  <div class="flex items-center gap-1 px-4 py-4">
+    {{ $cur := .Data.Pagination.CurrentPage }}
+    {{ $last := .Data.Pagination.LastPage }}
+    {{ $base := .Data.PageBaseURL }}
+    <a href="{{ $base }}page=1"
+       class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
+       {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>«</a>
+    <a href="{{ $base }}page={{ .Data.Pagination.PrevPage }}"
+       class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
+       {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>‹</a>
+    <a href="{{ $base }}page={{ .Data.Pagination.NextPage }}"
+       class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
+       {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>›</a>
+    <a href="{{ $base }}page={{ $last }}"
+       class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
+       {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>»</a>
+  </div>
+  {{ end }}
   {{ else }}
   <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
     {{ if eq (len .Data.Categories) 0 }}
@@ -102,7 +95,7 @@
     {{ else if .Data.Query }}
       <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
     {{ else if .Data.Filtered }}
-      <p class="text-sm">No items found for the selected categories.</p>
+      <p class="text-sm">No items found for the selected category.</p>
     {{ else }}
       <p class="text-sm">No items yet. <a href="/companies/{{ .Data.CompanyID }}/inventory/new" class="link">Add your first item.</a></p>
     {{ end }}

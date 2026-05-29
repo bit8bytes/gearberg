@@ -7,12 +7,13 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
-	"strings"
+	"strconv"
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
+	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
@@ -24,22 +25,9 @@ type inventoryData struct {
 	Inventories []inventory.Inventory
 	Filtered    bool
 	Query       string
-	SortBy      string
-	SortDir     string
-	SortBaseURL template.URL
-}
-
-func parseSortParams(q url.Values) (sortBy, sortDir string) {
-	sortBy = q.Get("sort")
-	switch sortBy {
-	case "name", "category", "stock":
-	default:
-		return "", ""
-	}
-	if q.Get("dir") == "desc" {
-		return sortBy, "desc"
-	}
-	return sortBy, "asc"
+	Category    string
+	PageBaseURL template.URL
+	Pagination  pagination.Metadata
 }
 
 type inventoryItemData struct {
@@ -55,25 +43,26 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 
 	cats, err := app.services.inventory.ListCategories(ctx, id)
 	if err != nil {
-		return &appError{
-			Error:   err,
-			Message: "Failed to retrieve categories.",
-			Code:    http.StatusInternalServerError,
-		}
+		return &appError{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
-	selectedCategories := r.URL.Query()["category"]
-	q := r.URL.Query().Get("q")
+	qs := r.URL.Query()
+	query := qs.Get("q")
+	category := qs.Get("category")
 
-	sortBy, sortDir := parseSortParams(r.URL.Query())
+	page, err := strconv.Atoi(qs.Get("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
 
-	items, err := app.services.inventory.GetFiltered(ctx, id, selectedCategories, sortBy, sortDir, q)
+	f := pagination.Filters{
+		Page:     page,
+		PageSize: 25,
+	}
+
+	items, meta, err := app.services.inventory.GetFiltered(ctx, id, query, category, f)
 	if err != nil {
-		return &appError{
-			Error:   err,
-			Message: "Failed to retrieve inventory.",
-			Code:    http.StatusInternalServerError,
-		}
+		return &appError{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
 	for i := range items {
@@ -82,19 +71,12 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		}
 	}
 
-	var baseURL strings.Builder
-	baseURL.WriteString("/companies/" + url.PathEscape(id) + "/inventory?")
-	for i, c := range selectedCategories {
-		if i > 0 {
-			baseURL.WriteString("&")
-		}
-		baseURL.WriteString("category=" + url.QueryEscape(c))
+	pageBaseURL := "/companies/" + url.PathEscape(id) + "/inventory?"
+	if category != "" {
+		pageBaseURL += "category=" + url.QueryEscape(category) + "&"
 	}
-	if len(selectedCategories) > 0 {
-		baseURL.WriteString("&")
-	}
-	if q != "" {
-		baseURL.WriteString("q=" + url.QueryEscape(q) + "&")
+	if query != "" {
+		pageBaseURL += "q=" + url.QueryEscape(query) + "&"
 	}
 
 	data := app.newTemplateData(r)
@@ -102,11 +84,11 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		CompanyID:   id,
 		Categories:  cats,
 		Inventories: items,
-		Filtered:    len(selectedCategories) > 0 || q != "",
-		Query:       q,
-		SortBy:      sortBy,
-		SortDir:     sortDir,
-		SortBaseURL: template.URL(baseURL.String()), // #nosec G203 — baseURL is built with url.PathEscape/url.QueryEscape
+		Filtered:    query != "" || category != "",
+		Query:       query,
+		Category:    category,
+		PageBaseURL: template.URL(pageBaseURL), // #nosec G203
+		Pagination:  meta,
 	}
 	return app.render(w, r, http.StatusOK, pages.Inventory, data)
 }

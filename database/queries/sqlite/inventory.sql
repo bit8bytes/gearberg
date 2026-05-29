@@ -1,3 +1,27 @@
+-- name: List :many
+SELECT
+    i.id,
+    i.company_id,
+    i.name,
+    i.category_id,
+    COALESCE(ec.name, '') AS category_name,
+    i.manufacturer_id,
+    i.storage_object_id,
+    i.total_stock,
+    i.purchase_price,
+    i.rental_price,
+    i.notes,
+    i.updated_at,
+    i.created_at,
+    COUNT(*) OVER() AS total_records
+FROM inventory i
+LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+WHERE i.company_id = sqlc.arg(company_id)
+  AND (sqlc.arg(name_query) = '' OR i.name LIKE '%' || sqlc.arg(name_query) || '%')
+  AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
+ORDER BY i.name ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
+
 -- name: CountByCompanyID :one
 SELECT COUNT(*) FROM inventory
 WHERE company_id = ?;
@@ -36,24 +60,6 @@ INSERT INTO inventory (
     notes,
     created_at;
 
--- name: ListByCompanyID :many
-SELECT
-    i.id,
-    i.company_id,
-    i.name,
-    i.category_id,
-    COALESCE(ec.name, '') AS category_name,
-    i.manufacturer_id,
-    i.storage_object_id,
-    i.total_stock,
-    i.purchase_price,
-    i.rental_price,
-    i.notes,
-    i.updated_at,
-    i.created_at
-FROM inventory i
-LEFT JOIN equipment_categories ec ON ec.id = i.category_id
-WHERE i.company_id = ? AND (sqlc.arg(query) = '' OR i.name LIKE '%' || sqlc.arg(query) || '%');
 
 -- name: GetByID :one
 SELECT

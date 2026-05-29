@@ -1,13 +1,11 @@
 package inventory
 
 import (
-	"cmp"
 	"context"
 	"fmt"
-	"slices"
-	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
+	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
 // CategoryLister fetches equipment categories by company.
@@ -26,47 +24,15 @@ func NewService(repo *Repository, cats CategoryLister) *Service {
 	return &Service{repo: repo, categories: cats}
 }
 
-// GetFiltered returns inventory items for companyID, narrowed to the given
-// category names and sorted by sortBy ("name", "category", "stock") in sortDir
-// ("asc", "desc"). When query is non-empty, only items whose name contains the
-// query string (case-insensitive) are returned. Empty values leave results
-// unfiltered / in DB order.
-func (s *Service) GetFiltered(ctx context.Context, companyID string, categoryNames []string, sortBy, sortDir, query string) ([]Inventory, error) {
-	items, err := s.repo.List(ctx, companyID, query)
+// GetFiltered returns a page of inventory items for companyID, filtered by query
+// and category, sorted and paginated according to f.
+func (s *Service) GetFiltered(ctx context.Context, companyID, query, category string, f pagination.Filters) ([]Inventory, pagination.Metadata, error) {
+	items, total, err := s.repo.List(ctx, companyID, query, category, f)
 	if err != nil {
-		return nil, fmt.Errorf("GetFiltered: %w", err)
+		return nil, pagination.Metadata{}, fmt.Errorf("GetFiltered: %w", err)
 	}
-	filtered := items
-	if len(categoryNames) > 0 {
-		keep := make(map[string]struct{}, len(categoryNames))
-		for _, c := range categoryNames {
-			keep[c] = struct{}{}
-		}
-		filtered = items[:0]
-		for _, item := range items {
-			if _, ok := keep[item.CategoryName]; ok {
-				filtered = append(filtered, item)
-			}
-		}
-	}
-	sortItems(filtered, sortBy, sortDir)
-	return filtered, nil
-}
-
-func sortItems(items []Inventory, sortBy, sortDir string) {
-	switch sortBy {
-	case "name":
-		slices.SortFunc(items, func(a, b Inventory) int { return strings.Compare(a.Name, b.Name) })
-	case "category":
-		slices.SortFunc(items, func(a, b Inventory) int { return strings.Compare(a.CategoryName, b.CategoryName) })
-	case "stock":
-		slices.SortFunc(items, func(a, b Inventory) int { return cmp.Compare(a.TotalStock, b.TotalStock) })
-	default:
-		return
-	}
-	if sortDir == "desc" {
-		slices.Reverse(items)
-	}
+	meta := pagination.CalculateMetadata(total, f.Page, f.PageSize)
+	return items, meta, nil
 }
 
 // GetByID returns the inventory item with id.
