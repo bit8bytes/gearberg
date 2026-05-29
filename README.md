@@ -18,7 +18,19 @@ For more information see current specification [here](./wiki/SPECS.md).
 
 ## Self-hosting
 
-Self-hosting will be provided via binary for the major platforms. Container hosting will be available too. Two databases will be supported, SQLite and PostgreSQL.
+### Quickstart
+
+Try it without installing anything (except of Docker):
+
+```sh
+docker run -it -p 8080:8080 nixos/nix \
+  nix --extra-experimental-features "nix-command flakes" \
+  run github:bit8bytes/gearberg -- serve
+```
+
+Then open `http://localhost:8080` in your browser.
+
+Self-hosting is provided via NixOS with a full NixOS configuration included.
 
 ## Development
 
