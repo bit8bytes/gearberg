@@ -15,6 +15,15 @@ document.addEventListener("change", (e) => {
   }
 });
 
+// Open a <dialog> modal
+// Trigger: <button data-modal-target="dialog-id">
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-modal-target]");
+  if (!btn) return;
+  const modal = document.getElementById(btn.dataset.modalTarget);
+  if (modal) modal.showModal();
+});
+
 // In-place image preview
 // Trigger: <input data-image-input> inside a container with <label data-image-preview>
 document.addEventListener("change", (e) => {
