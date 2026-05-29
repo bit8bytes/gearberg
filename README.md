@@ -16,11 +16,9 @@ Future developments will be *import* and *export* of data into CSV files. This w
 
 For more information see current specification [here](./wiki/SPECS.md).
 
-## Self-hosting
+## Self-hosting: Quickstart
 
-### Quickstart
-
-Try it without installing anything (except of Docker):
+Try it without installing anything (except of [Docker](https://docker.com)):
 
 ```sh
 docker run -it -p 8080:8080 nixos/nix \
