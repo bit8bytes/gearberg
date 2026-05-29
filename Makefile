@@ -123,7 +123,12 @@ tailwind/build:
 nix/check:
 	nix flake check --all-systems
 
-## nix/build: build the Go binary with Nix
-.PHONY: nix/build
-nix/build:
+## nix/build/web: build the Go binary with Nix
+.PHONY: nix/build/web
+nix/build/web:
 	nix build
+
+## nix/build/www: build the Go binary with Nix
+.PHONY: nix/build/www
+nix/build/www:
+	nix build .#www
