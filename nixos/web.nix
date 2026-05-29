@@ -14,6 +14,8 @@ buildpkgs.buildGoModule {
 
   vendorHash = "sha256-/rLXKPc0el25tamhckO7oLvJPFiMe9v8ufbMOJ31h4s=";
 
+  subPackages = ["cmd/web"];
+
   # Buildflags and tags, the same as typical go build .
   ldflags = [
     "-s"

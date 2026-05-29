@@ -10,6 +10,8 @@ buildpkgs.buildGoModule {
 
   vendorHash = "sha256-/rLXKPc0el25tamhckO7oLvJPFiMe9v8ufbMOJ31h4s=";
 
+  subPackages = ["cmd/www"];
+
   ldflags = [
     "-s"
     "-w"

@@ -23,8 +23,6 @@ go.work.sum
 
 # Go vendor folder
 vendor
-# Queries are generated on demand
-database/queries/gen/**
 
 # env files (allow .example files)
 .env*
