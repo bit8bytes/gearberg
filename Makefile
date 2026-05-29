@@ -16,10 +16,20 @@ confirm:
 run/web:
 	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web serve
 
-## dev: start development server (web + tailwind watch)
-.PHONY: dev
-dev:
+## run/www: run the web application with live reload
+.PHONY: run/www
+run/www:
+	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/www serve
+
+## dev/web: start development server (web + tailwind watch)
+.PHONY: dev/web
+dev/web:
 	$(MAKE) -j2 tailwind run/web
+
+## dev/www: start development server (www + tailwind watch)
+.PHONY: dev/www
+dev/www:
+	$(MAKE) -j2 tailwind run/www
 
 ## lint: run linters
 .PHONY: lint

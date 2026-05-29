@@ -1,0 +1,24 @@
+{{ define "root" }}
+<!DOCTYPE html>
+<html
+  lang="{{ block "lang" . }}en{{ end }}"
+  data-theme="gearberg"
+  class="scroll-smooth"
+  >
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ block "title" . }}gearberg{{ end }} - gearberg</title>
+    <meta
+      name="description"
+      content="{{ block "description" . }}Inventory and Rental.{{ end }}"
+      />
+    <link rel="icon" type="image/x-icon" href="/dist/images/favicon.ico" />
+    {{ template "styles" . }}
+    {{ block "seo" . }}{{ end }}
+  </head>
+  <body class="min-h-screen flex flex-col">
+    {{ template "page" . }}
+  </body>
+</html>
+{{ end }}

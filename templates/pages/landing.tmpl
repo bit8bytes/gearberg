@@ -1,0 +1,232 @@
+{{ define "title" }}Inventory &amp; Rental Management{{ end }}
+{{ define "description" }}Gearberg is a free, open-source, self-hostable inventory and rental management system. Organize equipment by category, track rentals and due dates, and export your data anytime as CSV.{{ end }}
+
+{{ define "seo" }}
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Gearberg — Inventory &amp; Rental Management" />
+<meta property="og:description" content="Free, open-source, self-hostable inventory and rental management. No subscriptions, no lock-in." />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Gearberg — Inventory &amp; Rental Management" />
+<meta name="twitter:description" content="Free, open-source, self-hostable inventory and rental management. No subscriptions, no lock-in." />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Gearberg",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Linux, macOS, Windows",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "url": "https://github.com/bit8bytes/gearberg",
+  "description": "Free, open-source, self-hostable inventory and rental management system.",
+  "keywords": "inventory management, rental management, self-hosted, open source, equipment tracking"
+}
+</script>
+{{ end }}
+
+{{ define "page" }}
+<main>
+{{/* Hero Section */}}
+<section class="hero bg-base-200 min-h-screen" aria-labelledby="hero-heading">
+  <div class="hero-content text-center">
+    <div class="max-w-md">
+      <h1 id="hero-heading" class="text-6xl font-bold">Inventory &amp; Rental Management</h1>
+      <p class="py-6 text-lg">
+        Self-hostable, free as in freedom. Organize your equipment, track rentals,
+        and move your data whenever you want.
+      </p>
+      <nav aria-label="Page sections">
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a href="#features" class="btn btn-primary">See Features</a>
+          <a href="#quickstart" class="btn btn-outline">Quickstart</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+</section>
+
+{{/* Features */}}
+<section id="features" class="py-24 bg-base-100" aria-labelledby="features-heading">
+  <div class="container mx-auto px-6 max-w-5xl">
+    <h2 id="features-heading" class="text-4xl font-bold text-center mb-16">Features</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+      <div class="card bg-base-200 shadow">
+        <div class="card-body">
+          <h3 class="card-title text-xl text-primary font-bold">
+            {{ template "inventory-icon" . }}
+            Inventory
+          </h3>
+          <p>Organize equipment by category with descriptions, pictures, and quantities. Always know what you have and where it is.</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-200 shadow">
+        <div class="card-body">
+          <h3 class="card-title text-xl text-primary font-bold">
+            {{ template "rentals-icon" . }}
+            Rentals
+          </h3>
+          <p>Check items out to people, set due dates, and track partial checkouts. Keep rentals under control without spreadsheets.</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-200 shadow">
+        <div class="card-body">
+          <h3 class="card-title text-xl text-primary font-bold">
+            {{ template "free-icon" . }}
+            Import &amp; Export
+          </h3>
+          <p>Move your data in and out as CSV. Switch back to paper, migrate to another tool, or just keep a backup; Your data stays yours.</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-200 shadow" id="open-source">
+        <div class="card-body">
+          <h3 class="card-title text-xl text-primary font-bold">
+            {{ template "open-source-icon" . }}
+            Open Source
+          </h3>
+          <p>Licensed under AGPL v3. Self-host it, audit it, contribute to it. No vendor lock-in, no hidden fees.</p>
+          <div class="card-actions mt-2">
+            <a href="https://github.com/bit8bytes/gearberg" class="btn btn-sm btn-outline" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{{/* Quickstart */}}
+<section id="quickstart" class="py-24 bg-base-200" aria-labelledby="quickstart-heading">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <h2 id="quickstart-heading" class="text-4xl font-bold text-center mb-4">Quickstart</h2>
+    <p class="text-center mb-10">Try it without installing anything (except <a href="https://docker.com" class="link link-primary" target="_blank" rel="noopener noreferrer">Docker</a>):</p>
+
+    <div class="mockup-code" role="region" aria-label="Quickstart command">
+      <pre data-prefix="$"><code>docker run -it -p 8080:8080 nixos/nix \
+  nix --extra-experimental-features "nix-command flakes" \
+  run github:bit8bytes/gearberg -- serve</code></pre>
+        <pre data-prefix=">" class="text-success"><code>{"time":"2026-05-29T15:40:25.22062-04:00", "msg":"starting server"}</code></pre>
+    </div>
+
+    <p class="text-center mt-6">Then open <a href="http://localhost:8080" class="badge badge-neutral font-mono" target="_blank" rel="noopener noreferrer">http://localhost:8080</a> in your browser.</p>
+    <p class="text-center mt-3 text-sm opacity-70">Self-hosting is provided via NixOS with a full NixOS configuration included.</p>
+  </div>
+</section>
+
+{{/* FAQ */}}
+<section id="faq" class="py-24 bg-base-100" aria-labelledby="faq-heading">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <h2 id="faq-heading" class="text-4xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+    <div class="space-y-3">
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">What is Gearberg?</summary>
+        <div class="collapse-content">
+          <p>Gearberg is a free, open-source inventory and rental management application you run yourself. It lets you organize equipment by category, track who has what checked out and when it is due back, and export everything as CSV whenever you need it.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Is Gearberg free to use?</summary>
+        <div class="collapse-content">
+          <p>Yes. Gearberg is free as in freedom and free as in price. There are no subscriptions, no usage limits, and no hidden fees. You run it on your own infrastructure.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">How do I self-host Gearberg?</summary>
+        <div class="collapse-content">
+          <p>The quickest way is to run Gearberg with Docker and Nix — no installation required on your machine beyond Docker. For permanent self-hosting, a full NixOS configuration is included in the repository so you can deploy it to your own server.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">What license is Gearberg released under?</summary>
+        <div class="collapse-content">
+          <p>Gearberg is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" class="link link-primary" target="_blank" rel="noopener noreferrer">GNU Affero General Public License v3 (AGPL-3.0)</a>. This means you can use, study, modify, and distribute it, provided any modifications you deploy over a network are also released under the same license.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">What data formats does Gearberg support?</summary>
+        <div class="collapse-content">
+          <p>Gearberg supports CSV for both import and export. You can migrate data in from a spreadsheet, back it up at any time, or take it to another tool — your data is never locked in.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Does Gearberg need an internet connection?</summary>
+        <div class="collapse-content">
+          <p>No. Once deployed, Gearberg runs entirely on your own server or local machine. It does not phone home or depend on any external services.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Who is Gearberg for?</summary>
+        <div class="collapse-content">
+          <p>Gearberg is built for small teams, clubs, schools, studios, or anyone who needs to track shared equipment and rentals without relying on spreadsheets or expensive SaaS tools.</p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Gearberg?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gearberg is a free, open-source inventory and rental management application you run yourself. It lets you organize equipment by category, track who has what checked out and when it is due back, and export everything as CSV whenever you need it." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Gearberg free to use?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Gearberg is free as in freedom and free as in price. There are no subscriptions, no usage limits, and no hidden fees. You run it on your own infrastructure." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I self-host Gearberg?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The quickest way is to run Gearberg with Docker and Nix — no installation required on your machine beyond Docker. For permanent self-hosting, a full NixOS configuration is included in the repository so you can deploy it to your own server." }
+      },
+      {
+        "@type": "Question",
+        "name": "What license is Gearberg released under?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gearberg is licensed under the GNU Affero General Public License v3 (AGPL-3.0). You can use, study, modify, and distribute it, provided any modifications you deploy over a network are also released under the same license." }
+      },
+      {
+        "@type": "Question",
+        "name": "What data formats does Gearberg support?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gearberg supports CSV for both import and export. You can migrate data in from a spreadsheet, back it up at any time, or take it to another tool." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gearberg need an internet connection?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Once deployed, Gearberg runs entirely on your own server or local machine. It does not phone home or depend on any external services." }
+      },
+      {
+        "@type": "Question",
+        "name": "Who is Gearberg for?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gearberg is built for small teams, clubs, schools, studios, or anyone who needs to track shared equipment and rentals without relying on spreadsheets or expensive SaaS tools." }
+      }
+    ]
+  }
+  </script>
+</section>
+
+</main>
+
+{{/* Footer */}}
+<footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
+  <p>Copyright &copy; {{ .Data.Year }} Gearberg &mdash; Licensed under <a href="https://github.com/bit8bytes/gearberg" class="link" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
+</footer>
+
+{{/* Scroll to top */}}
+<a href="#" class="btn btn-circle btn-primary fixed bottom-6 right-6 shadow-lg" aria-label="Scroll to top">
+  {{ template "chevron-up" . }}
+</a>
+{{ end }}

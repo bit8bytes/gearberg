@@ -28,6 +28,9 @@ func newPage(file string, layout layouts.Layout) Page {
 
 // Pages.
 var (
+	// Landing is the public landing page.
+	Landing = newPage("pages/landing.tmpl", layouts.Landing)
+
 	// Companies is the company selector page.
 	Companies = newPage("pages/companies/index.tmpl", layouts.Center)
 
