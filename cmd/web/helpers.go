@@ -108,6 +108,8 @@ type templateData struct {
 	URL *url.URL
 	// Nonce is the per-request CSP nonce injected into script and style tags.
 	Nonce nonce.Nonce
+	// Revision is the binary revision string used for cache-busting static assets.
+	Revision string
 }
 
 // newTemplateData builds the base template data shared by every page: the request URL
@@ -115,7 +117,8 @@ type templateData struct {
 // and the binary revision (for cache-busting static assets).
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		URL:   r.URL,
-		Nonce: nonce.From(r.Context()),
+		URL:      r.URL,
+		Nonce:    nonce.From(r.Context()),
+		Revision: revision,
 	}
 }
