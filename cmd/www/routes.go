@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bit8bytes/gearberg/assets"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/templates/pages"
 )
 
@@ -20,9 +21,9 @@ func (app *application) routes() http.Handler {
 		_, _ = fmt.Fprint(w, "User-agent: *\nAllow: /\n")
 	})
 
-	mux.HandleFunc("/", app.handleHTML(app.getLanding))
-	mux.HandleFunc("GET /imprint", app.handleHTML(app.getImprint))
-	mux.HandleFunc("GET /privacy", app.handleHTML(app.getPrivacy))
+	mux.HandleFunc("/", app.html.Handle(app.getLanding))
+	mux.HandleFunc("GET /imprint", app.html.Handle(app.getImprint))
+	mux.HandleFunc("GET /privacy", app.html.Handle(app.getPrivacy))
 
 	antiCSRF := http.NewCrossOriginProtection()
 	logRequest := newRequestLogger(app.logger)
@@ -37,20 +38,20 @@ func (app *application) routes() http.Handler {
 							antiCSRF.Handler(mux)))))))
 }
 
-func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *appError {
-	data := app.newTemplateData(r)
+func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	data := app.html.TemplateData(r)
 	data.Data = struct {
 		Year int
 	}{
 		Year: time.Now().Year(),
 	}
-	return app.render(w, r, http.StatusOK, pages.Landing, data)
+	return app.html.Render(w, r, http.StatusOK, pages.Landing, data)
 }
 
-func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *appError {
-	return app.render(w, r, http.StatusOK, pages.Imprint, app.newTemplateData(r))
+func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	return app.html.Render(w, r, http.StatusOK, pages.Imprint, app.html.TemplateData(r))
 }
 
-func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *appError {
-	return app.render(w, r, http.StatusOK, pages.Privacy, app.newTemplateData(r))
+func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	return app.html.Render(w, r, http.StatusOK, pages.Privacy, app.html.TemplateData(r))
 }

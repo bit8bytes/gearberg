@@ -19,18 +19,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
 type application struct {
 	logger  *slog.Logger
 	options *options
-	cache   map[string]*template.Template
+	html    *htmlpkg.HTML
 }
 
 func main() {
@@ -86,7 +87,7 @@ func runServe(args []string) error {
 	app := &application{
 		logger:  log,
 		options: options,
-		cache:   cache,
+		html:    htmlpkg.New(log, cache, revision),
 	}
 
 	return app.serve(ctx)

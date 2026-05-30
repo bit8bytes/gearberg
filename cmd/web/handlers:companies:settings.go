@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/bit8bytes/gearberg/internal/companies/settings"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
 )
@@ -13,39 +14,39 @@ type companySettingsData struct {
 	CompanyID string
 }
 
-func (app *application) getCompanySettings(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getCompanySettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	s, err := app.services.companysettings.GetByCompanyID(ctx, id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve company settings.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &settings.Form{}
 	data.Data = companySettingsData{Settings: s, CompanyID: id}
-	return app.render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
+	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
 }
 
-func (app *application) postCompanySettings(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postCompanySettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	form, err := settings.Parse(r)
 	if err != nil {
-		return &appError{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	reRender := func(f *settings.Form) *appError {
-		data := app.newTemplateData(r)
+	reRender := func(f *settings.Form) *httperr.Error {
+		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = companySettingsData{CompanyID: id}
-		return app.render(w, r, http.StatusUnprocessableEntity, pages.CompanySettingsConfig, data)
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.CompanySettingsConfig, data)
 	}
 
 	if !form.Validate() {
@@ -60,15 +61,15 @@ func (app *application) postCompanySettings(w http.ResponseWriter, r *http.Reque
 		Timezone:  form.Timezone,
 	})
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to save company settings.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &settings.Form{}
 	data.Data = companySettingsData{Settings: s, CompanyID: id}
-	return app.render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
+	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
 }

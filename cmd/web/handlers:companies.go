@@ -7,6 +7,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
@@ -17,45 +18,45 @@ type companiesData struct {
 	MaxCompanies int
 }
 
-func (app *application) getCompanies(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getCompanies(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 
 	allCompanies, err := app.services.companies.GetAll(ctx)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve companies.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Data = companiesData{
 		Companies:    allCompanies,
 		MaxCompanies: app.services.companies.MaxCompanies(),
 	}
 
-	return app.render(w, r, http.StatusOK, pages.Companies, data)
+	return app.html.Render(w, r, http.StatusOK, pages.Companies, data)
 }
 
-func (app *application) getCompaniesNew(w http.ResponseWriter, r *http.Request) *appError {
-	data := app.newTemplateData(r)
+func (app *application) getCompaniesNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	data := app.html.TemplateData(r)
 	data.Form = &companies.Form{}
-	return app.render(w, r, http.StatusOK, pages.CompaniesNew, data)
+	return app.html.Render(w, r, http.StatusOK, pages.CompaniesNew, data)
 }
 
-func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 
 	form, err := companies.Parse(r)
 	if err != nil {
-		return &appError{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	reRender := func(f *companies.Form) *appError {
-		data := app.newTemplateData(r)
+	reRender := func(f *companies.Form) *httperr.Error {
+		data := app.html.TemplateData(r)
 		data.Form = f
-		return app.render(w, r, http.StatusUnprocessableEntity, pages.CompaniesNew, data)
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.CompaniesNew, data)
 	}
 
 	if !form.Validate() {
@@ -76,7 +77,7 @@ func (app *application) postCompaniesNew(w http.ResponseWriter, r *http.Request)
 			form.AddError("name", fmt.Sprintf("Company limit reached. Only %d company allowed.", limit))
 			return reRender(&form)
 		}
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to create company.",
 			Code:    http.StatusInternalServerError,
@@ -93,13 +94,13 @@ type settingsCompanyData struct {
 	StorageUsage storage.Usage
 }
 
-func (app *application) getSettingsCompany(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getSettingsCompany(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	company, err := app.services.companies.GetByID(ctx, id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve company.",
 			Code:    http.StatusInternalServerError,
@@ -108,33 +109,33 @@ func (app *application) getSettingsCompany(w http.ResponseWriter, r *http.Reques
 
 	usage, err := app.services.storageManager.Info(ctx, id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve storage info.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &companies.Form{}
 	data.Data = settingsCompanyData{Company: company, CompanyID: id, StorageUsage: usage}
-	return app.render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
+	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
 }
 
-func (app *application) postSettingsCompany(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postSettingsCompany(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	form, err := companies.Parse(r)
 	if err != nil {
-		return &appError{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	reRender := func(f *companies.Form) *appError {
-		data := app.newTemplateData(r)
+	reRender := func(f *companies.Form) *httperr.Error {
+		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = settingsCompanyData{CompanyID: id}
-		return app.render(w, r, http.StatusUnprocessableEntity, pages.CompanySettingsCompany, data)
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.CompanySettingsCompany, data)
 	}
 
 	if !form.Validate() {
@@ -150,7 +151,7 @@ func (app *application) postSettingsCompany(w http.ResponseWriter, r *http.Reque
 			form.AddError("name", "A company with this name already exists.")
 			return reRender(&form)
 		}
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to update company.",
 			Code:    http.StatusInternalServerError,
@@ -159,25 +160,25 @@ func (app *application) postSettingsCompany(w http.ResponseWriter, r *http.Reque
 
 	usage, err := app.services.storageManager.Info(ctx, id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve storage info.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &companies.Form{}
 	data.Data = settingsCompanyData{Company: company, CompanyID: id, StorageUsage: usage}
-	return app.render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
+	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsCompany, data)
 }
 
-func (app *application) postDeleteCompany(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postDeleteCompany(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	if err := app.services.companies.Delete(ctx, id); err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to delete company.",
 			Code:    http.StatusInternalServerError,

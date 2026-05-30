@@ -11,6 +11,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/internal/companies/categories"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	"github.com/bit8bytes/gearberg/internal/pagination"
@@ -37,13 +38,13 @@ type inventoryItemData struct {
 	Categories []categories.EquipmentCategory
 }
 
-func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	cats, err := app.services.inventory.ListCategories(ctx, id)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
 	qs := r.URL.Query()
@@ -62,7 +63,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 
 	items, meta, err := app.services.inventory.GetFiltered(ctx, id, query, category, f)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
 	for i := range items {
@@ -79,7 +80,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		pageBaseURL += "q=" + url.QueryEscape(query) + "&"
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Data = inventoryData{
 		CompanyID:   id,
 		Categories:  cats,
@@ -90,46 +91,46 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ap
 		PageBaseURL: template.URL(pageBaseURL), // #nosec G203
 		Pagination:  meta,
 	}
-	return app.render(w, r, http.StatusOK, pages.Inventory, data)
+	return app.html.Render(w, r, http.StatusOK, pages.Inventory, data)
 }
 
-func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	cats, err := app.services.inventory.ListCategories(ctx, id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve categories.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
 	data.Data = inventoryItemData{CompanyID: id, Categories: cats}
-	return app.render(w, r, http.StatusOK, pages.InventoryNew, data)
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryNew, data)
 }
 
-func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("company_id")
 
 	form, err := inventory.Parse(r)
 	if err != nil {
-		return &appError{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	reRender := func(f *inventory.Form) *appError {
+	reRender := func(f *inventory.Form) *httperr.Error {
 		cats, catErr := app.services.inventory.ListCategories(ctx, id)
 		if catErr != nil {
-			return &appError{Error: catErr, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+			return &httperr.Error{Error: catErr, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 		}
-		data := app.newTemplateData(r)
+		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = inventoryItemData{CompanyID: id, Categories: cats}
-		return app.render(w, r, http.StatusUnprocessableEntity, pages.InventoryNew, data)
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryNew, data)
 	}
 
 	if !form.Validate() {
@@ -146,7 +147,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		Notes:      form.Notes,
 	})
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to create inventory item.",
 			Code:    http.StatusInternalServerError,
@@ -167,7 +168,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	itemID := r.PathValue("id")
@@ -175,9 +176,9 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 	item, err := app.services.inventory.GetByID(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return &appError{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
+			return &httperr.Error{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
 		}
-		return &appError{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 
 	if item.StorageObjectID != nil {
@@ -186,23 +187,23 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 
 	cats, err := app.services.inventory.ListCategories(ctx, companyID)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
 	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
-	return app.render(w, r, http.StatusOK, pages.InventoryDetail, data)
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
 
-func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	itemID := r.PathValue("id")
 
 	form, err := inventory.Parse(r)
 	if err != nil {
-		return &appError{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
 	if form.Image != nil {
@@ -227,7 +228,7 @@ func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request
 		Notes:      form.Notes,
 	})
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to update inventory item.",
 			Code:    http.StatusInternalServerError,
@@ -240,23 +241,23 @@ func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request
 
 	cats, err := app.services.inventory.ListCategories(ctx, companyID)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
 	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
-	return app.render(w, r, http.StatusOK, pages.InventoryDetail, data)
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
 
 // storeInventoryImage processes the uploaded image and writes it to storage.
 // It does not link the image to the inventory item; call linkInventoryImage for that.
-func (app *application) storeInventoryImage(r *http.Request, companyID, itemID string, form *inventory.Form) (*storage.Object, *appError) {
+func (app *application) storeInventoryImage(r *http.Request, companyID, itemID string, form *inventory.Form) (*storage.Object, *httperr.Error) {
 	ctx := r.Context()
 
 	result, err := imgpkg.Process(form.Image)
 	if err != nil {
-		return nil, &appError{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
+		return nil, &httperr.Error{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
 	}
 
 	key := fmt.Sprintf("company/%s/inventory/%s", companyID, itemID)
@@ -265,7 +266,7 @@ func (app *application) storeInventoryImage(r *http.Request, companyID, itemID s
 		ContentType: result.ContentType,
 	})
 	if err != nil {
-		return nil, &appError{Error: err, Message: "Failed to store image.", Code: http.StatusInternalServerError}
+		return nil, &httperr.Error{Error: err, Message: "Failed to store image.", Code: http.StatusInternalServerError}
 	}
 
 	return record, nil
@@ -273,50 +274,50 @@ func (app *application) storeInventoryImage(r *http.Request, companyID, itemID s
 
 // renderInventoryEdit re-fetches the item and categories and renders the edit
 // form with 422 Unprocessable Entity, used when validation fails.
-func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, companyID, itemID string, f *inventory.Form) *appError {
+func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, companyID, itemID string, f *inventory.Form) *httperr.Error {
 	ctx := r.Context()
 	item, err := app.services.inventory.GetByID(ctx, itemID)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 	if item.StorageObjectID != nil {
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 	cats, err := app.services.inventory.ListCategories(ctx, companyID)
 	if err != nil {
-		return &appError{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
-	data := app.newTemplateData(r)
+	data := app.html.TemplateData(r)
 	data.Form = f
 	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
-	return app.render(w, r, http.StatusUnprocessableEntity, pages.InventoryDetail, data)
+	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryDetail, data)
 }
 
 // linkInventoryImage associates a storage object with an inventory item.
-func (app *application) linkInventoryImage(r *http.Request, itemID, storageObjectID string) *appError {
+func (app *application) linkInventoryImage(r *http.Request, itemID, storageObjectID string) *httperr.Error {
 	if err := app.services.inventory.SetImage(r.Context(), inventory.SetImage{
 		ID:              itemID,
 		StorageObjectID: &storageObjectID,
 	}); err != nil {
-		return &appError{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
 	}
 	return nil
 }
 
-func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	companyID := r.PathValue("company_id")
 	itemID := r.PathValue("id")
 
 	if err := app.services.inventory.Delete(ctx, itemID); err != nil {
 		if errors.Is(err, database.ErrForeignKeyViolation) {
-			return &appError{
+			return &httperr.Error{
 				Error:   err,
 				Message: "Cannot delete an inventory item that is part of an active rental.",
 				Code:    http.StatusConflict,
 			}
 		}
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to delete inventory item.",
 			Code:    http.StatusInternalServerError,

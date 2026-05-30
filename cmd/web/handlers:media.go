@@ -3,14 +3,16 @@ package main
 import (
 	"io"
 	"net/http"
+
+	"github.com/bit8bytes/gearberg/internal/httperr"
 )
 
-func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *appError {
+func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("id")
 
 	obj, err := app.services.storageManager.Get(r.Context(), id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Media not found.",
 			Code:    http.StatusNotFound,
@@ -19,7 +21,7 @@ func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *appErr
 
 	rc, err := app.services.storageManager.Open(r.Context(), id)
 	if err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to open media.",
 			Code:    http.StatusInternalServerError,
@@ -33,7 +35,7 @@ func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *appErr
 
 	w.Header().Set("Content-Type", obj.ContentType)
 	if _, err := io.Copy(w, rc); err != nil {
-		return &appError{
+		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to serve media.",
 			Code:    http.StatusInternalServerError,

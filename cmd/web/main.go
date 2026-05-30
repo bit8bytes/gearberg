@@ -20,19 +20,20 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
 type application struct {
 	logger   *slog.Logger
 	options  *options
-	cache    map[string]*template.Template
+	html     *htmlpkg.HTML
 	db       *sql.DB
 	services *services
 }
@@ -89,6 +90,8 @@ func runServe(args []string) error {
 		return fmt.Errorf("load templates: %w", err)
 	}
 
+	html := htmlpkg.New(log, cache, revision)
+
 	db, err := setupDatabase(ctx, options)
 	if err != nil {
 		return fmt.Errorf("setup database: %w", err)
@@ -107,7 +110,7 @@ func runServe(args []string) error {
 	app := &application{
 		logger:   log,
 		options:  options,
-		cache:    cache,
+		html:     html,
 		db:       db,
 		services: services,
 	}

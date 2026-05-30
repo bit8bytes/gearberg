@@ -9,15 +9,10 @@ import (
 )
 
 type options struct {
-	Version         bool
-	LogLevel        logLevel
-	Port            int
-	TLSMode         string
-	DbDsn           string // SECRET
-	StorageDSN      string
-	MaxCompanies    int
-	MaxCategories   int
-	MaxStorageBytes int64
+	Version  bool
+	LogLevel logLevel
+	Port     int
+	TLSMode  string
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
