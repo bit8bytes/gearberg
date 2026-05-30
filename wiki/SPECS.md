@@ -29,6 +29,8 @@ The first increment comes without login because the software will be self-hosted
 | M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
 | M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
 
+See [SPECS2](./SPECS2.md) for additional specifications.
+
 ### Milestone 2: Import & Export
 
 | ID | Name |
