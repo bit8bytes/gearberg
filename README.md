@@ -18,7 +18,7 @@ For more information see current specification [here](./wiki/SPECS.md).
 
 ## Self-hosting: Quickstart
 
-Try it without installing anything (except of [Docker](https://docker.com)):
+Try it with a single [Docker](https://docker.com) command:
 
 ```sh
 docker run -it -p 8080:8080 nixos/nix \
