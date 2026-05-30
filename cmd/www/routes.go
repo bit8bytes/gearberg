@@ -49,9 +49,13 @@ func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *http
 }
 
 func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	return app.html.Render(w, r, http.StatusOK, pages.Imprint, app.html.TemplateData(r))
+	data := app.html.TemplateData(r)
+	data.Data = struct{ Year int }{Year: time.Now().Year()}
+	return app.html.Render(w, r, http.StatusOK, pages.Imprint, data)
 }
 
 func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	return app.html.Render(w, r, http.StatusOK, pages.Privacy, app.html.TemplateData(r))
+	data := app.html.TemplateData(r)
+	data.Data = struct{ Year int }{Year: time.Now().Year()}
+	return app.html.Render(w, r, http.StatusOK, pages.Privacy, data)
 }

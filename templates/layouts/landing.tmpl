@@ -18,7 +18,9 @@
     {{ block "seo" . }}{{ end }}
   </head>
   <body class="min-h-screen flex flex-col">
+    {{ template "landing-header" . }}
     {{ template "page" . }}
+    {{ template "landing-footer" . }}
   </body>
 </html>
 {{ end }}

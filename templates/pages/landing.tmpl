@@ -27,7 +27,7 @@
 {{ define "page" }}
 <main>
 {{/* Hero Section */}}
-<section class="hero bg-base-200 min-h-screen" aria-labelledby="hero-heading">
+<section class="hero bg-base-200 min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
   <div class="hero-content text-center">
     <div class="max-w-md">
       <h1 id="hero-heading" class="text-6xl font-bold">Inventory &amp; Rental Management</h1>
@@ -41,7 +41,7 @@
           <a href="#quickstart" class="btn btn-outline">Quickstart</a>
         </div>
       </nav>
-      <p class="mt-4 text-sm opacity-60">Early development &mdash; local testing only.</p>
+      <p class="mt-4 badge text-content-accent badge-accent">Early development. Local testing only.</p>
     </div>
   </div>
 </section>
@@ -220,22 +220,9 @@
   </script>
 </section>
 
-</main>
-
-{{/* Footer */}}
-<footer class="footer footer-horizontal footer-center bg-base-200 text-base-content rounded p-10">
-  <nav class="grid grid-flow-col gap-4">
-    <a href="mailto:gleiter.tobias@outlook.de" class="link link-hover">Contact</a>
-    <a href="/imprint" class="link link-hover">Imprint</a>
-    <a href="/privacy" class="link link-hover">Privacy Policy</a>
-  </nav>
-  <aside>
-    <p>Copyright &copy; {{ .Data.Year }} Gearberg &mdash; Licensed under <a href="https://github.com/bit8bytes/gearberg" class="link" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
-  </aside>
-</footer>
-
-{{/* Scroll to top */}}
 <a href="#" class="btn btn-circle btn-primary fixed bottom-6 right-6 shadow-lg" aria-label="Scroll to top">
   {{ template "chevron-up" . }}
 </a>
+
+</main>
 {{ end }}
