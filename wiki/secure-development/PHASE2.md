@@ -11,9 +11,9 @@ Gearberg is a self-hostable, open-source (AGPL v3) web application for inventory
 | Operator | Self-host a private inventory system |
 | Staff | Check items in/out, track overdue rentals |
 | Borrower | Know what they have borrowed and when it is due |
-| Administrator | Manage users, roles, and company settings |
+| Administrator | Manage users, roles, and org settings |
 
-**Functions:** inventory (items, categories, tags, availability), rentals (checkout, return, overdue tracking), multi-tenancy (isolated company data), data portability (CSV export/import), authentication (session login, RBAC — M4).
+**Functions:** inventory (items, categories, tags, availability), rentals (checkout, return, overdue tracking), multi-tenancy (isolated org data), data portability (CSV export/import), authentication (session login, RBAC — M4).
 
 **Desired flows:** staff opens the app → records a rental with item, borrower, and due date → monitors overdue list → marks item returned → exports history to CSV.
 
@@ -43,7 +43,7 @@ Gearberg is a self-hostable, open-source (AGPL v3) web application for inventory
 | Data | Class | Legal basis |
 |---|---|---|
 | Item metadata, images, inventory counts | C1 | — |
-| Company name and settings, rental records, audit log entries | C2 | — |
+| Org name and settings, rental records, audit log entries | C2 | — |
 | Borrower identity (name, email, phone) | C3 | GDPR Art. 6 |
 | User credentials, session tokens *(M4)* | C3 | GDPR Art. 6 |
 | CSV exports | Inherits highest class of included fields | — |
@@ -125,11 +125,11 @@ SR-AUTH (password hashing, session tokens, rate limiting, credential enumeration
 
 ## KOP 5: Abuse Cases (M0)
 
-### UC-M0-1 — Configure company settings (M0.1)
+### UC-M0-1 — Configure org settings (M0.1)
 
 | ID | Abuse | Method | Impact | Mitigated by |
 |---|---|---|---|---|
-| AC-M0-01 | Stored XSS via company name | Submit `<script>` as name; rendered in all page headings and invoice headers | Script execution in operator's browser | SR-INPUT-3 |
+| AC-M0-01 | Stored XSS via org name | Submit `<script>` as name; rendered in all page headings and invoice headers | Script execution in operator's browser | SR-INPUT-3 |
 | AC-M0-02 | VAT rate corruption | Submit value outside `[0.00, 1.00]`; flows into all invoice totals | Silent financial miscalculation; legal liability | SR-INPUT-1, FSR-M0-03 |
 | AC-M0-03 | Invalid currency code | Submit non-ISO-4217 value; downstream formatters crash or render garbage | Broken UI; potential error exposure | SR-INPUT-1, FSR-M0-02 |
 | AC-M0-04 | Malicious timezone string | Submit SQL/shell payload as timezone; used in time calculations | Corrupted duration calculations; injection surface | SR-INPUT-1, SR-INPUT-2, FSR-M0-02 |

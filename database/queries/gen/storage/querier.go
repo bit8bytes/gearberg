@@ -13,7 +13,7 @@ type Querier interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, key string) (StorageObject, error)
 	GetByID(ctx context.Context, id string) (StorageObject, error)
-	GetStorageUsedByCompany(ctx context.Context, companyID string) (int64, error)
+	GetStorageUsedByOrg(ctx context.Context, orgID string) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

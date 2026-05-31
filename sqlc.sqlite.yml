@@ -2,22 +2,22 @@ version: "2"
 
 sql:
   - engine: "sqlite"
-    queries: "database/queries/sqlite/companies.sql"
+    queries: "database/queries/sqlite/orgs.sql"
     schema: "database/migrations/sqlite/"
     gen:
       go:
-        package: "companies"
-        out: "database/queries/gen/companies"
+        package: "orgs"
+        out: "database/queries/gen/orgs"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/company_settings.sql"
+    queries: "database/queries/sqlite/org_settings.sql"
     schema: "database/migrations/sqlite/"
     gen:
       go:
-        package: "companysettings"
-        out: "database/queries/gen/companysettings"
+        package: "orgsettings"
+        out: "database/queries/gen/orgsettings"
         emit_interface: true
         omit_unused_structs: true
 

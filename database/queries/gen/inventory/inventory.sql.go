@@ -10,13 +10,13 @@ import (
 	"database/sql"
 )
 
-const countByCompanyID = `-- name: CountByCompanyID :one
+const countByOrgID = `-- name: CountByOrgID :one
 SELECT COUNT(*) FROM inventory
-WHERE company_id = ?
+WHERE org_id = ?
 `
 
-func (q *Queries) CountByCompanyID(ctx context.Context, companyID string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countByCompanyID, companyID)
+func (q *Queries) CountByOrgID(ctx context.Context, orgID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countByOrgID, orgID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -25,7 +25,7 @@ func (q *Queries) CountByCompanyID(ctx context.Context, companyID string) (int64
 const create = `-- name: Create :one
 INSERT INTO inventory (
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -45,7 +45,7 @@ INSERT INTO inventory (
     ?
 ) RETURNING
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -59,7 +59,7 @@ INSERT INTO inventory (
 
 type CreateParams struct {
 	ID             string
-	CompanyID      string
+	OrgID          string
 	Name           string
 	CategoryID     string
 	ManufacturerID sql.NullString
@@ -71,7 +71,7 @@ type CreateParams struct {
 
 type CreateRow struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Name            string
 	CategoryID      string
 	ManufacturerID  sql.NullString
@@ -86,7 +86,7 @@ type CreateRow struct {
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
 	row := q.db.QueryRowContext(ctx, create,
 		arg.ID,
-		arg.CompanyID,
+		arg.OrgID,
 		arg.Name,
 		arg.CategoryID,
 		arg.ManufacturerID,
@@ -98,7 +98,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 	var i CreateRow
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.CategoryID,
 		&i.ManufacturerID,
@@ -125,7 +125,7 @@ func (q *Queries) Delete(ctx context.Context, id string) error {
 const getByID = `-- name: GetByID :one
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -142,7 +142,7 @@ WHERE id = ?
 
 type GetByIDRow struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Name            string
 	CategoryID      string
 	ManufacturerID  sql.NullString
@@ -160,7 +160,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 	var i GetByIDRow
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.CategoryID,
 		&i.ManufacturerID,
@@ -178,7 +178,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 const list = `-- name: List :many
 SELECT
     i.id,
-    i.company_id,
+    i.org_id,
     i.name,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
@@ -193,7 +193,7 @@ SELECT
     COUNT(*) OVER() AS total_records
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
-WHERE i.company_id = ?1
+WHERE i.org_id = ?1
   AND (?2 = '' OR i.name LIKE '%' || ?2 || '%')
   AND (?3 = '' OR ec.name = ?3)
 ORDER BY i.name ASC
@@ -201,7 +201,7 @@ LIMIT ?5 OFFSET ?4
 `
 
 type ListParams struct {
-	CompanyID  string
+	OrgID      string
 	NameQuery  interface{}
 	Category   interface{}
 	PageOffset int64
@@ -210,7 +210,7 @@ type ListParams struct {
 
 type ListRow struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Name            string
 	CategoryID      string
 	CategoryName    string
@@ -227,7 +227,7 @@ type ListRow struct {
 
 func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 	rows, err := q.db.QueryContext(ctx, list,
-		arg.CompanyID,
+		arg.OrgID,
 		arg.NameQuery,
 		arg.Category,
 		arg.PageOffset,
@@ -242,7 +242,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 		var i ListRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.CompanyID,
+			&i.OrgID,
 			&i.Name,
 			&i.CategoryID,
 			&i.CategoryName,
@@ -283,7 +283,7 @@ SET
 WHERE id = ?
 RETURNING
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -309,7 +309,7 @@ type UpdateParams struct {
 
 type UpdateRow struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Name            string
 	CategoryID      string
 	ManufacturerID  sql.NullString
@@ -336,7 +336,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 	var i UpdateRow
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.CategoryID,
 		&i.ManufacturerID,

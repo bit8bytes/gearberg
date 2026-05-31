@@ -4,7 +4,7 @@ package inventory
 // Inventory represents a single inventory item.
 type Inventory struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Name            string
 	CategoryID      string
 	CategoryName    string
@@ -22,7 +22,7 @@ type Inventory struct {
 // CreateInventory holds the data required to create a new inventory item.
 type CreateInventory struct {
 	ID            string
-	CompanyID     string
+	OrgID         string
 	Name          string
 	CategoryID    string
 	TotalStock    int64

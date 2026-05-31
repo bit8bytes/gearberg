@@ -2,16 +2,16 @@
 
 ```mermaid
 erDiagram
-  companies {
+  orgs {
     text id PK
     text name "UNIQUE NOT NULL"
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
 
-  company_settings {
+  org_settings {
     text id PK
-    text company_id FK "NOT NULL ON DELETE CASCADE"
+    text org_id FK "NOT NULL ON DELETE CASCADE"
     text currency
     decimal vat_rate
     text timezone
@@ -21,7 +21,7 @@ erDiagram
 
   equipment_categories {
     text id PK
-    text company_id FK "NOT NULL ON DELETE CASCADE"
+    text org_id FK "NOT NULL ON DELETE CASCADE"
     text name "UNIQUE NOT NULL"
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
@@ -29,12 +29,12 @@ erDiagram
 
   manufacturers {
     text id PK
-    text company_id FK "NOT NULL ON DELETE CASCADE"
+    text org_id FK "NOT NULL ON DELETE CASCADE"
     text name "NOT NULL"
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
-  %% name must be unique per company: UNIQUE(company_id, name)
+  %% name must be unique per org: UNIQUE(org_id, name)
 
   inventory_types {
     text id PK
@@ -44,7 +44,7 @@ erDiagram
 
   inventory {
     text id PK
-    text company_id FK "NOT NULL ON DELETE CASCADE"
+    text org_id FK "NOT NULL ON DELETE CASCADE"
     text category_id FK "NOT NULL ON DELETE RESTRICT"
     text manufacturer_id FK "ON DELETE RESTRICT"
     text type_id FK "NOT NULL ON DELETE RESTRICT"
@@ -82,10 +82,10 @@ erDiagram
 
   inventory_types ||--o{ inventory : "types"
   unit_statuses ||--o{ inventory_units : "statuses"
-  companies ||--|| company_settings : "has"
-  companies ||--o{ equipment_categories : "has"
-  companies ||--o{ manufacturers : "has"
-  companies ||--o{ inventory : "owns"
+  orgs ||--|| org_settings : "has"
+  orgs ||--o{ equipment_categories : "has"
+  orgs ||--o{ manufacturers : "has"
+  orgs ||--o{ inventory : "owns"
   equipment_categories ||--o{ inventory : "categorizes"
   manufacturers ||--o{ inventory : "makes"
   inventory ||--o{ inventory_units : "has units"

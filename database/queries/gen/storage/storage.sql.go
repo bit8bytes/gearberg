@@ -12,7 +12,7 @@ import (
 const create = `-- name: Create :one
 INSERT INTO storage_objects (
     id,
-    company_id,
+    org_id,
     key,
     backend,
     filename,
@@ -36,12 +36,12 @@ ON CONFLICT(key) DO UPDATE SET
     content_type     = excluded.content_type,
     size             = excluded.size,
     encryption_key_id = excluded.encryption_key_id
-RETURNING id, company_id, key, backend, filename, content_type, size, encryption_key_id, created_at
+RETURNING id, org_id, key, backend, filename, content_type, size, encryption_key_id, created_at
 `
 
 type CreateParams struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Key             string
 	Backend         string
 	Filename        string
@@ -53,7 +53,7 @@ type CreateParams struct {
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (StorageObject, error) {
 	row := q.db.QueryRowContext(ctx, create,
 		arg.ID,
-		arg.CompanyID,
+		arg.OrgID,
 		arg.Key,
 		arg.Backend,
 		arg.Filename,
@@ -64,7 +64,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (StorageObject, 
 	var i StorageObject
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Key,
 		&i.Backend,
 		&i.Filename,
@@ -87,7 +87,7 @@ func (q *Queries) Delete(ctx context.Context, id string) error {
 }
 
 const get = `-- name: Get :one
-SELECT id, company_id, key, backend, filename, content_type, size, encryption_key_id, created_at
+SELECT id, org_id, key, backend, filename, content_type, size, encryption_key_id, created_at
 FROM storage_objects
 WHERE key = ?1
 `
@@ -97,7 +97,7 @@ func (q *Queries) Get(ctx context.Context, key string) (StorageObject, error) {
 	var i StorageObject
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Key,
 		&i.Backend,
 		&i.Filename,
@@ -110,7 +110,7 @@ func (q *Queries) Get(ctx context.Context, key string) (StorageObject, error) {
 }
 
 const getByID = `-- name: GetByID :one
-SELECT id, company_id, key, backend, filename, content_type, size, encryption_key_id, created_at
+SELECT id, org_id, key, backend, filename, content_type, size, encryption_key_id, created_at
 FROM storage_objects
 WHERE id = ?1
 `
@@ -120,7 +120,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (StorageObject, error)
 	var i StorageObject
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Key,
 		&i.Backend,
 		&i.Filename,
@@ -132,15 +132,15 @@ func (q *Queries) GetByID(ctx context.Context, id string) (StorageObject, error)
 	return i, err
 }
 
-const getStorageUsedByCompany = `-- name: GetStorageUsedByCompany :one
+const getStorageUsedByOrg = `-- name: GetStorageUsedByOrg :one
 SELECT CAST(COALESCE(SUM(so.size), 0) AS INTEGER) AS bytes_used
 FROM storage_objects so
 INNER JOIN inventory i ON i.storage_object_id = so.id
-WHERE i.company_id = ?1
+WHERE i.org_id = ?1
 `
 
-func (q *Queries) GetStorageUsedByCompany(ctx context.Context, companyID string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getStorageUsedByCompany, companyID)
+func (q *Queries) GetStorageUsedByOrg(ctx context.Context, orgID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getStorageUsedByOrg, orgID)
 	var bytes_used int64
 	err := row.Scan(&bytes_used)
 	return bytes_used, err

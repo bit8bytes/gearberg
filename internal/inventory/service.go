@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/internal/companies/categories"
+	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
-// CategoryLister fetches equipment categories by company.
+// CategoryLister fetches equipment categories by org.
 type CategoryLister interface {
-	GetByCompanyID(ctx context.Context, companyID string) ([]categories.EquipmentCategory, error)
+	GetByOrgID(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error)
 }
 
 // Service implements business logic for inventory.
@@ -24,10 +24,10 @@ func NewService(repo *Repository, cats CategoryLister) *Service {
 	return &Service{repo: repo, categories: cats}
 }
 
-// GetFiltered returns a page of inventory items for companyID, filtered by query
+// GetFiltered returns a page of inventory items for orgID, filtered by query
 // and category, sorted and paginated according to f.
-func (s *Service) GetFiltered(ctx context.Context, companyID, query, category string, f pagination.Filters) ([]Inventory, pagination.Metadata, error) {
-	items, total, err := s.repo.List(ctx, companyID, query, category, f)
+func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, f pagination.Filters) ([]Inventory, pagination.Metadata, error) {
+	items, total, err := s.repo.List(ctx, orgID, query, category, f)
 	if err != nil {
 		return nil, pagination.Metadata{}, fmt.Errorf("GetFiltered: %w", err)
 	}
@@ -78,9 +78,9 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// ListCategories returns all equipment categories for companyID.
-func (s *Service) ListCategories(ctx context.Context, companyID string) ([]categories.EquipmentCategory, error) {
-	cats, err := s.categories.GetByCompanyID(ctx, companyID)
+// ListCategories returns all equipment categories for orgID.
+func (s *Service) ListCategories(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error) {
+	cats, err := s.categories.GetByOrgID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("ListCategories: %w", err)
 	}

@@ -3,39 +3,39 @@ package main
 import (
 	"net/http"
 
-	"github.com/bit8bytes/gearberg/internal/companies/settings"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
 )
 
-type companySettingsData struct {
-	Settings  *settings.CompanySettings
-	CompanyID string
+type orgSettingsData struct {
+	Settings *settings.OrgSettings
+	OrgID    string
 }
 
-func (app *application) getCompanySettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
+func (app *application) getOrgSettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
-	s, err := app.services.companysettings.GetByCompanyID(ctx, id)
+	s, err := app.services.orgsettings.GetByOrgID(ctx, id)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
-			Message: "Failed to retrieve company settings.",
+			Message: "Failed to retrieve org settings.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &settings.Form{}
-	data.Data = companySettingsData{Settings: s, CompanyID: id}
-	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
+	data.Data = orgSettingsData{Settings: s, OrgID: id}
+	return app.html.Render(w, r, http.StatusOK, pages.OrgSettings, data)
 }
 
-func (app *application) postCompanySettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
+func (app *application) postOrgSettings(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
 	form, err := settings.Parse(r)
 	if err != nil {
@@ -45,31 +45,31 @@ func (app *application) postCompanySettings(w http.ResponseWriter, r *http.Reque
 	reRender := func(f *settings.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = companySettingsData{CompanyID: id}
-		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.CompanySettingsConfig, data)
+		data.Data = orgSettingsData{OrgID: id}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.OrgSettings, data)
 	}
 
 	if !form.Validate() {
 		return reRender(&form)
 	}
 
-	s, err := app.services.companysettings.Upsert(ctx, settings.UpsertCompanySettings{
-		ID:        ksuid.New().String(),
-		CompanyID: id,
-		Currency:  form.Currency,
-		VatRate:   form.VatRate,
-		Timezone:  form.Timezone,
+	s, err := app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{
+		ID:       ksuid.New().String(),
+		OrgID:    id,
+		Currency: form.Currency,
+		VatRate:  form.VatRate,
+		Timezone: form.Timezone,
 	})
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
-			Message: "Failed to save company settings.",
+			Message: "Failed to save org settings.",
 			Code:    http.StatusInternalServerError,
 		}
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &settings.Form{}
-	data.Data = companySettingsData{Settings: s, CompanyID: id}
-	return app.html.Render(w, r, http.StatusOK, pages.CompanySettingsConfig, data)
+	data.Data = orgSettingsData{Settings: s, OrgID: id}
+	return app.html.Render(w, r, http.StatusOK, pages.OrgSettings, data)
 }

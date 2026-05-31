@@ -6,7 +6,7 @@ package storage
 
 type StorageObject struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Key             string
 	Backend         string
 	Filename        string

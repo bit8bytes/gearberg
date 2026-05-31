@@ -4,7 +4,7 @@
 <div class="flex-1 max-w-xs mx-auto mt-8">
   <h1 class="">Add Item</h1>
 
-  <form method="POST" action="/companies/{{ .Data.CompanyID }}/inventory/new" enctype="multipart/form-data" class="mt-4 flex flex-col gap-4" novalidate>
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/inventory/new" enctype="multipart/form-data" class="mt-4 flex flex-col gap-4" novalidate>
 
     <div class="flex flex-col gap-1">
       <label>Photo</label>
@@ -70,7 +70,7 @@
 
     <div class="flex gap-2">
       <button type="submit" class="btn btn-primary">Add Item</button>
-      <a href="/companies/{{ .Data.CompanyID }}/inventory" class="btn">Cancel</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory" class="btn">Cancel</a>
     </div>
 
   </form>

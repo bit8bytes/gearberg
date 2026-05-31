@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE inventory (
   id TEXT PRIMARY KEY,
-  company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
   category_id TEXT NOT NULL REFERENCES equipment_categories(id) ON DELETE RESTRICT,
   manufacturer_id TEXT REFERENCES manufacturers(id) ON DELETE RESTRICT,
   name TEXT NOT NULL,

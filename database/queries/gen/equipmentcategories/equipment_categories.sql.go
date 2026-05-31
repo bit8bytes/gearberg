@@ -9,13 +9,13 @@ import (
 	"context"
 )
 
-const countByCompanyID = `-- name: CountByCompanyID :one
+const countByOrgID = `-- name: CountByOrgID :one
 SELECT COUNT(*) FROM equipment_categories
-WHERE company_id = ?
+WHERE org_id = ?
 `
 
-func (q *Queries) CountByCompanyID(ctx context.Context, companyID string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countByCompanyID, companyID)
+func (q *Queries) CountByOrgID(ctx context.Context, orgID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countByOrgID, orgID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -24,7 +24,7 @@ func (q *Queries) CountByCompanyID(ctx context.Context, companyID string) (int64
 const create = `-- name: Create :one
 INSERT INTO equipment_categories (
     id,
-    company_id,
+    org_id,
     name
 ) VALUES (
     ?,
@@ -32,30 +32,30 @@ INSERT INTO equipment_categories (
     ?
 ) RETURNING
     id,
-    company_id,
+    org_id,
     name,
     created_at
 `
 
 type CreateParams struct {
-	ID        string
-	CompanyID string
-	Name      string
+	ID    string
+	OrgID string
+	Name  string
 }
 
 type CreateRow struct {
 	ID        string
-	CompanyID string
+	OrgID     string
 	Name      string
 	CreatedAt int64
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.CompanyID, arg.Name)
+	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.OrgID, arg.Name)
 	var i CreateRow
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.CreatedAt,
 	)
@@ -75,7 +75,7 @@ func (q *Queries) Delete(ctx context.Context, id string) error {
 const getAll = `-- name: GetAll :many
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
@@ -93,47 +93,7 @@ func (q *Queries) GetAll(ctx context.Context) ([]EquipmentCategory, error) {
 		var i EquipmentCategory
 		if err := rows.Scan(
 			&i.ID,
-			&i.CompanyID,
-			&i.Name,
-			&i.UpdatedAt,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getByCompanyID = `-- name: GetByCompanyID :many
-SELECT
-    id,
-    company_id,
-    name,
-    updated_at,
-    created_at
-FROM equipment_categories
-WHERE company_id = ?
-`
-
-func (q *Queries) GetByCompanyID(ctx context.Context, companyID string) ([]EquipmentCategory, error) {
-	rows, err := q.db.QueryContext(ctx, getByCompanyID, companyID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []EquipmentCategory
-	for rows.Next() {
-		var i EquipmentCategory
-		if err := rows.Scan(
-			&i.ID,
-			&i.CompanyID,
+			&i.OrgID,
 			&i.Name,
 			&i.UpdatedAt,
 			&i.CreatedAt,
@@ -154,7 +114,7 @@ func (q *Queries) GetByCompanyID(ctx context.Context, companyID string) ([]Equip
 const getByID = `-- name: GetByID :one
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
@@ -167,12 +127,52 @@ func (q *Queries) GetByID(ctx context.Context, id string) (EquipmentCategory, er
 	var i EquipmentCategory
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getByOrgID = `-- name: GetByOrgID :many
+SELECT
+    id,
+    org_id,
+    name,
+    updated_at,
+    created_at
+FROM equipment_categories
+WHERE org_id = ?
+`
+
+func (q *Queries) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
+	rows, err := q.db.QueryContext(ctx, getByOrgID, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EquipmentCategory
+	for rows.Next() {
+		var i EquipmentCategory
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrgID,
+			&i.Name,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const update = `-- name: Update :one
@@ -183,7 +183,7 @@ SET
 WHERE id = ?
 RETURNING
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
@@ -199,7 +199,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (EquipmentCatego
 	var i EquipmentCategory
 	err := row.Scan(
 		&i.ID,
-		&i.CompanyID,
+		&i.OrgID,
 		&i.Name,
 		&i.UpdatedAt,
 		&i.CreatedAt,
