@@ -16,10 +16,10 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	"github.com/bit8bytes/gearberg/database/migrations"
-	"github.com/bit8bytes/gearberg/internal/companies"
-	"github.com/bit8bytes/gearberg/internal/companies/categories"
-	"github.com/bit8bytes/gearberg/internal/companies/settings"
 	"github.com/bit8bytes/gearberg/internal/inventory"
+	"github.com/bit8bytes/gearberg/internal/orgs"
+	"github.com/bit8bytes/gearberg/internal/orgs/categories"
+	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates"
 	"github.com/bit8bytes/gearberg/templates/pages"
@@ -114,22 +114,22 @@ func setupDatabase(ctx context.Context, options *options) (*sql.DB, error) {
 }
 
 type services struct {
-	companies           *companies.Service
-	companysettings     *settings.Service
+	orgs                *orgs.Service
+	orgsettings         *settings.Service
 	equipmentcategories *categories.Service
 	inventory           *inventory.Service
 	storageManager      *storage.Manager
 }
 
 func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, error) {
-	companyRepo := companies.NewRepository(db)
-	companySvc := companies.NewService(companyRepo, companies.Options{MaxCompanies: opts.MaxCompanies})
+	orgRepo := orgs.NewRepository(db)
+	orgSvc := orgs.NewService(orgRepo, orgs.Options{MaxOrgs: opts.MaxOrgs})
 
-	companysettingsRepo := settings.NewRepository(db)
-	companysettingsSvc := settings.NewService(companysettingsRepo)
+	orgsettingsRepo := settings.NewRepository(db)
+	orgsettingsSvc := settings.NewService(orgsettingsRepo)
 
 	equipmentcategoriesRepo := categories.NewRepository(db)
-	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.MaxCategories})
+	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.MaxOrgCategories})
 
 	inventoryRepo := inventory.NewRepository(db)
 	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc)
@@ -146,8 +146,8 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 	)
 
 	return &services{
-		companies:           companySvc,
-		companysettings:     companysettingsSvc,
+		orgs:                orgSvc,
+		orgsettings:         orgsettingsSvc,
 		equipmentcategories: equipmentcategoriesSvc,
 		inventory:           inventorySvc,
 		storageManager:      storageMgr,

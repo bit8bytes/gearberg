@@ -1,7 +1,7 @@
 -- name: Create :one
 INSERT INTO equipment_categories (
     id,
-    company_id,
+    org_id,
     name
 ) VALUES (
     ?,
@@ -9,14 +9,14 @@ INSERT INTO equipment_categories (
     ?
 ) RETURNING
     id,
-    company_id,
+    org_id,
     name,
     created_at;
 
 -- name: GetByID :one
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
@@ -26,21 +26,21 @@ WHERE id = ?;
 -- name: GetAll :many
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
 FROM equipment_categories;
 
--- name: GetByCompanyID :many
+-- name: GetByOrgID :many
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
 FROM equipment_categories
-WHERE company_id = ?;
+WHERE org_id = ?;
 
 -- name: Update :one
 UPDATE equipment_categories
@@ -50,7 +50,7 @@ SET
 WHERE id = ?
 RETURNING
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at;
@@ -59,6 +59,6 @@ RETURNING
 DELETE FROM equipment_categories
 WHERE id = ?;
 
--- name: CountByCompanyID :one
+-- name: CountByOrgID :one
 SELECT COUNT(*) FROM equipment_categories
-WHERE company_id = ?;
+WHERE org_id = ?;

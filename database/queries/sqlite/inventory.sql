@@ -1,7 +1,7 @@
 -- name: List :many
 SELECT
     i.id,
-    i.company_id,
+    i.org_id,
     i.name,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
@@ -16,20 +16,20 @@ SELECT
     COUNT(*) OVER() AS total_records
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
-WHERE i.company_id = sqlc.arg(company_id)
+WHERE i.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR i.name LIKE '%' || sqlc.arg(name_query) || '%')
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
 ORDER BY i.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
--- name: CountByCompanyID :one
+-- name: CountByOrgID :one
 SELECT COUNT(*) FROM inventory
-WHERE company_id = ?;
+WHERE org_id = ?;
 
 -- name: Create :one
 INSERT INTO inventory (
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -49,7 +49,7 @@ INSERT INTO inventory (
     ?
 ) RETURNING
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -64,7 +64,7 @@ INSERT INTO inventory (
 -- name: GetByID :one
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,
@@ -92,7 +92,7 @@ SET
 WHERE id = ?
 RETURNING
     id,
-    company_id,
+    org_id,
     name,
     category_id,
     manufacturer_id,

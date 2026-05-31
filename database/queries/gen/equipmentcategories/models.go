@@ -6,7 +6,7 @@ package equipmentcategories
 
 type EquipmentCategory struct {
 	ID        string
-	CompanyID string
+	OrgID     string
 	Name      string
 	UpdatedAt int64
 	CreatedAt int64

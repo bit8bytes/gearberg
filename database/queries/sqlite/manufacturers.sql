@@ -1,11 +1,11 @@
--- name: CountByCompanyID :one
+-- name: CountByOrgID :one
 SELECT COUNT(*) FROM manufacturers
-WHERE company_id = ?;
+WHERE org_id = ?;
 
 -- name: Create :one
 INSERT INTO manufacturers (
     id,
-    company_id,
+    org_id,
     name
 ) VALUES (
     ?,
@@ -13,24 +13,24 @@ INSERT INTO manufacturers (
     ?
 ) RETURNING
     id,
-    company_id,
+    org_id,
     name,
     created_at;
 
--- name: GetByCompanyID :many
+-- name: GetByOrgID :many
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
 FROM manufacturers
-WHERE company_id = ?;
+WHERE org_id = ?;
 
 -- name: GetByID :one
 SELECT
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at
@@ -45,7 +45,7 @@ SET
 WHERE id = ?
 RETURNING
     id,
-    company_id,
+    org_id,
     name,
     updated_at,
     created_at;

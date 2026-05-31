@@ -10,7 +10,7 @@ The first increment comes without login because the software will be self-hosted
 
 | ID | Name | Done |
 | - | - | - |
-| M0.1 | A user can configure company name, currency, VAT rate, and timezone | 100 % |
+| M0.1 | A user can configure org name, currency, VAT rate, and timezone | 100 % |
 | M0.2 | A user can create, update, and delete inventory categories | 100 % |
 | M0.3 | A user cannot delete a category that is assigned to one or more inventory items | 100 % |
 
@@ -74,7 +74,7 @@ See [SPECS2](./SPECS2.md) for additional specifications.
 | M4.15 | A user can view overdue rentals (active rentals past their expected return date) |
 | M4.16 | A user can view a single rental in detail |
 | M4.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440) x (1 - discount_rate)`) |
-| M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from company settings) as a display-only line |
+| M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from org settings) as a display-only line |
 | M4.19 | A user cannot delete a customer that has draft or active rentals |
 | M4.20 | A user can generate an invoice for an active rental |
 | M4.21 | A user can see previously generated invoices of customers on the customer detail page (see M4.3) |
@@ -84,25 +84,25 @@ See [SPECS2](./SPECS2.md) for additional specifications.
 
 ## Product Data
 
-### Companies
+### orgs
 
 On a self-hosted instance this table always has exactly one row, seeded at install time.
 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | name | Display name of the company |
+| 2 | name | Display name of the org |
 | 3 | created_at | |
 | 4 | updated_at | |
 
-### Company Settings
+### Org Settings
 
-One row per company, seeded at install time.
+One row per org, seeded at install time.
 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | company_id | Reference to a company |
+| 2 | org_id | Reference to a org |
 | 3 | currency | ISO 4217 currency code (e.g. `EUR`, `USD`) |
 | 4 | vat_rate | VAT rate as a decimal (e.g. `0.19` for 19%). Set to `0` if not applicable. |
 | 5 | timezone | IANA timezone string (e.g. `Europe/Berlin`). Used for all date calculations. |
@@ -111,12 +111,12 @@ One row per company, seeded at install time.
 
 ### Categories
 
-Scoped per company. Seeded with sensible defaults at install time (e.g. Camera, Lighting, Audio, Other).
+Scoped per org. Seeded with sensible defaults at install time (e.g. Camera, Lighting, Audio, Other).
 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | company_id | Reference to a company |
+| 2 | org_id | Reference to a org |
 | 3 | name | Display name of the category |
 | 4 | created_at | |
 | 5 | updated_at | |
@@ -126,7 +126,7 @@ Scoped per company. Seeded with sensible defaults at install time (e.g. Camera, 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | company_id | Reference to a company |
+| 2 | org_id | Reference to a org |
 | 3 | name | |
 | 4 | category_id | Reference to a category |
 | 5 | manufacturer | |
@@ -144,7 +144,7 @@ Scoped per company. Seeded with sensible defaults at install time (e.g. Camera, 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | company_id | Reference to a company |
+| 2 | org_id | Reference to a org |
 | 3 | name | Full name |
 | 4 | email | |
 | 5 | phone | |
@@ -157,7 +157,7 @@ Scoped per company. Seeded with sensible defaults at install time (e.g. Camera, 
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | company_id | Reference to a company |
+| 2 | org_id | Reference to a org |
 | 3 | customer_id | Reference to a customer |
 | 4 | status | One of 'draft', 'active', 'returned' |
 | 5 | checkout_date | Date items were handed out |
@@ -169,7 +169,7 @@ Scoped per company. Seeded with sensible defaults at install time (e.g. Camera, 
 
 ### Rental Items
 
-Line items linking an inventory item to a rental. Scoped implicitly through `rental_id` — no separate `company_id` needed.
+Line items linking an inventory item to a rental. Scoped implicitly through `rental_id` — no separate `org_id` needed.
 
 `duration_minutes`: for returned rentals, derived from `checkout_date` to `return_date`. For draft and active rentals, derived from `checkout_date` to `expected_return_date`. 1 day = 1440 minutes.
 

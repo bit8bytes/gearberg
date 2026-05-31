@@ -114,17 +114,17 @@ func withMaxBodySize(next http.Handler) http.Handler {
 	})
 }
 
-// withCheckQuota gates the request on the company's storage quota. It extracts
-// company_id from the path and returns 507 Insufficient Storage when the quota
-// is already exhausted. Requests without a company_id are passed through.
+// withCheckQuota gates the request on the org's storage quota. It extracts
+// org_id from the path and returns 507 Insufficient Storage when the quota
+// is already exhausted. Requests without a org_id are passed through.
 func (app *application) withCheckQuota(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		companyID := r.PathValue("company_id")
-		if companyID == "" {
+		orgID := r.PathValue("org_id")
+		if orgID == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if err := app.services.storageManager.CheckQuota(r.Context(), companyID, 0); err != nil {
+		if err := app.services.storageManager.CheckQuota(r.Context(), orgID, 0); err != nil {
 			if errors.Is(err, storage.ErrStorageQuotaExceeded) {
 				http.Error(w, "Storage quota exceeded.", http.StatusInsufficientStorage)
 				return

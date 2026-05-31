@@ -10,10 +10,10 @@ import (
 	"strconv"
 
 	"github.com/bit8bytes/gearberg/database"
-	"github.com/bit8bytes/gearberg/internal/companies/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
+	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates/pages"
@@ -21,7 +21,7 @@ import (
 )
 
 type inventoryData struct {
-	CompanyID   string
+	OrgID       string
 	Categories  []categories.EquipmentCategory
 	Inventories []inventory.Inventory
 	Filtered    bool
@@ -32,7 +32,7 @@ type inventoryData struct {
 }
 
 type inventoryItemData struct {
-	CompanyID  string
+	OrgID      string
 	Item       *inventory.Inventory
 	ID         string
 	Categories []categories.EquipmentCategory
@@ -40,7 +40,7 @@ type inventoryItemData struct {
 
 func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
 	cats, err := app.services.inventory.ListCategories(ctx, id)
 	if err != nil {
@@ -72,7 +72,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		}
 	}
 
-	pageBaseURL := "/companies/" + url.PathEscape(id) + "/inventory?"
+	pageBaseURL := "/orgs/" + url.PathEscape(id) + "/inventory?"
 	if category != "" {
 		pageBaseURL += "category=" + url.QueryEscape(category) + "&"
 	}
@@ -82,7 +82,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 
 	data := app.html.TemplateData(r)
 	data.Data = inventoryData{
-		CompanyID:   id,
+		OrgID:       id,
 		Categories:  cats,
 		Inventories: items,
 		Filtered:    query != "" || category != "",
@@ -96,7 +96,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 
 func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
 	cats, err := app.services.inventory.ListCategories(ctx, id)
 	if err != nil {
@@ -109,13 +109,13 @@ func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) 
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{CompanyID: id, Categories: cats}
+	data.Data = inventoryItemData{OrgID: id, Categories: cats}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryNew, data)
 }
 
 func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
 	form, err := inventory.Parse(r)
 	if err != nil {
@@ -129,7 +129,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = inventoryItemData{CompanyID: id, Categories: cats}
+		data.Data = inventoryItemData{OrgID: id, Categories: cats}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryNew, data)
 	}
 
@@ -140,7 +140,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 	itemID := ksuid.New().String()
 	_, err = app.services.inventory.Create(ctx, inventory.CreateInventory{
 		ID:         itemID,
-		CompanyID:  id,
+		OrgID:      id,
 		Name:       form.Name,
 		CategoryID: form.CategoryID,
 		TotalStock: form.TotalStockInt64(),
@@ -164,13 +164,13 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	http.Redirect(w, r, "/companies/"+url.PathEscape(id)+"/inventory", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/inventory", http.StatusSeeOther)
 	return nil
 }
 
 func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
 	item, err := app.services.inventory.GetByID(ctx, itemID)
@@ -185,20 +185,20 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 
-	cats, err := app.services.inventory.ListCategories(ctx, companyID)
+	cats, err := app.services.inventory.ListCategories(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
 
 func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
 	form, err := inventory.Parse(r)
@@ -207,7 +207,7 @@ func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request
 	}
 
 	if form.Image != nil {
-		record, appErr := app.storeInventoryImage(r, companyID, itemID, &form)
+		record, appErr := app.storeInventoryImage(r, orgID, itemID, &form)
 		if appErr != nil {
 			return appErr
 		}
@@ -217,7 +217,7 @@ func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request
 	}
 
 	if !form.Validate() {
-		return app.renderInventoryEdit(w, r, companyID, itemID, &form)
+		return app.renderInventoryEdit(w, r, orgID, itemID, &form)
 	}
 
 	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
@@ -239,20 +239,20 @@ func (app *application) postInventoryItem(w http.ResponseWriter, r *http.Request
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 
-	cats, err := app.services.inventory.ListCategories(ctx, companyID)
+	cats, err := app.services.inventory.ListCategories(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
 
 // storeInventoryImage processes the uploaded image and writes it to storage.
 // It does not link the image to the inventory item; call linkInventoryImage for that.
-func (app *application) storeInventoryImage(r *http.Request, companyID, itemID string, form *inventory.Form) (*storage.Object, *httperr.Error) {
+func (app *application) storeInventoryImage(r *http.Request, orgID, itemID string, form *inventory.Form) (*storage.Object, *httperr.Error) {
 	ctx := r.Context()
 
 	result, err := imgpkg.Process(form.Image)
@@ -260,8 +260,8 @@ func (app *application) storeInventoryImage(r *http.Request, companyID, itemID s
 		return nil, &httperr.Error{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
 	}
 
-	key := fmt.Sprintf("company/%s/inventory/%s", companyID, itemID)
-	record, err := app.services.storageManager.Put(ctx, companyID, key, form.ImageHeader.Filename, bytes.NewReader(result.Data), storage.Options{
+	key := fmt.Sprintf("orgs/%s/inventory/%s", orgID, itemID)
+	record, err := app.services.storageManager.Put(ctx, orgID, key, form.ImageHeader.Filename, bytes.NewReader(result.Data), storage.Options{
 		Size:        int64(len(result.Data)),
 		ContentType: result.ContentType,
 	})
@@ -274,7 +274,7 @@ func (app *application) storeInventoryImage(r *http.Request, companyID, itemID s
 
 // renderInventoryEdit re-fetches the item and categories and renders the edit
 // form with 422 Unprocessable Entity, used when validation fails.
-func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, companyID, itemID string, f *inventory.Form) *httperr.Error {
+func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, orgID, itemID string, f *inventory.Form) *httperr.Error {
 	ctx := r.Context()
 	item, err := app.services.inventory.GetByID(ctx, itemID)
 	if err != nil {
@@ -283,13 +283,13 @@ func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Reque
 	if item.StorageObjectID != nil {
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
-	cats, err := app.services.inventory.ListCategories(ctx, companyID)
+	cats, err := app.services.inventory.ListCategories(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}
 	data := app.html.TemplateData(r)
 	data.Form = f
-	data.Data = inventoryItemData{CompanyID: companyID, Item: item, ID: itemID, Categories: cats}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryDetail, data)
 }
 
@@ -306,7 +306,7 @@ func (app *application) linkInventoryImage(r *http.Request, itemID, storageObjec
 
 func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
 	if err := app.services.inventory.Delete(ctx, itemID); err != nil {
@@ -324,6 +324,6 @@ func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	http.Redirect(w, r, "/companies/"+url.PathEscape(companyID)+"/inventory", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory", http.StatusSeeOther)
 	return nil
 }

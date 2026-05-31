@@ -1,7 +1,7 @@
 // Package pages references all available application pages.
 //
 // Pages can be used by importing this package and referencing the page
-// e.g. pages.CompaniesIndex.
+// e.g. pages.Name.
 //
 // A page has two elements: the page file itself and the layout.
 // Partials are owned by the layout, not the page.
@@ -31,26 +31,26 @@ var (
 	// Landing is the public landing page.
 	Landing = newPage("pages/landing.tmpl", layouts.Landing)
 
-	// Companies is the company selector page.
-	Companies = newPage("pages/companies/index.tmpl", layouts.Center)
+	// Orgs is the org selector page.
+	Orgs = newPage("pages/orgs/index.tmpl", layouts.Center)
 
-	// CompaniesNew is the create-company form page.
-	CompaniesNew = newPage("pages/companies/new.tmpl", layouts.Center)
+	// OrgsNew is the create-org form page.
+	OrgsNew = newPage("pages/orgs/new.tmpl", layouts.Center)
 
-	// CompanySettingsCompany is the General settings page — edit company name.
-	CompanySettingsCompany = newPage("pages/companies/details.tmpl", layouts.Settings)
+	// OrgSettingsDetails is the General settings page — edit org name.
+	OrgSettingsDetails = newPage("pages/orgs/details.tmpl", layouts.Settings)
 
-	// CompanySettingsConfig is the Billing & Tax settings page — currency, VAT rate, timezone.
-	CompanySettingsConfig = newPage("pages/companies/settings.tmpl", layouts.Settings)
+	// OrgSettings is the Billing & Tax settings page — currency, VAT rate, timezone.
+	OrgSettings = newPage("pages/orgs/settings.tmpl", layouts.Settings)
 
 	// EquipmentCategoriesIndex is the Equipment Categories settings page.
-	EquipmentCategoriesIndex = newPage("pages/companies/categories/index.tmpl", layouts.Settings)
+	EquipmentCategoriesIndex = newPage("pages/orgs/categories/index.tmpl", layouts.Settings)
 
 	// EquipmentCategoriesNew is the create-category form page.
-	EquipmentCategoriesNew = newPage("pages/companies/categories/new.tmpl", layouts.Center)
+	EquipmentCategoriesNew = newPage("pages/orgs/categories/new.tmpl", layouts.Center)
 
 	// EquipmentCategoriesDetail is the category detail/edit page.
-	EquipmentCategoriesDetail = newPage("pages/companies/categories/detail.tmpl", layouts.Center)
+	EquipmentCategoriesDetail = newPage("pages/orgs/categories/detail.tmpl", layouts.Center)
 
 	// Inventory is the inventory list page.
 	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)

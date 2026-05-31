@@ -9,7 +9,7 @@ import (
 )
 
 type Querier interface {
-	CountByCompanyID(ctx context.Context, companyID string) (int64, error)
+	CountByOrgID(ctx context.Context, orgID string) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)

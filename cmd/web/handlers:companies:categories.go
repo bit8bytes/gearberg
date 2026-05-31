@@ -8,23 +8,23 @@ import (
 	"strings"
 
 	"github.com/bit8bytes/gearberg/database"
-	"github.com/bit8bytes/gearberg/internal/companies/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/templates/pages"
 	"github.com/segmentio/ksuid"
 )
 
 type equipmentCategoriesData struct {
-	CompanyID     string
+	OrgID         string
 	Categories    []categories.EquipmentCategory
 	MaxCategories int
 }
 
 type equipmentCategoryData struct {
-	CompanyID string
-	Category  *categories.EquipmentCategory
-	ID        string
-	ReturnTo  string
+	OrgID    string
+	Category *categories.EquipmentCategory
+	ID       string
+	ReturnTo string
 }
 
 func safeReturnTo(s string) string {
@@ -36,9 +36,9 @@ func safeReturnTo(s string) string {
 
 func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 
-	cats, err := app.services.equipmentcategories.GetByCompanyID(ctx, id)
+	cats, err := app.services.equipmentcategories.GetByOrgID(ctx, id)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
@@ -50,7 +50,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{}
 	data.Data = equipmentCategoriesData{
-		CompanyID:     id,
+		OrgID:         id,
 		Categories:    cats,
 		MaxCategories: app.services.equipmentcategories.MaxCategories(),
 	}
@@ -58,17 +58,17 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) getEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{CompanyID: id, ReturnTo: returnTo}
+	data.Data = equipmentCategoryData{OrgID: id, ReturnTo: returnTo}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesNew, data)
 }
 
 func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("company_id")
+	id := r.PathValue("org_id")
 	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := categories.Parse(r)
@@ -79,7 +79,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{CompanyID: id, ReturnTo: returnTo}
+		data.Data = equipmentCategoryData{OrgID: id, ReturnTo: returnTo}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesNew, data)
 	}
 
@@ -88,9 +88,9 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 	}
 
 	_, err = app.services.equipmentcategories.Create(ctx, categories.CreateEquipmentCategory{
-		ID:        ksuid.New().String(),
-		CompanyID: id,
-		Name:      form.Name,
+		ID:    ksuid.New().String(),
+		OrgID: id,
+		Name:  form.Name,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -99,7 +99,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		}
 		if errors.Is(err, database.ErrLimitExceeded) {
 			limit := app.services.equipmentcategories.MaxCategories()
-			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per company.", limit))
+			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per orgs.", limit))
 			return reRender(&form)
 		}
 		return &httperr.Error{
@@ -109,7 +109,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		}
 	}
 
-	dest := "/companies/" + url.PathEscape(id) + "/settings/equipment-categories"
+	dest := "/orgs/" + url.PathEscape(id) + "/settings/equipment-categories"
 	if returnTo != "" {
 		dest = returnTo
 	}
@@ -119,7 +119,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 
 func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
 	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 
@@ -134,13 +134,13 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID, ReturnTo: returnTo}
+	data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID, ReturnTo: returnTo}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
 }
 
 func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
 	returnTo := safeReturnTo(r.FormValue("return_to"))
 
@@ -152,7 +152,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{CompanyID: companyID, ID: catID, ReturnTo: returnTo}
+		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID, ReturnTo: returnTo}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
@@ -176,7 +176,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	dest := "/companies/" + url.PathEscape(companyID) + "/settings/equipment-categories/" + url.PathEscape(catID)
+	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/equipment-categories/" + url.PathEscape(catID)
 	if returnTo != "" {
 		dest = returnTo
 	}
@@ -186,7 +186,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 
 func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	companyID := r.PathValue("company_id")
+	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
 	returnTo := safeReturnTo(r.FormValue("return_to"))
 
@@ -200,7 +200,7 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 			f.AddError("delete", "Cannot delete: this category is assigned to one or more inventory items.")
 			data := app.html.TemplateData(r)
 			data.Form = f
-			data.Data = equipmentCategoryData{CompanyID: companyID, Category: category, ID: catID, ReturnTo: returnTo}
+			data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID, ReturnTo: returnTo}
 			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 		}
 		return &httperr.Error{
@@ -210,7 +210,7 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 		}
 	}
 
-	dest := "/companies/" + url.PathEscape(companyID) + "/settings/equipment-categories"
+	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/equipment-categories"
 	if returnTo != "" {
 		dest = returnTo
 	}

@@ -1,0 +1,30 @@
+{{ define "title" }}Equipment Categories{{ end }}
+{{ define "sidebar-categories" }}bg-base-300 font-semibold{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="heading heading--md">Equipment Categories</h2>
+    {{ if ge (len .Data.Categories) .Data.MaxCategories }}
+    <div class="tooltip" data-tip="Maximum of {{ .Data.MaxCategories }} categories reached">
+      <button class="btn btn-primary" disabled>New Category</button>
+    </div>
+    {{ else }}
+    <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories/new" class="btn btn-primary">New Category</a>
+    {{ end }}
+  </div>
+  <p class="text-sm text-neutral mb-6">Categories used to classify rental equipment.</p>
+
+  {{ if .Data.Categories }}
+  <ul class="flex flex-col gap-2">
+    {{ range .Data.Categories }}
+    <li class="flex items-center justify-between p-3 rounded border border-base-300">
+      <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .ID }}" class="hover:underline">{{ .Name }}</a>
+    </li>
+    {{ end }}
+  </ul>
+  {{ else }}
+  <p class="text-neutral">No equipment categories yet.</p>
+  {{ end }}
+</div>
+{{ end }}

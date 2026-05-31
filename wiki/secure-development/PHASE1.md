@@ -16,7 +16,7 @@ Functional requirements describe concrete, testable security behaviors derived f
 
 | ID | Category | Requirement |
 | - | - | - |
-| FSR-M0-01 | Data Handling | All M0 inputs (company name, currency, VAT rate, timezone, category name) MUST be validated server-side before persistence. Client-side validation is not a substitute. |
+| FSR-M0-01 | Data Handling | All M0 inputs (org name, currency, VAT rate, timezone, category name) MUST be validated server-side before persistence. Client-side validation is not a substitute. |
 | FSR-M0-02 | Data Handling | Currency codes MUST conform to ISO 4217; timezone values MUST conform to the IANA Time Zone Database. Invalid values MUST be rejected. |
 | FSR-M0-03 | Data Handling | The VAT rate MUST be validated as a decimal in [0.00, 1.00]. Values outside this range MUST be rejected. |
 | FSR-M0-04 | Interfaces | The server MUST enforce the referential integrity rule of M0.3: a category with assigned inventory items MUST NOT be deletable, regardless of client-side state. |
@@ -30,7 +30,7 @@ Non-functional requirements describe the required security quality of the softwa
 | - | - | - |
 | NFSR-M0-01 | Data Handling | The application MUST be robust against stored XSS through all M0 input fields by applying context-appropriate output encoding. |
 | NFSR-M0-02 | Data Handling | The application MUST be robust against SQL injection in all settings and category operations by using parameterized queries or an ORM. |
-| NFSR-M0-03 | Interfaces | The API MUST expose only the minimum writable fields required. Internal fields (id, company_id, created_at, updated_at) MUST NOT be modifiable through any endpoint. |
+| NFSR-M0-03 | Interfaces | The API MUST expose only the minimum writable fields required. Internal fields (id, org_id, created_at, updated_at) MUST NOT be modifiable through any endpoint. |
 
 ## IPV 3: Creation of a Business Impact Analysis
 
@@ -38,7 +38,7 @@ gearberg is a self-hosted, single-tenant application intended for use on a priva
 
 **1. Damage from unauthorized reading or manipulation of application data (Confidentiality / Integrity)**
 
-Data processed by the application includes company settings, inventory items with purchase and rental prices, customer contact data (name, email, phone), rental records, and generated invoices and quotes.
+Data processed by the application includes org settings, inventory items with purchase and rental prices, customer contact data (name, email, phone), rental records, and generated invoices and quotes.
 
 - *Reading:* Exposure of customer contact data (name, email, phone) creates GDPR obligations for EU operators. Exposure of pricing data (purchase prices, rental prices) may constitute a competitive disadvantage. Severity: **low to medium**.
 - *Manipulation:* Tampering with the VAT rate or currency setting would silently corrupt all downstream financial calculations (invoices, quotes). Manipulation of inventory stock or rental records could cause overbooking or financial disputes with customers. Severity: **medium**, primarily due to financial and legal consequences from incorrect invoicing.

@@ -25,21 +25,21 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
-// Count returns the number of inventory items belonging to companyID.
-func (r *Repository) Count(ctx context.Context, companyID string) (int64, error) {
-	n, err := r.inventory.CountByCompanyID(ctx, companyID)
+// Count returns the number of inventory items belonging to orgID.
+func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
+	n, err := r.inventory.CountByOrgID(ctx, orgID)
 	if err != nil {
 		return 0, fmt.Errorf("Count: %w", err)
 	}
 	return n, nil
 }
 
-// List returns a page of inventory items for companyID. When query is non-empty, only
+// List returns a page of inventory items for orgID. When query is non-empty, only
 // items whose name contains query (case-insensitive) are returned. When category is
 // non-empty, only items in that category are returned. Returns total matching count.
-func (r *Repository) List(ctx context.Context, companyID, query, category string, f pagination.Filters) ([]Inventory, int, error) {
+func (r *Repository) List(ctx context.Context, orgID, query, category string, f pagination.Filters) ([]Inventory, int, error) {
 	rows, err := r.inventory.List(ctx, geninv.ListParams{
-		CompanyID:  companyID,
+		OrgID:      orgID,
 		NameQuery:  query,
 		Category:   category,
 		PageOffset: int64(f.Offset()),
@@ -55,7 +55,7 @@ func (r *Repository) List(ctx context.Context, companyID, query, category string
 		totalRecords = row.TotalRecords
 		items = append(items, Inventory{
 			ID:              row.ID,
-			CompanyID:       row.CompanyID,
+			OrgID:           row.OrgID,
 			Name:            row.Name,
 			CategoryID:      row.CategoryID,
 			CategoryName:    row.CategoryName,
@@ -83,7 +83,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 	}
 	m := Inventory{
 		ID:              row.ID,
-		CompanyID:       row.CompanyID,
+		OrgID:           row.OrgID,
 		Name:            row.Name,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
@@ -113,7 +113,7 @@ func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
 func (r *Repository) Create(ctx context.Context, c CreateInventory) (*Inventory, error) {
 	row, err := r.inventory.Create(ctx, geninv.CreateParams{
 		ID:            c.ID,
-		CompanyID:     c.CompanyID,
+		OrgID:         c.OrgID,
 		Name:          c.Name,
 		CategoryID:    c.CategoryID,
 		TotalStock:    c.TotalStock,
@@ -126,7 +126,7 @@ func (r *Repository) Create(ctx context.Context, c CreateInventory) (*Inventory,
 	}
 	m := Inventory{
 		ID:              row.ID,
-		CompanyID:       row.CompanyID,
+		OrgID:           row.OrgID,
 		Name:            row.Name,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
@@ -156,7 +156,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 	}
 	m := Inventory{
 		ID:              row.ID,
-		CompanyID:       row.CompanyID,
+		OrgID:           row.OrgID,
 		Name:            row.Name,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),

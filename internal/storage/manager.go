@@ -16,34 +16,34 @@ import (
 )
 
 // ErrStorageQuotaExceeded is returned by CheckQuota when an upload would push
-// the company over its configured storage limit.
+// the org over its configured storage limit.
 var ErrStorageQuotaExceeded = errors.New("storage quota exceeded")
 
 // Manager routes object storage operations across one or more backends.
 // All writes go to the single currentBackend; reads are routed by consulting
 // the database, which preserves backward compatibility when the backend changes.
 type Manager struct {
-	store           map[string]*Store
-	currentBackend  string
-	companyMaxBytes int64
-	queries         *genstorage.Queries
+	store          map[string]*Store
+	currentBackend string
+	orgMaxBytes    int64
+	queries        *genstorage.Queries
 }
 
 // NewManager returns a Manager that routes writes to currentBackend and reads
 // via the database-recorded backend for each object.
-func NewManager(store map[string]*Store, currentBackend string, companyMaxBytes int64, db genstorage.DBTX) *Manager {
+func NewManager(store map[string]*Store, currentBackend string, orgMaxBytes int64, db genstorage.DBTX) *Manager {
 	return &Manager{
-		store:           store,
-		currentBackend:  currentBackend,
-		companyMaxBytes: companyMaxBytes,
-		queries:         genstorage.New(db),
+		store:          store,
+		currentBackend: currentBackend,
+		orgMaxBytes:    orgMaxBytes,
+		queries:        genstorage.New(db),
 	}
 }
 
 // Object is the domain model for a stored object.
 type Object struct {
 	ID              string
-	CompanyID       string
+	OrgID           string
 	Key             string
 	Backend         string
 	Filename        string
@@ -62,33 +62,33 @@ type Usage struct {
 	Max       string // e.g. "5.00 GB"
 }
 
-// Info returns storage usage for the given company.
-func (m *Manager) Info(ctx context.Context, companyID string) (Usage, error) {
-	bytesUsed, err := m.queries.GetStorageUsedByCompany(ctx, companyID)
+// Info returns storage usage for the given org.
+func (m *Manager) Info(ctx context.Context, orgID string) (Usage, error) {
+	bytesUsed, err := m.queries.GetStorageUsedByOrg(ctx, orgID)
 	if err != nil {
 		return Usage{}, fmt.Errorf("storage.Info: %w", err)
 	}
 	var pct int
-	if m.companyMaxBytes > 0 {
-		pct = min(int(bytesUsed*100/m.companyMaxBytes), 100)
+	if m.orgMaxBytes > 0 {
+		pct = min(int(bytesUsed*100/m.orgMaxBytes), 100)
 	}
 	return Usage{
 		BytesUsed: bytesUsed,
-		BytesMax:  m.companyMaxBytes,
+		BytesMax:  m.orgMaxBytes,
 		Percent:   pct,
 		Used:      Byte(bytesUsed).String(),
-		Max:       Byte(m.companyMaxBytes).String(),
+		Max:       Byte(m.orgMaxBytes).String(),
 	}, nil
 }
 
 // CheckQuota returns ErrStorageQuotaExceeded if uploading size bytes would
-// push the company over its quota. Call this before Put.
-func (m *Manager) CheckQuota(ctx context.Context, companyID string, size int64) error {
-	used, err := m.queries.GetStorageUsedByCompany(ctx, companyID)
+// push the org over its quota. Call this before Put.
+func (m *Manager) CheckQuota(ctx context.Context, orgID string, size int64) error {
+	used, err := m.queries.GetStorageUsedByOrg(ctx, orgID)
 	if err != nil {
 		return fmt.Errorf("storage.CheckQuota: %w", err)
 	}
-	if used+size > m.companyMaxBytes {
+	if used+size > m.orgMaxBytes {
 		return ErrStorageQuotaExceeded
 	}
 	return nil
@@ -103,7 +103,7 @@ func storeFrom(store map[string]*Store, backend string) (*Store, error) {
 }
 
 // Put streams r to the backend and registers the object in the database.
-func (m *Manager) Put(ctx context.Context, companyID, key, filename string, r io.Reader, opts Options) (*Object, error) {
+func (m *Manager) Put(ctx context.Context, orgID, key, filename string, r io.Reader, opts Options) (*Object, error) {
 	s, err := storeFrom(m.store, m.currentBackend)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (m *Manager) Put(ctx context.Context, companyID, key, filename string, r io
 	}
 	row, err := m.queries.Create(ctx, genstorage.CreateParams{
 		ID:              ksuid.New().String(),
-		CompanyID:       companyID,
+		OrgID:           orgID,
 		Key:             key,
 		Backend:         s.Backend,
 		Filename:        filename,
@@ -178,7 +178,7 @@ func (m *Manager) URL(id string) string {
 func recordFromRow(row *genstorage.StorageObject) *Object {
 	return &Object{
 		ID:              row.ID,
-		CompanyID:       row.CompanyID,
+		OrgID:           row.OrgID,
 		Key:             row.Key,
 		Backend:         row.Backend,
 		Filename:        row.Filename,
