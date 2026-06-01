@@ -54,6 +54,13 @@ func templateFuncs() template.FuncMap {
 		"inPath": func(currentPath, targetPath string) bool {
 			return currentPath == targetPath || strings.HasPrefix(currentPath, targetPath+"/")
 		},
+		// unixDate formats a *int64 Unix timestamp as "2006-01-02", or returns "" for nil.
+		"unixDate": func(v *int64) string {
+			if v == nil {
+				return ""
+			}
+			return time.Unix(*v, 0).UTC().Format("2006-01-02")
+		},
 	}
 }
 

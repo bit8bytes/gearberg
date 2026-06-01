@@ -1,10 +1,10 @@
 {{ define "title" }}Add Item{{ end }}
 
 {{ define "page" }}
-<div class="flex-1 max-w-xs mx-auto mt-8">
-  <h1 class="">Add Item</h1>
+<div class="flex-1 max-w-lg mx-auto my-8">
+  <h1 class="mb-6">Add Item</h1>
 
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/inventory/new" enctype="multipart/form-data" class="mt-4 flex flex-col gap-4" novalidate>
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/inventory/new" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
 
     <div class="flex flex-col gap-1">
       <label>Photo</label>
@@ -17,14 +17,7 @@
 
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
-      <input
-        id="name"
-        type="text"
-        name="name"
-        value="{{ .Form.Name }}"
-        maxlength="200"
-        class="input"
-      />
+      <input id="name" type="text" name="name" value="{{ .Form.Name }}" maxlength="200" class="input w-full" />
       {{ with index .Form.Errors "name" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
@@ -32,7 +25,7 @@
 
     <div class="flex flex-col gap-1">
       <label for="category_id">Category</label>
-      <select id="category_id" name="category_id" class="select">
+      <select id="category_id" name="category_id" class="select w-full">
         <option value="">Select a category</option>
         {{ range .Data.Categories }}
           <option value="{{ .ID }}" {{ if eq $.Form.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
@@ -44,28 +37,87 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label for="total_stock">Total Stock</label>
-      <input
-        id="total_stock"
-        type="number"
-        name="total_stock"
-        value="{{ if .Form.TotalStock }}{{ .Form.TotalStock }}{{ else }}1{{ end }}"
-        min="1"
-        class="input"
-      />
-      {{ with index .Form.Errors "total_stock" }}
+      <label for="code">Code <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <input id="code" type="text" name="code" value="{{ .Form.Code }}" maxlength="100" class="input w-full" />
+    </div>
+
+    <input type="hidden" name="usage_type_id" value="rental" />
+
+    <div class="flex flex-col gap-1">
+      <label>Type</label>
+      <div class="grid grid-cols-2 gap-3" data-type-selector>
+        <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+          <input
+            type="radio"
+            name="type_id"
+            value="bulk"
+            class="sr-only"
+            {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}checked{{ end }}
+          />
+          <div class="w-5 h-5">{{ template "bulk-icon" . }}</div>
+          <span class="font-medium text-sm">Bulk</span>
+          <span class="text-xs text-base-content/50">Track a total quantity</span>
+        </label>
+        <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors {{ if eq .Form.TypeID "serialized" }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+          <input
+            type="radio"
+            name="type_id"
+            value="serialized"
+            class="sr-only"
+            {{ if eq .Form.TypeID "serialized" }}checked{{ end }}
+          />
+          <div class="w-5 h-5">{{ template "serialized-icon" . }}</div>
+          <span class="font-medium text-sm">Serialized</span>
+          <span class="text-xs text-base-content/50">Track individual units with serial numbers</span>
+        </label>
+      </div>
+      {{ with index .Form.Errors "type_id" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
     </div>
 
     <div class="flex flex-col gap-1">
-      <label for="notes">Notes</label>
-      <textarea
-        id="notes"
-        name="notes"
-        class="textarea"
-        rows="3"
-      >{{ .Form.Notes }}</textarea>
+      <label for="count"><span data-count-label>{{ if eq .Form.TypeID "serialized" }}Units to Create{{ else }}Quantity{{ end }}</span></label>
+      <input
+        id="count"
+        type="number"
+        name="count"
+        value="{{ if .Form.Count }}{{ .Form.Count }}{{ else }}1{{ end }}"
+        min="1"
+        class="input w-full"
+      />
+      <p data-count-hint class="text-xs text-base-content/50 {{ if ne .Form.TypeID "serialized" }}hidden{{ end }}">You can add serial numbers and inspection dates after creating.</p>
+      {{ with index .Form.Errors "count" }}
+        <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div class="flex gap-2">
+      <div class="flex flex-col gap-1 flex-1">
+        <label for="purchase_price">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+        <label class="input w-full">
+          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+          <input id="purchase_price" type="text" inputmode="decimal" name="purchase_price" value="{{ .Form.PurchasePrice }}" />
+        </label>
+        {{ with index .Form.Errors "purchase_price" }}
+          <p class="text-red-500 text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+      <div class="flex flex-col gap-1 flex-1">
+        <label for="rental_price">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+        <label class="input w-full">
+          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+          <input id="rental_price" type="text" inputmode="decimal" name="rental_price" value="{{ .Form.RentalPrice }}" />
+        </label>
+        {{ with index .Form.Errors "rental_price" }}
+          <p class="text-red-500 text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="notes">Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <textarea id="notes" name="notes" class="textarea w-full" rows="3">{{ .Form.Notes }}</textarea>
     </div>
 
     <div class="flex gap-2">

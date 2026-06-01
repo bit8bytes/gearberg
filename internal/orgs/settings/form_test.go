@@ -8,19 +8,19 @@ func TestValidate_PermittedCurrencyAndTimezone(t *testing.T) {
 	cases := []struct {
 		name     string
 		currency string
-		vatRate  float64
+		vatRate  string
 		timezone string
 		valid    bool
 	}{
-		{"valid", "EUR", 0.19, "Europe/Berlin", true},
-		{"vat rate zero", "EUR", 0.00, "Europe/Berlin", true},
-		{"vat rate one", "EUR", 1.00, "Europe/Berlin", true},
-		{"vat rate below range", "EUR", -0.01, "Europe/Berlin", false},
-		{"vat rate above range", "EUR", 1.01, "Europe/Berlin", false},
-		{"invalid currency", "XYZ", 0.19, "Europe/Berlin", false},
-		{"blank currency", "", 0.19, "Europe/Berlin", false},
-		{"invalid timezone", "EUR", 0.19, "Mars/Olympus", false},
-		{"blank timezone", "EUR", 0.19, "", false},
+		{"valid", "EUR", "19", "Europe/Berlin", true},
+		{"vat rate zero", "EUR", "0", "Europe/Berlin", true},
+		{"vat rate one", "EUR", "100", "Europe/Berlin", true},
+		{"vat rate below range", "EUR", "-1", "Europe/Berlin", false},
+		{"vat rate above range", "EUR", "101", "Europe/Berlin", false},
+		{"invalid currency", "XYZ", "19", "Europe/Berlin", false},
+		{"blank currency", "", "19", "Europe/Berlin", false},
+		{"invalid timezone", "EUR", "19", "Mars/Olympus", false},
+		{"blank timezone", "EUR", "19", "", false},
 	}
 
 	for _, tc := range cases {

@@ -44,18 +44,18 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label for="vat_rate">VAT Rate (0.00 – 1.00)</label>
-      <input
-        id="vat_rate"
-        type="number"
-        name="vat_rate"
-        value="{{ if .Data.Settings }}{{ .Data.Settings.VatRate }}{{ else }}{{ .Form.VatRate }}{{ end }}"
-        min="0"
-        max="1"
-        step="0.01"
-        placeholder="e.g. 0.19"
-        class="input"
-      />
+      <label for="vat_rate">VAT Rate</label>
+      <label class="input">
+        <span class="opacity-50">%</span>
+        <input
+          id="vat_rate"
+          type="text"
+          inputmode="decimal"
+          name="vat_rate"
+          value="{{ if .Data.Settings }}{{ .Data.Settings.VatRatePercent }}{{ else }}{{ .Form.VatRate }}{{ end }}"
+          placeholder="e.g. 19"
+        />
+      </label>
       {{ with index .Form.Errors "vat_rate" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}

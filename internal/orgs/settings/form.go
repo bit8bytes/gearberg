@@ -3,6 +3,7 @@ package settings
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ var permittedTimezones = []string{
 // Form holds the parsed form input and validation state for org settings requests.
 type Form struct {
 	Currency string
-	VatRate  float64
+	VatRate  string // entered as a percentage e.g. "19" or "19,5"
 	Timezone string
 	validator.Validator
 }
@@ -52,10 +53,9 @@ func Parse(r *http.Request) (Form, error) {
 	if err := r.ParseForm(); err != nil {
 		return Form{}, fmt.Errorf("parse form: %w", err)
 	}
-	vatRate, _ := strconv.ParseFloat(strings.TrimSpace(r.PostForm.Get("vat_rate")), 64)
 	return Form{
 		Currency: strings.TrimSpace(r.PostForm.Get("currency")),
-		VatRate:  vatRate,
+		VatRate:  strings.TrimSpace(r.PostForm.Get("vat_rate")),
 		Timezone: strings.TrimSpace(r.PostForm.Get("timezone")),
 	}, nil
 }
@@ -63,7 +63,20 @@ func Parse(r *http.Request) (Form, error) {
 // Validate checks form fields and returns true when all checks pass.
 func (f *Form) Validate() bool {
 	f.Check(validator.PermittedValue(f.Currency, permittedCurrencies...), "currency", "Must be a valid ISO-4217 currency code")
-	f.Check(f.VatRate >= 0.00 && f.VatRate <= 1.00, "vat_rate", "Must be between 0.00 and 1.00")
+	if validator.NotBlank(f.VatRate) {
+		v, err := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
+		f.Check(err == nil, "vat_rate", "Must be a valid number")
+		f.Check(err != nil || (v >= 0 && v <= 100), "vat_rate", "Must be between 0 and 100")
+	} else {
+		f.AddError("vat_rate", "This field cannot be blank")
+	}
 	f.Check(validator.PermittedValue(f.Timezone, permittedTimezones...), "timezone", "Must be a valid IANA timezone")
 	return f.Valid()
+}
+
+// VatRateBasisPoints returns the VAT rate as basis points (e.g. "19" → 1900).
+// Call only after Validate() returns true.
+func (f *Form) VatRateBasisPoints() int64 {
+	v, _ := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
+	return int64(math.Round(v * 100))
 }

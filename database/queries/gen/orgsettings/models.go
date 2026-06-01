@@ -8,7 +8,7 @@ type OrgSetting struct {
 	ID        string
 	OrgID     string
 	Currency  string
-	VatRate   float64
+	VatRate   int64
 	Timezone  string
 	UpdatedAt int64
 	CreatedAt int64

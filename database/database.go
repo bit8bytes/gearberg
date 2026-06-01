@@ -121,6 +121,14 @@ func Int64Ptr(i sql.NullInt64) *int64 {
 	return &v
 }
 
+// NullInt64Ptr converts a *int64 to sql.NullInt64.
+func NullInt64Ptr(v *int64) sql.NullInt64 {
+	if v == nil {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{Int64: *v, Valid: true}
+}
+
 // NullFloat64 converts a float64 to sql.NullFloat64, treating 0 as NULL.
 func NullFloat64(v float64) sql.NullFloat64 {
 	return sql.NullFloat64{Float64: v, Valid: v != 0}
