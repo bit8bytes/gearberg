@@ -11,11 +11,18 @@ import (
 type Querier interface {
 	CountByOrgID(ctx context.Context, orgID string) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
+	CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateUnitRow, error)
 	Delete(ctx context.Context, id string) error
+	DeleteUnit(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)
+	GetUnit(ctx context.Context, id string) (GetUnitRow, error)
 	List(ctx context.Context, arg ListParams) ([]ListRow, error)
+	ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]ListUnitsByInventoryIDRow, error)
+	MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error)
 	Update(ctx context.Context, arg UpdateParams) (UpdateRow, error)
 	UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error
+	UpdateTotalStock(ctx context.Context, arg UpdateTotalStockParams) error
+	UpdateUnit(ctx context.Context, arg UpdateUnitParams) error
 }
 
 var _ Querier = (*Queries)(nil)

@@ -7,6 +7,8 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
     i.storage_object_id,
+    i.type_id,
+    i.usage_type_id,
     i.total_stock,
     i.purchase_price,
     i.rental_price,
@@ -32,12 +34,16 @@ INSERT INTO inventory (
     org_id,
     name,
     category_id,
-    manufacturer_id,
+    type_id,
+    usage_type_id,
+    code,
     total_stock,
     purchase_price,
     rental_price,
     notes
 ) VALUES (
+    ?,
+    ?,
     ?,
     ?,
     ?,
@@ -54,10 +60,37 @@ INSERT INTO inventory (
     category_id,
     manufacturer_id,
     storage_object_id,
+    type_id,
+    usage_type_id,
+    code,
     total_stock,
     purchase_price,
     rental_price,
     notes,
+    created_at;
+
+-- name: CreateUnit :one
+INSERT INTO inventory_units (
+    id,
+    inventory_id,
+    status_id,
+    unit_number,
+    serial_number,
+    next_inspection_at
+) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+) RETURNING
+    id,
+    inventory_id,
+    status_id,
+    unit_number,
+    serial_number,
+    next_inspection_at,
     created_at;
 
 
@@ -65,6 +98,8 @@ INSERT INTO inventory (
 SELECT
     id,
     org_id,
+    type_id,
+    usage_type_id,
     name,
     category_id,
     manufacturer_id,
@@ -83,7 +118,7 @@ UPDATE inventory
 SET
     name = ?,
     category_id = ?,
-    manufacturer_id = ?,
+    code = ?,
     total_stock = ?,
     purchase_price = ?,
     rental_price = ?,
@@ -97,12 +132,29 @@ RETURNING
     category_id,
     manufacturer_id,
     storage_object_id,
+    type_id,
+    usage_type_id,
+    code,
     total_stock,
     purchase_price,
     rental_price,
     notes,
     updated_at,
     created_at;
+
+-- name: ListUnitsByInventoryID :many
+SELECT
+    id,
+    inventory_id,
+    status_id,
+    unit_number,
+    serial_number,
+    next_inspection_at,
+    updated_at,
+    created_at
+FROM inventory_units
+WHERE inventory_id = ?
+ORDER BY unit_number ASC;
 
 -- name: UpdateStorageObject :exec
 UPDATE inventory
@@ -111,4 +163,40 @@ WHERE id = sqlc.arg(id);
 
 -- name: Delete :exec
 DELETE FROM inventory
+WHERE id = ?;
+
+-- name: GetUnit :one
+SELECT
+    id,
+    inventory_id,
+    status_id,
+    unit_number,
+    serial_number,
+    next_inspection_at,
+    updated_at,
+    created_at
+FROM inventory_units
+WHERE id = ?;
+
+-- name: MaxUnitNumber :one
+SELECT CAST(COALESCE(MAX(unit_number), 0) AS INTEGER) FROM inventory_units
+WHERE inventory_id = ?;
+
+-- name: UpdateUnit :exec
+UPDATE inventory_units
+SET
+    serial_number = ?,
+    next_inspection_at = ?,
+    updated_at = unixepoch()
+WHERE id = ?;
+
+-- name: DeleteUnit :exec
+DELETE FROM inventory_units
+WHERE id = ?;
+
+-- name: UpdateTotalStock :exec
+UPDATE inventory
+SET
+    total_stock = total_stock + ?,
+    updated_at = unixepoch()
 WHERE id = ?;

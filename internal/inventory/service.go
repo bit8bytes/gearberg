@@ -2,6 +2,7 @@ package inventory
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
@@ -44,11 +45,20 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Inventory, error) {
 	return item, nil
 }
 
-// Create creates a new inventory item.
-func (s *Service) Create(ctx context.Context, c CreateInventory) (*Inventory, error) {
-	item, err := s.repo.Create(ctx, c)
+// CreateBulk creates a new bulk inventory item.
+func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inventory, error) {
+	item, err := s.repo.CreateBulk(ctx, c)
 	if err != nil {
-		return nil, fmt.Errorf("Create: %w", err)
+		return nil, fmt.Errorf("CreateBulk: %w", err)
+	}
+	return item, nil
+}
+
+// CreateSerialized creates a new serialized inventory item with all its units in a single transaction.
+func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
+	item, err := s.repo.CreateSerialized(ctx, tx, c)
+	if err != nil {
+		return nil, fmt.Errorf("CreateSerialized: %w", err)
 	}
 	return item, nil
 }
@@ -78,6 +88,15 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// ListUnits returns all inventory units for the given inventory item, ordered by unit_number.
+func (s *Service) ListUnits(ctx context.Context, inventoryID string) ([]Unit, error) {
+	units, err := s.repo.ListUnits(ctx, inventoryID)
+	if err != nil {
+		return nil, fmt.Errorf("ListUnits: %w", err)
+	}
+	return units, nil
+}
+
 // ListCategories returns all equipment categories for orgID.
 func (s *Service) ListCategories(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error) {
 	cats, err := s.categories.GetByOrgID(ctx, orgID)
@@ -85,4 +104,50 @@ func (s *Service) ListCategories(ctx context.Context, orgID string) ([]categorie
 		return nil, fmt.Errorf("ListCategories: %w", err)
 	}
 	return cats, nil
+}
+
+// GetUnit returns the unit with id, or database.ErrNotFound when it does not exist.
+func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
+	u, err := s.repo.GetUnit(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("GetUnit: %w", err)
+	}
+	return u, nil
+}
+
+// AddUnit adds a new empty unit to the serialized inventory item, auto-assigning the next unit number.
+// It also increments total_stock on the inventory record.
+func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
+	maxNum, err := s.repo.MaxUnitNumber(ctx, a.InventoryID)
+	if err != nil {
+		return nil, fmt.Errorf("AddUnit: %w", err)
+	}
+	a.UnitNumber = maxNum + 1
+	u, err := s.repo.AddUnit(ctx, a)
+	if err != nil {
+		return nil, fmt.Errorf("AddUnit: %w", err)
+	}
+	if err := s.repo.UpdateTotalStock(ctx, a.InventoryID, 1); err != nil {
+		return nil, fmt.Errorf("AddUnit: %w", err)
+	}
+	return u, nil
+}
+
+// UpdateUnit updates a unit's serial number and next inspection date.
+func (s *Service) UpdateUnit(ctx context.Context, u UpdateUnit) error {
+	if err := s.repo.UpdateUnit(ctx, u); err != nil {
+		return fmt.Errorf("UpdateUnit: %w", err)
+	}
+	return nil
+}
+
+// DeleteUnit removes a unit and decrements total_stock on the inventory record.
+func (s *Service) DeleteUnit(ctx context.Context, unitID, inventoryID string) error {
+	if err := s.repo.DeleteUnit(ctx, unitID); err != nil {
+		return fmt.Errorf("DeleteUnit: %w", err)
+	}
+	if err := s.repo.UpdateTotalStock(ctx, inventoryID, -1); err != nil {
+		return fmt.Errorf("DeleteUnit: %w", err)
+	}
+	return nil
 }

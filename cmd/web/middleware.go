@@ -36,7 +36,17 @@ func newRequestLogger(logger *slog.Logger) *requestLogger {
 	return &requestLogger{logger: logger}
 }
 
-// logRequest is middleware that logs each inbound request. Requests to /s/ (static assets)
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (sr *statusRecorder) WriteHeader(code int) {
+	sr.status = code
+	sr.ResponseWriter.WriteHeader(code)
+}
+
+// logRequest is middleware that logs each inbound request. Requests to /static/ (static assets)
 // are skipped to avoid flooding logs with high-frequency, low-signal noise.
 func (rl *requestLogger) handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,14 +55,16 @@ func (rl *requestLogger) handler(next http.Handler) http.Handler {
 			return
 		}
 
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(rec, r)
+
 		rl.logger.InfoContext(r.Context(), "request",
 			slog.String("addr", r.RemoteAddr),
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
+			slog.Int("status", rec.status),
 			slog.Any("queries", r.URL.Query()),
 		)
-
-		next.ServeHTTP(w, r)
 	})
 }
 

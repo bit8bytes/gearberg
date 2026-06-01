@@ -14,10 +14,14 @@
     <div>
       {{ if eq (len .Data.Categories) 0 }}
       <div class="tooltip tooltip-left" data-tip="Create a category first">
-        <a tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item</a>
+        <span tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item ▾</span>
       </div>
       {{ else }}
-      <a href="/orgs/{{ .Data.OrgID }}/inventory/new" tabindex="0" class="btn btn-primary">+ Add Item</a>
+      <div class="dropdown dropdown-end">
+        <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/inventory/new">
+          + Add Item 
+        </a>
+      </div>
       {{ end }}
     </div>
   </div>

@@ -57,7 +57,7 @@ func (app *application) postOrgSettings(w http.ResponseWriter, r *http.Request) 
 		ID:       ksuid.New().String(),
 		OrgID:    id,
 		Currency: form.Currency,
-		VatRate:  form.VatRate,
+		VatRate:  form.VatRateBasisPoints(),
 		Timezone: form.Timezone,
 	})
 	if err != nil {

@@ -13,7 +13,7 @@ erDiagram
     text id PK
     text org_id FK "NOT NULL ON DELETE CASCADE"
     text currency
-    decimal vat_rate
+    integer vat_rate "basis points e.g. 1900 = 19%"
     text timezone
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
@@ -37,31 +37,39 @@ erDiagram
   %% name must be unique per org: UNIQUE(org_id, name)
 
   inventory_types {
-    text id PK
+    integer id PK
     text name "UNIQUE NOT NULL"
   }
   %% seeded with bulk and serialized; extend by inserting new rows
+
+  usage_types {
+    integer id PK
+    text name "UNIQUE NOT NULL"
+  }
+  %% seeded with rental and sale; extend by inserting new rows
 
   inventory {
     text id PK
     text org_id FK "NOT NULL ON DELETE CASCADE"
     text category_id FK "NOT NULL ON DELETE RESTRICT"
     text manufacturer_id FK "ON DELETE RESTRICT"
-    text type_id FK "NOT NULL ON DELETE RESTRICT"
+    integer type_id FK "NOT NULL ON DELETE RESTRICT"
+    integer usage_type_id FK "NOT NULL ON DELETE RESTRICT"
     text name "NOT NULL"
     text code
-    text image_key
+    text storage_object_id FK "ON DELETE SET NULL"
     integer total_stock "NOT NULL DEFAULT 1"
-    real purchase_price
-    real rental_price
+    integer purchase_price "cents e.g. 1999 = 19.99"
+    integer rental_price "cents e.g. 1999 = 19.99"
     text notes
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
   %% code is a user-defined identifier (e.g. an internal asset code like 4993); optional and not enforced for uniqueness
+  %% prices are stored exclusive of VAT (net); VAT is applied at invoice time using org_settings.vat_rate
 
   unit_statuses {
-    text id PK
+    integer id PK
     text name "UNIQUE NOT NULL"
   }
   %% seeded with available, in_service, retired
@@ -81,6 +89,7 @@ erDiagram
   %% unit_number is auto-assigned by the application (next available integer per inventory item); serial_number is optional
 
   inventory_types ||--o{ inventory : "types"
+  usage_types ||--o{ inventory : "usage"
   unit_statuses ||--o{ inventory_units : "statuses"
   orgs ||--|| org_settings : "has"
   orgs ||--o{ equipment_categories : "has"

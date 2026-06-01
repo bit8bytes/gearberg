@@ -102,6 +102,10 @@ func runServe(args []string) error {
 		}
 	}(db)
 
+	if err := seedReferenceData(ctx, db); err != nil {
+		return fmt.Errorf("seed reference data: %w", err)
+	}
+
 	services, err := setupServices(db, options, log)
 	if err != nil {
 		return fmt.Errorf("setup services: %w", err)
@@ -141,6 +145,10 @@ func runVerify(args []string) error {
 			log.InfoContext(ctx, "close database", "error", err.Error())
 		}
 	}(db)
+
+	if err := seedReferenceData(ctx, db); err != nil {
+		return fmt.Errorf("seed reference data: %w", err)
+	}
 
 	log.InfoContext(ctx, "ok", "db_version", databaseVersion)
 	return nil

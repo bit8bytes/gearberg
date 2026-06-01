@@ -35,7 +35,7 @@ type CreateParams struct {
 	ID       string
 	OrgID    string
 	Currency string
-	VatRate  float64
+	VatRate  int64
 	Timezone string
 }
 
@@ -43,7 +43,7 @@ type CreateRow struct {
 	ID        string
 	OrgID     string
 	Currency  string
-	VatRate   float64
+	VatRate   int64
 	Timezone  string
 	CreatedAt int64
 }
@@ -154,7 +154,7 @@ RETURNING
 
 type UpdateParams struct {
 	Currency string
-	VatRate  float64
+	VatRate  int64
 	Timezone string
 	ID       string
 }

@@ -55,11 +55,17 @@ var (
 	// Inventory is the inventory list page.
 	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)
 
-	// InventoryNew is the create-item form page.
+	// InventoryNew is the unified create-item form page (bulk or serialized).
 	InventoryNew = newPage("pages/inventory/new.tmpl", layouts.Center)
 
-	// InventoryDetail is the item detail/edit page.
-	InventoryDetail = newPage("pages/inventory/detail.tmpl", layouts.Center)
+	// InventoryDetailBulk is the bulk item detail/edit page.
+	InventoryDetailBulk = newPage("pages/inventory/detail-bulk.tmpl", layouts.Center)
+
+	// InventoryDetailSerialized is the serialized item detail/edit page.
+	InventoryDetailSerialized = newPage("pages/inventory/detail-serialized.tmpl", layouts.Center)
+
+	// InventoryUnits is the unit management page for a serialized item.
+	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Center)
 
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)

@@ -1,0 +1,111 @@
+{{ define "title" }}{{ .Data.ItemName }} — Units{{ end }}
+
+{{ define "page" }}
+<div class="flex-1 min-w-0 max-w-xl mx-auto mt-8">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1>Units</h1>
+      <span class="text-base-content/60 text-sm">{{ .Data.ItemName }}</span>
+    </div>
+    <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}" class="btn">Back</a>
+  </div>
+
+  {{/* Unit-level forms live outside the table to avoid nesting. */}}
+  {{ range .Data.Units }}
+  <form id="unit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}"></form>
+  <form id="unit-{{ .ID }}-delete" method="POST" action="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}/delete"></form>
+  {{ end }}
+  <form id="unit-add" method="POST" action="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/units"></form>
+
+  <div class="overflow-x-auto">
+    <table class="table table-sm w-full">
+      <thead>
+        <tr>
+          <th class="w-10">#</th>
+          <th class="w-28">Status</th>
+          <th>Serial Number</th>
+          <th>Next Inspection</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ if .Data.Units }}
+        {{ range .Data.Units }}
+        <tr>
+          <td class="text-base-content/40 align-middle">{{ .UnitNumber }}</td>
+          <td class="align-middle">
+            {{ if eq .StatusID 1 }}<span class="badge badge-success badge-sm">Available</span>
+            {{ else if eq .StatusID 2 }}<span class="badge badge-warning badge-sm">In Service</span>
+            {{ else if eq .StatusID 3 }}<span class="badge badge-neutral badge-sm">Retired</span>
+            {{ end }}
+          </td>
+          <td>
+            <input
+              form="unit-{{ .ID }}"
+              type="text"
+              name="serial_number"
+              value="{{ .SerialNumber }}"
+              maxlength="200"
+              class="input input-sm w-full"
+              placeholder="—"
+            />
+          </td>
+          <td>
+            <input
+              form="unit-{{ .ID }}"
+              type="date"
+              name="next_inspection_at"
+              value="{{ unixDate .NextInspectionAt }}"
+              class="input input-sm"
+            />
+          </td>
+          <td class="text-right">
+            <div class="flex gap-1 justify-end">
+              <button form="unit-{{ .ID }}" type="submit" class="btn btn-sm btn-primary">Save</button>
+              <button
+                form="unit-{{ .ID }}-delete"
+                type="submit"
+                class="btn btn-sm btn-error btn-outline"
+                data-confirm="Delete unit #{{ .UnitNumber }}?"
+              >Delete</button>
+            </div>
+          </td>
+        </tr>
+        {{ end }}
+        {{ else }}
+        <tr>
+          <td colspan="5" class="text-sm text-base-content/40 py-4">No units recorded.</td>
+        </tr>
+        {{ end }}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2" class="text-xs text-base-content/40 align-middle">New unit</td>
+          <td>
+            <input
+              form="unit-add"
+              type="text"
+              name="serial_number"
+              maxlength="200"
+              class="input input-sm w-full"
+              placeholder="Serial number (optional)"
+            />
+          </td>
+          <td>
+            <input
+              form="unit-add"
+              type="date"
+              name="next_inspection_at"
+              class="input input-sm"
+            />
+          </td>
+          <td class="text-right">
+            <button form="unit-add" type="submit" class="btn btn-sm btn-primary">Add</button>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+</div>
+{{ end }}
