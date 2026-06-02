@@ -253,6 +253,7 @@ func (r *Repository) ListUnits(ctx context.Context, inventoryID string) ([]Unit,
 			StatusID:         row.StatusID,
 			UnitNumber:       row.UnitNumber,
 			SerialNumber:     database.String(row.SerialNumber),
+			Notes:            database.String(row.Notes),
 			NextInspectionAt: database.Int64Ptr(row.NextInspectionAt),
 			CreatedAt:        row.CreatedAt,
 			UpdatedAt:        row.UpdatedAt,
@@ -285,6 +286,7 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		StatusID:         row.StatusID,
 		UnitNumber:       row.UnitNumber,
 		SerialNumber:     database.String(row.SerialNumber),
+		Notes:            database.String(row.Notes),
 		NextInspectionAt: database.Int64Ptr(row.NextInspectionAt),
 		CreatedAt:        row.CreatedAt,
 		UpdatedAt:        row.UpdatedAt,
@@ -329,6 +331,7 @@ func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.inventory.UpdateUnit(ctx, geninv.UpdateUnitParams{
 		SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
 		NextInspectionAt: database.NullInt64(u.NextInspectionAt),
+		Notes:            database.NullString(database.StringOrNil(u.Notes)),
 		ID:               u.ID,
 	}); err != nil {
 		return fmt.Errorf("UpdateUnit: %w", database.NormalizeError(err))

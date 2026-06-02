@@ -281,6 +281,7 @@ SELECT
     status_id,
     unit_number,
     serial_number,
+    notes,
     next_inspection_at,
     updated_at,
     created_at
@@ -288,26 +289,16 @@ FROM inventory_units
 WHERE id = ?
 `
 
-type GetUnitRow struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	UpdatedAt        int64
-	CreatedAt        int64
-}
-
-func (q *Queries) GetUnit(ctx context.Context, id string) (GetUnitRow, error) {
+func (q *Queries) GetUnit(ctx context.Context, id string) (InventoryUnit, error) {
 	row := q.db.QueryRowContext(ctx, getUnit, id)
-	var i GetUnitRow
+	var i InventoryUnit
 	err := row.Scan(
 		&i.ID,
 		&i.InventoryID,
 		&i.StatusID,
 		&i.UnitNumber,
 		&i.SerialNumber,
+		&i.Notes,
 		&i.NextInspectionAt,
 		&i.UpdatedAt,
 		&i.CreatedAt,
@@ -422,6 +413,7 @@ SELECT
     status_id,
     unit_number,
     serial_number,
+    notes,
     next_inspection_at,
     updated_at,
     created_at
@@ -430,32 +422,22 @@ WHERE inventory_id = ?
 ORDER BY unit_number ASC
 `
 
-type ListUnitsByInventoryIDRow struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	UpdatedAt        int64
-	CreatedAt        int64
-}
-
-func (q *Queries) ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]ListUnitsByInventoryIDRow, error) {
+func (q *Queries) ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]InventoryUnit, error) {
 	rows, err := q.db.QueryContext(ctx, listUnitsByInventoryID, inventoryID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListUnitsByInventoryIDRow
+	var items []InventoryUnit
 	for rows.Next() {
-		var i ListUnitsByInventoryIDRow
+		var i InventoryUnit
 		if err := rows.Scan(
 			&i.ID,
 			&i.InventoryID,
 			&i.StatusID,
 			&i.UnitNumber,
 			&i.SerialNumber,
+			&i.Notes,
 			&i.NextInspectionAt,
 			&i.UpdatedAt,
 			&i.CreatedAt,
@@ -615,6 +597,7 @@ UPDATE inventory_units
 SET
     serial_number = ?,
     next_inspection_at = ?,
+    notes = ?,
     updated_at = unixepoch()
 WHERE id = ?
 `
@@ -622,10 +605,16 @@ WHERE id = ?
 type UpdateUnitParams struct {
 	SerialNumber     sql.NullString
 	NextInspectionAt sql.NullInt64
+	Notes            sql.NullString
 	ID               string
 }
 
 func (q *Queries) UpdateUnit(ctx context.Context, arg UpdateUnitParams) error {
-	_, err := q.db.ExecContext(ctx, updateUnit, arg.SerialNumber, arg.NextInspectionAt, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateUnit,
+		arg.SerialNumber,
+		arg.NextInspectionAt,
+		arg.Notes,
+		arg.ID,
+	)
 	return err
 }

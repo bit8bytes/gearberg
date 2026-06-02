@@ -82,6 +82,7 @@ type Unit struct {
 	StatusID         int64
 	UnitNumber       int64
 	SerialNumber     string
+	Notes            string
 	NextInspectionAt *int64
 	CreatedAt        int64
 	UpdatedAt        int64
@@ -116,5 +117,6 @@ type AddUnit struct {
 type UpdateUnit struct {
 	ID               string
 	SerialNumber     string
+	Notes            string
 	NextInspectionAt *int64
 }

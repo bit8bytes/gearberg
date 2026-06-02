@@ -3,3 +3,19 @@
 //   sqlc v1.31.1
 
 package inventory
+
+import (
+	"database/sql"
+)
+
+type InventoryUnit struct {
+	ID               string
+	InventoryID      string
+	StatusID         int64
+	UnitNumber       int64
+	SerialNumber     sql.NullString
+	Notes            sql.NullString
+	NextInspectionAt sql.NullInt64
+	UpdatedAt        int64
+	CreatedAt        int64
+}

@@ -207,6 +207,7 @@ func (f *NewForm) RentalPriceCents() *int64 {
 // UnitForm holds the parsed form input and validation state for adding or editing a unit.
 type UnitForm struct {
 	SerialNumber     string
+	Notes            string
 	NextInspectionAt string
 	validator.Validator
 }
@@ -218,6 +219,7 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 	}
 	return UnitForm{
 		SerialNumber:     strings.TrimSpace(r.PostForm.Get("serial_number")),
+		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
 		NextInspectionAt: strings.TrimSpace(r.PostForm.Get("next_inspection_at")),
 	}, nil
 }
@@ -226,6 +228,9 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 func (f *UnitForm) Validate() bool {
 	if validator.NotBlank(f.SerialNumber) {
 		f.Check(validator.MaxChars(f.SerialNumber, 200), "serial_number", "Cannot exceed 200 characters")
+	}
+	if validator.NotBlank(f.Notes) {
+		f.Check(validator.MaxChars(f.Notes, 1000), "notes", "Cannot exceed 1000 characters")
 	}
 	if validator.NotBlank(f.NextInspectionAt) {
 		_, err := time.Parse("2006-01-02", f.NextInspectionAt)

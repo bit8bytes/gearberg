@@ -71,6 +71,18 @@
             </div>
           </td>
         </tr>
+        <tr>
+          <td colspan="5" class="pt-0 pb-2">
+            <textarea
+              form="unit-{{ .ID }}"
+              name="notes"
+              maxlength="1000"
+              rows="2"
+              class="textarea textarea-sm w-full"
+              placeholder="Notes"
+            >{{ .Notes }}</textarea>
+          </td>
+        </tr>
         {{ end }}
         {{ else }}
         <tr>
@@ -101,6 +113,18 @@
           </td>
           <td class="text-right">
             <button form="unit-add" type="submit" class="btn btn-sm btn-primary">Add</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" class="pt-0 pb-2">
+            <textarea
+              form="unit-add"
+              name="notes"
+              maxlength="1000"
+              rows="2"
+              class="textarea textarea-sm w-full"
+              placeholder="Notes (optional)"
+            ></textarea>
           </td>
         </tr>
       </tfoot>

@@ -395,13 +395,14 @@ func (app *application) postInventoryAddUnit(w http.ResponseWriter, r *http.Requ
 	// AddUnit creates an empty unit; we patch it immediately if serial/date were supplied.
 	// This avoids a separate "edit after add" round-trip for users who fill the form.
 	// We don't know the new unit ID here, so we list units and update the last one.
-	if form.SerialNumber != "" || form.NextInspectionAt != "" {
+	if form.SerialNumber != "" || form.NextInspectionAt != "" || form.Notes != "" {
 		units, listErr := app.services.inventory.ListUnits(ctx, itemID)
 		if listErr == nil && len(units) > 0 {
 			last := units[len(units)-1]
 			_ = app.services.inventory.UpdateUnit(ctx, inventory.UpdateUnit{
 				ID:               last.ID,
 				SerialNumber:     form.SerialNumber,
+				Notes:            form.Notes,
 				NextInspectionAt: form.NextInspectionAtUnix(),
 			})
 		}
@@ -429,6 +430,7 @@ func (app *application) postInventoryUpdateUnit(w http.ResponseWriter, r *http.R
 	if err := app.services.inventory.UpdateUnit(ctx, inventory.UpdateUnit{
 		ID:               unitID,
 		SerialNumber:     form.SerialNumber,
+		Notes:            form.Notes,
 		NextInspectionAt: form.NextInspectionAtUnix(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}

@@ -149,6 +149,7 @@ SELECT
     status_id,
     unit_number,
     serial_number,
+    notes,
     next_inspection_at,
     updated_at,
     created_at
@@ -172,6 +173,7 @@ SELECT
     status_id,
     unit_number,
     serial_number,
+    notes,
     next_inspection_at,
     updated_at,
     created_at
@@ -187,6 +189,7 @@ UPDATE inventory_units
 SET
     serial_number = ?,
     next_inspection_at = ?,
+    notes = ?,
     updated_at = unixepoch()
 WHERE id = ?;
 
