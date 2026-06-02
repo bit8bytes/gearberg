@@ -27,7 +27,7 @@ type Inventory struct {
 	TypeID          int64
 	UsageTypeID     int64
 	Name            string
-	Code            string
+	Code            int64
 	CategoryID      string
 	CategoryName    string
 	ManufacturerID  string
@@ -48,7 +48,7 @@ type Base struct {
 	UsageTypeID   int64
 	Name          string
 	CategoryID    string
-	Code          string
+	Code          int64
 	PurchasePrice *int64
 	RentalPrice   *int64
 	Notes         string
@@ -93,7 +93,7 @@ type UpdateInventory struct {
 	ID            string
 	Name          string
 	CategoryID    string
-	Code          string
+	Code          int64
 	TotalStock    int64
 	PurchasePrice *int64
 	RentalPrice   *int64

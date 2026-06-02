@@ -45,6 +45,7 @@ type inventoryUnitsData struct {
 	OrgID    string
 	ItemID   string
 	ItemName string
+	ItemCode int64
 	Units    []inventory.Unit
 }
 
@@ -161,7 +162,6 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		UsageTypeID:   invtypes.ParseUsage(form.UsageTypeID).ID(),
 		Name:          form.Name,
 		CategoryID:    form.CategoryID,
-		Code:          form.Code,
 		PurchasePrice: form.PurchasePriceCents(),
 		RentalPrice:   form.RentalPriceCents(),
 		Notes:         form.Notes,
@@ -280,13 +280,17 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		ID:            itemID,
 		Name:          form.Name,
 		CategoryID:    form.CategoryID,
-		Code:          form.Code,
+		Code:          form.CodeInt64(),
 		TotalStock:    form.TotalStockInt64(),
 		PurchasePrice: form.PurchasePriceCents(),
 		RentalPrice:   form.RentalPriceCents(),
 		Notes:         form.Notes,
 	})
 	if err != nil {
+		if errors.Is(err, database.ErrUniqueConstraint) {
+			form.AddError("code", "This code is already used by another item")
+			return app.renderInventoryEdit(w, r, orgID, itemID, &form)
+		}
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
@@ -339,13 +343,17 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 		ID:            itemID,
 		Name:          form.Name,
 		CategoryID:    form.CategoryID,
-		Code:          form.Code,
+		Code:          form.CodeInt64(),
 		TotalStock:    current.TotalStock,
 		PurchasePrice: form.PurchasePriceCents(),
 		RentalPrice:   form.RentalPriceCents(),
 		Notes:         form.Notes,
 	})
 	if err != nil {
+		if errors.Is(err, database.ErrUniqueConstraint) {
+			form.AddError("code", "This code is already used by another item")
+			return app.renderInventoryEdit(w, r, orgID, itemID, &form)
+		}
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
@@ -473,7 +481,7 @@ func (app *application) getInventoryUnits(w http.ResponseWriter, r *http.Request
 	}
 
 	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, Units: units}
+	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryUnits, data)
 }
 
@@ -492,7 +500,7 @@ func (app *application) renderInventoryUnits(w http.ResponseWriter, r *http.Requ
 	}
 
 	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, Units: units}
+	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryUnits, data)
 }
 

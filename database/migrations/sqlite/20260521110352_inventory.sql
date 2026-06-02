@@ -8,14 +8,15 @@ CREATE TABLE inventory (
   type_id INTEGER NOT NULL REFERENCES inventory_types(id) ON DELETE RESTRICT,
   usage_type_id INTEGER NOT NULL REFERENCES usage_types(id) ON DELETE RESTRICT,
   name TEXT NOT NULL,
-  code TEXT,
+  code INTEGER NOT NULL,
   storage_object_id TEXT DEFAULT NULL REFERENCES storage_objects(id) ON DELETE SET NULL,
   total_stock INTEGER NOT NULL DEFAULT 1,
   purchase_price INTEGER,
   rental_price INTEGER,
   notes TEXT,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
-  created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  UNIQUE(org_id, code)
 ) STRICT;
 -- +goose StatementEnd
 

@@ -71,7 +71,7 @@ type CreateParams struct {
 	CategoryID    string
 	TypeID        int64
 	UsageTypeID   int64
-	Code          sql.NullString
+	Code          int64
 	TotalStock    int64
 	PurchasePrice sql.NullInt64
 	RentalPrice   sql.NullInt64
@@ -87,7 +87,7 @@ type CreateRow struct {
 	StorageObjectID sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
-	Code            sql.NullString
+	Code            int64
 	TotalStock      int64
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
@@ -222,6 +222,7 @@ SELECT
     type_id,
     usage_type_id,
     name,
+    code,
     category_id,
     manufacturer_id,
     storage_object_id,
@@ -241,6 +242,7 @@ type GetByIDRow struct {
 	TypeID          int64
 	UsageTypeID     int64
 	Name            string
+	Code            int64
 	CategoryID      string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
@@ -261,6 +263,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.TypeID,
 		&i.UsageTypeID,
 		&i.Name,
+		&i.Code,
 		&i.CategoryID,
 		&i.ManufacturerID,
 		&i.StorageObjectID,
@@ -311,6 +314,7 @@ SELECT
     i.id,
     i.org_id,
     i.name,
+    i.code,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
@@ -345,6 +349,7 @@ type ListRow struct {
 	ID              string
 	OrgID           string
 	Name            string
+	Code            int64
 	CategoryID      string
 	CategoryName    string
 	ManufacturerID  sql.NullString
@@ -379,6 +384,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.ID,
 			&i.OrgID,
 			&i.Name,
+			&i.Code,
 			&i.CategoryID,
 			&i.CategoryName,
 			&i.ManufacturerID,
@@ -455,6 +461,18 @@ func (q *Queries) ListUnitsByInventoryID(ctx context.Context, inventoryID string
 	return items, nil
 }
 
+const maxCodeByOrgID = `-- name: MaxCodeByOrgID :one
+SELECT CAST(COALESCE(MAX(code), 0) AS INTEGER) FROM inventory
+WHERE org_id = ?
+`
+
+func (q *Queries) MaxCodeByOrgID(ctx context.Context, orgID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, maxCodeByOrgID, orgID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const maxUnitNumber = `-- name: MaxUnitNumber :one
 SELECT CAST(COALESCE(MAX(unit_number), 0) AS INTEGER) FROM inventory_units
 WHERE inventory_id = ?
@@ -500,7 +518,7 @@ RETURNING
 type UpdateParams struct {
 	Name          string
 	CategoryID    string
-	Code          sql.NullString
+	Code          int64
 	TotalStock    int64
 	PurchasePrice sql.NullInt64
 	RentalPrice   sql.NullInt64
@@ -517,7 +535,7 @@ type UpdateRow struct {
 	StorageObjectID sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
-	Code            sql.NullString
+	Code            int64
 	TotalStock      int64
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64

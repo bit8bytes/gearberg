@@ -62,15 +62,18 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label for="code">Code <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <label for="code">Code</label>
       <input
         id="code"
-        type="text"
+        type="number"
         name="code"
+        min="1"
         value="{{ if .Form.Code }}{{ .Form.Code }}{{ else if .Data.Item }}{{ .Data.Item.Code }}{{ end }}"
-        maxlength="100"
         class="input w-full"
       />
+      {{ with index .Form.Errors "code" }}
+        <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
     </div>
 
     <div class="flex gap-2">

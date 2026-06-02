@@ -26,6 +26,15 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+// MaxCode returns the highest code for orgID, or 0 when there are no items.
+func (r *Repository) MaxCode(ctx context.Context, orgID string) (int64, error) {
+	n, err := r.inventory.MaxCodeByOrgID(ctx, orgID)
+	if err != nil {
+		return 0, fmt.Errorf("MaxCode: %w", err)
+	}
+	return n, nil
+}
+
 // Count returns the number of inventory items belonging to orgID.
 func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 	n, err := r.inventory.CountByOrgID(ctx, orgID)
@@ -60,6 +69,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			TypeID:          row.TypeID,
 			UsageTypeID:     row.UsageTypeID,
 			Name:            row.Name,
+			Code:            row.Code,
 			CategoryID:      row.CategoryID,
 			CategoryName:    row.CategoryName,
 			ManufacturerID:  database.String(row.ManufacturerID),
@@ -90,6 +100,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 		TypeID:          row.TypeID,
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
+		Code:            row.Code,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
@@ -123,7 +134,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		CategoryID:    c.CategoryID,
 		TypeID:        types.Bulk.ID(),
 		UsageTypeID:   c.UsageTypeID,
-		Code:          database.NullString(database.StringOrNil(c.Code)),
+		Code:          c.Code,
 		TotalStock:    c.TotalStock,
 		PurchasePrice: database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:   database.NullInt64Ptr(c.RentalPrice),
@@ -138,7 +149,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		TypeID:          row.TypeID,
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
-		Code:            database.String(row.Code),
+		Code:            row.Code,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
@@ -161,7 +172,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		CategoryID:    c.CategoryID,
 		TypeID:        types.Serialized.ID(),
 		UsageTypeID:   c.UsageTypeID,
-		Code:          database.NullString(database.StringOrNil(c.Code)),
+		Code:          c.Code,
 		TotalStock:    int64(len(c.Units)),
 		PurchasePrice: database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:   database.NullInt64Ptr(c.RentalPrice),
@@ -191,7 +202,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		TypeID:          row.TypeID,
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
-		Code:            database.String(row.Code),
+		Code:            row.Code,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
@@ -210,7 +221,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 		ID:            u.ID,
 		Name:          u.Name,
 		CategoryID:    u.CategoryID,
-		Code:          database.NullString(database.StringOrNil(u.Code)),
+		Code:          u.Code,
 		TotalStock:    u.TotalStock,
 		PurchasePrice: database.NullInt64Ptr(u.PurchasePrice),
 		RentalPrice:   database.NullInt64Ptr(u.RentalPrice),
@@ -225,7 +236,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 		TypeID:          row.TypeID,
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
-		Code:            database.String(row.Code),
+		Code:            row.Code,
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),

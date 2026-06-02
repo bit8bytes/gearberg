@@ -1,8 +1,13 @@
+-- name: MaxCodeByOrgID :one
+SELECT CAST(COALESCE(MAX(code), 0) AS INTEGER) FROM inventory
+WHERE org_id = ?;
+
 -- name: List :many
 SELECT
     i.id,
     i.org_id,
     i.name,
+    i.code,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
@@ -101,6 +106,7 @@ SELECT
     type_id,
     usage_type_id,
     name,
+    code,
     category_id,
     manufacturer_id,
     storage_object_id,

@@ -45,8 +45,13 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Inventory, error) {
 	return item, nil
 }
 
-// CreateBulk creates a new bulk inventory item.
+// CreateBulk creates a new bulk inventory item with an auto-assigned code.
 func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inventory, error) {
+	maxCode, err := s.repo.MaxCode(ctx, c.OrgID)
+	if err != nil {
+		return nil, fmt.Errorf("CreateBulk: %w", err)
+	}
+	c.Code = maxCode + 1
 	item, err := s.repo.CreateBulk(ctx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", err)
@@ -55,7 +60,13 @@ func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inven
 }
 
 // CreateSerialized creates a new serialized inventory item with all its units in a single transaction.
+// Code is auto-assigned before the transaction begins.
 func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
+	maxCode, err := s.repo.MaxCode(ctx, c.OrgID)
+	if err != nil {
+		return nil, fmt.Errorf("CreateSerialized: %w", err)
+	}
+	c.Code = maxCode + 1
 	item, err := s.repo.CreateSerialized(ctx, tx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", err)

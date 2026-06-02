@@ -56,7 +56,7 @@ erDiagram
     integer type_id FK "NOT NULL ON DELETE RESTRICT"
     integer usage_type_id FK "NOT NULL ON DELETE RESTRICT"
     text name "NOT NULL"
-    text code
+    integer code "NOT NULL UNIQUE(org_id,code)"
     text storage_object_id FK "ON DELETE SET NULL"
     integer total_stock "NOT NULL DEFAULT 1"
     integer purchase_price "cents e.g. 1999 = 19.99"
@@ -65,7 +65,7 @@ erDiagram
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
-  %% code is a user-defined identifier (e.g. an internal asset code like 4993); optional and not enforced for uniqueness
+  %% code is auto-assigned at creation (MAX(code)+1 per org); user-editable but must remain a positive integer unique within the org
   %% prices are stored exclusive of VAT (net); VAT is applied at invoice time using org_settings.vat_rate
 
   unit_statuses {

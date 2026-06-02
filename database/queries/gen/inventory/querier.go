@@ -18,6 +18,7 @@ type Querier interface {
 	GetUnit(ctx context.Context, id string) (InventoryUnit, error)
 	List(ctx context.Context, arg ListParams) ([]ListRow, error)
 	ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]InventoryUnit, error)
+	MaxCodeByOrgID(ctx context.Context, orgID string) (int64, error)
 	MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error)
 	Update(ctx context.Context, arg UpdateParams) (UpdateRow, error)
 	UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error
