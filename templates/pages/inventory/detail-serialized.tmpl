@@ -62,6 +62,22 @@
     </div>
 
     <div class="flex flex-col gap-1">
+      <label for="manufacturer_id">Manufacturer</label>
+      <select id="manufacturer_id" name="manufacturer_id" class="select w-full" {{ if not .Data.Manufacturers }}disabled{{ end }}>
+        <option value="">None</option>
+        {{ range .Data.Manufacturers }}
+          <option value="{{ .ID }}"
+            {{ if $.Form.ManufacturerID }}
+              {{ if eq $.Form.ManufacturerID .ID }}selected{{ end }}
+            {{ else if $.Data.Item }}
+              {{ if eq $.Data.Item.ManufacturerID .ID }}selected{{ end }}
+            {{ end }}
+          >{{ .Name }}</option>
+        {{ end }}
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
       <label for="code">Code</label>
       <input
         id="code"

@@ -39,6 +39,7 @@ INSERT INTO inventory (
     org_id,
     name,
     category_id,
+    manufacturer_id,
     type_id,
     usage_type_id,
     code,
@@ -47,6 +48,7 @@ INSERT INTO inventory (
     rental_price,
     notes
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -124,6 +126,7 @@ UPDATE inventory
 SET
     name = ?,
     category_id = ?,
+    manufacturer_id = ?,
     code = ?,
     total_stock = ?,
     purchase_price = ?,

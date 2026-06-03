@@ -1,0 +1,38 @@
+{{ define "title" }}{{ if .Data.Manufacturer }}{{ .Data.Manufacturer.Name }}{{ end }}{{ end }}
+
+{{ define "page" }}
+{{ $back := printf "/orgs/%s/settings/manufacturers" .Data.OrgID }}
+{{ if .Data.ReturnTo }}{{ $back = .Data.ReturnTo }}{{ end }}
+<div class="flex-1 max-w-xs mx-auto mt-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1>Edit Manufacturer</h1>
+    <a href="{{ $back }}" class="btn">Back</a>
+  </div>
+
+  <form method="POST" class="flex flex-col gap-4" novalidate>
+    <input type="hidden" name="return_to" value="{{ .Data.ReturnTo }}">
+    <div class="flex flex-col gap-1">
+      <label for="name">Name</label>
+      <input
+        id="name"
+        type="text"
+        name="name"
+        value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Manufacturer }}{{ .Data.Manufacturer.Name }}{{ end }}"
+        maxlength="100"
+        class="input"
+      />
+      {{ with index .Form.Errors "name" }}
+        <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div class="flex gap-1 items-center">
+      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/settings/manufacturers/{{ .Data.ID }}" class="btn btn-primary">Save</button>
+      <button formaction="/orgs/{{ .Data.OrgID }}/settings/manufacturers/{{ .Data.ID }}/delete" type="submit" class="btn btn-error btn-outline">Delete</button>
+    </div>
+    {{ with index .Form.Errors "delete" }}
+    <p class="text-error text-sm">{{ . }}</p>
+    {{ end }}
+  </form>
+</div>
+{{ end }}

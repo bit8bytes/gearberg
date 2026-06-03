@@ -1,0 +1,30 @@
+{{ define "title" }}Manufacturers{{ end }}
+{{ define "sidebar-manufacturers" }}bg-base-300 font-semibold{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="heading heading--md">Manufacturers</h2>
+    {{ if ge (len .Data.Manufacturers) .Data.MaxManufacturers }}
+    <div class="tooltip" data-tip="Maximum of {{ .Data.MaxManufacturers }} manufacturers reached">
+      <button class="btn btn-primary" disabled>New Manufacturer</button>
+    </div>
+    {{ else }}
+    <a href="/orgs/{{ .Data.OrgID }}/settings/manufacturers/new" class="btn btn-primary">New Manufacturer</a>
+    {{ end }}
+  </div>
+  <p class="text-sm text-neutral mb-6">Manufacturers of equipment in your inventory.</p>
+
+  {{ if .Data.Manufacturers }}
+  <ul class="flex flex-col gap-2">
+    {{ range .Data.Manufacturers }}
+    <li class="flex items-center justify-between p-3 rounded border border-base-300">
+      <a href="/orgs/{{ $.Data.OrgID }}/settings/manufacturers/{{ .ID }}" class="hover:underline">{{ .Name }}</a>
+    </li>
+    {{ end }}
+  </ul>
+  {{ else }}
+  <p class="text-neutral">No manufacturers yet.</p>
+  {{ end }}
+</div>
+{{ end }}

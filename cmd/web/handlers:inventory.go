@@ -16,6 +16,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	invtypes "github.com/bit8bytes/gearberg/internal/inventory/types"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
+	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates/pages"
@@ -34,11 +35,12 @@ type inventoryData struct {
 }
 
 type inventoryItemData struct {
-	OrgID      string
-	Item       *inventory.Inventory
-	ID         string
-	Categories []categories.EquipmentCategory
-	Currency   string
+	OrgID         string
+	Item          *inventory.Inventory
+	ID            string
+	Categories    []categories.EquipmentCategory
+	Manufacturers []manufacturers.Manufacturer
+	Currency      string
 }
 
 type inventoryUnitsData struct {
@@ -107,28 +109,20 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 }
 
 func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	cats, err := app.services.inventory.ListCategories(ctx, id)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-	}
-
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, id)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
+	deps, appErr := app.loadInventoryFormDeps(r, id)
+	if appErr != nil {
+		return appErr
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.NewForm{}
-	data.Data = inventoryItemData{OrgID: id, Categories: cats, Currency: currency}
+	data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryNew, data)
 }
 
 func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
 	id := r.PathValue("org_id")
 
 	form, err := inventory.ParseNew(r)
@@ -137,18 +131,13 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 	}
 
 	reRender := func(f *inventory.NewForm) *httperr.Error {
-		cats, catErr := app.services.inventory.ListCategories(ctx, id)
-		if catErr != nil {
-			return &httperr.Error{Error: catErr, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-		}
-		orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, id)
-		currency := ""
-		if orgSettings != nil {
-			currency = orgSettings.Currency
+		deps, appErr := app.loadInventoryFormDeps(r, id)
+		if appErr != nil {
+			return appErr
 		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = inventoryItemData{OrgID: id, Categories: cats, Currency: currency}
+		data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryNew, data)
 	}
 
@@ -158,14 +147,15 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 
 	itemID := ksuid.New().String()
 	base := inventory.Base{
-		ID:            itemID,
-		OrgID:         id,
-		UsageTypeID:   invtypes.ParseUsage(form.UsageTypeID).ID(),
-		Name:          form.Name,
-		CategoryID:    form.CategoryID,
-		PurchasePrice: form.PurchasePriceCents(),
-		RentalPrice:   form.RentalPriceCents(),
-		Notes:         form.Notes,
+		ID:             itemID,
+		OrgID:          id,
+		UsageTypeID:    invtypes.ParseUsage(form.UsageTypeID).ID(),
+		Name:           form.Name,
+		CategoryID:     form.CategoryID,
+		ManufacturerID: form.ManufacturerID,
+		PurchasePrice:  form.PurchasePriceCents(),
+		RentalPrice:    form.RentalPriceCents(),
+		Notes:          form.Notes,
 	}
 
 	if form.TypeID == "bulk" {
@@ -238,20 +228,14 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 
-	cats, err := app.services.inventory.ListCategories(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-	}
-
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats, Currency: currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
 	if item.TypeID == invtypes.Serialized.ID() {
 		page = pages.InventoryDetailSerialized
@@ -278,14 +262,15 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 	}
 
 	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
-		ID:            itemID,
-		Name:          form.Name,
-		CategoryID:    form.CategoryID,
-		Code:          form.CodeInt64(),
-		TotalStock:    form.TotalStockInt64(),
-		PurchasePrice: form.PurchasePriceCents(),
-		RentalPrice:   form.RentalPriceCents(),
-		Notes:         form.Notes,
+		ID:             itemID,
+		Name:           form.Name,
+		CategoryID:     form.CategoryID,
+		ManufacturerID: form.ManufacturerID,
+		Code:           form.CodeInt64(),
+		TotalStock:     form.TotalStockInt64(),
+		PurchasePrice:  form.PurchasePriceCents(),
+		RentalPrice:    form.RentalPriceCents(),
+		Notes:          form.Notes,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -299,20 +284,14 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 
-	cats, err := app.services.inventory.ListCategories(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-	}
-
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats, Currency: currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetailBulk, data)
 }
 
@@ -341,14 +320,15 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 	}
 
 	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
-		ID:            itemID,
-		Name:          form.Name,
-		CategoryID:    form.CategoryID,
-		Code:          form.CodeInt64(),
-		TotalStock:    current.TotalStock,
-		PurchasePrice: form.PurchasePriceCents(),
-		RentalPrice:   form.RentalPriceCents(),
-		Notes:         form.Notes,
+		ID:             itemID,
+		Name:           form.Name,
+		CategoryID:     form.CategoryID,
+		ManufacturerID: form.ManufacturerID,
+		Code:           form.CodeInt64(),
+		TotalStock:     current.TotalStock,
+		PurchasePrice:  form.PurchasePriceCents(),
+		RentalPrice:    form.RentalPriceCents(),
+		Notes:          form.Notes,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -362,20 +342,14 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
 
-	cats, err := app.services.inventory.ListCategories(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-	}
-
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats, Currency: currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetailSerialized, data)
 }
 
@@ -550,35 +524,51 @@ func (app *application) storeInventoryImage(r *http.Request, orgID, itemID strin
 	return record, nil
 }
 
+type inventoryFormDeps struct {
+	Categories    []categories.EquipmentCategory
+	Manufacturers []manufacturers.Manufacturer
+	Currency      string
+}
+
+func (app *application) loadInventoryFormDeps(r *http.Request, orgID string) (inventoryFormDeps, *httperr.Error) {
+	ctx := r.Context()
+	cats, err := app.services.inventory.ListCategories(ctx, orgID)
+	if err != nil {
+		return inventoryFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+	}
+	mfrs, err := app.services.inventory.ListManufacturers(ctx, orgID)
+	if err != nil {
+		return inventoryFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
+	}
+	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
+	currency := ""
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
+	return inventoryFormDeps{Categories: cats, Manufacturers: mfrs, Currency: currency}, nil
+}
+
 // renderInventoryEdit re-fetches the item and categories and renders the edit
 // form with 422 Unprocessable Entity, used when validation fails.
 // f may be nil for serialized items where the item form is valid but a unit form failed.
 func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, orgID, itemID string, f *inventory.Form) *httperr.Error {
-	ctx := r.Context()
-	item, err := app.services.inventory.GetByID(ctx, itemID)
+	item, err := app.services.inventory.GetByID(r.Context(), itemID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 	if item.StorageObjectID != nil {
 		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
 	}
-	cats, err := app.services.inventory.ListCategories(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
 	}
-
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
-	}
-
 	if f == nil {
 		f = &inventory.Form{}
 	}
 	data := app.html.TemplateData(r)
 	data.Form = f
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: cats, Currency: currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
 	if item.TypeID == invtypes.Serialized.ID() {
 		page = pages.InventoryDetailSerialized

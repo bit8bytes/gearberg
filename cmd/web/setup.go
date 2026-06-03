@@ -19,6 +19,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
+	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/templates"
@@ -124,6 +125,7 @@ type services struct {
 	orgs                *orgs.Service
 	orgsettings         *settings.Service
 	equipmentcategories *categories.Service
+	manufacturers       *manufacturers.Service
 	inventory           *inventory.Service
 	storageManager      *storage.Manager
 }
@@ -138,8 +140,11 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 	equipmentcategoriesRepo := categories.NewRepository(db)
 	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.MaxOrgCategories})
 
+	manufacturersRepo := manufacturers.NewRepository(db)
+	manufacturersSvc := manufacturers.NewService(manufacturersRepo, manufacturers.Options{MaxManufacturers: opts.MaxOrgManufacturers})
+
 	inventoryRepo := inventory.NewRepository(db)
-	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc)
+	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc, manufacturersSvc)
 
 	store, err := storage.Open("local", opts.StorageDSN, logger)
 	if err != nil {
@@ -156,6 +161,7 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 		orgs:                orgSvc,
 		orgsettings:         orgsettingsSvc,
 		equipmentcategories: equipmentcategoriesSvc,
+		manufacturers:       manufacturersSvc,
 		inventory:           inventorySvc,
 		storageManager:      storageMgr,
 	}, nil

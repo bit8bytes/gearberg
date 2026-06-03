@@ -9,15 +9,16 @@ import (
 )
 
 type options struct {
-	Version          bool
-	LogLevel         logLevel
-	Port             int
-	TLSMode          string
-	DbDsn            string // SECRET
-	StorageDSN       string
-	MaxOrgs          int
-	MaxOrgCategories int
-	MaxStorageBytes  int64
+	Version             bool
+	LogLevel            logLevel
+	Port                int
+	TLSMode             string
+	DbDsn               string // SECRET
+	StorageDSN          string
+	MaxOrgs             int
+	MaxOrgCategories    int
+	MaxOrgManufacturers int
+	MaxStorageBytes     int64
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
@@ -35,6 +36,7 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
+	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per or (default 1 GiB)")
 
@@ -63,6 +65,9 @@ func parseServeOptions(args []string) (*options, error) {
 	}
 	if cfg.MaxOrgCategories <= 0 {
 		return nil, fmt.Errorf("max categories must be greater than 0")
+	}
+	if cfg.MaxOrgManufacturers <= 0 {
+		return nil, fmt.Errorf("max manufacturers must be greater than 0")
 	}
 
 	return cfg, nil

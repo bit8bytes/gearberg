@@ -28,6 +28,7 @@ INSERT INTO inventory (
     org_id,
     name,
     category_id,
+    manufacturer_id,
     type_id,
     usage_type_id,
     code,
@@ -36,6 +37,7 @@ INSERT INTO inventory (
     rental_price,
     notes
 ) VALUES (
+    ?,
     ?,
     ?,
     ?,
@@ -65,17 +67,18 @@ INSERT INTO inventory (
 `
 
 type CreateParams struct {
-	ID            string
-	OrgID         string
-	Name          string
-	CategoryID    string
-	TypeID        int64
-	UsageTypeID   int64
-	Code          int64
-	TotalStock    int64
-	PurchasePrice sql.NullInt64
-	RentalPrice   sql.NullInt64
-	Notes         sql.NullString
+	ID             string
+	OrgID          string
+	Name           string
+	CategoryID     string
+	ManufacturerID sql.NullString
+	TypeID         int64
+	UsageTypeID    int64
+	Code           int64
+	TotalStock     int64
+	PurchasePrice  sql.NullInt64
+	RentalPrice    sql.NullInt64
+	Notes          sql.NullString
 }
 
 type CreateRow struct {
@@ -101,6 +104,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.OrgID,
 		arg.Name,
 		arg.CategoryID,
+		arg.ManufacturerID,
 		arg.TypeID,
 		arg.UsageTypeID,
 		arg.Code,
@@ -517,6 +521,7 @@ UPDATE inventory
 SET
     name = ?,
     category_id = ?,
+    manufacturer_id = ?,
     code = ?,
     total_stock = ?,
     purchase_price = ?,
@@ -543,14 +548,15 @@ RETURNING
 `
 
 type UpdateParams struct {
-	Name          string
-	CategoryID    string
-	Code          int64
-	TotalStock    int64
-	PurchasePrice sql.NullInt64
-	RentalPrice   sql.NullInt64
-	Notes         sql.NullString
-	ID            string
+	Name           string
+	CategoryID     string
+	ManufacturerID sql.NullString
+	Code           int64
+	TotalStock     int64
+	PurchasePrice  sql.NullInt64
+	RentalPrice    sql.NullInt64
+	Notes          sql.NullString
+	ID             string
 }
 
 type UpdateRow struct {
@@ -575,6 +581,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 	row := q.db.QueryRowContext(ctx, update,
 		arg.Name,
 		arg.CategoryID,
+		arg.ManufacturerID,
 		arg.Code,
 		arg.TotalStock,
 		arg.PurchasePrice,

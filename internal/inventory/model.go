@@ -46,15 +46,16 @@ type Inventory struct {
 
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
-	ID            string
-	OrgID         string
-	UsageTypeID   int64
-	Name          string
-	CategoryID    string
-	Code          int64
-	PurchasePrice *int64
-	RentalPrice   *int64
-	Notes         string
+	ID             string
+	OrgID          string
+	UsageTypeID    int64
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	Code           int64
+	PurchasePrice  *int64
+	RentalPrice    *int64
+	Notes          string
 }
 
 // CreateBulkInventory holds the data required to create a bulk inventory item.
@@ -93,14 +94,15 @@ type Unit struct {
 
 // UpdateInventory holds the data required to update an inventory item.
 type UpdateInventory struct {
-	ID            string
-	Name          string
-	CategoryID    string
-	Code          int64
-	TotalStock    int64
-	PurchasePrice *int64
-	RentalPrice   *int64
-	Notes         string
+	ID             string
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	Code           int64
+	TotalStock     int64
+	PurchasePrice  *int64
+	RentalPrice    *int64
+	Notes          string
 }
 
 // SetImage links or unlinks a storage object from an inventory item.

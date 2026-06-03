@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
+	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
@@ -14,15 +15,21 @@ type CategoryLister interface {
 	GetByOrgID(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error)
 }
 
+// ManufacturerLister fetches manufacturers by org.
+type ManufacturerLister interface {
+	GetByOrgID(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error)
+}
+
 // Service implements business logic for inventory.
 type Service struct {
-	repo       *Repository
-	categories CategoryLister
+	repo          *Repository
+	categories    CategoryLister
+	manufacturers ManufacturerLister
 }
 
 // NewService returns a new Service.
-func NewService(repo *Repository, cats CategoryLister) *Service {
-	return &Service{repo: repo, categories: cats}
+func NewService(repo *Repository, cats CategoryLister, mfrs ManufacturerLister) *Service {
+	return &Service{repo: repo, categories: cats, manufacturers: mfrs}
 }
 
 // GetFiltered returns a page of inventory items for orgID, filtered by query
@@ -115,6 +122,15 @@ func (s *Service) ListCategories(ctx context.Context, orgID string) ([]categorie
 		return nil, fmt.Errorf("ListCategories: %w", err)
 	}
 	return cats, nil
+}
+
+// ListManufacturers returns all manufacturers for orgID.
+func (s *Service) ListManufacturers(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error) {
+	mfrs, err := s.manufacturers.GetByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListManufacturers: %w", err)
+	}
+	return mfrs, nil
 }
 
 // GetUnit returns the unit with id, or database.ErrNotFound when it does not exist.

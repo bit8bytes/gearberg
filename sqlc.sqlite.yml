@@ -32,6 +32,16 @@ sql:
         omit_unused_structs: true
 
   - engine: "sqlite"
+    queries: "database/queries/sqlite/manufacturers.sql"
+    schema: "database/migrations/sqlite/"
+    gen:
+      go:
+        package: "manufacturers"
+        out: "database/queries/gen/manufacturers"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
     queries: "database/queries/sqlite/inventory.sql"
     schema: "database/migrations/sqlite/"
     gen:

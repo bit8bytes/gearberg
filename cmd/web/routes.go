@@ -39,6 +39,12 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /orgs/{org_id}/settings/equipment-categories/{id}", app.html.Handle(app.getEquipmentCategory))
 	mux.HandleFunc("POST /orgs/{org_id}/settings/equipment-categories/{id}", app.html.Handle(app.postEquipmentCategory))
 	mux.HandleFunc("POST /orgs/{org_id}/settings/equipment-categories/{id}/delete", app.html.Handle(app.postDeleteEquipmentCategory))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/manufacturers", app.html.Handle(app.getManufacturers))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/manufacturers/new", app.html.Handle(app.getManufacturerNew))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/manufacturers/new", app.html.Handle(app.postManufacturerNew))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/manufacturers/{id}", app.html.Handle(app.getManufacturer))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/manufacturers/{id}", app.html.Handle(app.postManufacturer))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/manufacturers/{id}/delete", app.html.Handle(app.postDeleteManufacturer))
 
 	antiCSRF := http.NewCrossOriginProtection()
 	logRequest := newRequestLogger(app.logger)

@@ -128,17 +128,18 @@ func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
 // CreateBulk inserts a new bulk inventory item.
 func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inventory, error) {
 	row, err := r.inventory.Create(ctx, geninv.CreateParams{
-		ID:            c.ID,
-		OrgID:         c.OrgID,
-		Name:          c.Name,
-		CategoryID:    c.CategoryID,
-		TypeID:        types.Bulk.ID(),
-		UsageTypeID:   c.UsageTypeID,
-		Code:          c.Code,
-		TotalStock:    c.TotalStock,
-		PurchasePrice: database.NullInt64Ptr(c.PurchasePrice),
-		RentalPrice:   database.NullInt64Ptr(c.RentalPrice),
-		Notes:         database.NullString(database.StringOrNil(c.Notes)),
+		ID:             c.ID,
+		OrgID:          c.OrgID,
+		Name:           c.Name,
+		CategoryID:     c.CategoryID,
+		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
+		TypeID:         types.Bulk.ID(),
+		UsageTypeID:    c.UsageTypeID,
+		Code:           c.Code,
+		TotalStock:     c.TotalStock,
+		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
+		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
+		Notes:          database.NullString(database.StringOrNil(c.Notes)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", database.NormalizeError(err))
@@ -166,17 +167,18 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
 	q := geninv.New(tx)
 	row, err := q.Create(ctx, geninv.CreateParams{
-		ID:            c.ID,
-		OrgID:         c.OrgID,
-		Name:          c.Name,
-		CategoryID:    c.CategoryID,
-		TypeID:        types.Serialized.ID(),
-		UsageTypeID:   c.UsageTypeID,
-		Code:          c.Code,
-		TotalStock:    int64(len(c.Units)),
-		PurchasePrice: database.NullInt64Ptr(c.PurchasePrice),
-		RentalPrice:   database.NullInt64Ptr(c.RentalPrice),
-		Notes:         database.NullString(database.StringOrNil(c.Notes)),
+		ID:             c.ID,
+		OrgID:          c.OrgID,
+		Name:           c.Name,
+		CategoryID:     c.CategoryID,
+		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
+		TypeID:         types.Serialized.ID(),
+		UsageTypeID:    c.UsageTypeID,
+		Code:           c.Code,
+		TotalStock:     int64(len(c.Units)),
+		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
+		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
+		Notes:          database.NullString(database.StringOrNil(c.Notes)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
@@ -218,14 +220,15 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 // Update updates the fields of the inventory item identified by u.ID.
 func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
 	row, err := r.inventory.Update(ctx, geninv.UpdateParams{
-		ID:            u.ID,
-		Name:          u.Name,
-		CategoryID:    u.CategoryID,
-		Code:          u.Code,
-		TotalStock:    u.TotalStock,
-		PurchasePrice: database.NullInt64Ptr(u.PurchasePrice),
-		RentalPrice:   database.NullInt64Ptr(u.RentalPrice),
-		Notes:         database.NullString(database.StringOrNil(u.Notes)),
+		ID:             u.ID,
+		Name:           u.Name,
+		CategoryID:     u.CategoryID,
+		ManufacturerID: database.NullString(database.StringOrNil(u.ManufacturerID)),
+		Code:           u.Code,
+		TotalStock:     u.TotalStock,
+		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
+		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
+		Notes:          database.NullString(database.StringOrNil(u.Notes)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Update: %w", database.NormalizeError(err))

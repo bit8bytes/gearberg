@@ -1,0 +1,35 @@
+{{ define "title" }}New Manufacturer{{ end }}
+
+{{ define "page" }}
+{{ $back := printf "/orgs/%s/settings/manufacturers" .Data.OrgID }}
+{{ if .Data.ReturnTo }}{{ $back = .Data.ReturnTo }}{{ end }}
+<div class="flex-1 max-w-xs mx-auto mt-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="">New Manufacturer</h1>
+    <a href="{{ $back }}" class="btn">Back</a>
+  </div>
+
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/manufacturers/new" class="flex flex-col gap-4" novalidate>
+    <input type="hidden" name="return_to" value="{{ .Data.ReturnTo }}">
+    <div class="flex flex-col gap-1">
+      <label for="name">Name</label>
+      <input
+        id="name"
+        type="text"
+        name="name"
+        value="{{ .Form.Name }}"
+        maxlength="100"
+        class="input"
+      />
+      {{ with index .Form.Errors "name" }}
+        <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary">Create</button>
+      <a href="{{ $back }}" class="btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{{ end }}

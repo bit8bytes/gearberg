@@ -52,6 +52,15 @@ var (
 	// EquipmentCategoriesDetail is the category detail/edit page.
 	EquipmentCategoriesDetail = newPage("pages/orgs/categories/detail.tmpl", layouts.Center)
 
+	// ManufacturersIndex is the Manufacturers settings page.
+	ManufacturersIndex = newPage("pages/orgs/manufacturers/index.tmpl", layouts.Settings)
+
+	// ManufacturersNew is the create-manufacturer form page.
+	ManufacturersNew = newPage("pages/orgs/manufacturers/new.tmpl", layouts.Center)
+
+	// ManufacturersDetail is the manufacturer detail/edit page.
+	ManufacturersDetail = newPage("pages/orgs/manufacturers/detail.tmpl", layouts.Center)
+
 	// Inventory is the inventory list page.
 	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)
 
