@@ -72,7 +72,7 @@ erDiagram
     integer id PK
     text name "UNIQUE NOT NULL"
   }
-  %% seeded with available, in_service, retired
+  %% seeded with available, damaged, under_repair, retired
 
   inventory_units {
     text id PK

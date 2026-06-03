@@ -19,3 +19,8 @@ type InventoryUnit struct {
 	UpdatedAt        int64
 	CreatedAt        int64
 }
+
+type UnitStatus struct {
+	ID   int64
+	Name string
+}

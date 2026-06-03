@@ -222,6 +222,7 @@ func (f *NewForm) RentalPriceCents() *int64 {
 
 // UnitForm holds the parsed form input and validation state for adding or editing a unit.
 type UnitForm struct {
+	StatusID         string
 	SerialNumber     string
 	Notes            string
 	NextInspectionAt string
@@ -234,6 +235,7 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 		return UnitForm{}, fmt.Errorf("parse form: %w", err)
 	}
 	return UnitForm{
+		StatusID:         strings.TrimSpace(r.PostForm.Get("status_id")),
 		SerialNumber:     strings.TrimSpace(r.PostForm.Get("serial_number")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
 		NextInspectionAt: strings.TrimSpace(r.PostForm.Get("next_inspection_at")),
@@ -253,6 +255,15 @@ func (f *UnitForm) Validate() bool {
 		f.Check(err == nil, "next_inspection_at", "Must be a valid date (YYYY-MM-DD)")
 	}
 	return f.Valid()
+}
+
+// StatusIDInt64 returns the parsed StatusID value, defaulting to 1 (available) when blank or invalid.
+func (f *UnitForm) StatusIDInt64() int64 {
+	n, err := strconv.ParseInt(f.StatusID, 10, 64)
+	if err != nil || n < 1 {
+		return 1
+	}
+	return n
 }
 
 // NextInspectionAtUnix returns the parsed next inspection date as a Unix timestamp, or nil when blank.

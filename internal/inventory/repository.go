@@ -337,9 +337,23 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	return &u, nil
 }
 
-// UpdateUnit updates the serial number and next inspection date of a unit.
+// ListUnitStatuses returns all rows from the unit_statuses lookup table.
+func (r *Repository) ListUnitStatuses(ctx context.Context) ([]UnitStatusEntry, error) {
+	rows, err := r.inventory.ListUnitStatuses(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ListUnitStatuses: %w", err)
+	}
+	out := make([]UnitStatusEntry, len(rows))
+	for i, row := range rows {
+		out[i] = UnitStatusEntry{ID: row.ID, Name: row.Name}
+	}
+	return out, nil
+}
+
+// UpdateUnit updates the editable fields of a unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.inventory.UpdateUnit(ctx, geninv.UpdateUnitParams{
+		StatusID:         u.StatusID,
 		SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
 		NextInspectionAt: database.NullInt64(u.NextInspectionAt),
 		Notes:            database.NullString(database.StringOrNil(u.Notes)),

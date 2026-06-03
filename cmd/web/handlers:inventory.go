@@ -42,11 +42,12 @@ type inventoryItemData struct {
 }
 
 type inventoryUnitsData struct {
-	OrgID    string
-	ItemID   string
-	ItemName string
-	ItemCode int64
-	Units    []inventory.Unit
+	OrgID        string
+	ItemID       string
+	ItemName     string
+	ItemCode     int64
+	Units        []inventory.Unit
+	UnitStatuses []inventory.UnitStatusEntry
 }
 
 func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -437,6 +438,7 @@ func (app *application) postInventoryUpdateUnit(w http.ResponseWriter, r *http.R
 
 	if err := app.services.inventory.UpdateUnit(ctx, inventory.UpdateUnit{
 		ID:               unitID,
+		StatusID:         form.StatusIDInt64(),
 		SerialNumber:     form.SerialNumber,
 		Notes:            form.Notes,
 		NextInspectionAt: form.NextInspectionAtUnix(),
@@ -480,8 +482,13 @@ func (app *application) getInventoryUnits(w http.ResponseWriter, r *http.Request
 		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
 	}
 
+	statuses, err := app.services.inventory.ListUnitStatuses(ctx)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve unit statuses.", Code: http.StatusInternalServerError}
+	}
+
 	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units}
+	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units, UnitStatuses: statuses}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryUnits, data)
 }
 
@@ -499,8 +506,13 @@ func (app *application) renderInventoryUnits(w http.ResponseWriter, r *http.Requ
 		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
 	}
 
+	statuses, err := app.services.inventory.ListUnitStatuses(ctx)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve unit statuses.", Code: http.StatusInternalServerError}
+	}
+
 	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units}
+	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units, UnitStatuses: statuses}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryUnits, data)
 }
 

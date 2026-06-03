@@ -22,6 +22,7 @@
       <thead>
         <tr>
           <th class="w-10">#</th>
+          <th>Status</th>
           <th>Serial Number</th>
           <th>Next Inspection</th>
           <th></th>
@@ -32,6 +33,14 @@
         {{ range .Data.Units }}
         <tr>
           <td class="text-base-content/40 align-middle whitespace-nowrap">{{ $.Data.ItemCode }}-{{ .UnitNumber }}</td>
+          <td>
+            <select form="unit-{{ .ID }}" name="status_id" class="select select-sm">
+              {{ $currentStatusID := .StatusID }}
+              {{ range $.Data.UnitStatuses }}
+              <option value="{{ .ID }}"{{ if eq .ID $currentStatusID }} selected{{ end }}>{{ .Label }}</option>
+              {{ end }}
+            </select>
+          </td>
           <td>
             <input
               form="unit-{{ .ID }}"

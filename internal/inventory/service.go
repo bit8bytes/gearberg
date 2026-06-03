@@ -144,7 +144,16 @@ func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	return u, nil
 }
 
-// UpdateUnit updates a unit's serial number and next inspection date.
+// ListUnitStatuses returns all rows from the unit_statuses lookup table.
+func (s *Service) ListUnitStatuses(ctx context.Context) ([]UnitStatusEntry, error) {
+	statuses, err := s.repo.ListUnitStatuses(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ListUnitStatuses: %w", err)
+	}
+	return statuses, nil
+}
+
+// UpdateUnit updates a unit's editable fields.
 func (s *Service) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := s.repo.UpdateUnit(ctx, u); err != nil {
 		return fmt.Errorf("UpdateUnit: %w", err)

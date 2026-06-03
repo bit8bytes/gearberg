@@ -1,7 +1,10 @@
 // Package inventory implements business logic and data access for inventory items.
 package inventory
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // PurchasePriceInput formats the purchase price as a plain decimal string for use in
 // form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
@@ -113,9 +116,27 @@ type AddUnit struct {
 	UnitNumber  int64
 }
 
+// UnitStatusEntry is a row from the unit_statuses lookup table.
+type UnitStatusEntry struct {
+	ID   int64
+	Name string
+}
+
+// Label converts the snake_case Name to Title Case (e.g. "under_repair" → "Under Repair").
+func (u UnitStatusEntry) Label() string {
+	words := strings.Fields(strings.ReplaceAll(u.Name, "_", " "))
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 // UpdateUnit holds the data required to update a single unit's editable fields.
 type UpdateUnit struct {
 	ID               string
+	StatusID         int64
 	SerialNumber     string
 	Notes            string
 	NextInspectionAt *int64

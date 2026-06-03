@@ -38,7 +38,8 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 		name string
 	}{
 		{inventorytypes.UnitAvailable, "available"},
-		{inventorytypes.UnitInService, "in_service"},
+		{inventorytypes.UnitDamaged, "damaged"},
+		{inventorytypes.UnitUnderRepair, "under_repair"},
 		{inventorytypes.UnitRetired, "retired"},
 	}
 	for _, s := range unitStatuses {

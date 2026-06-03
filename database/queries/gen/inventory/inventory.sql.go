@@ -412,6 +412,33 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 	return items, nil
 }
 
+const listUnitStatuses = `-- name: ListUnitStatuses :many
+SELECT id, name FROM unit_statuses ORDER BY id ASC
+`
+
+func (q *Queries) ListUnitStatuses(ctx context.Context) ([]UnitStatus, error) {
+	rows, err := q.db.QueryContext(ctx, listUnitStatuses)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UnitStatus
+	for rows.Next() {
+		var i UnitStatus
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUnitsByInventoryID = `-- name: ListUnitsByInventoryID :many
 SELECT
     id,
@@ -613,6 +640,7 @@ func (q *Queries) UpdateTotalStock(ctx context.Context, arg UpdateTotalStockPara
 const updateUnit = `-- name: UpdateUnit :exec
 UPDATE inventory_units
 SET
+    status_id = ?,
     serial_number = ?,
     next_inspection_at = ?,
     notes = ?,
@@ -621,6 +649,7 @@ WHERE id = ?
 `
 
 type UpdateUnitParams struct {
+	StatusID         int64
 	SerialNumber     sql.NullString
 	NextInspectionAt sql.NullInt64
 	Notes            sql.NullString
@@ -629,6 +658,7 @@ type UpdateUnitParams struct {
 
 func (q *Queries) UpdateUnit(ctx context.Context, arg UpdateUnitParams) error {
 	_, err := q.db.ExecContext(ctx, updateUnit,
+		arg.StatusID,
 		arg.SerialNumber,
 		arg.NextInspectionAt,
 		arg.Notes,

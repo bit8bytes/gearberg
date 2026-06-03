@@ -190,9 +190,13 @@ WHERE id = ?;
 SELECT CAST(COALESCE(MAX(unit_number), 0) AS INTEGER) FROM inventory_units
 WHERE inventory_id = ?;
 
+-- name: ListUnitStatuses :many
+SELECT id, name FROM unit_statuses ORDER BY id ASC;
+
 -- name: UpdateUnit :exec
 UPDATE inventory_units
 SET
+    status_id = ?,
     serial_number = ?,
     next_inspection_at = ?,
     notes = ?,
