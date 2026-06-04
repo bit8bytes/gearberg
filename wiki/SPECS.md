@@ -1,4 +1,4 @@
-# Specification (V1, 5/2/2026)
+# Specification
 
 [gearberg.org](./README.md) will be a free self-hostable inventory and rental management software. The development has three milestones: Inventory, Rentals, and Import & Export. Each Milestone ends with a deliverable increment.
 
@@ -6,7 +6,7 @@ The first increment comes without login because the software will be self-hosted
 
 ## User stories
 
-### Settings
+### Milestone 0: Settings
 
 | ID | Name | Done |
 | - | - | - |
@@ -28,8 +28,16 @@ The first increment comes without login because the software will be self-hosted
 | M1.8 | A user can upload an image for an inventory item | 100 % |
 | M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
 | M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
+| M1.11 | A user can add a user-defined code to an inventory item (e.g. `4993`) | 100 % |
+| M1.12 | A user can mark an inventory item as serialized, enabling individual unit tracking | 100 % |
+| M1.13 | A user can add individual units to a serialized inventory item, each with a unit number and optional serial number | 100 % |
+| M1.14 | A user can view all units of a serialized inventory item on its detail page | 100 % |
+| M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
+| M1.16 | A user can set a next inspection date on an individual unit | 100 % |
+| M1.17 | A user can view all units with an upcoming or overdue inspection date | 0 % |
+| M1.18 | A user can set an operational status on an individual unit (available, in service, retired) | 0 % |
 
-See [SPECS2](./SPECS2.md) for additional specifications.
+Defered ideas: QR-Code generation, inventory locations, and flight cases & groupings.
 
 ### Milestone 2: Import & Export
 
