@@ -77,16 +77,3 @@ func (u Usage) String() string {
 		return ""
 	}
 }
-
-// UnitStatus represents the status of a serialized unit.
-// The integer value matches the id stored in the unit_statuses table,
-// which is seeded at startup rather than via migrations.
-type UnitStatus int64
-
-// Unit status identifiers seeded into the unit_statuses table.
-const (
-	UnitAvailable   UnitStatus = 1
-	UnitDamaged     UnitStatus = 2
-	UnitUnderRepair UnitStatus = 3
-	UnitRetired     UnitStatus = 4
-)

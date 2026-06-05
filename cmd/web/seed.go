@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	inventorytypes "github.com/bit8bytes/gearberg/internal/inventory/types"
+	invunits "github.com/bit8bytes/gearberg/internal/inventory/units"
 )
 
 // seedReferenceData populates fixed lookup tables on every startup using
@@ -34,13 +35,13 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 	}
 
 	unitStatuses := []struct {
-		id   inventorytypes.UnitStatus
+		id   invunits.Status
 		name string
 	}{
-		{inventorytypes.UnitAvailable, "available"},
-		{inventorytypes.UnitDamaged, "damaged"},
-		{inventorytypes.UnitUnderRepair, "under_repair"},
-		{inventorytypes.UnitRetired, "retired"},
+		{invunits.UnitAvailable, "available"},
+		{invunits.UnitDamaged, "damaged"},
+		{invunits.UnitUnderRepair, "under_repair"},
+		{invunits.UnitRetired, "retired"},
 	}
 	for _, s := range unitStatuses {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO unit_statuses (id, name) VALUES (?, ?)`, int64(s.id), s.name); err != nil {

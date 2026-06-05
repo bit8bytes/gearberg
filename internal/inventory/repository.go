@@ -8,8 +8,8 @@ import (
 
 	"github.com/bit8bytes/gearberg/database"
 	geninv "github.com/bit8bytes/gearberg/database/queries/gen/inventory"
-	"github.com/bit8bytes/gearberg/internal/inventory/types"
 	inventorytypes "github.com/bit8bytes/gearberg/internal/inventory/types"
+	"github.com/bit8bytes/gearberg/internal/inventory/units"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
@@ -134,7 +134,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		Name:           c.Name,
 		CategoryID:     c.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
-		TypeID:         types.Bulk.ID(),
+		TypeID:         inventorytypes.Bulk.ID(),
 		UsageTypeID:    c.UsageTypeID,
 		Code:           c.Code,
 		TotalStock:     c.TotalStock,
@@ -173,7 +173,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		Name:           c.Name,
 		CategoryID:     c.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
-		TypeID:         types.Serialized.ID(),
+		TypeID:         inventorytypes.Serialized.ID(),
 		UsageTypeID:    c.UsageTypeID,
 		Code:           c.Code,
 		TotalStock:     int64(len(c.Units)),
@@ -189,7 +189,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		_, err := q.CreateUnit(ctx, geninv.CreateUnitParams{
 			ID:               u.ID,
 			InventoryID:      row.ID,
-			StatusID:         int64(types.UnitAvailable),
+			StatusID:         int64(units.UnitAvailable),
 			UnitNumber:       u.UnitNumber,
 			SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
 			NextInspectionAt: database.NullInt64(u.NextInspectionAt),
@@ -323,7 +323,7 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	row, err := r.inventory.CreateUnit(ctx, geninv.CreateUnitParams{
 		ID:               a.ID,
 		InventoryID:      a.InventoryID,
-		StatusID:         int64(types.UnitAvailable),
+		StatusID:         int64(units.UnitAvailable),
 		UnitNumber:       a.UnitNumber,
 		SerialNumber:     database.NullString(nil),
 		NextInspectionAt: database.NullInt64(nil),

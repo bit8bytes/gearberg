@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/bit8bytes/toolbox/validator"
 )
@@ -224,57 +223,6 @@ func (f *NewForm) RentalPriceCents() *int64 {
 	return parseOptionalCents(f.RentalPrice)
 }
 
-// UnitForm holds the parsed form input and validation state for adding or editing a unit.
-type UnitForm struct {
-	StatusID         string
-	SerialNumber     string
-	Notes            string
-	NextInspectionAt string
-	validator.Validator
-}
-
-// ParseUnit reads unit form fields from r.
-func ParseUnit(r *http.Request) (UnitForm, error) {
-	if err := r.ParseForm(); err != nil {
-		return UnitForm{}, fmt.Errorf("parse form: %w", err)
-	}
-	return UnitForm{
-		StatusID:         strings.TrimSpace(r.PostForm.Get("status_id")),
-		SerialNumber:     strings.TrimSpace(r.PostForm.Get("serial_number")),
-		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
-		NextInspectionAt: strings.TrimSpace(r.PostForm.Get("next_inspection_at")),
-	}, nil
-}
-
-// Validate checks UnitForm fields and returns true when all checks pass.
-func (f *UnitForm) Validate() bool {
-	if validator.NotBlank(f.SerialNumber) {
-		f.Check(validator.MaxChars(f.SerialNumber, 200), "serial_number", "Cannot exceed 200 characters")
-	}
-	if validator.NotBlank(f.Notes) {
-		f.Check(validator.MaxChars(f.Notes, 1000), "notes", "Cannot exceed 1000 characters")
-	}
-	if validator.NotBlank(f.NextInspectionAt) {
-		_, err := time.Parse("2006-01-02", f.NextInspectionAt)
-		f.Check(err == nil, "next_inspection_at", "Must be a valid date (YYYY-MM-DD)")
-	}
-	return f.Valid()
-}
-
-// StatusIDInt64 returns the parsed StatusID value, defaulting to 1 (available) when blank or invalid.
-func (f *UnitForm) StatusIDInt64() int64 {
-	n, err := strconv.ParseInt(f.StatusID, 10, 64)
-	if err != nil || n < 1 {
-		return 1
-	}
-	return n
-}
-
-// NextInspectionAtUnix returns the parsed next inspection date as a Unix timestamp, or nil when blank.
-func (f *UnitForm) NextInspectionAtUnix() *int64 {
-	return parseDate(f.NextInspectionAt)
-}
-
 // parseOptionalCents parses a decimal price string (accepting both "." and "," as
 // the decimal separator) and returns the value in the smallest currency unit (cents).
 // Returns nil when s is blank or unparseable.
@@ -287,19 +235,5 @@ func parseOptionalCents(s string) *int64 {
 		return nil
 	}
 	v := int64(math.Round(f * 100))
-	return &v
-}
-
-// parseDate parses a date string in "2006-01-02" format and returns its Unix timestamp,
-// or nil when the string is blank or invalid.
-func parseDate(s string) *int64 {
-	if s == "" {
-		return nil
-	}
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return nil
-	}
-	v := t.UTC().Unix()
 	return &v
 }

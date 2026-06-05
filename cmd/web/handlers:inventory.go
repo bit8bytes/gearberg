@@ -15,6 +15,7 @@ import (
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	invtypes "github.com/bit8bytes/gearberg/internal/inventory/types"
+	invunits "github.com/bit8bytes/gearberg/internal/inventory/units"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
@@ -358,7 +359,7 @@ func (app *application) postInventoryAddUnit(w http.ResponseWriter, r *http.Requ
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	form, err := inventory.ParseUnit(r)
+	form, err := invunits.Parse(r)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
@@ -401,7 +402,7 @@ func (app *application) postInventoryUpdateUnit(w http.ResponseWriter, r *http.R
 	itemID := r.PathValue("id")
 	unitID := r.PathValue("unit_id")
 
-	form, err := inventory.ParseUnit(r)
+	form, err := invunits.Parse(r)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
