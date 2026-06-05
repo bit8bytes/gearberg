@@ -10,6 +10,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /{$}", http.RedirectHandler("/orgs", http.StatusSeeOther))
+	mux.HandleFunc("GET /healthz", app.json.Handle(app.getHealthz))
 	mux.HandleFunc("GET /media/{id}", app.html.Handle(app.getMedia))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
