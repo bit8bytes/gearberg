@@ -237,7 +237,7 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 	data.Form = &inventory.Form{}
 	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
-	if item.TypeID == invtypes.Serialized.ID() {
+	if item.Type.ID() == invtypes.Serialized.ID() {
 		page = pages.InventoryDetailSerialized
 	}
 	return app.html.Render(w, r, http.StatusOK, page, data)
@@ -570,7 +570,7 @@ func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Reque
 	data.Form = f
 	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
-	if item.TypeID == invtypes.Serialized.ID() {
+	if item.Type.ID() == invtypes.Serialized.ID() {
 		page = pages.InventoryDetailSerialized
 	}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, page, data)

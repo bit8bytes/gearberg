@@ -63,7 +63,14 @@
             {{ end }}
           </div>
         </td>
-        <td class="w-1/2"><a href="/orgs/{{ $.Data.OrgID }}/inventory/{{ .ID }}" class="link link-hover">{{ .Name }}</a></td>
+        <td class="w-1/2">
+          <a href="/orgs/{{ $.Data.OrgID }}/inventory/{{ .ID }}" 
+            class="font-bold link link-hover">
+            {{ .Name }}
+          </a>
+          <br />
+          <span class="text-xs text-secondary">{{ .Type.Label }}</span>
+        </td>
         <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
         <td><a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}?return_to={{ $.URL.Path }}" class="link link-hover">{{ .CategoryName }}</a></td>
         <td>{{ .TotalStock }}</td>

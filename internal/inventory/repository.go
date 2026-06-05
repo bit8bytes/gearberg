@@ -9,6 +9,7 @@ import (
 	"github.com/bit8bytes/gearberg/database"
 	geninv "github.com/bit8bytes/gearberg/database/queries/gen/inventory"
 	"github.com/bit8bytes/gearberg/internal/inventory/types"
+	inventorytypes "github.com/bit8bytes/gearberg/internal/inventory/types"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
@@ -66,7 +67,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 		items = append(items, Inventory{
 			ID:              row.ID,
 			OrgID:           row.OrgID,
-			TypeID:          row.TypeID,
+			Type:            inventorytypes.Kind(row.TypeID),
 			UsageTypeID:     row.UsageTypeID,
 			Name:            row.Name,
 			Code:            row.Code,
@@ -97,7 +98,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 	m := Inventory{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
-		TypeID:          row.TypeID,
+		Type:            inventorytypes.Kind(row.TypeID),
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
 		Code:            row.Code,
@@ -147,7 +148,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 	m := Inventory{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
-		TypeID:          row.TypeID,
+		Type:            inventorytypes.Kind(row.TypeID),
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
 		Code:            row.Code,
@@ -201,7 +202,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	m := Inventory{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
-		TypeID:          row.TypeID,
+		Type:            inventorytypes.Kind(row.TypeID),
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
 		Code:            row.Code,
@@ -236,7 +237,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 	m := Inventory{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
-		TypeID:          row.TypeID,
+		Type:            inventorytypes.Kind(row.TypeID),
 		UsageTypeID:     row.UsageTypeID,
 		Name:            row.Name,
 		Code:            row.Code,

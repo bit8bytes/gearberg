@@ -28,6 +28,18 @@ func (k Kind) String() string {
 	}
 }
 
+// Label returns the human-friendly label for the inventory type.
+func (k Kind) Label() string {
+	switch k {
+	case Bulk:
+		return "Bulk"
+	case Serialized:
+		return "Serialized"
+	default:
+		return ""
+	}
+}
+
 // Usage represents how an inventory item is used (rental or sale).
 // The integer value matches the id stored in the usage_types table,
 // which is seeded at startup rather than via migrations.
