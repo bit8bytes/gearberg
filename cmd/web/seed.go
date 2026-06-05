@@ -25,7 +25,7 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 		}
 	}
 
-	for _, u := range []inventory.Usage{
+	for _, u := range []inventory.UsageType{
 		inventory.Rental,
 		inventory.Sale,
 	} {

@@ -28,7 +28,7 @@ type Inventory struct {
 	ID              string
 	OrgID           string
 	Type            Type
-	UsageTypeID     int64
+	UsageType       UsageType
 	Name            string
 	Code            int64
 	CategoryID      string

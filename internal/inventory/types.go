@@ -38,22 +38,22 @@ func (k Type) Label() string {
 	}
 }
 
-// Usage represents how an inventory item is used (rental or sale).
+// UsageType represents how an inventory item is used (rental or sale).
 // The integer value matches the id stored in the usage_types table,
 // which is seeded at startup rather than via migrations.
-type Usage int64
+type UsageType int64
 
 // Usage type identifiers seeded into the usage_types table.
 const (
-	Rental Usage = 1
-	Sale   Usage = 2
+	Rental UsageType = 1
+	Sale   UsageType = 2
 )
 
 // ID returns the database id for the usage type.
-func (u Usage) ID() int64 { return int64(u) }
+func (u UsageType) ID() int64 { return int64(u) }
 
 // ParseUsage returns the Usage matching name, or 0 when unknown.
-func ParseUsage(name string) Usage {
+func ParseUsage(name string) UsageType {
 	switch name {
 	case "rental":
 		return Rental
@@ -65,7 +65,7 @@ func ParseUsage(name string) Usage {
 }
 
 // String returns the name stored in the usage_types table.
-func (u Usage) String() string {
+func (u UsageType) String() string {
 	switch u {
 	case Rental:
 		return "rental"
