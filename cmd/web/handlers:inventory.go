@@ -14,7 +14,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
-	invtypes "github.com/bit8bytes/gearberg/internal/inventory/types"
 	invunits "github.com/bit8bytes/gearberg/internal/inventory/units"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
@@ -150,7 +149,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 	base := inventory.Base{
 		ID:             itemID,
 		OrgID:          id,
-		UsageTypeID:    invtypes.ParseUsage(form.UsageTypeID).ID(),
+		UsageTypeID:    inventory.ParseUsage(form.UsageTypeID).ID(),
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
@@ -238,7 +237,7 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 	data.Form = &inventory.Form{}
 	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
-	if item.Type == invtypes.Serialized {
+	if item.Type == inventory.Serialized {
 		page = pages.InventoryDetailSerialized
 	}
 	return app.html.Render(w, r, http.StatusOK, page, data)
@@ -571,7 +570,7 @@ func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Reque
 	data.Form = f
 	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
 	page := pages.InventoryDetailBulk
-	if item.Type == invtypes.Serialized {
+	if item.Type == inventory.Serialized {
 		page = pages.InventoryDetailSerialized
 	}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, page, data)

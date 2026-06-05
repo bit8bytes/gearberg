@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	inventorytypes "github.com/bit8bytes/gearberg/internal/inventory/types"
+	"github.com/bit8bytes/gearberg/internal/inventory"
 	invunits "github.com/bit8bytes/gearberg/internal/inventory/units"
 )
 
@@ -16,18 +16,18 @@ import (
 // renaming a value only requires changing the relevant package constant and
 // this file, with no migration needed.
 func seedReferenceData(ctx context.Context, db *sql.DB) error {
-	for _, t := range []inventorytypes.Kind{
-		inventorytypes.Bulk,
-		inventorytypes.Serialized,
+	for _, t := range []inventory.Type{
+		inventory.Bulk,
+		inventory.Serialized,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO inventory_types (id, name) VALUES (?, ?)`, t.ID(), t.String()); err != nil {
 			return fmt.Errorf("seed inventory_types: %w", err)
 		}
 	}
 
-	for _, u := range []inventorytypes.Usage{
-		inventorytypes.Rental,
-		inventorytypes.Sale,
+	for _, u := range []inventory.Usage{
+		inventory.Rental,
+		inventory.Sale,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO usage_types (id, name) VALUES (?, ?)`, u.ID(), u.String()); err != nil {
 			return fmt.Errorf("seed usage_types: %w", err)
@@ -35,7 +35,7 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 	}
 
 	unitStatuses := []struct {
-		id   invunits.Status
+		id   invunits.StatusType
 		name string
 	}{
 		{invunits.UnitAvailable, "available"},

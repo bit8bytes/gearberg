@@ -1,23 +1,21 @@
-// Package types defines enumerated values for inventory classification,
-// matching the seeded lookup tables in the database.
-package types
+package inventory
 
-// Kind represents an inventory type (Bulk or Serialized).
+// Type represents an inventory type (Bulk or Serialized).
 // The integer value matches the id stored in the inventory_types table,
 // which is seeded at startup rather than via migrations.
-type Kind int64
+type Type int64
 
 // Inventory type identifiers seeded into the inventory_types table.
 const (
-	Bulk       Kind = 1
-	Serialized Kind = 2
+	Bulk       Type = 1
+	Serialized Type = 2
 )
 
 // ID returns the database id for the inventory type.
-func (k Kind) ID() int64 { return int64(k) }
+func (k Type) ID() int64 { return int64(k) }
 
 // String returns the name stored in the inventory_types table.
-func (k Kind) String() string {
+func (k Type) String() string {
 	switch k {
 	case Bulk:
 		return "bulk"
@@ -29,7 +27,7 @@ func (k Kind) String() string {
 }
 
 // Label returns the human-friendly label for the inventory type.
-func (k Kind) Label() string {
+func (k Type) Label() string {
 	switch k {
 	case Bulk:
 		return "Bulk"

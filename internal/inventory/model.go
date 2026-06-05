@@ -4,8 +4,6 @@ package inventory
 import (
 	"fmt"
 	"strings"
-
-	inventorytypes "github.com/bit8bytes/gearberg/internal/inventory/types"
 )
 
 // PurchasePriceInput formats the purchase price as a plain decimal string for use in
@@ -29,7 +27,7 @@ func priceInput(v *int64) string {
 type Inventory struct {
 	ID              string
 	OrgID           string
-	Type            inventorytypes.Kind
+	Type            Type
 	UsageTypeID     int64
 	Name            string
 	Code            int64
