@@ -6,7 +6,7 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/bit8bytes/gearberg/database/migrations"
+	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	_ "modernc.org/sqlite"
 )
 

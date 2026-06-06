@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bit8bytes/gearberg/database"
-	"github.com/bit8bytes/gearberg/database/migrations"
+	"github.com/bit8bytes/gearberg/internal/database"
+	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/database"
-	genmfr "github.com/bit8bytes/gearberg/database/queries/gen/manufacturers"
+	"github.com/bit8bytes/gearberg/internal/database"
+	genmfr "github.com/bit8bytes/gearberg/internal/database/queries/gen/manufacturers"
 )
 
 // Repository provides data access for manufacturers.

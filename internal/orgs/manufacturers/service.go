@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/database"
+	"github.com/bit8bytes/gearberg/internal/database"
 )
 
 // Options holds configuration for the manufacturer service.

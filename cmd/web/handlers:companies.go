@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bit8bytes/gearberg/database"
+	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/storage"

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/database"
-	geninv "github.com/bit8bytes/gearberg/database/queries/gen/inventory"
+	"github.com/bit8bytes/gearberg/internal/database"
+	geninv "github.com/bit8bytes/gearberg/internal/database/queries/gen/inventory"
 	"github.com/bit8bytes/gearberg/internal/inventory/units"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )

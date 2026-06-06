@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/database"
-	genorgs "github.com/bit8bytes/gearberg/database/queries/gen/orgs"
+	"github.com/bit8bytes/gearberg/internal/database"
+	genorgs "github.com/bit8bytes/gearberg/internal/database/queries/gen/orgs"
 )
 
 // Repository provides data access for orgs.

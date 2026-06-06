@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	gencs "github.com/bit8bytes/gearberg/database/queries/gen/orgsettings"
+	gencs "github.com/bit8bytes/gearberg/internal/database/queries/gen/orgsettings"
 )
 
 // Repository provides data access for org settings.

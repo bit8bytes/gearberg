@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bit8bytes/gearberg/database"
-	genec "github.com/bit8bytes/gearberg/database/queries/gen/equipmentcategories"
+	"github.com/bit8bytes/gearberg/internal/database"
+	genec "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcategories"
 )
 
 // Repository provides data access for equipment equipmentCategories.

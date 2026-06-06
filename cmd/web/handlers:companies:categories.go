@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bit8bytes/gearberg/database"
+	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/templates/pages"

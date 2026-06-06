@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/bit8bytes/gearberg/database"
+	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"

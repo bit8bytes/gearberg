@@ -2,61 +2,61 @@ version: "2"
 
 sql:
   - engine: "sqlite"
-    queries: "database/queries/sqlite/orgs.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/orgs.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "orgs"
-        out: "database/queries/gen/orgs"
+        out: "internal/database/queries/gen/orgs"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/org_settings.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/org_settings.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "orgsettings"
-        out: "database/queries/gen/orgsettings"
+        out: "internal/database/queries/gen/orgsettings"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/equipment_categories.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/equipment_categories.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "equipmentcategories"
-        out: "database/queries/gen/equipmentcategories"
+        out: "internal/database/queries/gen/equipmentcategories"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/manufacturers.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/manufacturers.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "manufacturers"
-        out: "database/queries/gen/manufacturers"
+        out: "internal/database/queries/gen/manufacturers"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/inventory.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/inventory.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "inventory"
-        out: "database/queries/gen/inventory"
+        out: "internal/database/queries/gen/inventory"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "database/queries/sqlite/storage.sql"
-    schema: "database/migrations/sqlite/"
+    queries: "internal/database/queries/sqlite/storage.sql"
+    schema: "internal/database/migrations/sqlite/"
     gen:
       go:
         package: "storage"
-        out: "database/queries/gen/storage"
+        out: "internal/database/queries/gen/storage"
         emit_interface: true
         omit_unused_structs: true

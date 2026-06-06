@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"io"
 
-	genstorage "github.com/bit8bytes/gearberg/database/queries/gen/storage"
+	genstorage "github.com/bit8bytes/gearberg/internal/database/queries/gen/storage"
 	"github.com/segmentio/ksuid"
 )
 
