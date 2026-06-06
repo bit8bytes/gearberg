@@ -1,0 +1,24 @@
+{{ define "title" }}Import Inventory{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl mx-auto px-4 py-12 flex flex-col gap-6">
+  <h3>Import Inventory</h3>
+
+
+
+  <form method="post" action="/orgs/{{ .Data.OrgID }}/inventory/import" enctype="multipart/form-data" class="flex flex-col gap-4">
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">CSV file</legend>
+      <input type="file" name="file" accept=".csv,text/csv" class="file-input file-input-bordered w-full" required />
+      {{ with .Data.Error }}
+      <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
+    </fieldset>
+    
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary">Upload & Preview</button>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{{ end }}

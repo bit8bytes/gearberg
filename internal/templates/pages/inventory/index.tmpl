@@ -12,7 +12,13 @@
       </div>
     </div>
     <div class="flex gap-2">
-      <a class="btn btn-ghost" href="/orgs/{{ .Data.OrgID }}/inventory/export">Export CSV</a>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-36 p-2 shadow border border-base-300">
+          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/export">Export</a></li>
+          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/import">Import</a></li>
+        </ul>
+      </div>
       {{ if eq (len .Data.Categories) 0 }}
       <div class="tooltip tooltip-left" data-tip="Create a category first">
         <span tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item</span>

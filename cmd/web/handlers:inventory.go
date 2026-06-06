@@ -63,9 +63,19 @@ func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Reques
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
+	mfrs, err := app.services.inventory.ListManufacturers(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
+	}
+	mfrByID := make(map[string]string, len(mfrs))
+	for _, m := range mfrs {
+		mfrByID[m.ID] = m.Name
+	}
+
 	filename := "inventory-" + time.Now().UTC().Format("2006-01-02") + ".csv"
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Cache-Control", "no-store")
 
 	// UTF-8 BOM for Excel compatibility.
 	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
@@ -73,7 +83,7 @@ func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Reques
 	}
 
 	cw := csv.NewWriter(w)
-	if err := cw.Write([]string{"Code", "Name", "Type", "Usage", "Category", "Total Stock", "Purchase Price", "Rental Price", "Notes", "Created At", "Updated At"}); err != nil {
+	if err := cw.Write([]string{"Code", "Name", "Type", "Usage", "Category", "Manufacturer", "Total Stock", "Purchase Price", "Rental Price", "Notes", "Created At", "Updated At"}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
 	}
 	for _, item := range items {
@@ -83,6 +93,7 @@ func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Reques
 			item.Type.Label(),
 			item.UsageType.Label(),
 			item.CategoryName,
+			mfrByID[item.ManufacturerID],
 			fmt.Sprintf("%d", item.TotalStock),
 			formatCents(item.PurchasePrice),
 			formatCents(item.RentalPrice),

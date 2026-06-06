@@ -75,10 +75,34 @@ func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inven
 	return item, nil
 }
 
+// CreateBulkTx creates a new bulk inventory item within an existing transaction.
+// Code is auto-assigned inside the transaction so concurrent batch inserts see each other's codes.
+func (s *Service) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkInventory) (*Inventory, error) {
+	maxCode, err := s.repo.MaxCodeTx(ctx, tx, c.OrgID)
+	if err != nil {
+		return nil, fmt.Errorf("CreateBulkTx: %w", err)
+	}
+	c.Code = maxCode + 1
+	item, err := s.repo.CreateBulkTx(ctx, tx, c)
+	if err != nil {
+		return nil, fmt.Errorf("CreateBulkTx: %w", err)
+	}
+	return item, nil
+}
+
+// UpdateTx updates an inventory item within an existing transaction.
+func (s *Service) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (*Inventory, error) {
+	item, err := s.repo.UpdateTx(ctx, tx, u)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateTx: %w", err)
+	}
+	return item, nil
+}
+
 // CreateSerialized creates a new serialized inventory item with all its units in a single transaction.
-// Code is auto-assigned before the transaction begins.
+// Code is auto-assigned inside the transaction so concurrent batch inserts see each other's codes.
 func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
-	maxCode, err := s.repo.MaxCode(ctx, c.OrgID)
+	maxCode, err := s.repo.MaxCodeTx(ctx, tx, c.OrgID)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", err)
 	}
