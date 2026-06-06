@@ -4,6 +4,7 @@ package inventory
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // PurchasePriceInput formats the purchase price as a plain decimal string for use in
@@ -81,15 +82,16 @@ type CreateSerializedInventory struct {
 
 // Unit represents a single serialized unit.
 type Unit struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     string
-	Notes            string
-	NextInspectionAt *int64
-	CreatedAt        int64
-	UpdatedAt        int64
+	ID                string
+	InventoryID       string
+	StatusID          int64
+	UnitNumber        int64
+	SerialNumber      string
+	Notes             string
+	NextInspectionAt  *int64
+	OverdueInspection int64
+	CreatedAt         int64
+	UpdatedAt         int64
 }
 
 // UpdateInventory holds the data required to update an inventory item.
@@ -133,6 +135,22 @@ func (u UnitStatusEntry) Label() string {
 		}
 	}
 	return strings.Join(words, " ")
+}
+
+// OverdueInspectionInLabel returns a human-readable string for how many days until
+// the unit's next inspection is required. Negative values mean overdue.
+// Returns "" when no inspection date is set.
+func (u *Unit) OverdueInspectionInLabel() string {
+	if u.NextInspectionAt == nil {
+		return ""
+	}
+	days := (*u.NextInspectionAt - time.Now().Unix()) / 86400
+	return fmt.Sprintf("%d days", days)
+}
+
+// IsInspectionOverdue reports whether the unit's next inspection date has passed.
+func (u *Unit) IsInspectionOverdue() bool {
+	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
 }
 
 // UpdateUnit holds the data required to update a single unit's editable fields.

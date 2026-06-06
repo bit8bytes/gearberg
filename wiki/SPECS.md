@@ -34,8 +34,8 @@ The first increment comes without login because the software will be self-hosted
 | M1.14 | A user can view all units of a serialized inventory item on its detail page | 100 % |
 | M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
-| M1.17 | A user can view all units with an upcoming or overdue inspection date | 0 % |
-| M1.18 | A user can set an operational status on an individual unit (available, in service, retired) | 0 % |
+| M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
+| M1.18 | A user can set an operational status on an individual unit (available, damaged, under repair, retired) | 100 % |
 
 Defered ideas: QR-Code generation, inventory locations, and flight cases & groupings.
 
