@@ -15,8 +15,15 @@
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-36 p-2 shadow border border-base-300">
-          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/export">Export</a></li>
-          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/import">Import</a></li>
+          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/export">
+            <span class="w-4 h-4">{{ template "export-icon" . }}</span>
+            Export</a></li>
+          <li><a href="/orgs/{{ .Data.OrgID }}/inventory/import">
+            <span class="w-4 h-4">{{ template "import-icon" . }}</span>
+            Import</a></li>
+          <li><a href="{{ .Data.PrintURL }}" target="_blank">
+            <span class="w-4 h-4">{{ template "print-icon" . }}</span>
+            Print</a></li>
         </ul>
       </div>
       {{ if eq (len .Data.Categories) 0 }}

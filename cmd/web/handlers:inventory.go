@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bit8bytes/gearberg/internal/database"
@@ -33,7 +34,18 @@ type inventoryData struct {
 	Query       string
 	Category    string
 	PageBaseURL template.URL
+	PrintURL    template.URL
 	Pagination  pagination.Metadata
+}
+
+type inventoryPrintData struct {
+	OrgID       string
+	OrgName     string
+	Inventories []inventory.Inventory
+	Query       string
+	Category    string
+	PrintDate   string
+	TotalCount  int
 }
 
 type inventoryItemData struct {
@@ -160,6 +172,20 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		pageBaseURL += "q=" + url.QueryEscape(query) + "&"
 	}
 
+	printURL := "/orgs/" + url.PathEscape(id) + "/inventory/print"
+	if category != "" || query != "" {
+		printURL += "?"
+		if category != "" {
+			printURL += "category=" + url.QueryEscape(category)
+		}
+		if category != "" && query != "" {
+			printURL += "&"
+		}
+		if query != "" {
+			printURL += "q=" + url.QueryEscape(query)
+		}
+	}
+
 	data := app.html.TemplateData(r)
 	data.Data = inventoryData{
 		OrgID:       id,
@@ -169,6 +195,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		Query:       query,
 		Category:    category,
 		PageBaseURL: template.URL(pageBaseURL), // #nosec G203
+		PrintURL:    template.URL(printURL),    // #nosec G203
 		Pagination:  meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Inventory, data)
@@ -675,4 +702,53 @@ func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.R
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory", http.StatusSeeOther)
 	return nil
+}
+
+func (app *application) getInventoryPrint(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	org, err := app.services.orgs.GetByID(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve organization.", Code: http.StatusInternalServerError}
+	}
+
+	qs := r.URL.Query()
+	query := qs.Get("q")
+	category := qs.Get("category")
+
+	items, err := app.services.inventory.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+	}
+
+	// Filter client-side to mirror the index page's query/category params.
+	filtered := make([]inventory.Inventory, 0, len(items))
+	for _, item := range items {
+		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
+			continue
+		}
+		if category != "" && item.CategoryName != category {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+
+	for i := range filtered {
+		if filtered[i].StorageObjectID != nil {
+			filtered[i].ImageURL = app.services.storageManager.URL(*filtered[i].StorageObjectID)
+		}
+	}
+
+	data := app.html.TemplateData(r)
+	data.Data = inventoryPrintData{
+		OrgID:       orgID,
+		OrgName:     org.Name,
+		Inventories: filtered,
+		Query:       query,
+		Category:    category,
+		PrintDate:   time.Now().UTC().Format("2006-01-02"),
+		TotalCount:  len(filtered),
+	}
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryPrint, data)
 }

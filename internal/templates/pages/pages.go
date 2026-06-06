@@ -82,6 +82,9 @@ var (
 	// InventoryImportPreview is the staging review and confirm page.
 	InventoryImportPreview = newPage("pages/inventory/import-preview.tmpl", layouts.Inventory)
 
+	// InventoryPrint is the bare print view of the inventory list.
+	InventoryPrint = newPage("pages/inventory/print.tmpl", layouts.Print)
+
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
 
