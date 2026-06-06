@@ -76,6 +76,15 @@ var (
 	// InventoryUnits is the unit management page for a serialized item.
 	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Center)
 
+	// InventoryImport is the CSV upload form page.
+	InventoryImport = newPage("pages/inventory/import.tmpl", layouts.Center)
+
+	// InventoryImportPreview is the staging review and confirm page.
+	InventoryImportPreview = newPage("pages/inventory/import-preview.tmpl", layouts.Inventory)
+
+	// InventoryPrint is the bare print view of the inventory list.
+	InventoryPrint = newPage("pages/inventory/print.tmpl", layouts.Print)
+
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
 

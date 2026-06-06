@@ -216,3 +216,26 @@ SET
     total_stock = total_stock + ?,
     updated_at = unixepoch()
 WHERE id = ?;
+
+-- name: ListAllByOrgID :many
+SELECT
+    i.id,
+    i.org_id,
+    i.name,
+    i.code,
+    i.category_id,
+    COALESCE(ec.name, '') AS category_name,
+    i.manufacturer_id,
+    i.storage_object_id,
+    i.type_id,
+    i.usage_type_id,
+    i.total_stock,
+    i.purchase_price,
+    i.rental_price,
+    i.notes,
+    i.updated_at,
+    i.created_at
+FROM inventory i
+LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+WHERE i.org_id = ?
+ORDER BY i.name ASC;

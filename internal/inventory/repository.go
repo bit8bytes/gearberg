@@ -14,14 +14,12 @@ import (
 
 // Repository provides data access for inventory items.
 type Repository struct {
-	db        *sql.DB
-	inventory geninv.Querier
+	inventory *geninv.Queries
 }
 
 // NewRepository returns a new Repository.
-func NewRepository(db *sql.DB) *Repository {
+func NewRepository(db geninv.DBTX) *Repository {
 	return &Repository{
-		db:        db,
 		inventory: geninv.New(db),
 	}
 }
@@ -31,6 +29,15 @@ func (r *Repository) MaxCode(ctx context.Context, orgID string) (int64, error) {
 	n, err := r.inventory.MaxCodeByOrgID(ctx, orgID)
 	if err != nil {
 		return 0, fmt.Errorf("MaxCode: %w", err)
+	}
+	return n, nil
+}
+
+// MaxCodeTx returns the highest code for orgID within tx, seeing uncommitted inserts.
+func (r *Repository) MaxCodeTx(ctx context.Context, tx *sql.Tx, orgID string) (int64, error) {
+	n, err := r.inventory.WithTx(tx).MaxCodeByOrgID(ctx, orgID)
+	if err != nil {
+		return 0, fmt.Errorf("MaxCodeTx: %w", err)
 	}
 	return n, nil
 }
@@ -165,7 +172,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 
 // CreateSerialized inserts a serialized inventory item and all its units atomically within tx.
 func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
-	q := geninv.New(tx)
+	q := r.inventory.WithTx(tx)
 	row, err := q.Create(ctx, geninv.CreateParams{
 		ID:             c.ID,
 		OrgID:          c.OrgID,
@@ -217,9 +224,48 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	return &m, nil
 }
 
-// Update updates the fields of the inventory item identified by u.ID.
-func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
-	row, err := r.inventory.Update(ctx, geninv.UpdateParams{
+// CreateBulkTx inserts a new bulk inventory item within an existing transaction.
+func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkInventory) (*Inventory, error) {
+	q := r.inventory.WithTx(tx)
+	row, err := q.Create(ctx, geninv.CreateParams{
+		ID:             c.ID,
+		OrgID:          c.OrgID,
+		Name:           c.Name,
+		CategoryID:     c.CategoryID,
+		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
+		TypeID:         Bulk.ID(),
+		UsageTypeID:    c.UsageTypeID,
+		Code:           c.Code,
+		TotalStock:     c.TotalStock,
+		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
+		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
+		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("CreateBulkTx: %w", database.NormalizeError(err))
+	}
+	m := Inventory{
+		ID:              row.ID,
+		OrgID:           row.OrgID,
+		Type:            Type(row.TypeID),
+		UsageType:       UsageType(row.UsageTypeID),
+		Name:            row.Name,
+		Code:            row.Code,
+		CategoryID:      row.CategoryID,
+		ManufacturerID:  database.String(row.ManufacturerID),
+		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		TotalStock:      row.TotalStock,
+		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
+		RentalPrice:     database.Int64Ptr(row.RentalPrice),
+		Notes:           database.String(row.Notes),
+		CreatedAt:       row.CreatedAt,
+	}
+	return &m, nil
+}
+
+// UpdateTx updates an inventory item within an existing transaction.
+func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u UpdateInventory) (*Inventory, error) {
+	row, err := q.Update(ctx, geninv.UpdateParams{
 		ID:             u.ID,
 		Name:           u.Name,
 		CategoryID:     u.CategoryID,
@@ -231,7 +277,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Update: %w", database.NormalizeError(err))
+		return nil, fmt.Errorf("updateWith: %w", database.NormalizeError(err))
 	}
 	m := Inventory{
 		ID:              row.ID,
@@ -251,6 +297,16 @@ func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory,
 		UpdatedAt:       row.UpdatedAt,
 	}
 	return &m, nil
+}
+
+// UpdateTx updates the inventory item identified by u.ID within an existing transaction.
+func (r *Repository) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (*Inventory, error) {
+	return r.updateWith(ctx, r.inventory.WithTx(tx), u)
+}
+
+// Update updates the fields of the inventory item identified by u.ID.
+func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
+	return r.updateWith(ctx, r.inventory, u)
 }
 
 // ListUnits returns all inventory units for the given inventory item, ordered by unit_number.
@@ -274,6 +330,36 @@ func (r *Repository) ListUnits(ctx context.Context, inventoryID string) ([]Unit,
 		})
 	}
 	return units, nil
+}
+
+// ListAll returns all inventory items for orgID ordered by name, with no pagination.
+func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Inventory, error) {
+	rows, err := r.inventory.ListAllByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListAll: %w", err)
+	}
+	items := make([]Inventory, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, Inventory{
+			ID:              row.ID,
+			OrgID:           row.OrgID,
+			Type:            Type(row.TypeID),
+			UsageType:       UsageType(row.UsageTypeID),
+			Name:            row.Name,
+			Code:            row.Code,
+			CategoryID:      row.CategoryID,
+			CategoryName:    row.CategoryName,
+			ManufacturerID:  database.String(row.ManufacturerID),
+			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			TotalStock:      row.TotalStock,
+			PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
+			RentalPrice:     database.Int64Ptr(row.RentalPrice),
+			Notes:           database.String(row.Notes),
+			UpdatedAt:       row.UpdatedAt,
+			CreatedAt:       row.CreatedAt,
+		})
+	}
+	return items, nil
 }
 
 // Delete removes the inventory item. Returns database.ErrForeignKeyViolation when

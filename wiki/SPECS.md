@@ -34,20 +34,20 @@ The first increment comes without login because the software will be self-hosted
 | M1.14 | A user can view all units of a serialized inventory item on its detail page | 100 % |
 | M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
-| M1.17 | A user can view all units with an upcoming or overdue inspection date | 0 % |
-| M1.18 | A user can set an operational status on an individual unit (available, in service, retired) | 0 % |
+| M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
+| M1.18 | A user can set an operational status on an individual unit (available, damaged, under repair, retired) | 100 % |
 
 Defered ideas: QR-Code generation, inventory locations, and flight cases & groupings.
 
 ### Milestone 2: Import & Export
 
-| ID | Name |
-| - | - |
-| M2.1 | A user can import new inventory items using CSV |
-| M2.2 | A user can export all inventory items using CSV |
-| M2.3 | A user can export all rentals using CSV |
-| M2.4 | A user can export all customers using CSV |
-| M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser |
+| ID | Name | Done |
+| - | - | - |
+| M2.1 | A user can import new inventory items using CSV | 100 % |
+| M2.2 | A user can export all inventory items using CSV | 100 % |
+| M2.3 | A user can export all rentals using CSV | 0 % |
+| M2.4 | A user can export all customers using CSV | 0 % |
+| M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser | 100 % |
 
 ### Milestone 3: Login
 

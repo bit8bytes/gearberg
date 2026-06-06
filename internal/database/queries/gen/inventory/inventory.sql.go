@@ -416,6 +416,89 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 	return items, nil
 }
 
+const listAllByOrgID = `-- name: ListAllByOrgID :many
+SELECT
+    i.id,
+    i.org_id,
+    i.name,
+    i.code,
+    i.category_id,
+    COALESCE(ec.name, '') AS category_name,
+    i.manufacturer_id,
+    i.storage_object_id,
+    i.type_id,
+    i.usage_type_id,
+    i.total_stock,
+    i.purchase_price,
+    i.rental_price,
+    i.notes,
+    i.updated_at,
+    i.created_at
+FROM inventory i
+LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+WHERE i.org_id = ?
+ORDER BY i.name ASC
+`
+
+type ListAllByOrgIDRow struct {
+	ID              string
+	OrgID           string
+	Name            string
+	Code            int64
+	CategoryID      string
+	CategoryName    string
+	ManufacturerID  sql.NullString
+	StorageObjectID sql.NullString
+	TypeID          int64
+	UsageTypeID     int64
+	TotalStock      int64
+	PurchasePrice   sql.NullInt64
+	RentalPrice     sql.NullInt64
+	Notes           sql.NullString
+	UpdatedAt       int64
+	CreatedAt       int64
+}
+
+func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllByOrgIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllByOrgID, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllByOrgIDRow
+	for rows.Next() {
+		var i ListAllByOrgIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrgID,
+			&i.Name,
+			&i.Code,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.ManufacturerID,
+			&i.StorageObjectID,
+			&i.TypeID,
+			&i.UsageTypeID,
+			&i.TotalStock,
+			&i.PurchasePrice,
+			&i.RentalPrice,
+			&i.Notes,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUnitStatuses = `-- name: ListUnitStatuses :many
 SELECT id, name FROM unit_statuses ORDER BY id ASC
 `

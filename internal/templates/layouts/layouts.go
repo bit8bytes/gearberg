@@ -23,4 +23,7 @@ var (
 
 	// Empty skips the HTML shell entirely; used for HTMX fragments.
 	Empty = Layout{File: "layouts/empty.tmpl"}
+
+	// Print renders a bare HTML shell for print-only pages (no nav, no chrome).
+	Print = Layout{File: "layouts/print.tmpl"}
 )

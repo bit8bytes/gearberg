@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"html/template"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -31,7 +34,18 @@ type inventoryData struct {
 	Query       string
 	Category    string
 	PageBaseURL template.URL
+	PrintURL    template.URL
 	Pagination  pagination.Metadata
+}
+
+type inventoryPrintData struct {
+	OrgID       string
+	OrgName     string
+	Inventories []inventory.Inventory
+	Query       string
+	Category    string
+	PrintDate   string
+	TotalCount  int
 }
 
 type inventoryItemData struct {
@@ -50,6 +64,70 @@ type inventoryUnitsData struct {
 	ItemCode     int64
 	Units        []inventory.Unit
 	UnitStatuses []inventory.UnitStatusEntry
+}
+
+func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	items, err := app.services.inventory.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+	}
+
+	mfrs, err := app.services.inventory.ListManufacturers(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
+	}
+	mfrByID := make(map[string]string, len(mfrs))
+	for _, m := range mfrs {
+		mfrByID[m.ID] = m.Name
+	}
+
+	filename := "inventory-" + time.Now().UTC().Format("2006-01-02") + ".csv"
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Cache-Control", "no-store")
+
+	// UTF-8 BOM for Excel compatibility.
+	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+
+	cw := csv.NewWriter(w)
+	if err := cw.Write([]string{"Code", "Name", "Type", "Usage", "Category", "Manufacturer", "Total Stock", "Purchase Price", "Rental Price", "Notes", "Created At", "Updated At"}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	for _, item := range items {
+		if err := cw.Write([]string{
+			fmt.Sprintf("%d", item.Code),
+			item.Name,
+			item.Type.Label(),
+			item.UsageType.Label(),
+			item.CategoryName,
+			mfrByID[item.ManufacturerID],
+			fmt.Sprintf("%d", item.TotalStock),
+			formatCents(item.PurchasePrice),
+			formatCents(item.RentalPrice),
+			item.Notes,
+			time.Unix(item.CreatedAt, 0).UTC().Format("2006-01-02"),
+			time.Unix(item.UpdatedAt, 0).UTC().Format("2006-01-02"),
+		}); err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+		}
+	}
+	cw.Flush()
+	if err := cw.Error(); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
+func formatCents(v *int64) string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%.2f", float64(*v)/100)
 }
 
 func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -94,6 +172,20 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		pageBaseURL += "q=" + url.QueryEscape(query) + "&"
 	}
 
+	printURL := "/orgs/" + url.PathEscape(id) + "/inventory/print"
+	if category != "" || query != "" {
+		printURL += "?"
+		if category != "" {
+			printURL += "category=" + url.QueryEscape(category)
+		}
+		if category != "" && query != "" {
+			printURL += "&"
+		}
+		if query != "" {
+			printURL += "q=" + url.QueryEscape(query)
+		}
+	}
+
 	data := app.html.TemplateData(r)
 	data.Data = inventoryData{
 		OrgID:       id,
@@ -103,6 +195,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		Query:       query,
 		Category:    category,
 		PageBaseURL: template.URL(pageBaseURL), // #nosec G203
+		PrintURL:    template.URL(printURL),    // #nosec G203
 		Pagination:  meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Inventory, data)
@@ -609,4 +702,53 @@ func (app *application) postDeleteInventoryItem(w http.ResponseWriter, r *http.R
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory", http.StatusSeeOther)
 	return nil
+}
+
+func (app *application) getInventoryPrint(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	org, err := app.services.orgs.GetByID(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve organization.", Code: http.StatusInternalServerError}
+	}
+
+	qs := r.URL.Query()
+	query := qs.Get("q")
+	category := qs.Get("category")
+
+	items, err := app.services.inventory.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+	}
+
+	// Filter client-side to mirror the index page's query/category params.
+	filtered := make([]inventory.Inventory, 0, len(items))
+	for _, item := range items {
+		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
+			continue
+		}
+		if category != "" && item.CategoryName != category {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+
+	for i := range filtered {
+		if filtered[i].StorageObjectID != nil {
+			filtered[i].ImageURL = app.services.storageManager.URL(*filtered[i].StorageObjectID)
+		}
+	}
+
+	data := app.html.TemplateData(r)
+	data.Data = inventoryPrintData{
+		OrgID:       orgID,
+		OrgName:     org.Name,
+		Inventories: filtered,
+		Query:       query,
+		Category:    category,
+		PrintDate:   time.Now().UTC().Format("2006-01-02"),
+		TotalCount:  len(filtered),
+	}
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryPrint, data)
 }

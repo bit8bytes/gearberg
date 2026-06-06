@@ -60,3 +60,13 @@ sql:
         out: "internal/database/queries/gen/storage"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/inventory_imports.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "invimports"
+        out: "internal/database/queries/gen/invimports"
+        emit_interface: true
+        omit_unused_structs: true
