@@ -27,7 +27,6 @@ buildpkgs.buildGoModule {
   nativeBuildInputs = [buildpkgs.tailwindcss_4 buildpkgs.sqlc buildpkgs.ogen];
 
   preBuild = ''
-    go generate ./api/
     sqlc generate -f sqlc.sqlite.yml
     tailwindcss -i ./internal/assets/css/index.css -o ./internal/assets/dist/index.css --minify
   '';
