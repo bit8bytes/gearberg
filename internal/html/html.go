@@ -12,8 +12,8 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/nonce"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/internal/trace"
-	"github.com/bit8bytes/gearberg/templates/pages"
 )
 
 // TemplateData is the base data passed to every page template.

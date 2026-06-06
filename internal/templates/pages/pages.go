@@ -8,7 +8,7 @@
 package pages
 
 import (
-	"github.com/bit8bytes/gearberg/templates/layouts"
+	"github.com/bit8bytes/gearberg/internal/templates/layouts"
 )
 
 // Page holds the template file path and the layout used to render it.

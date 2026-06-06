@@ -7,7 +7,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/assets"
 	"github.com/bit8bytes/gearberg/internal/httperr"
-	"github.com/bit8bytes/gearberg/templates/pages"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
 func (app *application) routes() http.Handler {

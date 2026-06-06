@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
-func (app *application) GetHealthz(ctx context.Context) (*gen.HealthzResponse, error) {
+func (app *application) GetHealthz(_ context.Context) (*gen.HealthzResponse, error) {
 	return &gen.HealthzResponse{
 		Status:          "ok",
 		AppRevision:     revision,
@@ -23,7 +24,7 @@ func (app *application) ListInventory(ctx context.Context, params gen.ListInvent
 
 	items, meta, err := app.services.inventory.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", f)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch inventory: %w", err)
 	}
 
 	out := make([]gen.InventoryItem, len(items))

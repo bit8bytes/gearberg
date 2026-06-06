@@ -22,8 +22,8 @@ import (
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
-	"github.com/bit8bytes/gearberg/templates"
-	"github.com/bit8bytes/gearberg/templates/pages"
+	"github.com/bit8bytes/gearberg/internal/templates"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
 func setupLogger(l slog.Level) *slog.Logger {
