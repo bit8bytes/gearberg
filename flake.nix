@@ -1,6 +1,6 @@
 {
-  description = "gearberg: Self-hostable inventory management.";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+  description = "Gearberg: Self-hostable inventory management.";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
   inputs.nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
   outputs = {
     self,
