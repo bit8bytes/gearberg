@@ -116,12 +116,12 @@ build/all: verify build build/linux-amd64 build/linux-arm64 build/darwin-amd64 b
 ## tailwind: run Tailwind CSS in watch mode
 .PHONY: tailwind
 tailwind:
-	tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --watch
+	tailwindcss -i ./internal/assets/css/index.css -o ./internal/assets/dist/index.css --watch
 
 ## tailwind/build: build Tailwind CSS once (no watch)
 .PHONY: tailwind/build
 tailwind/build:
-	tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --minify
+	tailwindcss -i ./internal/assets/css/index.css -o ./internal/assets/dist/index.css --minify
 
 ## nix/check: check if the Nix build works
 .PHONY: nix/check

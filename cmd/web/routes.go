@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bit8bytes/gearberg/assets"
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
+	"github.com/bit8bytes/gearberg/internal/assets"
 )
 
 func (app *application) routes() (http.Handler, error) {

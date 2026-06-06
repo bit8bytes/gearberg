@@ -22,7 +22,7 @@ buildpkgs.buildGoModule {
   nativeBuildInputs = [buildpkgs.tailwindcss_4];
 
   preBuild = ''
-    tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --minify
+    tailwindcss -i ./internal/assets/css/index.css -o ./internal/assets/dist/index.css --minify
   '';
 
   env = {

@@ -29,7 +29,7 @@ buildpkgs.buildGoModule {
   preBuild = ''
     go generate ./api/
     sqlc generate -f sqlc.sqlite.yml
-    tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --minify
+    tailwindcss -i ./internal/assets/css/index.css -o ./internal/assets/dist/index.css --minify
   '';
 
   env = {
