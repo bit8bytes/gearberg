@@ -276,6 +276,36 @@ func (r *Repository) ListUnits(ctx context.Context, inventoryID string) ([]Unit,
 	return units, nil
 }
 
+// ListAll returns all inventory items for orgID ordered by name, with no pagination.
+func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Inventory, error) {
+	rows, err := r.inventory.ListAllByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListAll: %w", err)
+	}
+	items := make([]Inventory, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, Inventory{
+			ID:              row.ID,
+			OrgID:           row.OrgID,
+			Type:            Type(row.TypeID),
+			UsageType:       UsageType(row.UsageTypeID),
+			Name:            row.Name,
+			Code:            row.Code,
+			CategoryID:      row.CategoryID,
+			CategoryName:    row.CategoryName,
+			ManufacturerID:  database.String(row.ManufacturerID),
+			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			TotalStock:      row.TotalStock,
+			PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
+			RentalPrice:     database.Int64Ptr(row.RentalPrice),
+			Notes:           database.String(row.Notes),
+			UpdatedAt:       row.UpdatedAt,
+			CreatedAt:       row.CreatedAt,
+		})
+	}
+	return items, nil
+}
+
 // Delete removes the inventory item. Returns database.ErrForeignKeyViolation when
 // active rental line items reference it.
 func (r *Repository) Delete(ctx context.Context, id string) error {

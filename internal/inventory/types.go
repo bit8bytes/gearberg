@@ -64,6 +64,18 @@ func ParseUsage(name string) UsageType {
 	}
 }
 
+// Label returns the human-friendly label for the usage type.
+func (u UsageType) Label() string {
+	switch u {
+	case Rental:
+		return "Rental"
+	case Sale:
+		return "Sale"
+	default:
+		return ""
+	}
+}
+
 // String returns the name stored in the usage_types table.
 func (u UsageType) String() string {
 	switch u {

@@ -43,6 +43,15 @@ func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string
 	return items, meta, nil
 }
 
+// ListAll returns all inventory items for orgID with no pagination, ordered by name.
+func (s *Service) ListAll(ctx context.Context, orgID string) ([]Inventory, error) {
+	items, err := s.repo.ListAll(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListAll: %w", err)
+	}
+	return items, nil
+}
+
 // GetByID returns the inventory item with id.
 func (s *Service) GetByID(ctx context.Context, id string) (*Inventory, error) {
 	item, err := s.repo.GetByID(ctx, id)

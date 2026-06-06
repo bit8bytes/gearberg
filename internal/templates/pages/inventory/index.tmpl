@@ -11,7 +11,8 @@
         <span>{{ len .Data.Categories }} categories</span>
       </div>
     </div>
-    <div>
+    <div class="flex gap-2">
+      <a class="btn btn-ghost" href="/orgs/{{ .Data.OrgID }}/inventory/export">Export CSV</a>
       {{ if eq (len .Data.Categories) 0 }}
       <div class="tooltip tooltip-left" data-tip="Create a category first">
         <span tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item</span>

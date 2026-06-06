@@ -28,6 +28,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("POST /orgs/{org_id}", app.html.Handle(app.postSettingsOrg))
 	mux.HandleFunc("POST /orgs/{org_id}/delete", app.html.Handle(app.postDeleteOrg))
 	mux.HandleFunc("GET /orgs/{org_id}/inventory", app.html.Handle(app.getInventory))
+	mux.HandleFunc("GET /orgs/{org_id}/inventory/export", app.html.Handle(app.getInventoryExport))
 	mux.HandleFunc("GET /orgs/{org_id}/inventory/new", app.html.Handle(app.getInventoryNew))
 	mux.Handle("POST /orgs/{org_id}/inventory/new", app.withCheckQuota(app.html.Handle(app.postInventoryNew)))
 	mux.HandleFunc("GET /orgs/{org_id}/inventory/{id}", app.html.Handle(app.getInventoryItem))

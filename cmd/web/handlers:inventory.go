@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"html/template"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -50,6 +52,59 @@ type inventoryUnitsData struct {
 	ItemCode     int64
 	Units        []inventory.Unit
 	UnitStatuses []inventory.UnitStatusEntry
+}
+
+func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	items, err := app.services.inventory.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+	}
+
+	filename := "inventory-" + time.Now().UTC().Format("2006-01-02") + ".csv"
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+
+	// UTF-8 BOM for Excel compatibility.
+	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+
+	cw := csv.NewWriter(w)
+	if err := cw.Write([]string{"Code", "Name", "Type", "Usage", "Category", "Total Stock", "Purchase Price", "Rental Price", "Notes", "Created At", "Updated At"}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	for _, item := range items {
+		if err := cw.Write([]string{
+			fmt.Sprintf("%d", item.Code),
+			item.Name,
+			item.Type.Label(),
+			item.UsageType.Label(),
+			item.CategoryName,
+			fmt.Sprintf("%d", item.TotalStock),
+			formatCents(item.PurchasePrice),
+			formatCents(item.RentalPrice),
+			item.Notes,
+			time.Unix(item.CreatedAt, 0).UTC().Format("2006-01-02"),
+			time.Unix(item.UpdatedAt, 0).UTC().Format("2006-01-02"),
+		}); err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+		}
+	}
+	cw.Flush()
+	if err := cw.Error(); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
+func formatCents(v *int64) string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%.2f", float64(*v)/100)
 }
 
 func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *httperr.Error {
