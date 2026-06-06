@@ -1,0 +1,111 @@
+openapi: "3.1.0"
+info:
+  title: Gearberg API
+  version: "0.1.0"
+paths:
+  /healthz:
+    get:
+      operationId: getHealthz
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthzResponse"
+
+  /orgs/{org_id}/inventory:
+    get:
+      operationId: listInventory
+      summary: List inventory items for an org
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Paginated list of inventory items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryListResponse"
+
+components:
+  schemas:
+    HealthzResponse:
+      type: object
+      required:
+        - status
+        - app_revision
+        - database_version
+        - timestamp
+      properties:
+        status:
+          type: string
+        app_revision:
+          type: string
+        database_version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    InventoryListResponse:
+      type: object
+      required:
+        - items
+        - current_page
+        - last_page
+        - total_records
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryItem"
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        total_records:
+          type: integer
+
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - name
+        - code
+        - total_stock
+        - type
+        - usage_type
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        code:
+          type: integer
+          format: int64
+        total_stock:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [bulk, serialized]
+        usage_type:
+          type: string
+          enum: [rental, sale]
+        category_name:
+          type: string

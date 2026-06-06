@@ -1,16 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/bit8bytes/gearberg/assets"
+	gen "github.com/bit8bytes/gearberg/internal/api/gen"
 )
 
-func (app *application) routes() http.Handler {
+func (app *application) routes() (http.Handler, error) {
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /{$}", http.RedirectHandler("/orgs", http.StatusSeeOther))
-	mux.HandleFunc("GET /healthz", app.json.Handle(app.getHealthz))
+	apiServer, err := gen.NewServer(app, gen.WithPathPrefix("/api/v1"))
+	if err != nil {
+		return nil, fmt.Errorf("routes: new api server: %w", err)
+	}
+	mux.Handle("/api/v1/", apiServer)
 	mux.HandleFunc("GET /media/{id}", app.html.Handle(app.getMedia))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
@@ -57,5 +63,5 @@ func (app *application) routes() http.Handler {
 				logRequest.handler(
 					withSecurityHeaders(
 						withMaxBodySize(
-							antiCSRF.Handler(mux)))))))
+							antiCSRF.Handler(mux))))))), nil
 }

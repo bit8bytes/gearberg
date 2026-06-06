@@ -18,6 +18,7 @@ pkgs.mkShellNoCC {
     golangci-lint
     go-licenses
     git
+    ogen
   ];
   shellHook = ''
     echo "Welcome to the dev shell! All required tools are available."

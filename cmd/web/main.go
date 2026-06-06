@@ -28,14 +28,12 @@ import (
 	"time"
 
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
-	jsonpkg "github.com/bit8bytes/gearberg/internal/json"
 )
 
 type application struct {
 	logger   *slog.Logger
 	options  *options
 	html     *htmlpkg.HTML
-	json     *jsonpkg.JSON
 	db       *sql.DB
 	services *services
 }
@@ -93,7 +91,6 @@ func runServe(args []string) error {
 	}
 
 	html := htmlpkg.New(log, cache, revision)
-	json := jsonpkg.New(log)
 
 	db, err := setupDatabase(ctx, options)
 	if err != nil {
@@ -118,7 +115,6 @@ func runServe(args []string) error {
 		logger:   log,
 		options:  options,
 		html:     html,
-		json:     json,
 		db:       db,
 		services: services,
 	}

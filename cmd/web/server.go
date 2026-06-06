@@ -16,10 +16,14 @@ func (app *application) serve(ctx context.Context) error {
 	return app.serveUnsecure(ctx)
 }
 
-func (app *application) newServer(ctx context.Context) *http.Server {
+func (app *application) newServer(ctx context.Context) (*http.Server, error) {
+	routes, err := app.routes()
+	if err != nil {
+		return nil, fmt.Errorf("newServer: %w", err)
+	}
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", app.options.Port),
-		Handler:           http.TimeoutHandler(app.routes(), time.Second*20, ""),
+		Handler:           http.TimeoutHandler(routes, time.Second*20, ""),
 		MaxHeaderBytes:    524_288,
 		IdleTimeout:       time.Minute,
 		BaseContext:       func(_ net.Listener) context.Context { return ctx },
@@ -27,11 +31,14 @@ func (app *application) newServer(ctx context.Context) *http.Server {
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      15 * time.Second,
 		ErrorLog:          slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
-	}
+	}, nil
 }
 
 func (app *application) serveUnsecure(ctx context.Context) error {
-	srv := app.newServer(ctx)
+	srv, err := app.newServer(ctx)
+	if err != nil {
+		return err
+	}
 
 	app.logger.Info("starting server", "addr", srv.Addr, "revision", revision)
 

@@ -59,6 +59,11 @@ fix:
 verify: fix lint license test
 	go mod verify
 
+## generate/api: generate server code from OpenAPI spec
+.PHONY: generate/api
+generate/api:
+	go generate ./api/
+
 ## sqlc: generate source code from SQL
 .PHONY: sqlc
 sqlc:

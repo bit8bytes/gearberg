@@ -12,7 +12,7 @@ buildpkgs.buildGoModule {
   # one folder up.
   src = ./..;
 
-  vendorHash = "sha256-/rLXKPc0el25tamhckO7oLvJPFiMe9v8ufbMOJ31h4s=";
+  vendorHash = "sha256-5ABKSj01op4mlyX5KFRkxeen2hz4NlHh3pTuZ/xqvvw=";
 
   subPackages = ["cmd/web"];
 
@@ -24,9 +24,10 @@ buildpkgs.buildGoModule {
   ];
   tags = ["sqlite"];
 
-  nativeBuildInputs = [buildpkgs.tailwindcss_4 buildpkgs.sqlc];
+  nativeBuildInputs = [buildpkgs.tailwindcss_4 buildpkgs.sqlc buildpkgs.ogen];
 
   preBuild = ''
+    go generate ./api/
     sqlc generate -f sqlc.sqlite.yml
     tailwindcss -i ./assets/css/index.css -o ./assets/dist/index.css --minify
   '';
