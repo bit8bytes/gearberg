@@ -12,9 +12,11 @@ require (
 	github.com/ogen-go/ogen v1.20.3
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/segmentio/ksuid v1.0.4
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
+	golang.org/x/image v0.41.0
 	golang.org/x/sync v0.20.0
 	modernc.org/sqlite v1.50.1
 )
@@ -43,7 +45,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	modernc.org/libc v1.72.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect

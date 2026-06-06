@@ -131,6 +131,14 @@ func (s *Service) SetImage(ctx context.Context, si SetImage) error {
 	return nil
 }
 
+// SetQRCode links or unlinks a QR code storage object from an inventory item.
+func (s *Service) SetQRCode(ctx context.Context, sq SetQRCode) error {
+	if err := s.repo.SetQRCode(ctx, sq); err != nil {
+		return fmt.Errorf("SetQRCode: %w", err)
+	}
+	return nil
+}
+
 // Delete removes an inventory item.
 func (s *Service) Delete(ctx context.Context, id string) error {
 	if err := s.repo.Delete(ctx, id); err != nil {

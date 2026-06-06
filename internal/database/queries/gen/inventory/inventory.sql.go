@@ -56,6 +56,7 @@ INSERT INTO inventory (
     category_id,
     manufacturer_id,
     storage_object_id,
+    qr_object_id,
     type_id,
     usage_type_id,
     code,
@@ -88,6 +89,7 @@ type CreateRow struct {
 	CategoryID      string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
+	QrObjectID      sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
 	Code            int64
@@ -121,6 +123,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.CategoryID,
 		&i.ManufacturerID,
 		&i.StorageObjectID,
+		&i.QrObjectID,
 		&i.TypeID,
 		&i.UsageTypeID,
 		&i.Code,
@@ -230,6 +233,7 @@ SELECT
     category_id,
     manufacturer_id,
     storage_object_id,
+    qr_object_id,
     total_stock,
     purchase_price,
     rental_price,
@@ -250,6 +254,7 @@ type GetByIDRow struct {
 	CategoryID      string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
+	QrObjectID      sql.NullString
 	TotalStock      int64
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
@@ -271,6 +276,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.CategoryID,
 		&i.ManufacturerID,
 		&i.StorageObjectID,
+		&i.QrObjectID,
 		&i.TotalStock,
 		&i.PurchasePrice,
 		&i.RentalPrice,
@@ -323,6 +329,7 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
     i.storage_object_id,
+    i.qr_object_id,
     i.type_id,
     i.usage_type_id,
     i.total_stock,
@@ -358,6 +365,7 @@ type ListRow struct {
 	CategoryName    string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
+	QrObjectID      sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
 	TotalStock      int64
@@ -393,6 +401,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.CategoryName,
 			&i.ManufacturerID,
 			&i.StorageObjectID,
+			&i.QrObjectID,
 			&i.TypeID,
 			&i.UsageTypeID,
 			&i.TotalStock,
@@ -426,6 +435,7 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
     i.storage_object_id,
+    i.qr_object_id,
     i.type_id,
     i.usage_type_id,
     i.total_stock,
@@ -449,6 +459,7 @@ type ListAllByOrgIDRow struct {
 	CategoryName    string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
+	QrObjectID      sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
 	TotalStock      int64
@@ -477,6 +488,7 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.CategoryName,
 			&i.ManufacturerID,
 			&i.StorageObjectID,
+			&i.QrObjectID,
 			&i.TypeID,
 			&i.UsageTypeID,
 			&i.TotalStock,
@@ -619,6 +631,7 @@ RETURNING
     category_id,
     manufacturer_id,
     storage_object_id,
+    qr_object_id,
     type_id,
     usage_type_id,
     code,
@@ -649,6 +662,7 @@ type UpdateRow struct {
 	CategoryID      string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
+	QrObjectID      sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
 	Code            int64
@@ -680,6 +694,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		&i.CategoryID,
 		&i.ManufacturerID,
 		&i.StorageObjectID,
+		&i.QrObjectID,
 		&i.TypeID,
 		&i.UsageTypeID,
 		&i.Code,
@@ -691,6 +706,22 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const updateQRObject = `-- name: UpdateQRObject :exec
+UPDATE inventory
+SET qr_object_id = ?1
+WHERE id = ?2
+`
+
+type UpdateQRObjectParams struct {
+	QrObjectID sql.NullString
+	ID         string
+}
+
+func (q *Queries) UpdateQRObject(ctx context.Context, arg UpdateQRObjectParams) error {
+	_, err := q.db.ExecContext(ctx, updateQRObject, arg.QrObjectID, arg.ID)
+	return err
 }
 
 const updateStorageObject = `-- name: UpdateStorageObject :exec

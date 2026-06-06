@@ -21,6 +21,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
+	"github.com/bit8bytes/gearberg/internal/qrcode"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/segmentio/ksuid"
@@ -158,33 +159,7 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
-	for i := range items {
-		if items[i].StorageObjectID != nil {
-			items[i].ImageURL = app.services.storageManager.URL(*items[i].StorageObjectID)
-		}
-	}
-
-	pageBaseURL := "/orgs/" + url.PathEscape(id) + "/inventory?"
-	if category != "" {
-		pageBaseURL += "category=" + url.QueryEscape(category) + "&"
-	}
-	if query != "" {
-		pageBaseURL += "q=" + url.QueryEscape(query) + "&"
-	}
-
-	printURL := "/orgs/" + url.PathEscape(id) + "/inventory/print"
-	if category != "" || query != "" {
-		printURL += "?"
-		if category != "" {
-			printURL += "category=" + url.QueryEscape(category)
-		}
-		if category != "" && query != "" {
-			printURL += "&"
-		}
-		if query != "" {
-			printURL += "q=" + url.QueryEscape(query)
-		}
-	}
+	app.resolveInventoryURLs(items)
 
 	data := app.html.TemplateData(r)
 	data.Data = inventoryData{
@@ -194,8 +169,8 @@ func (app *application) getInventory(w http.ResponseWriter, r *http.Request) *ht
 		Filtered:    query != "" || category != "",
 		Query:       query,
 		Category:    category,
-		PageBaseURL: template.URL(pageBaseURL), // #nosec G203
-		PrintURL:    template.URL(printURL),    // #nosec G203
+		PageBaseURL: template.URL(inventoryPageURL(id, query, category)),  // #nosec G203
+		PrintURL:    template.URL(inventoryPrintURL(id, query, category)), // #nosec G203
 		Pagination:  meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Inventory, data)
@@ -259,13 +234,17 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 
 func (app *application) createBulkItem(w http.ResponseWriter, r *http.Request, orgID, itemID string, base inventory.Base, form *inventory.NewForm) *httperr.Error {
 	ctx := r.Context()
-	if _, err := app.services.inventory.CreateBulk(ctx, inventory.CreateBulkInventory{
+	item, err := app.services.inventory.CreateBulk(ctx, inventory.CreateBulkInventory{
 		Base:       base,
 		TotalStock: form.CountInt64(),
-	}); err != nil {
+	})
+	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to create inventory item.", Code: http.StatusInternalServerError}
 	}
 	if appErr := app.processInventoryImage(r, orgID, itemID, form.Image, form.ImageHeader); appErr != nil {
+		return appErr
+	}
+	if appErr := app.storeInventoryQRCode(r, orgID, itemID, item.Code); appErr != nil {
 		return appErr
 	}
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory", http.StatusSeeOther)
@@ -288,16 +267,20 @@ func (app *application) createSerializedItem(w http.ResponseWriter, r *http.Requ
 		return &httperr.Error{Error: txErr, Message: "Failed to start transaction.", Code: http.StatusInternalServerError}
 	}
 	defer func() { _ = tx.Rollback() }()
-	if _, err := app.services.inventory.CreateSerialized(ctx, tx, inventory.CreateSerializedInventory{
+	item, err := app.services.inventory.CreateSerialized(ctx, tx, inventory.CreateSerializedInventory{
 		Base:  base,
 		Units: units,
-	}); err != nil {
+	})
+	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to create inventory item.", Code: http.StatusInternalServerError}
 	}
 	if err := tx.Commit(); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to save inventory item.", Code: http.StatusInternalServerError}
 	}
 	if appErr := app.processInventoryImage(r, orgID, itemID, form.Image, form.ImageHeader); appErr != nil {
+		return appErr
+	}
+	if appErr := app.storeInventoryQRCode(r, orgID, itemID, item.Code); appErr != nil {
 		return appErr
 	}
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID), http.StatusSeeOther)
@@ -317,9 +300,7 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	if item.StorageObjectID != nil {
-		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
-	}
+	app.resolveItemURLs(item)
 
 	deps, appErr := app.loadInventoryFormDeps(r, orgID)
 	if appErr != nil {
@@ -373,9 +354,7 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	if item.StorageObjectID != nil {
-		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
-	}
+	app.resolveItemURLs(item)
 
 	deps, appErr := app.loadInventoryFormDeps(r, orgID)
 	if appErr != nil {
@@ -431,9 +410,7 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	if item.StorageObjectID != nil {
-		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
-	}
+	app.resolveItemURLs(item)
 
 	deps, appErr := app.loadInventoryFormDeps(r, orgID)
 	if appErr != nil {
@@ -617,6 +594,88 @@ func (app *application) storeInventoryImage(r *http.Request, orgID, itemID strin
 	return record, nil
 }
 
+// inventoryPageURL builds the paginated base URL for the inventory list.
+func inventoryPageURL(orgID, query, category string) string {
+	base := "/orgs/" + url.PathEscape(orgID) + "/inventory?"
+	if category != "" {
+		base += "category=" + url.QueryEscape(category) + "&"
+	}
+	if query != "" {
+		base += "q=" + url.QueryEscape(query) + "&"
+	}
+	return base
+}
+
+// inventoryPrintURL builds the print URL with optional filter params.
+func inventoryPrintURL(orgID, query, category string) string {
+	base := "/orgs/" + url.PathEscape(orgID) + "/inventory/print"
+	if category == "" && query == "" {
+		return base
+	}
+	sep := "?"
+	if category != "" {
+		base += sep + "category=" + url.QueryEscape(category)
+		sep = "&"
+	}
+	if query != "" {
+		base += sep + "q=" + url.QueryEscape(query)
+	}
+	return base
+}
+
+// resolveItemURLs populates the ImageURL and QR.URL fields from storage object IDs.
+func (app *application) resolveItemURLs(item *inventory.Inventory) {
+	if item.StorageObjectID != nil {
+		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
+	}
+	if item.QR.ObjectID != nil {
+		item.QR.URL = app.services.storageManager.URL(*item.QR.ObjectID)
+	}
+}
+
+// resolveInventoryURLs calls resolveItemURLs for each item in the slice.
+func (app *application) resolveInventoryURLs(items []inventory.Inventory) {
+	for i := range items {
+		app.resolveItemURLs(&items[i])
+	}
+}
+
+// storeInventoryQRCode generates a QR code for the item URL and stores it in storage.
+func (app *application) storeInventoryQRCode(r *http.Request, orgID, itemID string, code int64) *httperr.Error {
+	ctx := r.Context()
+
+	base := app.options.Domain
+	if base == "" {
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		base = scheme + "://" + r.Host
+	}
+	content := base + "/orgs/" + url.PathEscape(orgID) + "/inventory/" + url.PathEscape(itemID)
+	png, err := qrcode.Generate(content, fmt.Sprintf("#%d", code))
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
+	}
+
+	key := fmt.Sprintf("orgs/%s/inventory/%s.qr", orgID, itemID)
+	record, err := app.services.storageManager.Put(ctx, orgID, key, "qr.png", bytes.NewReader(png), storage.Options{
+		Size:        int64(len(png)),
+		ContentType: "image/png",
+	})
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to store QR code.", Code: http.StatusInternalServerError}
+	}
+
+	if err := app.services.inventory.SetQRCode(ctx, inventory.SetQRCode{
+		ID:         itemID,
+		QRObjectID: &record.ID,
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to link QR code.", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
 type inventoryFormDeps struct {
 	Categories    []categories.EquipmentCategory
 	Manufacturers []manufacturers.Manufacturer
@@ -649,9 +708,7 @@ func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
-	if item.StorageObjectID != nil {
-		item.ImageURL = app.services.storageManager.URL(*item.StorageObjectID)
-	}
+	app.resolveItemURLs(item)
 	deps, appErr := app.loadInventoryFormDeps(r, orgID)
 	if appErr != nil {
 		return appErr
@@ -734,11 +791,7 @@ func (app *application) getInventoryPrint(w http.ResponseWriter, r *http.Request
 		filtered = append(filtered, item)
 	}
 
-	for i := range filtered {
-		if filtered[i].StorageObjectID != nil {
-			filtered[i].ImageURL = app.services.storageManager.URL(*filtered[i].StorageObjectID)
-		}
-	}
+	app.resolveInventoryURLs(filtered)
 
 	data := app.html.TemplateData(r)
 	data.Data = inventoryPrintData{

@@ -24,6 +24,15 @@ func priceInput(v *int64) string {
 	return fmt.Sprintf("%.2f", float64(*v)/100)
 }
 
+// QRCode holds the storage reference and public URL for an item's QR image.
+type QRCode struct {
+	ObjectID *string
+	URL      string
+}
+
+// IsSet reports whether a QR code has been stored for this item.
+func (q QRCode) IsSet() bool { return q.ObjectID != nil }
+
 // Inventory represents a single inventory item.
 type Inventory struct {
 	ID              string
@@ -37,6 +46,7 @@ type Inventory struct {
 	ManufacturerID  string
 	StorageObjectID *string
 	ImageURL        string
+	QR              QRCode
 	TotalStock      int64
 	PurchasePrice   *int64
 	RentalPrice     *int64
@@ -111,6 +121,12 @@ type UpdateInventory struct {
 type SetImage struct {
 	ID              string
 	StorageObjectID *string
+}
+
+// SetQRCode links or unlinks a QR code storage object from an inventory item.
+type SetQRCode struct {
+	ID         string
+	QRObjectID *string
 }
 
 // AddUnit holds the data required to add a single unit to a serialized inventory item.
