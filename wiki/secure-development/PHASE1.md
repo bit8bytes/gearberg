@@ -34,7 +34,7 @@ Non-functional requirements describe the required security quality of the softwa
 
 ## IPV 3: Creation of a Business Impact Analysis
 
-gearberg is a self-hosted, single-tenant application intended for use on a private local network and not exposed to the internet. The operator is a small business (e.g., camera/audio/lighting rental). This limits both the attack surface and the blast radius of any compromise.
+Gearberg is a self-hosted, single-tenant application intended for use on a private local network and not exposed to the internet. The operator is a small business (e.g., camera/audio/lighting rental). This limits both the attack surface and the blast radius of any compromise.
 
 **1. Damage from unauthorized reading or manipulation of application data (Confidentiality / Integrity)**
 
@@ -57,7 +57,7 @@ An attacker who can modify the application (e.g., via a stored XSS or a compromi
 
 Since the application is self-hosted and operator-controlled, recovery is typically a service restart. There is no external SLA or dependency. Maximum damage is limited to lost operational efficiency and potential manual rework. Severity: **low to medium**.
 
-**Overall assessment:** gearberg processes a small volume of business-relevant and personal data in a controlled, local environment. The protection needs for Confidentiality and Integrity are **medium** (driven by GDPR and financial accuracy requirements); the protection need for Availability is **low**.
+**Overall assessment:** Gearberg processes a small volume of business-relevant and personal data in a controlled, local environment. The protection needs for Confidentiality and Integrity are **medium** (driven by GDPR and financial accuracy requirements); the protection need for Availability is **low**.
 
 ## IPV 4: Creation of the Security Project Plan
 

@@ -1,4 +1,4 @@
-# gearberg
+# Gearberg
 
 Self-hostable inventory and rental management. Free as in freedom.
 
