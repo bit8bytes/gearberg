@@ -1,4 +1,4 @@
-/*! tailwindcss v4.2.4 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
@@ -4137,9 +4137,6 @@
       }
     }
   }
-  .start {
-    inset-inline-start: var(--spacing);
-  }
   .dropdown-left {
     @layer daisyui.l1.l2 {
       --anchor-h: left;
@@ -4237,9 +4234,6 @@
         }
       }
     }
-  }
-  .end {
-    inset-inline-end: var(--spacing);
   }
   .dropdown-bottom {
     @layer daisyui.l1.l2 {
@@ -6535,6 +6529,9 @@
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
+  .h-48 {
+    height: calc(var(--spacing) * 48);
+  }
   .h-full {
     height: 100%;
   }
@@ -6707,6 +6704,9 @@
   }
   .w-36 {
     width: calc(var(--spacing) * 36);
+  }
+  .w-48 {
+    width: calc(var(--spacing) * 48);
   }
   .w-52 {
     width: calc(var(--spacing) * 52);
@@ -6885,6 +6885,9 @@
         scroll-snap-align: start;
       }
     }
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
   }
   .list-inside {
     list-style-position: inside;
@@ -7659,6 +7662,9 @@
   }
   .bg-teal-400 {
     background-color: var(--color-teal-400);
+  }
+  .bg-white {
+    background-color: var(--color-white);
   }
   .divider-accent {
     @layer daisyui.l1.l2 {

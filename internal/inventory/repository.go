@@ -81,6 +81,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			CategoryName:    row.CategoryName,
 			ManufacturerID:  database.String(row.ManufacturerID),
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 			TotalStock:      row.TotalStock,
 			PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -111,6 +112,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -128,6 +130,17 @@ func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
 		StorageObjectID: database.NullString(s.StorageObjectID),
 	}); err != nil {
 		return fmt.Errorf("SetImage: %w", err)
+	}
+	return nil
+}
+
+// SetQRCode links or unlinks a QR code storage object from an inventory item.
+func (r *Repository) SetQRCode(ctx context.Context, s SetQRCode) error {
+	if err := r.inventory.UpdateQRObject(ctx, geninv.UpdateQRObjectParams{
+		ID:         s.ID,
+		QrObjectID: database.NullString(s.QRObjectID),
+	}); err != nil {
+		return fmt.Errorf("SetQRCode: %w", err)
 	}
 	return nil
 }
@@ -161,6 +174,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -215,6 +229,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -254,6 +269,7 @@ func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkI
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -289,6 +305,7 @@ func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u Update
 		CategoryID:      row.CategoryID,
 		ManufacturerID:  database.String(row.ManufacturerID),
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -351,6 +368,7 @@ func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Inventory, er
 			CategoryName:    row.CategoryName,
 			ManufacturerID:  database.String(row.ManufacturerID),
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			QR:              QRCode{ObjectID: database.StringPtr(row.QrObjectID)},
 			TotalStock:      row.TotalStock,
 			PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),

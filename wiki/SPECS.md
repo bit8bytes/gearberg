@@ -36,8 +36,10 @@ The first increment comes without login because the software will be self-hosted
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
 | M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
 | M1.18 | A user can set an operational status on an individual unit (available, damaged, under repair, retired) | 100 % |
+| M1.19 | A user can view a QR code for an inventory item that encodes a link to its detail page, labelled with the item code | 100 % |
+| M1.20 | A user can download the QR code for an inventory item as a PNG file | 100 % |
 
-Defered ideas: QR-Code generation, inventory locations, and flight cases & groupings.
+Defered ideas: inventory locations, and flight cases & groupings.
 
 ### Milestone 2: Import & Export
 

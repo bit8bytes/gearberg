@@ -60,9 +60,23 @@ func (q *Queries) GetImportRow(ctx context.Context, id string) (InventoryImport,
 
 const insertImportRow = `-- name: InsertImportRow :one
 INSERT INTO inventory_imports (
-    id, import_id, org_id, row_number, name, type_label, usage_type_label,
-    category_name, manufacturer_name, total_stock, purchase_price, rental_price,
-    notes, status, error_message, action, existing_item_id
+    id,
+    import_id,
+    org_id,
+    row_number,
+    name,
+    type_label,
+    usage_type_label,
+    category_name,
+    manufacturer_name,
+    total_stock,
+    purchase_price,
+    rental_price,
+    notes,
+    status,
+    error_message,
+    action,
+    existing_item_id
 ) VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id, import_id, org_id, row_number, name, type_label, usage_type_label, category_name, manufacturer_name, total_stock, purchase_price, rental_price, notes, status, error_message, "action", existing_item_id, created_at
