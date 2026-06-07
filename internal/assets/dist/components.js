@@ -60,11 +60,16 @@ class ComboBox extends LitElement {
     // upgrades — prevents raw text from flashing in browsers that render
     // <option> elements outside <select> (e.g. Chrome).
     const tmpl = this.querySelector('template');
-    this._options = Array.from(tmpl ? tmpl.content.querySelectorAll('option') : []).map((o) => ({
+    const opts = Array.from(tmpl ? tmpl.content.querySelectorAll('option') : []);
+    this._options = opts.filter((o) => o.value !== '').map((o) => ({
       value: o.value,
       label: o.textContent.trim(),
     }));
-    if (this.selectedId && this.selectedName) {
+    const sel = opts.find((o) => o.hasAttribute('selected'));
+    if (sel) {
+      this._currentId = sel.value;
+      this._inputValue = sel.textContent.trim();
+    } else if (this.selectedId && this.selectedName) {
       this._currentId = this.selectedId;
       this._inputValue = this.selectedName;
     } else if (!this.selectedId && this.selectedName) {

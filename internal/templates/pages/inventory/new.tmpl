@@ -30,12 +30,13 @@
         name="category_id"
         name-new="category_name"
         placeholder="Search or add category…"
-        selected-id="{{ .Form.CategoryID }}"
-        selected-name="{{ range .Data.Categories }}{{ if eq .ID $.Form.CategoryID }}{{ .Name }}{{ end }}{{ end }}{{ if and (eq .Form.CategoryID "") .Form.CategoryName }}{{ .Form.CategoryName }}{{ end }}"
+        {{ if and (eq .Form.CategoryID "") .Form.CategoryName }}selected-name="{{ .Form.CategoryName }}"{{ end }}
       >
         <template>
           {{ range .Data.Categories }}
-            <option value="{{ .ID }}">{{ .Name }}</option>
+            <option value="{{ .ID }}"{{ if eq .ID $.Form.CategoryID }} selected{{ end }}>
+              {{ .Name }}
+            </option>
           {{ end }}
         </template>
       </combo-box>
@@ -51,12 +52,13 @@
         name="manufacturer_id"
         name-new="manufacturer_name"
         placeholder="Search or add manufacturer…"
-        selected-id="{{ .Form.ManufacturerID }}"
-        selected-name="{{ range .Data.Manufacturers }}{{ if eq .ID $.Form.ManufacturerID }}{{ .Name }}{{ end }}{{ end }}{{ if and (eq .Form.ManufacturerID "") .Form.ManufacturerName }}{{ .Form.ManufacturerName }}{{ end }}"
+        {{ if and (eq .Form.ManufacturerID "") .Form.ManufacturerName }}selected-name="{{ .Form.ManufacturerName }}"{{ end }}
       >
         <template>
           {{ range .Data.Manufacturers }}
-            <option value="{{ .ID }}">{{ .Name }}</option>
+            <option value="{{ .ID }}"{{ if eq .ID $.Form.ManufacturerID }} selected{{ end }}>
+              {{ .Name }}
+            </option>
           {{ end }}
         </template>
       </combo-box>
