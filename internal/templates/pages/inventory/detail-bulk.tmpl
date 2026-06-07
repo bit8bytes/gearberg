@@ -157,7 +157,10 @@
     </div>
 
     <div class="flex gap-2">
-      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/bulk" class="btn btn-primary">Save</button>
+      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/bulk" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Save
+      </button>
       <button data-confirm="Delete inventory item?" formaction="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/delete" type="submit" class="btn btn-error btn-outline">Delete</button>
     </div>
 

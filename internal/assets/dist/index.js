@@ -1,3 +1,13 @@
+// Loading state on form submit
+// Usage: <button data-loading-trigger> with optional <span data-loading-spinner> inside
+document.addEventListener("submit", (e) => {
+  const trigger = e.target.querySelector("[data-loading-trigger]");
+  if (!trigger) return;
+  const spinner = trigger.querySelector("[data-loading-spinner]");
+  if (spinner) spinner.classList.remove("hidden");
+  trigger.disabled = true;
+});
+
 // Confirm before destructive form submissions
 // Trigger: <button data-confirm="Are you sure?">
 document.addEventListener("click", (e) => {

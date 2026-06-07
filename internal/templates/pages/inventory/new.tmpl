@@ -143,7 +143,10 @@
     </div>
 
     <div class="flex gap-2">
-      <button type="submit" tabindex="0"  class="btn btn-primary">Add Item</button>
+      <button type="submit" tabindex="0"  class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Add Item
+      </button>
       <a tabindex="0" href="/orgs/{{ .Data.OrgID }}/inventory" class="btn">Cancel</a>
     </div>
 
