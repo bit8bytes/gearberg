@@ -24,13 +24,21 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label for="category_id">Category</label>
-      <select id="category_id" name="category_id" class="select w-full">
-        <option value="">Select a category</option>
-        {{ range .Data.Categories }}
-          <option value="{{ .ID }}" {{ if eq $.Form.CategoryID .ID }}selected{{ end }}>{{ .Name }}</option>
-        {{ end }}
-      </select>
+      <label for="category_input">Category</label>
+      <combo-box
+        input-id="category_input"
+        name="category_id"
+        name-new="category_name"
+        placeholder="Search or add category…"
+        selected-id="{{ .Form.CategoryID }}"
+        selected-name="{{ range .Data.Categories }}{{ if eq .ID $.Form.CategoryID }}{{ .Name }}{{ end }}{{ end }}{{ if and (eq .Form.CategoryID "") .Form.CategoryName }}{{ .Form.CategoryName }}{{ end }}"
+      >
+        <template>
+          {{ range .Data.Categories }}
+            <option value="{{ .ID }}">{{ .Name }}</option>
+          {{ end }}
+        </template>
+      </combo-box>
       {{ with index .Form.Errors "category_id" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
       {{ end }}
