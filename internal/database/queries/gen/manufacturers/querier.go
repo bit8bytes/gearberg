@@ -13,6 +13,7 @@ type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (Manufacturer, error)
+	GetByName(ctx context.Context, arg GetByNameParams) (Manufacturer, error)
 	GetByOrgID(ctx context.Context, orgID string) ([]Manufacturer, error)
 	Update(ctx context.Context, arg UpdateParams) (Manufacturer, error)
 }

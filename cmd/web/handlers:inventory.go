@@ -213,6 +213,15 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		return reRender(&form)
 	}
 
+	if form.ManufacturerID == "" && form.ManufacturerName != "" {
+		ctx := r.Context()
+		mfrID, err := app.services.manufacturers.EnsureByName(ctx, id, form.ManufacturerName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
+		}
+		form.ManufacturerID = mfrID
+	}
+
 	itemID := ksuid.New().String()
 	base := inventory.Base{
 		ID:             itemID,

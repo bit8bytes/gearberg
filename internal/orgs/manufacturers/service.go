@@ -2,9 +2,12 @@ package manufacturers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/database"
+	"github.com/segmentio/ksuid"
 )
 
 // Options holds configuration for the manufacturer service.
@@ -70,6 +73,29 @@ func (s *Service) Update(ctx context.Context, u UpdateManufacturer) (*Manufactur
 		return nil, fmt.Errorf("failed to update manufacturer: %w", err)
 	}
 	return manufacturer, nil
+}
+
+// EnsureByName returns the ID of the manufacturer with the given name within orgID,
+// creating it if it does not exist. Bypasses the MaxManufacturers limit check
+// since this is an implicit creation triggered by the user typing a new name.
+func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("EnsureByName: name is blank")
+	}
+	_, err := s.repo.Create(ctx, CreateManufacturer{
+		ID:    ksuid.New().String(),
+		OrgID: orgID,
+		Name:  name,
+	})
+	if err != nil && !errors.Is(err, database.ErrUniqueConstraint) {
+		return "", fmt.Errorf("EnsureByName: %w", err)
+	}
+	m, err := s.repo.GetByName(ctx, orgID, name)
+	if err != nil {
+		return "", fmt.Errorf("EnsureByName: %w", err)
+	}
+	return m.ID, nil
 }
 
 // Delete removes a manufacturer. Returns database.ErrForeignKeyViolation when

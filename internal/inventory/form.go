@@ -140,17 +140,18 @@ func (f *Form) RentalPriceCents() *int64 {
 
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {
-	TypeID         string // "bulk" or "serialized"
-	UsageTypeID    string // "rental" or "sale"
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	Count          string // total_stock for bulk; number of units to generate for serialized
-	PurchasePrice  string
-	RentalPrice    string
-	Notes          string
-	Image          multipart.File
-	ImageHeader    *multipart.FileHeader
+	TypeID           string // "bulk" or "serialized"
+	UsageTypeID      string // "rental" or "sale"
+	Name             string
+	CategoryID       string
+	ManufacturerID   string
+	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
+	Count            string // total_stock for bulk; number of units to generate for serialized
+	PurchasePrice    string
+	RentalPrice      string
+	Notes            string
+	Image            multipart.File
+	ImageHeader      *multipart.FileHeader
 	validator.Validator
 }
 
@@ -160,15 +161,16 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		return NewForm{}, fmt.Errorf("parse form: %w", err)
 	}
 	f := NewForm{
-		TypeID:         strings.TrimSpace(r.PostForm.Get("type_id")),
-		UsageTypeID:    strings.TrimSpace(r.PostForm.Get("usage_type_id")),
-		Name:           strings.TrimSpace(r.PostForm.Get("name")),
-		CategoryID:     strings.TrimSpace(r.PostForm.Get("category_id")),
-		ManufacturerID: strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
-		Count:          strings.TrimSpace(r.PostForm.Get("count")),
-		PurchasePrice:  strings.TrimSpace(r.PostForm.Get("purchase_price")),
-		RentalPrice:    strings.TrimSpace(r.PostForm.Get("rental_price")),
-		Notes:          strings.TrimSpace(r.PostForm.Get("notes")),
+		TypeID:           strings.TrimSpace(r.PostForm.Get("type_id")),
+		UsageTypeID:      strings.TrimSpace(r.PostForm.Get("usage_type_id")),
+		Name:             strings.TrimSpace(r.PostForm.Get("name")),
+		CategoryID:       strings.TrimSpace(r.PostForm.Get("category_id")),
+		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
+		ManufacturerName: strings.TrimSpace(r.PostForm.Get("manufacturer_name")),
+		Count:            strings.TrimSpace(r.PostForm.Get("count")),
+		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
+		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
+		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
 	}
 	file, header, err := r.FormFile("image")
 	if err == nil {

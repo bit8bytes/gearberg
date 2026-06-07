@@ -90,6 +90,23 @@ func (r *Repository) Update(ctx context.Context, u UpdateManufacturer) (*Manufac
 	return &m, nil
 }
 
+// GetByName returns the manufacturer with the given name within orgID, or database.ErrNotFound
+// when it does not exist.
+func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Manufacturer, error) {
+	row, err := r.manufacturers.GetByName(ctx, genmfr.GetByNameParams{
+		OrgID: orgID,
+		Name:  name,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, database.ErrNotFound
+		}
+		return nil, fmt.Errorf("GetByName: %w", err)
+	}
+	m := toModel(row)
+	return &m, nil
+}
+
 // Delete removes the manufacturer. Returns database.ErrForeignKeyViolation when inventory
 // items are still assigned to the manufacturer.
 func (r *Repository) Delete(ctx context.Context, id string) error {

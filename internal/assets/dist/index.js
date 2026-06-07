@@ -90,6 +90,7 @@ document.addEventListener("change", (e) => {
   });
 })();
 
+
 // Serialized inventory unit rows
 // Trigger: [data-add-unit] adds a row; [data-remove-unit] removes its row.
 // Unit numbers in .unit-number cells are kept in sync after every change.
