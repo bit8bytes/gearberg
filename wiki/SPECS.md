@@ -71,7 +71,7 @@ Defered ideas: inventory locations, and flight cases & groupings.
 | M4.2 | A user can view customers in a list |
 | M4.3 | A user can view a single customer in detail |
 | M4.4 | A user can view the rental history of a customer |
-| M4.5 | A user can start (create) a draft rental for an existing customer |
+| M4.5 | A user can start (create) a draft rental for an existing customer, with an optional name (e.g. "BMW Munich") |
 | M4.6 | A user can add or remove inventory items from a draft rental |
 | M4.7 | A user can increase or decrease the quantity of an item in a draft rental |
 | M4.8 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
@@ -169,13 +169,14 @@ Scoped per org. Seeded with sensible defaults at install time (e.g. Camera, Ligh
 | 1 | id | Internal identifier |
 | 2 | org_id | Reference to a org |
 | 3 | customer_id | Reference to a customer |
-| 4 | status | One of 'draft', 'active', 'returned' |
-| 5 | checkout_date | Date items were handed out |
-| 6 | expected_return_date | Planned return date |
-| 7 | return_date | Actual return date (set when marked returned) |
-| 8 | notes | |
-| 9 | created_at | |
-| 10 | updated_at | |
+| 4 | name | Optional short label for the job (e.g. "BMW Munich") |
+| 5 | status | One of 'draft', 'active', 'returned' |
+| 6 | checkout_date | Date items were handed out |
+| 7 | expected_return_date | Planned return date |
+| 8 | return_date | Actual return date (set when marked returned) |
+| 9 | notes | |
+| 10 | created_at | |
+| 11 | updated_at | |
 
 ### Rental Items
 
