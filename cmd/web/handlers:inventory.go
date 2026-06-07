@@ -213,6 +213,10 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		return reRender(&form)
 	}
 
+	if appErr := app.resolveNewFormRefs(r, id, &form); appErr != nil {
+		return appErr
+	}
+
 	itemID := ksuid.New().String()
 	base := inventory.Base{
 		ID:             itemID,
@@ -248,6 +252,25 @@ func (app *application) createBulkItem(w http.ResponseWriter, r *http.Request, o
 		return appErr
 	}
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory", http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) resolveNewFormRefs(r *http.Request, orgID string, form *inventory.NewForm) *httperr.Error {
+	ctx := r.Context()
+	if form.CategoryID == "" && form.CategoryName != "" {
+		catID, err := app.services.equipmentcategories.EnsureByName(ctx, orgID, form.CategoryName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve category.", Code: http.StatusInternalServerError}
+		}
+		form.CategoryID = catID
+	}
+	if form.ManufacturerID == "" && form.ManufacturerName != "" {
+		mfrID, err := app.services.manufacturers.EnsureByName(ctx, orgID, form.ManufacturerName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
+		}
+		form.ManufacturerID = mfrID
+	}
 	return nil
 }
 

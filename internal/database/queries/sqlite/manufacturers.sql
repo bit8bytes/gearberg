@@ -50,6 +50,16 @@ RETURNING
     updated_at,
     created_at;
 
+-- name: GetByName :one
+SELECT
+    id,
+    org_id,
+    name,
+    updated_at,
+    created_at
+FROM manufacturers
+WHERE org_id = ? AND name = ?;
+
 -- name: Delete :exec
 DELETE FROM manufacturers
 WHERE id = ?;

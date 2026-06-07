@@ -90,6 +90,23 @@ func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*Eq
 	return &m, nil
 }
 
+// GetByName returns the category with the given name within orgID, or database.ErrNotFound
+// when it does not exist.
+func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*EquipmentCategory, error) {
+	row, err := r.equipmentCategories.GetByName(ctx, genec.GetByNameParams{
+		OrgID: orgID,
+		Name:  name,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, database.ErrNotFound
+		}
+		return nil, fmt.Errorf("GetByName: %w", err)
+	}
+	m := toModel(row)
+	return &m, nil
+}
+
 // Delete removes the category. Returns database.ErrForeignKeyViolation when inventory
 // items are still assigned to the category.
 func (r *Repository) Delete(ctx context.Context, id string) error {

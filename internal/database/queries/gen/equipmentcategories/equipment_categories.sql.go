@@ -135,6 +135,35 @@ func (q *Queries) GetByID(ctx context.Context, id string) (EquipmentCategory, er
 	return i, err
 }
 
+const getByName = `-- name: GetByName :one
+SELECT
+    id,
+    org_id,
+    name,
+    updated_at,
+    created_at
+FROM equipment_categories
+WHERE org_id = ? AND name = ?
+`
+
+type GetByNameParams struct {
+	OrgID string
+	Name  string
+}
+
+func (q *Queries) GetByName(ctx context.Context, arg GetByNameParams) (EquipmentCategory, error) {
+	row := q.db.QueryRowContext(ctx, getByName, arg.OrgID, arg.Name)
+	var i EquipmentCategory
+	err := row.Scan(
+		&i.ID,
+		&i.OrgID,
+		&i.Name,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getByOrgID = `-- name: GetByOrgID :many
 SELECT
     id,

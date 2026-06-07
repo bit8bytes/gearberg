@@ -140,17 +140,19 @@ func (f *Form) RentalPriceCents() *int64 {
 
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {
-	TypeID         string // "bulk" or "serialized"
-	UsageTypeID    string // "rental" or "sale"
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	Count          string // total_stock for bulk; number of units to generate for serialized
-	PurchasePrice  string
-	RentalPrice    string
-	Notes          string
-	Image          multipart.File
-	ImageHeader    *multipart.FileHeader
+	TypeID           string // "bulk" or "serialized"
+	UsageTypeID      string // "rental" or "sale"
+	Name             string
+	CategoryID       string
+	CategoryName     string // set when user typed a new category name not yet in the DB
+	ManufacturerID   string
+	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
+	Count            string // total_stock for bulk; number of units to generate for serialized
+	PurchasePrice    string
+	RentalPrice      string
+	Notes            string
+	Image            multipart.File
+	ImageHeader      *multipart.FileHeader
 	validator.Validator
 }
 
@@ -160,15 +162,17 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		return NewForm{}, fmt.Errorf("parse form: %w", err)
 	}
 	f := NewForm{
-		TypeID:         strings.TrimSpace(r.PostForm.Get("type_id")),
-		UsageTypeID:    strings.TrimSpace(r.PostForm.Get("usage_type_id")),
-		Name:           strings.TrimSpace(r.PostForm.Get("name")),
-		CategoryID:     strings.TrimSpace(r.PostForm.Get("category_id")),
-		ManufacturerID: strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
-		Count:          strings.TrimSpace(r.PostForm.Get("count")),
-		PurchasePrice:  strings.TrimSpace(r.PostForm.Get("purchase_price")),
-		RentalPrice:    strings.TrimSpace(r.PostForm.Get("rental_price")),
-		Notes:          strings.TrimSpace(r.PostForm.Get("notes")),
+		TypeID:           strings.TrimSpace(r.PostForm.Get("type_id")),
+		UsageTypeID:      strings.TrimSpace(r.PostForm.Get("usage_type_id")),
+		Name:             strings.TrimSpace(r.PostForm.Get("name")),
+		CategoryID:       strings.TrimSpace(r.PostForm.Get("category_id")),
+		CategoryName:     strings.TrimSpace(r.PostForm.Get("category_name")),
+		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
+		ManufacturerName: strings.TrimSpace(r.PostForm.Get("manufacturer_name")),
+		Count:            strings.TrimSpace(r.PostForm.Get("count")),
+		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
+		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
+		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
 	}
 	file, header, err := r.FormFile("image")
 	if err == nil {
@@ -184,7 +188,7 @@ func (f *NewForm) Validate() bool {
 	f.Check(f.UsageTypeID == "rental" || f.UsageTypeID == "sale", "usage_type_id", "Must be rental or sale")
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
-	f.Check(validator.NotBlank(f.CategoryID), "category_id", "A category must be selected")
+	f.Check(validator.NotBlank(f.CategoryID) || validator.NotBlank(f.CategoryName), "category_id", "A category must be selected")
 
 	if validator.NotBlank(f.Count) {
 		n, err := strconv.ParseInt(f.Count, 10, 64)

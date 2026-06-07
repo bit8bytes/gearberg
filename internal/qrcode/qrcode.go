@@ -16,9 +16,11 @@ import (
 	goqr "github.com/skip2/go-qrcode"
 )
 
-const size = 256
-const labelHeight = 24
-const labelBaseline = size + 17
+const (
+	size          = 256
+	labelHeight   = 24
+	labelBaseline = size + 17
+)
 
 // Generate returns a PNG-encoded QR code for the given content string with the
 // label rendered below the code for easy visual identification.

@@ -14,6 +14,7 @@ type Querier interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]EquipmentCategory, error)
 	GetByID(ctx context.Context, id string) (EquipmentCategory, error)
+	GetByName(ctx context.Context, arg GetByNameParams) (EquipmentCategory, error)
 	GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error)
 	Update(ctx context.Context, arg UpdateParams) (EquipmentCategory, error)
 }
