@@ -39,13 +39,15 @@ type inventoryData struct {
 }
 
 type inventoryPrintData struct {
-	OrgID       string
-	OrgName     string
-	Inventories []inventory.Inventory
-	Query       string
-	Category    string
-	PrintDate   string
-	TotalCount  int
+	OrgID          string
+	OrgName        string
+	Inventories    []inventory.Inventory
+	Query          string
+	Category       string
+	PrintDate      string
+	TotalCount     int
+	Currency       string
+	VatRateDisplay string
 }
 
 type inventoryItemData struct {
@@ -768,15 +770,27 @@ func (app *application) getInventoryPrint(w http.ResponseWriter, r *http.Request
 
 	app.resolveInventoryURLs(filtered)
 
+	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
+	var currency string
+	var vatRateDisplay string
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+		if orgSettings.VatRate > 0 {
+			vatRateDisplay = fmt.Sprintf("%.4g%%", float64(orgSettings.VatRate)/100)
+		}
+	}
+
 	data := app.html.TemplateData(r)
 	data.Data = inventoryPrintData{
-		OrgID:       orgID,
-		OrgName:     org.Name,
-		Inventories: filtered,
-		Query:       query,
-		Category:    category,
-		PrintDate:   time.Now().UTC().Format("2006-01-02"),
-		TotalCount:  len(filtered),
+		OrgID:          orgID,
+		OrgName:        org.Name,
+		Inventories:    filtered,
+		Query:          query,
+		Category:       category,
+		PrintDate:      time.Now().UTC().Format("2006-01-02"),
+		TotalCount:     len(filtered),
+		Currency:       currency,
+		VatRateDisplay: vatRateDisplay,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryPrint, data)
 }

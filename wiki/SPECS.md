@@ -52,7 +52,7 @@ Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases &
 | M2.3 | A user can export all rentals using CSV | 0 % |
 | M2.4 | A user can export all customers using CSV | 0 % |
 | M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser | 100 % |
-| M2.6 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.5) to send to customers; pricing details are shown by default | 0 % |
+| M2.6 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.5) to send to customers; pricing details are shown by default | 100 % |
 
 ### Milestone 3: Login
 
