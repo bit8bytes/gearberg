@@ -6,17 +6,16 @@ require (
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/bit8bytes/toolbox v0.7.8
+	github.com/boombuler/barcode v1.1.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.2.0
 	github.com/klauspost/compress v1.18.6
 	github.com/ogen-go/ogen v1.20.3
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/segmentio/ksuid v1.0.4
-	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
-	golang.org/x/image v0.41.0
 	golang.org/x/sync v0.20.0
 	modernc.org/sqlite v1.50.1
 )

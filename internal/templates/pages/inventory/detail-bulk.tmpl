@@ -27,13 +27,6 @@
       <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
     </div>
 
-    {{ if and .Data.Item .Data.Item.QR.IsSet }}
-    <div class="flex flex-col gap-1">
-      <label>QR Code</label>
-      <button type="button" data-modal-target="qr_modal" class="btn btn-sm btn-outline w-fit">Show QR Code</button>
-    </div>
-    {{ end }}
-
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input
@@ -166,20 +159,6 @@
 
   </form>
 
-  {{ if and .Data.Item .Data.Item.QR.IsSet }}
-  <dialog id="qr_modal" class="modal">
-    <div class="modal-box flex flex-col items-center gap-4">
-      <h3 class="text-lg font-bold">QR Code</h3>
-      <img src="{{ .Data.Item.QR.URL }}" alt="QR Code" class="w-48 h-48 bg-white rounded-lg border border-base-300" />
-      <div class="modal-action w-full justify-between">
-        <a href="{{ .Data.Item.QR.URL }}" download="qr-{{ .Data.Item.Name }}-{{ .Data.Item.Code }}.png" class="btn btn-sm btn-ghost">Download</a>
-        <form method="dialog">
-          <button class="btn btn-sm">Close</button>
-        </form>
-      </div>
-    </div>
-  </dialog>
-  {{ end }}
 
 </div>
 {{ end }}

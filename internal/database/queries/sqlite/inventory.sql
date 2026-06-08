@@ -12,7 +12,6 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
     i.storage_object_id,
-    i.qr_object_id,
     i.type_id,
     i.usage_type_id,
     i.total_stock,
@@ -68,7 +67,6 @@ INSERT INTO inventory (
     category_id,
     manufacturer_id,
     storage_object_id,
-    qr_object_id,
     type_id,
     usage_type_id,
     code,
@@ -114,7 +112,6 @@ SELECT
     category_id,
     manufacturer_id,
     storage_object_id,
-    qr_object_id,
     total_stock,
     purchase_price,
     rental_price,
@@ -144,7 +141,6 @@ RETURNING
     category_id,
     manufacturer_id,
     storage_object_id,
-    qr_object_id,
     type_id,
     usage_type_id,
     code,
@@ -173,11 +169,6 @@ ORDER BY unit_number ASC;
 -- name: UpdateStorageObject :exec
 UPDATE inventory
 SET storage_object_id = sqlc.arg(storage_object_id)
-WHERE id = sqlc.arg(id);
-
--- name: UpdateQRObject :exec
-UPDATE inventory
-SET qr_object_id = sqlc.arg(qr_object_id)
 WHERE id = sqlc.arg(id);
 
 -- name: Delete :exec
@@ -236,7 +227,6 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     i.manufacturer_id,
     i.storage_object_id,
-    i.qr_object_id,
     i.type_id,
     i.usage_type_id,
     i.total_stock,

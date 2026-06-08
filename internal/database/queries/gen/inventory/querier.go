@@ -23,7 +23,6 @@ type Querier interface {
 	MaxCodeByOrgID(ctx context.Context, orgID string) (int64, error)
 	MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error)
 	Update(ctx context.Context, arg UpdateParams) (UpdateRow, error)
-	UpdateQRObject(ctx context.Context, arg UpdateQRObjectParams) error
 	UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error
 	UpdateTotalStock(ctx context.Context, arg UpdateTotalStockParams) error
 	UpdateUnit(ctx context.Context, arg UpdateUnitParams) error

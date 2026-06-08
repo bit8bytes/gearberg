@@ -15,7 +15,6 @@ type options struct {
 	TLSMode             string
 	DbDsn               string // SECRET
 	StorageDSN          string
-	Domain              string
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
@@ -39,7 +38,6 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
-	fs.StringVar(&cfg.Domain, "domain", "", "public base URL used in QR codes (e.g. https://gearberg.com)")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 
 	if err := fs.Parse(args); err != nil {

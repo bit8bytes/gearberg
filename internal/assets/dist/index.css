@@ -6543,9 +6543,6 @@
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
-  .h-48 {
-    height: calc(var(--spacing) * 48);
-  }
   .h-full {
     height: 100%;
   }
@@ -6721,9 +6718,6 @@
   }
   .w-36 {
     width: calc(var(--spacing) * 36);
-  }
-  .w-48 {
-    width: calc(var(--spacing) * 48);
   }
   .w-52 {
     width: calc(var(--spacing) * 52);
@@ -7691,9 +7685,6 @@
   }
   .bg-teal-400 {
     background-color: var(--color-teal-400);
-  }
-  .bg-white {
-    background-color: var(--color-white);
   }
   .divider-accent {
     @layer daisyui.l1.l2 {
