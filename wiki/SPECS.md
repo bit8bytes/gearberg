@@ -36,10 +36,12 @@ The first increment comes without login because the software will be self-hosted
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
 | M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
 | M1.18 | A user can set an operational status on an individual unit (available, damaged, under repair, retired) | 100 % |
-| M1.19 | A user can view a QR code for an inventory item that encodes a link to its detail page, labelled with the item code | 100 % |
-| M1.20 | A user can download the QR code for an inventory item as a PNG file | 100 % |
+| M1.19 | A user can download the QR code for a unit (serialized inventory item) as a PNG file | 0 % |
+| M1.20 | A user can set an operational status on an individual unit to "inhouse" | 0 % |
+| M1.21 | A user can set weight and dimensions on an inventory item | 0 % |
+| M1.22 | A user can see the total weight of all items in a rental | 0 % |
 
-Defered ideas: inventory locations, and flight cases & groupings.
+Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases & groupings, and additional documents (pdf, pictures).
 
 ### Milestone 2: Import & Export
 
@@ -50,6 +52,7 @@ Defered ideas: inventory locations, and flight cases & groupings.
 | M2.3 | A user can export all rentals using CSV | 0 % |
 | M2.4 | A user can export all customers using CSV | 0 % |
 | M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser | 100 % |
+| M2.6 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.5) to send to customers; pricing details are shown by default | 0 % |
 
 ### Milestone 3: Login
 
