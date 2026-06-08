@@ -2,7 +2,6 @@
 
 {{ define "page" }}
 {{ $back := printf "/orgs/%s/settings/equipment-categories" .Data.OrgID }}
-{{ if .Data.ReturnTo }}{{ $back = .Data.ReturnTo }}{{ end }}
 <div class="flex-1 max-w-xs mx-auto mt-8">
   <div class="flex items-center justify-between mb-6">
     <h1 class="">New Category</h1>
@@ -10,8 +9,7 @@
   </div>
 
   <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/equipment-categories/new" class="flex flex-col gap-4" novalidate>
-    <input type="hidden" name="return_to" value="{{ .Data.ReturnTo }}">
-    <div class="flex flex-col gap-1">
+<div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input
         id="name"

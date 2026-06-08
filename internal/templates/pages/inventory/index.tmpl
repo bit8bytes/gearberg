@@ -26,13 +26,7 @@
             Print</a></li>
         </ul>
       </div>
-      {{ if eq (len .Data.Categories) 0 }}
-      <div class="tooltip tooltip-left" data-tip="Create a category first">
-        <span tabindex="-1" class="btn btn-primary btn-disabled pointer-events-none" aria-disabled="true">+ Add Item</span>
-      </div>
-      {{ else }}
       <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/inventory/new">+ Add Item</a>
-      {{ end }}
     </div>
   </div>
 </div>
@@ -50,9 +44,6 @@
         {{ end }}
       </select>
     </form>
-    {{ if ne (len .Data.Categories) 0 }}
-    <a class="btn btn-sm btn-ghost rounded-full" href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories/new?return_to={{ $.URL.Path }}">+</a>
-    {{ end }}
   </div>
 </div>
 <div class="max-w-5xl w-full mx-auto mb-16">
@@ -86,7 +77,7 @@
           <span class="text-xs text-secondary">{{ .Type.Label }}</span>
         </td>
         <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
-        <td><a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}?return_to={{ $.URL.Path }}" class="link link-hover">{{ .CategoryName }}</a></td>
+        <td><a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a></td>
         <td>{{ .TotalStock }}</td>
       </tr>
       {{ end }}
@@ -113,9 +104,7 @@
   {{ end }}
   {{ else }}
   <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
-    {{ if eq (len .Data.Categories) 0 }}
-      <p class="text-sm">No items yet. <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories/new?return_to={{ .URL.Path }}" class="link">Create a category</a> to get started.</p>
-    {{ else if .Data.Query }}
+    {{ if .Data.Query }}
       <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
     {{ else if .Data.Filtered }}
       <p class="text-sm">No items found for the selected category.</p>

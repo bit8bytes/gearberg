@@ -24,7 +24,6 @@ type equipmentCategoryData struct {
 	OrgID    string
 	Category *categories.EquipmentCategory
 	ID       string
-	ReturnTo string
 }
 
 func safeReturnTo(s string) string {
@@ -59,17 +58,15 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 
 func (app *application) getEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
-	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{OrgID: id, ReturnTo: returnTo}
+	data.Data = equipmentCategoryData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesNew, data)
 }
 
 func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("org_id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := categories.Parse(r)
 	if err != nil {
@@ -79,7 +76,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{OrgID: id, ReturnTo: returnTo}
+		data.Data = equipmentCategoryData{OrgID: id}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesNew, data)
 	}
 
@@ -109,11 +106,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		}
 	}
 
-	dest := "/orgs/" + url.PathEscape(id) + "/settings/equipment-categories"
-	if returnTo != "" {
-		dest = returnTo
-	}
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/settings/equipment-categories", http.StatusSeeOther)
 	return nil
 }
 
@@ -121,7 +114,6 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
-	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 
 	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
 	if err != nil {
@@ -134,7 +126,7 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID, ReturnTo: returnTo}
+	data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
 }
 
@@ -142,7 +134,6 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := categories.Parse(r)
 	if err != nil {
@@ -152,7 +143,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID, ReturnTo: returnTo}
+		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
@@ -176,11 +167,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/equipment-categories/" + url.PathEscape(catID)
-	if returnTo != "" {
-		dest = returnTo
-	}
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories/"+url.PathEscape(catID), http.StatusSeeOther)
 	return nil
 }
 
@@ -188,7 +175,6 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	if err := app.services.equipmentcategories.Delete(ctx, catID); err != nil {
 		if errors.Is(err, database.ErrForeignKeyViolation) {
@@ -200,7 +186,7 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 			f.AddError("delete", "Cannot delete: this category is assigned to one or more inventory items.")
 			data := app.html.TemplateData(r)
 			data.Form = f
-			data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID, ReturnTo: returnTo}
+			data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
 			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 		}
 		return &httperr.Error{
@@ -210,10 +196,6 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 		}
 	}
 
-	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/equipment-categories"
-	if returnTo != "" {
-		dest = returnTo
-	}
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories", http.StatusSeeOther)
 	return nil
 }
