@@ -86,7 +86,7 @@ Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases &
 | M4.14 | A user can filter rentals by status (draft, active, returned) |
 | M4.15 | A user can view overdue rentals (active rentals past their expected return date) |
 | M4.16 | A user can view a single rental in detail |
-| M4.17 | A user can view the cost per inventory item in a rental, charged per day (`quantity x rental_price x ceil(duration_minutes / 1440) x (1 - discount_rate)`) |
+| M4.17 | A user can view the cost per inventory item in a rental (`quantity x rental_price x billing_units x (1 - discount_rate)`), where `billing_units` is derived from `pricing_unit` and duration |
 | M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from org settings) as a display-only line |
 | M4.19 | A user cannot delete a customer that has draft or active rentals |
 | M4.20 | A user can generate an invoice for an active rental |
@@ -124,8 +124,6 @@ One row per org, seeded at install time.
 
 ### Categories
 
-Scoped per org. Seeded with sensible defaults at install time (e.g. Camera, Lighting, Audio, Other).
-
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
@@ -147,10 +145,11 @@ Scoped per org. Seeded with sensible defaults at install time (e.g. Camera, Ligh
 | 7 | total_stock | Total units owned |
 | 8 | warehouse_stock | **Computed:** `total_stock` minus units in all draft and active rentals |
 | 9 | purchase_price | Purchase price of this item (net) |
-| 10 | rental_price | Rental price per unit per day (net) |
-| 11 | notes | Additional notes, e.g. 'in case' |
-| 12 | created_at | |
-| 13 | updated_at | |
+| 10 | rental_price | Rental price per unit per billing unit (net) |
+| 11 | pricing_unit | Billing unit: one of `per_day`, `per_hour`, `per_week`, `flat`. Defaults to `per_day`. |
+| 12 | notes | Additional notes, e.g. 'in case' |
+| 13 | created_at | |
+| 14 | updated_at | |
 
 ### Customers
 
@@ -187,13 +186,16 @@ Line items linking an inventory item to a rental. Scoped implicitly through `ren
 
 `duration_minutes`: for returned rentals, derived from `checkout_date` to `return_date`. For draft and active rentals, derived from `checkout_date` to `expected_return_date`. 1 day = 1440 minutes.
 
+`billing_units`: derived from `duration_minutes` and `pricing_unit`: `per_day` → `ceil(minutes / 1440)`, `per_hour` → `ceil(minutes / 60)`, `per_week` → `ceil(minutes / 10080)`, `flat` → `1`.
+
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
 | 2 | rental_id | Reference to a rental |
 | 3 | inventory_id | Reference to an inventory item |
 | 4 | quantity | Number of units in this rental |
-| 5 | rental_price | Snapshot of the rental price per day at the time the item was added (net) |
-| 6 | total_cost | **Computed:** `quantity x rental_price x ceil(duration_minutes / 1440)` (net) |
-| 7 | created_at | |
-| 8 | updated_at | |
+| 5 | rental_price | Snapshot of `rental_price` at the time the item was added (net) |
+| 6 | pricing_unit | Snapshot of `pricing_unit` at the time the item was added |
+| 7 | total_cost | **Computed:** `quantity x rental_price x billing_units` (net) |
+| 8 | created_at | |
+| 9 | updated_at | |
