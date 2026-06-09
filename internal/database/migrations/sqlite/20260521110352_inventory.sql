@@ -11,7 +11,6 @@ CREATE TABLE inventory (
   code INTEGER NOT NULL,
   storage_object_id TEXT DEFAULT NULL REFERENCES storage_objects(id) ON DELETE SET NULL,
   qr_object_id TEXT DEFAULT NULL REFERENCES storage_objects(id) ON DELETE SET NULL,
-  total_stock INTEGER NOT NULL DEFAULT 1,
   purchase_price INTEGER,
   rental_price INTEGER,
   notes TEXT,

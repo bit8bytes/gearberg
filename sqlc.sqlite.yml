@@ -70,3 +70,23 @@ sql:
         out: "internal/database/queries/gen/invimports"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/serialized_units.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "serializedunits"
+        out: "internal/database/queries/gen/serializedunits"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/bulk_stock.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "bulkstock"
+        out: "internal/database/queries/gen/bulkstock"
+        emit_interface: true
+        omit_unused_structs: true

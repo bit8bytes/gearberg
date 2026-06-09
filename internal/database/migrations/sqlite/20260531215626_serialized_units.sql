@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE inventory_units (
+CREATE TABLE serialized_units (
   id TEXT PRIMARY KEY,
   inventory_id TEXT NOT NULL REFERENCES inventory(id) ON DELETE CASCADE,
   status_id INTEGER NOT NULL REFERENCES unit_statuses(id) ON DELETE RESTRICT,
@@ -16,5 +16,5 @@ CREATE TABLE inventory_units (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS inventory_units;
+DROP TABLE IF EXISTS serialized_units;
 -- +goose StatementEnd

@@ -356,22 +356,24 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		return app.renderInventoryEdit(w, r, orgID, itemID, &form)
 	}
 
-	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
-		ID:             itemID,
-		Name:           form.Name,
-		CategoryID:     form.CategoryID,
-		ManufacturerID: form.ManufacturerID,
-		Code:           form.CodeInt64(),
-		TotalStock:     form.TotalStockInt64(),
-		PurchasePrice:  form.PurchasePriceCents(),
-		RentalPrice:    form.RentalPriceCents(),
-		Notes:          form.Notes,
-		WeightG:        form.WeightGInt64(),
-		WidthMM:        form.WidthMMInt64(),
-		HeightMM:       form.HeightMMInt64(),
-		DepthMM:        form.DepthMMInt64(),
-		PowerMW:        form.PowerMW(),
-		CurrentMA:      form.CurrentMA(),
+	item, err := app.services.inventory.UpdateBulk(ctx, inventory.UpdateBulkInventory{
+		UpdateInventory: inventory.UpdateInventory{
+			ID:             itemID,
+			Name:           form.Name,
+			CategoryID:     form.CategoryID,
+			ManufacturerID: form.ManufacturerID,
+			Code:           form.CodeInt64(),
+			PurchasePrice:  form.PurchasePriceCents(),
+			RentalPrice:    form.RentalPriceCents(),
+			Notes:          form.Notes,
+			WeightG:        form.WeightGInt64(),
+			WidthMM:        form.WidthMMInt64(),
+			HeightMM:       form.HeightMMInt64(),
+			DepthMM:        form.DepthMMInt64(),
+			PowerMW:        form.PowerMW(),
+			CurrentMA:      form.CurrentMA(),
+		},
+		TotalStock: form.TotalStockInt64(),
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -412,19 +414,12 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 		return app.renderInventoryEdit(w, r, orgID, itemID, &form)
 	}
 
-	// total_stock is derived from unit count; preserve the current value.
-	current, err := app.services.inventory.GetByID(ctx, itemID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
-	}
-
 	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
 		ID:             itemID,
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
 		Code:           form.CodeInt64(),
-		TotalStock:     current.TotalStock,
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,

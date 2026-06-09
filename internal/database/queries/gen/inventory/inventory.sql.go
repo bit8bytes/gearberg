@@ -32,7 +32,6 @@ INSERT INTO inventory (
     type_id,
     usage_type_id,
     code,
-    total_stock,
     purchase_price,
     rental_price,
     notes,
@@ -59,8 +58,7 @@ INSERT INTO inventory (
     ?13,
     ?14,
     ?15,
-    ?16,
-    ?17
+    ?16
 ) RETURNING
     id,
     org_id,
@@ -71,7 +69,6 @@ INSERT INTO inventory (
     type_id,
     usage_type_id,
     code,
-    total_stock,
     purchase_price,
     rental_price,
     notes,
@@ -92,7 +89,6 @@ type CreateParams struct {
 	ManufacturerID sql.NullString
 	TypeID         int64
 	UsageTypeID    int64
-	TotalStock     int64
 	PurchasePrice  sql.NullInt64
 	RentalPrice    sql.NullInt64
 	Notes          sql.NullString
@@ -114,7 +110,6 @@ type CreateRow struct {
 	TypeID          int64
 	UsageTypeID     int64
 	Code            int64
-	TotalStock      int64
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
 	Notes           sql.NullString
@@ -136,7 +131,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.ManufacturerID,
 		arg.TypeID,
 		arg.UsageTypeID,
-		arg.TotalStock,
 		arg.PurchasePrice,
 		arg.RentalPrice,
 		arg.Notes,
@@ -158,7 +152,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.TypeID,
 		&i.UsageTypeID,
 		&i.Code,
-		&i.TotalStock,
 		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.Notes,
@@ -168,70 +161,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.DepthMm,
 		&i.PowerMw,
 		&i.CurrentMa,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const createUnit = `-- name: CreateUnit :one
-INSERT INTO inventory_units (
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    next_inspection_at
-) VALUES (
-    ?1,
-    ?2,
-    ?3,
-    (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM inventory_units WHERE inventory_id = ?2),
-    ?4,
-    ?5
-) RETURNING
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    next_inspection_at,
-    created_at
-`
-
-type CreateUnitParams struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-}
-
-type CreateUnitRow struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	CreatedAt        int64
-}
-
-func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateUnitRow, error) {
-	row := q.db.QueryRowContext(ctx, createUnit,
-		arg.ID,
-		arg.InventoryID,
-		arg.StatusID,
-		arg.SerialNumber,
-		arg.NextInspectionAt,
-	)
-	var i CreateUnitRow
-	err := row.Scan(
-		&i.ID,
-		&i.InventoryID,
-		&i.StatusID,
-		&i.UnitNumber,
-		&i.SerialNumber,
-		&i.NextInspectionAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -247,41 +176,32 @@ func (q *Queries) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-const deleteUnit = `-- name: DeleteUnit :exec
-DELETE FROM inventory_units
-WHERE id = ?
-`
-
-func (q *Queries) DeleteUnit(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteUnit, id)
-	return err
-}
-
 const getByID = `-- name: GetByID :one
 SELECT
-    id,
-    org_id,
-    type_id,
-    usage_type_id,
-    name,
-    code,
-    category_id,
-    manufacturer_id,
-    storage_object_id,
-    total_stock,
-    purchase_price,
-    rental_price,
-    notes,
-    weight_g,
-    width_mm,
-    height_mm,
-    depth_mm,
-    power_mw,
-    current_ma,
-    updated_at,
-    created_at
-FROM inventory
-WHERE id = ?
+    i.id,
+    i.org_id,
+    i.type_id,
+    i.usage_type_id,
+    i.name,
+    i.code,
+    i.category_id,
+    i.manufacturer_id,
+    i.storage_object_id,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
+    i.purchase_price,
+    i.rental_price,
+    i.notes,
+    i.weight_g,
+    i.width_mm,
+    i.height_mm,
+    i.depth_mm,
+    i.power_mw,
+    i.current_ma,
+    i.updated_at,
+    i.created_at
+FROM inventory i
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
+WHERE i.id = ?
 `
 
 type GetByIDRow struct {
@@ -337,38 +257,6 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 	return i, err
 }
 
-const getUnit = `-- name: GetUnit :one
-SELECT
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    notes,
-    next_inspection_at,
-    updated_at,
-    created_at
-FROM inventory_units
-WHERE id = ?
-`
-
-func (q *Queries) GetUnit(ctx context.Context, id string) (InventoryUnit, error) {
-	row := q.db.QueryRowContext(ctx, getUnit, id)
-	var i InventoryUnit
-	err := row.Scan(
-		&i.ID,
-		&i.InventoryID,
-		&i.StatusID,
-		&i.UnitNumber,
-		&i.SerialNumber,
-		&i.Notes,
-		&i.NextInspectionAt,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const list = `-- name: List :many
 SELECT
     i.id,
@@ -381,7 +269,7 @@ SELECT
     i.storage_object_id,
     i.type_id,
     i.usage_type_id,
-    i.total_stock,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
     i.purchase_price,
     i.rental_price,
     i.notes,
@@ -390,6 +278,7 @@ SELECT
     COUNT(*) OVER() AS total_records
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.org_id = ?1
   AND (?2 = '' OR i.name LIKE '%' || ?2 || '%')
   AND (?3 = '' OR ec.name = ?3)
@@ -484,7 +373,7 @@ SELECT
     i.storage_object_id,
     i.type_id,
     i.usage_type_id,
-    i.total_stock,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
     i.purchase_price,
     i.rental_price,
     i.notes,
@@ -492,6 +381,7 @@ SELECT
     i.created_at
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.org_id = ?
 ORDER BY i.name ASC
 `
@@ -582,63 +472,13 @@ func (q *Queries) ListUnitStatuses(ctx context.Context) ([]UnitStatus, error) {
 	return items, nil
 }
 
-const listUnitsByInventoryID = `-- name: ListUnitsByInventoryID :many
-SELECT
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    notes,
-    next_inspection_at,
-    updated_at,
-    created_at
-FROM inventory_units
-WHERE inventory_id = ?
-ORDER BY unit_number ASC
-`
-
-func (q *Queries) ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]InventoryUnit, error) {
-	rows, err := q.db.QueryContext(ctx, listUnitsByInventoryID, inventoryID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []InventoryUnit
-	for rows.Next() {
-		var i InventoryUnit
-		if err := rows.Scan(
-			&i.ID,
-			&i.InventoryID,
-			&i.StatusID,
-			&i.UnitNumber,
-			&i.SerialNumber,
-			&i.Notes,
-			&i.NextInspectionAt,
-			&i.UpdatedAt,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const update = `-- name: Update :one
+const update = `-- name: Update :exec
 UPDATE inventory
 SET
     name = ?,
     category_id = ?,
     manufacturer_id = ?,
     code = ?,
-    total_stock = ?,
     purchase_price = ?,
     rental_price = ?,
     notes = ?,
@@ -650,28 +490,6 @@ SET
     current_ma = ?,
     updated_at = unixepoch()
 WHERE id = ?
-RETURNING
-    id,
-    org_id,
-    name,
-    category_id,
-    manufacturer_id,
-    storage_object_id,
-    type_id,
-    usage_type_id,
-    code,
-    total_stock,
-    purchase_price,
-    rental_price,
-    notes,
-    weight_g,
-    width_mm,
-    height_mm,
-    depth_mm,
-    power_mw,
-    current_ma,
-    updated_at,
-    created_at
 `
 
 type UpdateParams struct {
@@ -679,7 +497,6 @@ type UpdateParams struct {
 	CategoryID     string
 	ManufacturerID sql.NullString
 	Code           int64
-	TotalStock     int64
 	PurchasePrice  sql.NullInt64
 	RentalPrice    sql.NullInt64
 	Notes          sql.NullString
@@ -692,37 +509,12 @@ type UpdateParams struct {
 	ID             string
 }
 
-type UpdateRow struct {
-	ID              string
-	OrgID           string
-	Name            string
-	CategoryID      string
-	ManufacturerID  sql.NullString
-	StorageObjectID sql.NullString
-	TypeID          int64
-	UsageTypeID     int64
-	Code            int64
-	TotalStock      int64
-	PurchasePrice   sql.NullInt64
-	RentalPrice     sql.NullInt64
-	Notes           sql.NullString
-	WeightG         sql.NullInt64
-	WidthMm         sql.NullInt64
-	HeightMm        sql.NullInt64
-	DepthMm         sql.NullInt64
-	PowerMw         sql.NullInt64
-	CurrentMa       sql.NullInt64
-	UpdatedAt       int64
-	CreatedAt       int64
-}
-
-func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, error) {
-	row := q.db.QueryRowContext(ctx, update,
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
+	_, err := q.db.ExecContext(ctx, update,
 		arg.Name,
 		arg.CategoryID,
 		arg.ManufacturerID,
 		arg.Code,
-		arg.TotalStock,
 		arg.PurchasePrice,
 		arg.RentalPrice,
 		arg.Notes,
@@ -734,31 +526,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		arg.CurrentMa,
 		arg.ID,
 	)
-	var i UpdateRow
-	err := row.Scan(
-		&i.ID,
-		&i.OrgID,
-		&i.Name,
-		&i.CategoryID,
-		&i.ManufacturerID,
-		&i.StorageObjectID,
-		&i.TypeID,
-		&i.UsageTypeID,
-		&i.Code,
-		&i.TotalStock,
-		&i.PurchasePrice,
-		&i.RentalPrice,
-		&i.Notes,
-		&i.WeightG,
-		&i.WidthMm,
-		&i.HeightMm,
-		&i.DepthMm,
-		&i.PowerMw,
-		&i.CurrentMa,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
+	return err
 }
 
 const updateStorageObject = `-- name: UpdateStorageObject :exec
@@ -774,53 +542,5 @@ type UpdateStorageObjectParams struct {
 
 func (q *Queries) UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error {
 	_, err := q.db.ExecContext(ctx, updateStorageObject, arg.StorageObjectID, arg.ID)
-	return err
-}
-
-const updateTotalStock = `-- name: UpdateTotalStock :exec
-UPDATE inventory
-SET
-    total_stock = total_stock + ?,
-    updated_at = unixepoch()
-WHERE id = ?
-`
-
-type UpdateTotalStockParams struct {
-	TotalStock int64
-	ID         string
-}
-
-func (q *Queries) UpdateTotalStock(ctx context.Context, arg UpdateTotalStockParams) error {
-	_, err := q.db.ExecContext(ctx, updateTotalStock, arg.TotalStock, arg.ID)
-	return err
-}
-
-const updateUnit = `-- name: UpdateUnit :exec
-UPDATE inventory_units
-SET
-    status_id = ?,
-    serial_number = ?,
-    next_inspection_at = ?,
-    notes = ?,
-    updated_at = unixepoch()
-WHERE id = ?
-`
-
-type UpdateUnitParams struct {
-	StatusID         int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	Notes            sql.NullString
-	ID               string
-}
-
-func (q *Queries) UpdateUnit(ctx context.Context, arg UpdateUnitParams) error {
-	_, err := q.db.ExecContext(ctx, updateUnit,
-		arg.StatusID,
-		arg.SerialNumber,
-		arg.NextInspectionAt,
-		arg.Notes,
-		arg.ID,
-	)
 	return err
 }
