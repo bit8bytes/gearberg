@@ -228,7 +228,6 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 		units[i] = inventory.CreateUnit{
 			ID:          ksuid.New().String(),
 			InventoryID: itemID,
-			UnitNumber:  int64(i + 1),
 		}
 	}
 	if _, err := s.inventory.CreateSerialized(ctx, tx, inventory.CreateSerializedInventory{

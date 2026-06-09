@@ -20,8 +20,6 @@ type Querier interface {
 	ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllByOrgIDRow, error)
 	ListUnitStatuses(ctx context.Context) ([]UnitStatus, error)
 	ListUnitsByInventoryID(ctx context.Context, inventoryID string) ([]InventoryUnit, error)
-	MaxCodeByOrgID(ctx context.Context, orgID string) (int64, error)
-	MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error)
 	Update(ctx context.Context, arg UpdateParams) (UpdateRow, error)
 	UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error
 	UpdateTotalStock(ctx context.Context, arg UpdateTotalStockParams) error

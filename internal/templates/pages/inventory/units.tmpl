@@ -33,7 +33,7 @@
         {{ if .Data.Units }}
         {{ range .Data.Units }}
         <tr>
-          <td class="align-top text-base-content/40 whitespace-nowrap">{{ $.Data.ItemCode }}-{{ .UnitNumber }}</td>
+          <td class="align-top text-base-content/40 whitespace-nowrap">{{ printf "%04d" $.Data.ItemCode }}-{{ .UnitNumber }}</td>
           <td class="align-top">
             <select form="unit-{{ .ID }}" name="status_id" class="select select-sm">
               {{ $currentStatusID := .StatusID }}

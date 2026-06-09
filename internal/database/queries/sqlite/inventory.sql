@@ -1,7 +1,3 @@
--- name: MaxCodeByOrgID :one
-SELECT CAST(COALESCE(MAX(code), 0) AS INTEGER) FROM inventory
-WHERE org_id = ?;
-
 -- name: List :many
 SELECT
     i.id,
@@ -54,24 +50,24 @@ INSERT INTO inventory (
     power_mw,
     current_ma
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    sqlc.arg(id),
+    sqlc.arg(org_id),
+    sqlc.arg(name),
+    sqlc.arg(category_id),
+    sqlc.arg(manufacturer_id),
+    sqlc.arg(type_id),
+    sqlc.arg(usage_type_id),
+    (SELECT COALESCE(MAX(code), 0) + 1 FROM inventory WHERE org_id = sqlc.arg(org_id)),
+    sqlc.arg(total_stock),
+    sqlc.arg(purchase_price),
+    sqlc.arg(rental_price),
+    sqlc.arg(notes),
+    sqlc.arg(weight_g),
+    sqlc.arg(width_mm),
+    sqlc.arg(height_mm),
+    sqlc.arg(depth_mm),
+    sqlc.arg(power_mw),
+    sqlc.arg(current_ma)
 ) RETURNING
     id,
     org_id,
@@ -103,12 +99,12 @@ INSERT INTO inventory_units (
     serial_number,
     next_inspection_at
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    sqlc.arg(id),
+    sqlc.arg(inventory_id),
+    sqlc.arg(status_id),
+    (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM inventory_units WHERE inventory_id = sqlc.arg(inventory_id)),
+    sqlc.arg(serial_number),
+    sqlc.arg(next_inspection_at)
 ) RETURNING
     id,
     inventory_id,
@@ -224,10 +220,6 @@ SELECT
     created_at
 FROM inventory_units
 WHERE id = ?;
-
--- name: MaxUnitNumber :one
-SELECT CAST(COALESCE(MAX(unit_number), 0) AS INTEGER) FROM inventory_units
-WHERE inventory_id = ?;
 
 -- name: ListUnitStatuses :many
 SELECT id, name FROM unit_statuses ORDER BY id ASC;

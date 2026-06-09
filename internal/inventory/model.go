@@ -96,7 +96,6 @@ type Base struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID string
-	Code           int64
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string
@@ -118,7 +117,6 @@ type CreateBulkInventory struct {
 type CreateUnit struct {
 	ID               string
 	InventoryID      string
-	UnitNumber       int64
 	SerialNumber     string
 	NextInspectionAt *int64
 }
@@ -172,7 +170,6 @@ type SetImage struct {
 type AddUnit struct {
 	ID          string
 	InventoryID string
-	UnitNumber  int64
 }
 
 // UnitStatusEntry is a row from the unit_statuses lookup table.

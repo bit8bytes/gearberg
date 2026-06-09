@@ -41,7 +41,7 @@
           <br />
           <span class="text-xs text-secondary">{{ .Type.Label }}</span>
         </td>
-        <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
+        <td>{{ if .Code }}{{ printf "%04d" .Code }}{{ end }}</td>
         <td>{{ .CategoryName }}</td>
         <td>{{ .TotalStock }}</td>
         <td>{{ .RentalPriceInput }}</td>

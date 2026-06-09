@@ -24,24 +24,6 @@ func NewRepository(db geninv.DBTX) *Repository {
 	}
 }
 
-// MaxCode returns the highest code for orgID, or 0 when there are no items.
-func (r *Repository) MaxCode(ctx context.Context, orgID string) (int64, error) {
-	n, err := r.inventory.MaxCodeByOrgID(ctx, orgID)
-	if err != nil {
-		return 0, fmt.Errorf("MaxCode: %w", err)
-	}
-	return n, nil
-}
-
-// MaxCodeTx returns the highest code for orgID within tx, seeing uncommitted inserts.
-func (r *Repository) MaxCodeTx(ctx context.Context, tx *sql.Tx, orgID string) (int64, error) {
-	n, err := r.inventory.WithTx(tx).MaxCodeByOrgID(ctx, orgID)
-	if err != nil {
-		return 0, fmt.Errorf("MaxCodeTx: %w", err)
-	}
-	return n, nil
-}
-
 // Count returns the number of inventory items belonging to orgID.
 func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 	n, err := r.inventory.CountByOrgID(ctx, orgID)
@@ -148,7 +130,6 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
 		TypeID:         Bulk.ID(),
 		UsageTypeID:    c.UsageTypeID,
-		Code:           c.Code,
 		TotalStock:     c.TotalStock,
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
@@ -199,7 +180,6 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
 		TypeID:         Serialized.ID(),
 		UsageTypeID:    c.UsageTypeID,
-		Code:           c.Code,
 		TotalStock:     int64(len(c.Units)),
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
@@ -220,12 +200,11 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 			ID:               u.ID,
 			InventoryID:      row.ID,
 			StatusID:         int64(units.UnitAvailable),
-			UnitNumber:       u.UnitNumber,
 			SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
 			NextInspectionAt: database.NullInt64(u.NextInspectionAt),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("CreateSerialized: create unit %d: %w", u.UnitNumber, database.NormalizeError(err))
+			return nil, fmt.Errorf("CreateSerialized: create unit: %w", database.NormalizeError(err))
 		}
 	}
 
@@ -265,7 +244,6 @@ func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkI
 		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
 		TypeID:         Bulk.ID(),
 		UsageTypeID:    c.UsageTypeID,
-		Code:           c.Code,
 		TotalStock:     c.TotalStock,
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
@@ -448,22 +426,12 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 	return &u, nil
 }
 
-// MaxUnitNumber returns the highest unit_number for inventoryID, or 0 when there are no units.
-func (r *Repository) MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error) {
-	n, err := r.inventory.MaxUnitNumber(ctx, inventoryID)
-	if err != nil {
-		return 0, fmt.Errorf("MaxUnitNumber: %w", err)
-	}
-	return n, nil
-}
-
 // AddUnit inserts a new empty unit for the inventory item.
 func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	row, err := r.inventory.CreateUnit(ctx, geninv.CreateUnitParams{
 		ID:               a.ID,
 		InventoryID:      a.InventoryID,
 		StatusID:         int64(units.UnitAvailable),
-		UnitNumber:       a.UnitNumber,
 		SerialNumber:     database.NullString(nil),
 		NextInspectionAt: database.NullInt64(nil),
 	})

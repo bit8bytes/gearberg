@@ -285,7 +285,6 @@ func (app *application) createSerializedItem(w http.ResponseWriter, r *http.Requ
 		units[i] = inventory.CreateUnit{
 			ID:          ksuid.New().String(),
 			InventoryID: itemID,
-			UnitNumber:  int64(i + 1),
 		}
 	}
 	tx, txErr := app.db.BeginTx(ctx, nil)

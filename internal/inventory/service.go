@@ -63,11 +63,6 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Inventory, error) {
 
 // CreateBulk creates a new bulk inventory item with an auto-assigned code.
 func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inventory, error) {
-	maxCode, err := s.repo.MaxCode(ctx, c.OrgID)
-	if err != nil {
-		return nil, fmt.Errorf("CreateBulk: %w", err)
-	}
-	c.Code = maxCode + 1
 	item, err := s.repo.CreateBulk(ctx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", err)
@@ -76,13 +71,7 @@ func (s *Service) CreateBulk(ctx context.Context, c CreateBulkInventory) (*Inven
 }
 
 // CreateBulkTx creates a new bulk inventory item within an existing transaction.
-// Code is auto-assigned inside the transaction so concurrent batch inserts see each other's codes.
 func (s *Service) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkInventory) (*Inventory, error) {
-	maxCode, err := s.repo.MaxCodeTx(ctx, tx, c.OrgID)
-	if err != nil {
-		return nil, fmt.Errorf("CreateBulkTx: %w", err)
-	}
-	c.Code = maxCode + 1
 	item, err := s.repo.CreateBulkTx(ctx, tx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulkTx: %w", err)
@@ -100,13 +89,7 @@ func (s *Service) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (
 }
 
 // CreateSerialized creates a new serialized inventory item with all its units in a single transaction.
-// Code is auto-assigned inside the transaction so concurrent batch inserts see each other's codes.
 func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
-	maxCode, err := s.repo.MaxCodeTx(ctx, tx, c.OrgID)
-	if err != nil {
-		return nil, fmt.Errorf("CreateSerialized: %w", err)
-	}
-	c.Code = maxCode + 1
 	item, err := s.repo.CreateSerialized(ctx, tx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", err)
@@ -175,14 +158,9 @@ func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
 	return u, nil
 }
 
-// AddUnit adds a new empty unit to the serialized inventory item, auto-assigning the next unit number.
+// AddUnit adds a new empty unit to the serialized inventory item.
 // It also increments total_stock on the inventory record.
 func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
-	maxNum, err := s.repo.MaxUnitNumber(ctx, a.InventoryID)
-	if err != nil {
-		return nil, fmt.Errorf("AddUnit: %w", err)
-	}
-	a.UnitNumber = maxNum + 1
 	u, err := s.repo.AddUnit(ctx, a)
 	if err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", err)

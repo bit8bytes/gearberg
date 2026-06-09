@@ -43,24 +43,24 @@ INSERT INTO inventory (
     power_mw,
     current_ma
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    ?1,
+    ?2,
+    ?3,
+    ?4,
+    ?5,
+    ?6,
+    ?7,
+    (SELECT COALESCE(MAX(code), 0) + 1 FROM inventory WHERE org_id = ?2),
+    ?8,
+    ?9,
+    ?10,
+    ?11,
+    ?12,
+    ?13,
+    ?14,
+    ?15,
+    ?16,
+    ?17
 ) RETURNING
     id,
     org_id,
@@ -92,7 +92,6 @@ type CreateParams struct {
 	ManufacturerID sql.NullString
 	TypeID         int64
 	UsageTypeID    int64
-	Code           int64
 	TotalStock     int64
 	PurchasePrice  sql.NullInt64
 	RentalPrice    sql.NullInt64
@@ -137,7 +136,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.ManufacturerID,
 		arg.TypeID,
 		arg.UsageTypeID,
-		arg.Code,
 		arg.TotalStock,
 		arg.PurchasePrice,
 		arg.RentalPrice,
@@ -184,12 +182,12 @@ INSERT INTO inventory_units (
     serial_number,
     next_inspection_at
 ) VALUES (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
+    ?1,
+    ?2,
+    ?3,
+    (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM inventory_units WHERE inventory_id = ?2),
+    ?4,
+    ?5
 ) RETURNING
     id,
     inventory_id,
@@ -204,7 +202,6 @@ type CreateUnitParams struct {
 	ID               string
 	InventoryID      string
 	StatusID         int64
-	UnitNumber       int64
 	SerialNumber     sql.NullString
 	NextInspectionAt sql.NullInt64
 }
@@ -224,7 +221,6 @@ func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateU
 		arg.ID,
 		arg.InventoryID,
 		arg.StatusID,
-		arg.UnitNumber,
 		arg.SerialNumber,
 		arg.NextInspectionAt,
 	)
@@ -633,30 +629,6 @@ func (q *Queries) ListUnitsByInventoryID(ctx context.Context, inventoryID string
 		return nil, err
 	}
 	return items, nil
-}
-
-const maxCodeByOrgID = `-- name: MaxCodeByOrgID :one
-SELECT CAST(COALESCE(MAX(code), 0) AS INTEGER) FROM inventory
-WHERE org_id = ?
-`
-
-func (q *Queries) MaxCodeByOrgID(ctx context.Context, orgID string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, maxCodeByOrgID, orgID)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const maxUnitNumber = `-- name: MaxUnitNumber :one
-SELECT CAST(COALESCE(MAX(unit_number), 0) AS INTEGER) FROM inventory_units
-WHERE inventory_id = ?
-`
-
-func (q *Queries) MaxUnitNumber(ctx context.Context, inventoryID string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, maxUnitNumber, inventoryID)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
 }
 
 const update = `-- name: Update :one
