@@ -30,18 +30,14 @@
 <section class="hero bg-base-200 min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
   <div class="hero-content text-center">
     <div class="max-w-md">
-      <h1 id="hero-heading" class="text-6xl font-bold">Inventory &amp; Rental Management</h1>
-      <p class="py-6 text-lg">
-        Self-hostable, free as in freedom. Organize your equipment, track rentals,
-        and move your data whenever you want.
-      </p>
-      <nav aria-label="Page sections">
+      <h1 id="hero-heading" class="text-6xl font-bold">Self-Hosted Inventory &amp; Rental Management</h1>
+      <p class="py-6 text-base-content/60">Open Source &middot; No Subscription &middot; Docker Ready</p>
+      <nav aria-label="Page sections" class="mt-2">
         <div class="flex flex-wrap gap-4 justify-center">
           <a href="#features" class="btn btn-primary">See Features</a>
-          <a href="#quickstart" class="btn btn-outline">Quickstart</a>
+          <a href="#quickstart" class="btn btn-outline">Run with Docker</a>
         </div>
       </nav>
-      <p class="mt-4 badge text-content-accent badge-accent">Early development. Local testing only.</p>
     </div>
   </div>
 </section>
@@ -57,8 +53,9 @@
           <h3 class="card-title text-xl text-primary font-bold">
             {{ template "inventory-icon" . }}
             Inventory
+            <span class="badge badge-primary badge-sm ml-auto">M1</span>
           </h3>
-          <p>Organize equipment by category with descriptions, pictures, and quantities. Always know what you have and where it is.</p>
+          <p>Track bulk items by quantity or individual serialized items by ID. Organize by category with descriptions and pictures.</p>
         </div>
       </div>
 
@@ -67,6 +64,7 @@
           <h3 class="card-title text-xl text-primary font-bold">
             {{ template "rentals-icon" . }}
             Rentals
+            <span class="badge badge-primary badge-sm ml-auto">M4</span>
           </h3>
           <p>Check items out to people, set due dates, and track partial checkouts. Keep rentals under control without spreadsheets.</p>
         </div>
@@ -108,7 +106,7 @@
     <ul class="timeline timeline-vertical mx-auto w-fit">
 
       <li>
-        <div class="timeline-start timeline-box">Orgs &amp; Settings</div>
+        <div class="timeline-start timeline-box">M0: Orgs &amp; Settings</div>
         <div class="timeline-middle">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
@@ -124,13 +122,13 @@
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
           </svg>
         </div>
-        <div class="timeline-end timeline-box">Inventory</div>
+        <div class="timeline-end timeline-box">M1: Inventory</div>
         <hr />
       </li>
 
       <li>
         <hr />
-        <div class="timeline-start timeline-box">Import &amp; Export</div>
+        <div class="timeline-start timeline-box">M2: Import &amp; Export</div>
         <div class="timeline-middle">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
@@ -146,18 +144,19 @@
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
           </svg>
         </div>
-        <div class="timeline-end timeline-box">Login</div>
+        <div class="timeline-end timeline-box">M3: Login</div>
         <hr />
       </li>
 
       <li>
         <hr />
-        <div class="timeline-start timeline-box">Rentals</div>
+        <div class="timeline-start timeline-box">M4: Rentals</div>
         <div class="timeline-middle">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
           </svg>
         </div>
+        <hr />
       </li>
 
     </ul>
