@@ -148,7 +148,6 @@ type UpdateInventory struct {
 	CategoryID     string
 	ManufacturerID string
 	Code           int64
-	TotalStock     int64
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string
@@ -158,6 +157,13 @@ type UpdateInventory struct {
 	DepthMM        *int64
 	PowerMW        *int64
 	CurrentMA      *int64
+}
+
+// UpdateBulkInventory holds the data required to update a bulk inventory item,
+// including the new quantity stored in bulk_stock.
+type UpdateBulkInventory struct {
+	UpdateInventory
+	TotalStock int64
 }
 
 // SetImage links or unlinks a storage object from an inventory item.

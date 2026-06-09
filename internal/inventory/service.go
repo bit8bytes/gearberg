@@ -159,13 +159,9 @@ func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
 }
 
 // AddUnit adds a new empty unit to the serialized inventory item.
-// It also increments total_stock on the inventory record.
 func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	u, err := s.repo.AddUnit(ctx, a)
 	if err != nil {
-		return nil, fmt.Errorf("AddUnit: %w", err)
-	}
-	if err := s.repo.UpdateTotalStock(ctx, a.InventoryID, 1); err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", err)
 	}
 	return u, nil
@@ -188,13 +184,28 @@ func (s *Service) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	return nil
 }
 
-// DeleteUnit removes a unit and decrements total_stock on the inventory record.
-func (s *Service) DeleteUnit(ctx context.Context, unitID, inventoryID string) error {
+// DeleteUnit removes a unit from the serialized inventory item.
+func (s *Service) DeleteUnit(ctx context.Context, unitID, _ string) error {
 	if err := s.repo.DeleteUnit(ctx, unitID); err != nil {
 		return fmt.Errorf("DeleteUnit: %w", err)
 	}
-	if err := s.repo.UpdateTotalStock(ctx, inventoryID, -1); err != nil {
-		return fmt.Errorf("DeleteUnit: %w", err)
-	}
 	return nil
+}
+
+// UpdateBulk updates a bulk inventory item and its stock quantity atomically.
+func (s *Service) UpdateBulk(ctx context.Context, u UpdateBulkInventory) (*Inventory, error) {
+	item, err := s.repo.UpdateBulk(ctx, u)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateBulk: %w", err)
+	}
+	return item, nil
+}
+
+// UpdateBulkTx updates a bulk inventory item within an existing transaction.
+func (s *Service) UpdateBulkTx(ctx context.Context, tx *sql.Tx, u UpdateBulkInventory) (*Inventory, error) {
+	item, err := s.repo.UpdateBulkTx(ctx, tx, u)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateBulkTx: %w", err)
+	}
+	return item, nil
 }

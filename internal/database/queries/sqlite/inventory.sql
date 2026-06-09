@@ -10,7 +10,7 @@ SELECT
     i.storage_object_id,
     i.type_id,
     i.usage_type_id,
-    i.total_stock,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
     i.purchase_price,
     i.rental_price,
     i.notes,
@@ -19,6 +19,7 @@ SELECT
     COUNT(*) OVER() AS total_records
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR i.name LIKE '%' || sqlc.arg(name_query) || '%')
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
@@ -39,7 +40,6 @@ INSERT INTO inventory (
     type_id,
     usage_type_id,
     code,
-    total_stock,
     purchase_price,
     rental_price,
     notes,
@@ -58,7 +58,6 @@ INSERT INTO inventory (
     sqlc.arg(type_id),
     sqlc.arg(usage_type_id),
     (SELECT COALESCE(MAX(code), 0) + 1 FROM inventory WHERE org_id = sqlc.arg(org_id)),
-    sqlc.arg(total_stock),
     sqlc.arg(purchase_price),
     sqlc.arg(rental_price),
     sqlc.arg(notes),
@@ -78,7 +77,6 @@ INSERT INTO inventory (
     type_id,
     usage_type_id,
     code,
-    total_stock,
     purchase_price,
     rental_price,
     notes,
@@ -89,66 +87,41 @@ INSERT INTO inventory (
     power_mw,
     current_ma,
     created_at;
-
--- name: CreateUnit :one
-INSERT INTO inventory_units (
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    next_inspection_at
-) VALUES (
-    sqlc.arg(id),
-    sqlc.arg(inventory_id),
-    sqlc.arg(status_id),
-    (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM inventory_units WHERE inventory_id = sqlc.arg(inventory_id)),
-    sqlc.arg(serial_number),
-    sqlc.arg(next_inspection_at)
-) RETURNING
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    next_inspection_at,
-    created_at;
-
 
 -- name: GetByID :one
 SELECT
-    id,
-    org_id,
-    type_id,
-    usage_type_id,
-    name,
-    code,
-    category_id,
-    manufacturer_id,
-    storage_object_id,
-    total_stock,
-    purchase_price,
-    rental_price,
-    notes,
-    weight_g,
-    width_mm,
-    height_mm,
-    depth_mm,
-    power_mw,
-    current_ma,
-    updated_at,
-    created_at
-FROM inventory
-WHERE id = ?;
+    i.id,
+    i.org_id,
+    i.type_id,
+    i.usage_type_id,
+    i.name,
+    i.code,
+    i.category_id,
+    i.manufacturer_id,
+    i.storage_object_id,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
+    i.purchase_price,
+    i.rental_price,
+    i.notes,
+    i.weight_g,
+    i.width_mm,
+    i.height_mm,
+    i.depth_mm,
+    i.power_mw,
+    i.current_ma,
+    i.updated_at,
+    i.created_at
+FROM inventory i
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
+WHERE i.id = ?;
 
--- name: Update :one
+-- name: Update :exec
 UPDATE inventory
 SET
     name = ?,
     category_id = ?,
     manufacturer_id = ?,
     code = ?,
-    total_stock = ?,
     purchase_price = ?,
     rental_price = ?,
     notes = ?,
@@ -159,44 +132,7 @@ SET
     power_mw = ?,
     current_ma = ?,
     updated_at = unixepoch()
-WHERE id = ?
-RETURNING
-    id,
-    org_id,
-    name,
-    category_id,
-    manufacturer_id,
-    storage_object_id,
-    type_id,
-    usage_type_id,
-    code,
-    total_stock,
-    purchase_price,
-    rental_price,
-    notes,
-    weight_g,
-    width_mm,
-    height_mm,
-    depth_mm,
-    power_mw,
-    current_ma,
-    updated_at,
-    created_at;
-
--- name: ListUnitsByInventoryID :many
-SELECT
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    notes,
-    next_inspection_at,
-    updated_at,
-    created_at
-FROM inventory_units
-WHERE inventory_id = ?
-ORDER BY unit_number ASC;
+WHERE id = ?;
 
 -- name: UpdateStorageObject :exec
 UPDATE inventory
@@ -207,43 +143,8 @@ WHERE id = sqlc.arg(id);
 DELETE FROM inventory
 WHERE id = ?;
 
--- name: GetUnit :one
-SELECT
-    id,
-    inventory_id,
-    status_id,
-    unit_number,
-    serial_number,
-    notes,
-    next_inspection_at,
-    updated_at,
-    created_at
-FROM inventory_units
-WHERE id = ?;
-
 -- name: ListUnitStatuses :many
 SELECT id, name FROM unit_statuses ORDER BY id ASC;
-
--- name: UpdateUnit :exec
-UPDATE inventory_units
-SET
-    status_id = ?,
-    serial_number = ?,
-    next_inspection_at = ?,
-    notes = ?,
-    updated_at = unixepoch()
-WHERE id = ?;
-
--- name: DeleteUnit :exec
-DELETE FROM inventory_units
-WHERE id = ?;
-
--- name: UpdateTotalStock :exec
-UPDATE inventory
-SET
-    total_stock = total_stock + ?,
-    updated_at = unixepoch()
-WHERE id = ?;
 
 -- name: ListAllByOrgID :many
 SELECT
@@ -257,7 +158,7 @@ SELECT
     i.storage_object_id,
     i.type_id,
     i.usage_type_id,
-    i.total_stock,
+    COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
     i.purchase_price,
     i.rental_price,
     i.notes,
@@ -265,5 +166,6 @@ SELECT
     i.created_at
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.org_id = ?
 ORDER BY i.name ASC;

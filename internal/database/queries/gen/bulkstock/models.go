@@ -2,9 +2,4 @@
 // versions:
 //   sqlc v1.31.1
 
-package inventory
-
-type UnitStatus struct {
-	ID   int64
-	Name string
-}
+package bulkstock
