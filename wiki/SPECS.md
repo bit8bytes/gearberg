@@ -28,17 +28,17 @@ The first increment comes without login because the software will be self-hosted
 | M1.8 | A user can upload an image for an inventory item | 100 % |
 | M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
 | M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
-| M1.11 | A user can add a user-defined code to an inventory item (e.g. `4993`) | 100 % |
+| M1.11 | Each inventory item is automatically assigned a unique numeric code starting at `1000` (e.g. first item gets `1000`, second `1001`) | 100 % |
 | M1.12 | A user can mark an inventory item as serialized, enabling individual unit tracking | 100 % |
 | M1.13 | A user can add individual units to a serialized inventory item, each with a unit number and optional serial number | 100 % |
 | M1.14 | A user can view all units of a serialized inventory item on its detail page | 100 % |
 | M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
 | M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
-| M1.18 | A user can set an operational status on an individual unit (available, damaged, under repair, retired) | 100 % |
+| M1.18 | A user can set an operational status on an individual unit (available, inhouse, damaged, under repair, retired) | 100 % |
 | M1.19 | A user can download the QR code for a unit (serialized inventory item) as a PNG file | 0 % |
-| M1.20 | A user can set an operational status on an individual unit to "inhouse" | 0 % |
-| M1.21 | A user can set weight and dimensions on an inventory item | 0 % |
+| M1.20 | A user can set an operational status on an individual unit to "inhouse" (physically present but not available for rental) | 0 % |
+| M1.21 | A user can set weight, dimensions, power consumption (Watts), and current draw (Ampere) on an inventory item | 0 % |
 | M1.22 | A user can see the total weight of all items in a rental | 0 % |
 
 Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases & groupings, and additional documents (pdf, pictures).
@@ -138,18 +138,64 @@ One row per org, seeded at install time.
 | - | - | - |
 | 1 | id | Internal identifier |
 | 2 | org_id | Reference to a org |
-| 3 | name | |
-| 4 | category_id | Reference to a category |
-| 5 | manufacturer | |
-| 6 | image_key | Path to stored image |
-| 7 | total_stock | Total units owned |
-| 8 | warehouse_stock | **Computed:** `total_stock` minus units in all draft and active rentals |
+| 3 | code | Auto-assigned unique numeric code, starting at `1000`. Used as human-readable identifier and base for unit codes (e.g. `1000-1`). |
+| 4 | name | |
+| 5 | category_id | Reference to a category |
+| 6 | manufacturer | |
+| 7 | image_key | Path to stored image |
+| 8 | serialized | Whether individual unit tracking is enabled. Determines which stock source is used (see Bulk Stock vs Inventory Units). |
 | 9 | purchase_price | Purchase price of this item (net) |
 | 10 | rental_price | Rental price per unit per billing unit (net) |
 | 11 | pricing_unit | Billing unit: one of `per_day`, `per_hour`, `per_week`, `flat`. Defaults to `per_day`. |
 | 12 | notes | Additional notes, e.g. 'in case' |
-| 13 | created_at | |
-| 14 | updated_at | |
+| 13 | weight_grams | Weight in grams (optional) |
+| 14 | width_mm | Width in millimeters (optional) |
+| 15 | height_mm | Height in millimeters (optional) |
+| 16 | depth_mm | Depth in millimeters (optional) |
+| 17 | power_watts | Power consumption in Watts (optional) |
+| 18 | current_ampere | Current draw in Ampere (optional) |
+| 19 | created_at | |
+| 20 | updated_at | |
+
+### Bulk Stock
+
+Quantity record for non-serialized inventory items. Only exists when `inventory.serialized = false`. One row per inventory item.
+
+`total_stock`: total units owned.
+`warehouse_stock`: **Computed** — `total_stock` minus units reserved in all draft and active rentals.
+
+| ID | Name | Description |
+| - | - | - |
+| 1 | id | Internal identifier |
+| 2 | inventory_id | Reference to parent inventory item (unique) |
+| 3 | quantity | Total units owned |
+| 4 | created_at | |
+| 5 | updated_at | |
+
+### Inventory Units
+
+Individual tracked units belonging to a serialized inventory item. Only exists when `inventory.serialized = true`.
+
+For serialized items, `total_stock = COUNT(inventory_units)` and `warehouse_stock = COUNT(inventory_units WHERE status = 'available')`.
+
+`status`: one of `available`, `inhouse`, `damaged`, `under_repair`, `retired`.
+- `available` — ready to be rented out
+- `inhouse` — physically present but not available for rental (e.g. under maintenance, reserved internally)
+- `damaged` — has damage, not rentable
+- `under_repair` — currently being repaired
+- `retired` — permanently decommissioned
+
+| ID | Name | Description |
+| - | - | - |
+| 1 | id | Internal identifier |
+| 2 | inventory_id | Reference to parent inventory item |
+| 3 | unit_number | User-visible unit label (e.g. `1`, `2`) |
+| 4 | serial_number | Manufacturer serial number (optional) |
+| 5 | status | Operational status (see above). Defaults to `available`. |
+| 6 | notes | Free-text notes (e.g. "broken fader") |
+| 7 | next_inspection_date | Date of next scheduled inspection (optional) |
+| 8 | created_at | |
+| 9 | updated_at | |
 
 ### Customers
 
