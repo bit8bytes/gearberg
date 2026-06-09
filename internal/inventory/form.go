@@ -23,7 +23,13 @@ type Form struct {
 	PurchasePrice  string
 	RentalPrice    string
 	Notes          string
-	Image          multipart.File // nil when no file was uploaded
+	WeightG        string
+	WidthMM        string
+	HeightMM       string
+	DepthMM        string
+	PowerW         string // user enters watts; stored as milliwatts
+	CurrentA       string // user enters amps; stored as milliamps
+	Image          multipart.File
 	ImageHeader    *multipart.FileHeader
 	validator.Validator
 }
@@ -48,6 +54,12 @@ func Parse(r *http.Request) (Form, error) {
 		PurchasePrice:  strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:    strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:          strings.TrimSpace(r.PostForm.Get("notes")),
+		WeightG:        strings.TrimSpace(r.PostForm.Get("weight_g")),
+		WidthMM:        strings.TrimSpace(r.PostForm.Get("width_mm")),
+		HeightMM:       strings.TrimSpace(r.PostForm.Get("height_mm")),
+		DepthMM:        strings.TrimSpace(r.PostForm.Get("depth_mm")),
+		PowerW:         strings.TrimSpace(r.PostForm.Get("power_w")),
+		CurrentA:       strings.TrimSpace(r.PostForm.Get("current_a")),
 	}
 	file, header, err := r.FormFile("image")
 	if err == nil {
@@ -138,6 +150,24 @@ func (f *Form) RentalPriceCents() *int64 {
 	return parseOptionalCents(f.RentalPrice)
 }
 
+// WeightGInt64 returns weight_g as *int64 (nil when blank).
+func (f *Form) WeightGInt64() *int64 { return parseOptionalInt64(f.WeightG) }
+
+// WidthMMInt64 returns width_mm as *int64 (nil when blank).
+func (f *Form) WidthMMInt64() *int64 { return parseOptionalInt64(f.WidthMM) }
+
+// HeightMMInt64 returns height_mm as *int64 (nil when blank).
+func (f *Form) HeightMMInt64() *int64 { return parseOptionalInt64(f.HeightMM) }
+
+// DepthMMInt64 returns depth_mm as *int64 (nil when blank).
+func (f *Form) DepthMMInt64() *int64 { return parseOptionalInt64(f.DepthMM) }
+
+// PowerMW converts the user-entered watts string to milliwatts, or nil when blank.
+func (f *Form) PowerMW() *int64 { return parseOptionalWattsToMW(f.PowerW) }
+
+// CurrentMA converts the user-entered amps string to milliamps, or nil when blank.
+func (f *Form) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) }
+
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {
 	TypeID           string // "bulk" or "serialized"
@@ -151,6 +181,12 @@ type NewForm struct {
 	PurchasePrice    string
 	RentalPrice      string
 	Notes            string
+	WeightG          string
+	WidthMM          string
+	HeightMM         string
+	DepthMM          string
+	PowerW           string
+	CurrentA         string
 	Image            multipart.File
 	ImageHeader      *multipart.FileHeader
 	validator.Validator
@@ -173,6 +209,12 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
+		WeightG:          strings.TrimSpace(r.PostForm.Get("weight_g")),
+		WidthMM:          strings.TrimSpace(r.PostForm.Get("width_mm")),
+		HeightMM:         strings.TrimSpace(r.PostForm.Get("height_mm")),
+		DepthMM:          strings.TrimSpace(r.PostForm.Get("depth_mm")),
+		PowerW:           strings.TrimSpace(r.PostForm.Get("power_w")),
+		CurrentA:         strings.TrimSpace(r.PostForm.Get("current_a")),
 	}
 	file, header, err := r.FormFile("image")
 	if err == nil {
@@ -211,6 +253,24 @@ func (f *NewForm) Validate() bool {
 	return f.Valid()
 }
 
+// WeightGInt64 returns weight_g as *int64 (nil when blank).
+func (f *NewForm) WeightGInt64() *int64 { return parseOptionalInt64(f.WeightG) }
+
+// WidthMMInt64 returns width_mm as *int64 (nil when blank).
+func (f *NewForm) WidthMMInt64() *int64 { return parseOptionalInt64(f.WidthMM) }
+
+// HeightMMInt64 returns height_mm as *int64 (nil when blank).
+func (f *NewForm) HeightMMInt64() *int64 { return parseOptionalInt64(f.HeightMM) }
+
+// DepthMMInt64 returns depth_mm as *int64 (nil when blank).
+func (f *NewForm) DepthMMInt64() *int64 { return parseOptionalInt64(f.DepthMM) }
+
+// PowerMW converts the user-entered watts string to milliwatts, or nil when blank.
+func (f *NewForm) PowerMW() *int64 { return parseOptionalWattsToMW(f.PowerW) }
+
+// CurrentMA converts the user-entered amps string to milliamps, or nil when blank.
+func (f *NewForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) }
+
 // CountInt64 returns the parsed Count value. Call only after Validate() returns true.
 func (f *NewForm) CountInt64() int64 {
 	n, _ := strconv.ParseInt(f.Count, 10, 64)
@@ -239,5 +299,43 @@ func parseOptionalCents(s string) *int64 {
 		return nil
 	}
 	v := int64(math.Round(f * 100))
+	return &v
+}
+
+// parseOptionalInt64 parses a whole-number string. Returns nil when s is blank or unparseable.
+func parseOptionalInt64(s string) *int64 {
+	if s == "" {
+		return nil
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return nil
+	}
+	return &n
+}
+
+// parseOptionalWattsToMW parses a decimal watts string and returns milliwatts. Returns nil when blank.
+func parseOptionalWattsToMW(s string) *int64 {
+	if s == "" {
+		return nil
+	}
+	f, err := strconv.ParseFloat(normalizeDecimal(s), 64)
+	if err != nil {
+		return nil
+	}
+	v := int64(math.Round(f * 1000))
+	return &v
+}
+
+// parseOptionalAmpsToMA parses a decimal amps string and returns milliamps. Returns nil when blank.
+func parseOptionalAmpsToMA(s string) *int64 {
+	if s == "" {
+		return nil
+	}
+	f, err := strconv.ParseFloat(normalizeDecimal(s), 64)
+	if err != nil {
+		return nil
+	}
+	v := int64(math.Round(f * 1000))
 	return &v
 }

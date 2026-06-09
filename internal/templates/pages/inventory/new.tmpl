@@ -144,6 +144,44 @@
       <textarea id="notes" name="notes" class="textarea w-full" rows="3">{{ .Form.Notes }}</textarea>
     </div>
 
+    <details class="border-2 border-base-300 rounded-lg">
+      <summary class="cursor-pointer px-4 py-3 font-medium select-none">Additional Properties</summary>
+      <div class="flex flex-col gap-4 px-4 pb-4 pt-2">
+
+        <div class="flex flex-col gap-1">
+          <label for="weight_g">Weight <span class="text-base-content/40 text-xs">g</span></label>
+          <input id="weight_g" type="number" name="weight_g" min="0" class="input w-full" value="{{ .Form.WeightG }}" />
+        </div>
+
+        <div class="flex gap-2">
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="width_mm">Width <span class="text-base-content/40 text-xs">mm</span></label>
+            <input id="width_mm" type="number" name="width_mm" min="0" class="input w-full" value="{{ .Form.WidthMM }}" />
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="height_mm">Height <span class="text-base-content/40 text-xs">mm</span></label>
+            <input id="height_mm" type="number" name="height_mm" min="0" class="input w-full" value="{{ .Form.HeightMM }}" />
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="depth_mm">Depth <span class="text-base-content/40 text-xs">mm</span></label>
+            <input id="depth_mm" type="number" name="depth_mm" min="0" class="input w-full" value="{{ .Form.DepthMM }}" />
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="power_w">Power <span class="text-base-content/40 text-xs">W</span></label>
+            <input id="power_w" type="text" inputmode="decimal" name="power_w" class="input w-full" value="{{ .Form.PowerW }}" />
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label for="current_a">Current <span class="text-base-content/40 text-xs">A</span></label>
+            <input id="current_a" type="text" inputmode="decimal" name="current_a" class="input w-full" value="{{ .Form.CurrentA }}" />
+          </div>
+        </div>
+
+      </div>
+    </details>
+
     <div class="flex gap-2">
       <button type="submit" tabindex="0"  class="btn btn-primary" data-loading-trigger>
         {{ template "loading-spinner" . }}

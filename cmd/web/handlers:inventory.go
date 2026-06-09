@@ -229,6 +229,12 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
+		WeightG:        form.WeightGInt64(),
+		WidthMM:        form.WidthMMInt64(),
+		HeightMM:       form.HeightMMInt64(),
+		DepthMM:        form.DepthMMInt64(),
+		PowerMW:        form.PowerMW(),
+		CurrentMA:      form.CurrentMA(),
 	}
 
 	if form.TypeID == "bulk" {
@@ -361,6 +367,12 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
+		WeightG:        form.WeightGInt64(),
+		WidthMM:        form.WidthMMInt64(),
+		HeightMM:       form.HeightMMInt64(),
+		DepthMM:        form.DepthMMInt64(),
+		PowerMW:        form.PowerMW(),
+		CurrentMA:      form.CurrentMA(),
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -417,6 +429,12 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
+		WeightG:        form.WeightGInt64(),
+		WidthMM:        form.WidthMMInt64(),
+		HeightMM:       form.HeightMMInt64(),
+		DepthMM:        form.DepthMMInt64(),
+		PowerMW:        form.PowerMW(),
+		CurrentMA:      form.CurrentMA(),
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {

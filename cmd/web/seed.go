@@ -39,6 +39,7 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 		name string
 	}{
 		{invunits.UnitAvailable, "available"},
+		{invunits.UnitInhouse, "inhouse"},
 		{invunits.UnitDamaged, "damaged"},
 		{invunits.UnitUnderRepair, "under_repair"},
 		{invunits.UnitRetired, "retired"},

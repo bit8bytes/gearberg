@@ -8,6 +8,7 @@ type StatusType int64
 // Unit status identifiers seeded into the unit_statuses table.
 const (
 	UnitAvailable   StatusType = 1
+	UnitInhouse     StatusType = 5
 	UnitDamaged     StatusType = 2
 	UnitUnderRepair StatusType = 3
 	UnitRetired     StatusType = 4

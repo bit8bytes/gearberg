@@ -17,6 +17,12 @@ CREATE TABLE inventory (
   notes TEXT,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  weight_g INTEGER,
+  width_mm INTEGER,
+  height_mm INTEGER,
+  depth_mm INTEGER,
+  power_mw INTEGER,
+  current_ma INTEGER,
   UNIQUE(org_id, code)
 ) STRICT;
 -- +goose StatementEnd

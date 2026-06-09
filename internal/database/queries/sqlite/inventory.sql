@@ -46,8 +46,20 @@ INSERT INTO inventory (
     total_stock,
     purchase_price,
     rental_price,
-    notes
+    notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma
 ) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
     ?,
     ?,
     ?,
@@ -74,6 +86,12 @@ INSERT INTO inventory (
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     created_at;
 
 -- name: CreateUnit :one
@@ -116,6 +134,12 @@ SELECT
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     updated_at,
     created_at
 FROM inventory
@@ -132,6 +156,12 @@ SET
     purchase_price = ?,
     rental_price = ?,
     notes = ?,
+    weight_g = ?,
+    width_mm = ?,
+    height_mm = ?,
+    depth_mm = ?,
+    power_mw = ?,
+    current_ma = ?,
     updated_at = unixepoch()
 WHERE id = ?
 RETURNING
@@ -148,6 +178,12 @@ RETURNING
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     updated_at,
     created_at;
 

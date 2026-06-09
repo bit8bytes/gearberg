@@ -115,6 +115,12 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
+		WeightG:         database.Int64Ptr(row.WeightG),
+		WidthMM:         database.Int64Ptr(row.WidthMm),
+		HeightMM:        database.Int64Ptr(row.HeightMm),
+		DepthMM:         database.Int64Ptr(row.DepthMm),
+		PowerMW:         database.Int64Ptr(row.PowerMw),
+		CurrentMA:       database.Int64Ptr(row.CurrentMa),
 		CreatedAt:       row.CreatedAt,
 		UpdatedAt:       row.UpdatedAt,
 	}
@@ -147,6 +153,12 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+		WeightG:        database.NullInt64Ptr(c.WeightG),
+		WidthMm:        database.NullInt64Ptr(c.WidthMM),
+		HeightMm:       database.NullInt64Ptr(c.HeightMM),
+		DepthMm:        database.NullInt64Ptr(c.DepthMM),
+		PowerMw:        database.NullInt64Ptr(c.PowerMW),
+		CurrentMa:      database.NullInt64Ptr(c.CurrentMA),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", database.NormalizeError(err))
@@ -165,6 +177,12 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkInventory) (*In
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
+		WeightG:         database.Int64Ptr(row.WeightG),
+		WidthMM:         database.Int64Ptr(row.WidthMm),
+		HeightMM:        database.Int64Ptr(row.HeightMm),
+		DepthMM:         database.Int64Ptr(row.DepthMm),
+		PowerMW:         database.Int64Ptr(row.PowerMw),
+		CurrentMA:       database.Int64Ptr(row.CurrentMa),
 		CreatedAt:       row.CreatedAt,
 	}
 	return &m, nil
@@ -186,6 +204,12 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+		WeightG:        database.NullInt64Ptr(c.WeightG),
+		WidthMm:        database.NullInt64Ptr(c.WidthMM),
+		HeightMm:       database.NullInt64Ptr(c.HeightMM),
+		DepthMm:        database.NullInt64Ptr(c.DepthMM),
+		PowerMw:        database.NullInt64Ptr(c.PowerMW),
+		CurrentMa:      database.NullInt64Ptr(c.CurrentMA),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
@@ -219,6 +243,12 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
+		WeightG:         database.Int64Ptr(row.WeightG),
+		WidthMM:         database.Int64Ptr(row.WidthMm),
+		HeightMM:        database.Int64Ptr(row.HeightMm),
+		DepthMM:         database.Int64Ptr(row.DepthMm),
+		PowerMW:         database.Int64Ptr(row.PowerMw),
+		CurrentMA:       database.Int64Ptr(row.CurrentMa),
 		CreatedAt:       row.CreatedAt,
 	}
 	return &m, nil
@@ -240,6 +270,12 @@ func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkI
 		PurchasePrice:  database.NullInt64Ptr(c.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+		WeightG:        database.NullInt64Ptr(c.WeightG),
+		WidthMm:        database.NullInt64Ptr(c.WidthMM),
+		HeightMm:       database.NullInt64Ptr(c.HeightMM),
+		DepthMm:        database.NullInt64Ptr(c.DepthMM),
+		PowerMw:        database.NullInt64Ptr(c.PowerMW),
+		CurrentMa:      database.NullInt64Ptr(c.CurrentMA),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulkTx: %w", database.NormalizeError(err))
@@ -258,6 +294,12 @@ func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkI
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
+		WeightG:         database.Int64Ptr(row.WeightG),
+		WidthMM:         database.Int64Ptr(row.WidthMm),
+		HeightMM:        database.Int64Ptr(row.HeightMm),
+		DepthMM:         database.Int64Ptr(row.DepthMm),
+		PowerMW:         database.Int64Ptr(row.PowerMw),
+		CurrentMA:       database.Int64Ptr(row.CurrentMa),
 		CreatedAt:       row.CreatedAt,
 	}
 	return &m, nil
@@ -275,6 +317,12 @@ func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u Update
 		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
 		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
+		WeightG:        database.NullInt64Ptr(u.WeightG),
+		WidthMm:        database.NullInt64Ptr(u.WidthMM),
+		HeightMm:       database.NullInt64Ptr(u.HeightMM),
+		DepthMm:        database.NullInt64Ptr(u.DepthMM),
+		PowerMw:        database.NullInt64Ptr(u.PowerMW),
+		CurrentMa:      database.NullInt64Ptr(u.CurrentMA),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("updateWith: %w", database.NormalizeError(err))
@@ -293,6 +341,12 @@ func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u Update
 		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
+		WeightG:         database.Int64Ptr(row.WeightG),
+		WidthMM:         database.Int64Ptr(row.WidthMm),
+		HeightMM:        database.Int64Ptr(row.HeightMm),
+		DepthMM:         database.Int64Ptr(row.DepthMm),
+		PowerMW:         database.Int64Ptr(row.PowerMw),
+		CurrentMA:       database.Int64Ptr(row.CurrentMa),
 		CreatedAt:       row.CreatedAt,
 		UpdatedAt:       row.UpdatedAt,
 	}

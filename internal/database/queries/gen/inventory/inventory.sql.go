@@ -35,8 +35,20 @@ INSERT INTO inventory (
     total_stock,
     purchase_price,
     rental_price,
-    notes
+    notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma
 ) VALUES (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
     ?,
     ?,
     ?,
@@ -63,6 +75,12 @@ INSERT INTO inventory (
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     created_at
 `
 
@@ -79,6 +97,12 @@ type CreateParams struct {
 	PurchasePrice  sql.NullInt64
 	RentalPrice    sql.NullInt64
 	Notes          sql.NullString
+	WeightG        sql.NullInt64
+	WidthMm        sql.NullInt64
+	HeightMm       sql.NullInt64
+	DepthMm        sql.NullInt64
+	PowerMw        sql.NullInt64
+	CurrentMa      sql.NullInt64
 }
 
 type CreateRow struct {
@@ -95,6 +119,12 @@ type CreateRow struct {
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
 	Notes           sql.NullString
+	WeightG         sql.NullInt64
+	WidthMm         sql.NullInt64
+	HeightMm        sql.NullInt64
+	DepthMm         sql.NullInt64
+	PowerMw         sql.NullInt64
+	CurrentMa       sql.NullInt64
 	CreatedAt       int64
 }
 
@@ -112,6 +142,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.PurchasePrice,
 		arg.RentalPrice,
 		arg.Notes,
+		arg.WeightG,
+		arg.WidthMm,
+		arg.HeightMm,
+		arg.DepthMm,
+		arg.PowerMw,
+		arg.CurrentMa,
 	)
 	var i CreateRow
 	err := row.Scan(
@@ -128,6 +164,12 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.Notes,
+		&i.WeightG,
+		&i.WidthMm,
+		&i.HeightMm,
+		&i.DepthMm,
+		&i.PowerMw,
+		&i.CurrentMa,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -234,6 +276,12 @@ SELECT
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     updated_at,
     created_at
 FROM inventory
@@ -254,6 +302,12 @@ type GetByIDRow struct {
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
 	Notes           sql.NullString
+	WeightG         sql.NullInt64
+	WidthMm         sql.NullInt64
+	HeightMm        sql.NullInt64
+	DepthMm         sql.NullInt64
+	PowerMw         sql.NullInt64
+	CurrentMa       sql.NullInt64
 	UpdatedAt       int64
 	CreatedAt       int64
 }
@@ -275,6 +329,12 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.Notes,
+		&i.WeightG,
+		&i.WidthMm,
+		&i.HeightMm,
+		&i.DepthMm,
+		&i.PowerMw,
+		&i.CurrentMa,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -610,6 +670,12 @@ SET
     purchase_price = ?,
     rental_price = ?,
     notes = ?,
+    weight_g = ?,
+    width_mm = ?,
+    height_mm = ?,
+    depth_mm = ?,
+    power_mw = ?,
+    current_ma = ?,
     updated_at = unixepoch()
 WHERE id = ?
 RETURNING
@@ -626,6 +692,12 @@ RETURNING
     purchase_price,
     rental_price,
     notes,
+    weight_g,
+    width_mm,
+    height_mm,
+    depth_mm,
+    power_mw,
+    current_ma,
     updated_at,
     created_at
 `
@@ -639,6 +711,12 @@ type UpdateParams struct {
 	PurchasePrice  sql.NullInt64
 	RentalPrice    sql.NullInt64
 	Notes          sql.NullString
+	WeightG        sql.NullInt64
+	WidthMm        sql.NullInt64
+	HeightMm       sql.NullInt64
+	DepthMm        sql.NullInt64
+	PowerMw        sql.NullInt64
+	CurrentMa      sql.NullInt64
 	ID             string
 }
 
@@ -656,6 +734,12 @@ type UpdateRow struct {
 	PurchasePrice   sql.NullInt64
 	RentalPrice     sql.NullInt64
 	Notes           sql.NullString
+	WeightG         sql.NullInt64
+	WidthMm         sql.NullInt64
+	HeightMm        sql.NullInt64
+	DepthMm         sql.NullInt64
+	PowerMw         sql.NullInt64
+	CurrentMa       sql.NullInt64
 	UpdatedAt       int64
 	CreatedAt       int64
 }
@@ -670,6 +754,12 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		arg.PurchasePrice,
 		arg.RentalPrice,
 		arg.Notes,
+		arg.WeightG,
+		arg.WidthMm,
+		arg.HeightMm,
+		arg.DepthMm,
+		arg.PowerMw,
+		arg.CurrentMa,
 		arg.ID,
 	)
 	var i UpdateRow
@@ -687,6 +777,12 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.Notes,
+		&i.WeightG,
+		&i.WidthMm,
+		&i.HeightMm,
+		&i.DepthMm,
+		&i.PowerMw,
+		&i.CurrentMa,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
