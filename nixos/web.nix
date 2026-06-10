@@ -24,7 +24,7 @@ buildpkgs.buildGoModule {
   ];
   tags = ["sqlite"];
 
-  nativeBuildInputs = [buildpkgs.tailwindcss_4 buildpkgs.sqlc buildpkgs.ogen];
+  nativeBuildInputs = [buildpkgs.tailwindcss_4 buildpkgs.sqlc];
 
   preBuild = ''
     sqlc generate -f sqlc.sqlite.yml
