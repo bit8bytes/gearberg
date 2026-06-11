@@ -38,8 +38,8 @@ The first increment comes without login because the software will be self-hosted
 | M1.18 | A user can set an operational status on an individual unit (available, inhouse, damaged, under repair, retired) | 100 % |
 | M1.19 | A user can download the QR code for a unit (serialized inventory item) as a PNG file | 0 % |
 | M1.20 | A user can set an operational status on an individual unit to "inhouse" (physically present but not available for rental) | 100 % |
-| M1.21 | A user can set weight, dimensions, power consumption (Watts), and current draw (Ampere) on an inventory item | 0 % |
-| M1.22 | A user can see the total weight of all items in a rental | 0 % |
+| M1.21 | A user can set weight, dimensions, power consumption (Watts), and current draw (Ampere) on an inventory item | 100 % |
+| M1.22 | A user can see the total weight of all items in a rental | 100 % |
 
 Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases & groupings, and additional documents (pdf, pictures).
 
