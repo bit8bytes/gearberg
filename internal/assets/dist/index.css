@@ -7689,9 +7689,6 @@
   .bg-red-500\! {
     background-color: var(--color-red-500) !important;
   }
-  .bg-success {
-    background-color: var(--color-success);
-  }
   .bg-teal-400 {
     background-color: var(--color-teal-400);
   }
@@ -8893,9 +8890,6 @@
   }
   .text-teal-800 {
     color: var(--color-teal-800);
-  }
-  .text-warning {
-    color: var(--color-warning);
   }
   .text-white {
     color: var(--color-white);
