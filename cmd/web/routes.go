@@ -41,6 +41,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("POST /orgs/{org_id}/inventory/{id}/serialized", app.html.Handle(app.postInventoryItemSerialized))
 	mux.HandleFunc("POST /orgs/{org_id}/inventory/{id}/units", app.html.Handle(app.postInventoryAddUnit))
 	mux.HandleFunc("POST /orgs/{org_id}/inventory/{id}/units/{unit_id}", app.html.Handle(app.postInventoryUpdateUnit))
+	mux.HandleFunc("GET /orgs/{org_id}/inventory/{id}/units/{unit_id}/qr", app.html.Handle(app.getInventoryUnitQR))
 	mux.HandleFunc("POST /orgs/{org_id}/inventory/{id}/units/{unit_id}/delete", app.html.Handle(app.postDeleteInventoryUnit))
 	mux.HandleFunc("POST /orgs/{org_id}/inventory/{id}/delete", app.html.Handle(app.postDeleteInventoryItem))
 	mux.HandleFunc("GET /orgs/{org_id}/settings", app.html.Handle(app.getOrgSettings))

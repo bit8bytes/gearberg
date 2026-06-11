@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bit8bytes/gearberg/internal/barcodes"
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
@@ -562,6 +563,58 @@ func (app *application) getInventoryUnits(w http.ResponseWriter, r *http.Request
 	data := app.html.TemplateData(r)
 	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units, UnitStatuses: statuses}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryUnits, data)
+}
+
+func (app *application) getInventoryUnitQR(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	itemID := r.PathValue("id")
+	unitID := r.PathValue("unit_id")
+
+	item, err := app.services.inventory.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	unit, err := app.services.inventory.GetUnit(ctx, unitID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
+	}
+
+	content := fmt.Sprintf("%d-%d", item.Code, unit.UnitNumber)
+	png, err := barcodes.QR(content)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
+	}
+
+	filename := unitQRFilename(item.Name, item.Code, unit.UnitNumber)
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Cache-Control", "no-store")
+	if _, err := w.Write(png); err != nil { //nolint:gosec // png bytes are generated internally, not from user input
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
+// unitQRFilename returns a safe PNG filename for a unit QR download.
+// Format: {slugified-name}-{zero-padded-code}-{unit_number}.png.
+func unitQRFilename(name string, code, unitNumber int64) string {
+	slug := strings.Map(func(r rune) rune {
+		if r == ' ' {
+			return '-'
+		}
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			return r
+		}
+		return -1
+	}, strings.ToLower(name))
+	return slug + "-" + strconv.FormatInt(code, 10) + "-" + strconv.FormatInt(unitNumber, 10) + ".png"
 }
 
 // renderInventoryUnits re-fetches units and renders the units page with 422, used when unit validation fails.

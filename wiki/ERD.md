@@ -70,7 +70,6 @@ erDiagram
     text name "NOT NULL"
     integer code "NOT NULL UNIQUE(org_id,code)"
     text storage_object_id FK "ON DELETE SET NULL"
-    text qr_object_id FK "ON DELETE SET NULL"
     integer purchase_price "cents e.g. 1999 = 19.99"
     integer rental_price "cents e.g. 1999 = 19.99"
     text notes

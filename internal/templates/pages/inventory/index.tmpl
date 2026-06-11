@@ -76,7 +76,7 @@
           <br />
           <span class="text-xs text-secondary">{{ .Type.Label }}</span>
         </td>
-        <td>{{ if .Code }}{{ printf "%04d" .Code }}{{ end }}</td>
+        <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
         <td>
           <span class="inline-flex items-center gap-1.5">
             {{ if .CategoryColor }}<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ .CategoryColor }}"/></svg>{{ end }}

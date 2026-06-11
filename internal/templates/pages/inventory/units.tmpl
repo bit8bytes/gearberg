@@ -33,7 +33,7 @@
         {{ if .Data.Units }}
         {{ range .Data.Units }}
         <tr>
-          <td class="align-top text-base-content/40 whitespace-nowrap">{{ printf "%04d" $.Data.ItemCode }}-{{ .UnitNumber }}</td>
+          <td class="align-top text-base-content/40 whitespace-nowrap">{{ $.Data.ItemCode }}-{{ .UnitNumber }}</td>
           <td class="align-top">
             <select form="unit-{{ .ID }}" name="status_id" class="select select-sm">
               {{ $currentStatusID := .StatusID }}
@@ -80,6 +80,11 @@
           </td>
           <td class="align-top text-right">
             <div class="flex gap-1 justify-end">
+              <a
+                href="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}/qr"
+                class="btn btn-sm btn-ghost"
+                title="Download QR code"
+              ><span class="w-4 h-4">{{ template "qr-icon" . }}</span></a>
               <button form="unit-{{ .ID }}" type="submit" class="btn btn-sm btn-primary">Save</button>
               <button
                 form="unit-{{ .ID }}-delete"
