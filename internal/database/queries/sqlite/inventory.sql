@@ -6,6 +6,7 @@ SELECT
     i.code,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
+    COALESCE(ec.color, '') AS category_color,
     i.manufacturer_id,
     i.storage_object_id,
     i.type_id,

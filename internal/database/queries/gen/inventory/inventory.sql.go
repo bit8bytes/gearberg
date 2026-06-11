@@ -265,6 +265,7 @@ SELECT
     i.code,
     i.category_id,
     COALESCE(ec.name, '') AS category_name,
+    COALESCE(ec.color, '') AS category_color,
     i.manufacturer_id,
     i.storage_object_id,
     i.type_id,
@@ -301,6 +302,7 @@ type ListRow struct {
 	Code            int64
 	CategoryID      string
 	CategoryName    string
+	CategoryColor   string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
 	TypeID          int64
@@ -336,6 +338,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.Code,
 			&i.CategoryID,
 			&i.CategoryName,
+			&i.CategoryColor,
 			&i.ManufacturerID,
 			&i.StorageObjectID,
 			&i.TypeID,

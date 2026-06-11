@@ -65,6 +65,7 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 		ID:    c.ID,
 		OrgID: c.OrgID,
 		Name:  c.Name,
+		Color: c.Color,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create: %w", database.NormalizeError(err))
@@ -73,15 +74,17 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 		ID:    row.ID,
 		OrgID: row.OrgID,
 		Name:  row.Name,
+		Color: row.Color,
 	}
 	return &m, nil
 }
 
-// Update updates the name of the category identified by u.ID.
+// Update updates the name and color of the category identified by u.ID.
 func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*EquipmentCategory, error) {
 	row, err := r.equipmentCategories.Update(ctx, genec.UpdateParams{
-		ID:   u.ID,
-		Name: u.Name,
+		ID:    u.ID,
+		Name:  u.Name,
+		Color: u.Color,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Update: %w", err)
@@ -121,5 +124,6 @@ func toModel(row genec.EquipmentCategory) EquipmentCategory {
 		ID:    row.ID,
 		OrgID: row.OrgID,
 		Name:  row.Name,
+		Color: row.Color,
 	}
 }

@@ -24,6 +24,20 @@
       {{ end }}
     </div>
 
+    <div class="flex flex-col gap-1">
+      <label for="color">Color</label>
+      <input
+        id="color"
+        type="color"
+        name="color"
+        value="{{ .Form.Color }}"
+        class="h-10 w-16 cursor-pointer rounded border border-base-300 p-1"
+      />
+      {{ with index .Form.Errors "color" }}
+        <p class="text-red-500 text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
     <div class="flex gap-2">
       <button type="submit" class="btn btn-primary">Create</button>
       <a href="{{ $back }}" class="btn">Cancel</a>

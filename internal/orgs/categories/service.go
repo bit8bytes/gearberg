@@ -87,6 +87,7 @@ func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string,
 		ID:    ksuid.New().String(),
 		OrgID: orgID,
 		Name:  name,
+		Color: DefaultColor,
 	})
 	if err != nil && !errors.Is(err, database.ErrUniqueConstraint) {
 		return "", fmt.Errorf("EnsureByName: %w", err)

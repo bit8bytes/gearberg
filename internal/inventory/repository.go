@@ -69,6 +69,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			Code:            row.Code,
 			CategoryID:      row.CategoryID,
 			CategoryName:    row.CategoryName,
+			CategoryColor:   row.CategoryColor,
 			ManufacturerID:  database.String(row.ManufacturerID),
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
 			TotalStock:      row.TotalStock,

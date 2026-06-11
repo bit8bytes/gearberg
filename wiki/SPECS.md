@@ -13,6 +13,7 @@ The first increment comes without login because the software will be self-hosted
 | M0.1 | A user can configure org name, currency, VAT rate, and timezone | 100 % |
 | M0.2 | A user can create, update, and delete inventory categories | 100 % |
 | M0.3 | A user cannot delete a category that is assigned to one or more inventory items | 100 % |
+| M0.4 | A user can assign a color to an equipment category using a HEX color code (e.g. `#FF5733`) | 100 % |
 
 ### Milestone 1: Inventory
 
@@ -129,8 +130,9 @@ One row per org, seeded at install time.
 | 1 | id | Internal identifier |
 | 2 | org_id | Reference to a org |
 | 3 | name | Display name of the category |
-| 4 | created_at | |
-| 5 | updated_at | |
+| 4 | color | HEX color code (e.g. `#FF5733`). Optional. Used for visual identification in the UI. |
+| 5 | created_at | |
+| 6 | updated_at | |
 
 ### Inventory
 

@@ -71,6 +71,7 @@ type Inventory struct {
 	Code            int64
 	CategoryID      string
 	CategoryName    string
+	CategoryColor   string
 	ManufacturerID  string
 	StorageObjectID *string
 	ImageURL        string

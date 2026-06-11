@@ -59,7 +59,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 func (app *application) getEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = &categories.Form{}
+	data.Form = &categories.Form{Color: categories.DefaultColor}
 	data.Data = equipmentCategoryData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesNew, data)
 }
@@ -88,6 +88,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		ID:    ksuid.New().String(),
 		OrgID: id,
 		Name:  form.Name,
+		Color: form.Color,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {
@@ -152,8 +153,9 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	}
 
 	_, err = app.services.equipmentcategories.Update(ctx, categories.UpdateEquipmentCategory{
-		ID:   catID,
-		Name: form.Name,
+		ID:    catID,
+		Name:  form.Name,
+		Color: form.Color,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {

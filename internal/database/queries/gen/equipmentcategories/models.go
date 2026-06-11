@@ -8,6 +8,7 @@ type EquipmentCategory struct {
 	ID        string
 	OrgID     string
 	Name      string
+	Color     string
 	UpdatedAt int64
 	CreatedAt int64
 }
