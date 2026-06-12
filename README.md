@@ -46,6 +46,8 @@ Self-hosting is provided via NixOS with a full NixOS configuration included.
 We follow the [Leitfaden zur Entwicklung
 sicherer Webanwendungen](https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Studien/Webanwendungen/Webanw_Auftragnehmer.pdf?__blob=publicationFile&v=1) from the [Bundesamt für Sicherheit in der Informationstechnik (BSI)](https://www.bsi.bund.de/EN) to ensure secure software. There is no English translation yet, but we will document all steps in English. Find more info in our [wiki](./wiki/).
 
+We are also in process of [OpenSSF Best Practices Badge Program](https://www.bestpractices.dev/en) to ensure trusted high quality open source software.
+
 ## License
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
