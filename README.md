@@ -30,6 +30,14 @@ Then open `http://localhost:8080` in your browser.
 
 Self-hosting is provided via NixOS with a full NixOS configuration included.
 
+## Contributing
+
+**Obtain** — Download the latest release from the [releases page](https://github.com/bit8bytes/gearberg/releases), or run it directly with Nix as shown above.
+
+**Feedback** — Open a [GitHub issue](https://github.com/bit8bytes/gearberg/issues) to report bugs or request features. Please include steps to reproduce for bug reports.
+
+**Contribute** — See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved. The project is in early development; reach out via an issue before submitting code.
+
 ## Development
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg)
