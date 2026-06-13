@@ -16,41 +16,36 @@ INSERT INTO serialized_units (
     inventory_id,
     status_id,
     unit_number,
-    serial_number,
-    next_inspection_at
+    serial_number
 ) VALUES (
     ?1,
     ?2,
     ?3,
     (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM serialized_units WHERE inventory_id = ?2),
-    ?4,
-    ?5
+    ?4
 ) RETURNING
     id,
     inventory_id,
     status_id,
     unit_number,
     serial_number,
-    next_inspection_at,
     created_at
 `
 
 type CreateUnitParams struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
+	ID           string
+	InventoryID  string
+	StatusID     int64
+	SerialNumber sql.NullString
 }
 
 type CreateUnitRow struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	CreatedAt        int64
+	ID           string
+	InventoryID  string
+	StatusID     int64
+	UnitNumber   int64
+	SerialNumber sql.NullString
+	CreatedAt    int64
 }
 
 func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateUnitRow, error) {
@@ -59,7 +54,6 @@ func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateU
 		arg.InventoryID,
 		arg.StatusID,
 		arg.SerialNumber,
-		arg.NextInspectionAt,
 	)
 	var i CreateUnitRow
 	err := row.Scan(
@@ -68,7 +62,6 @@ func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (CreateU
 		&i.StatusID,
 		&i.UnitNumber,
 		&i.SerialNumber,
-		&i.NextInspectionAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -92,7 +85,7 @@ SELECT
     unit_number,
     serial_number,
     notes,
-    next_inspection_at,
+    purchased_at,
     updated_at,
     created_at
 FROM serialized_units
@@ -109,7 +102,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (SerializedUnit, error
 		&i.UnitNumber,
 		&i.SerialNumber,
 		&i.Notes,
-		&i.NextInspectionAt,
+		&i.PurchasedAt,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -124,7 +117,7 @@ SELECT
     unit_number,
     serial_number,
     notes,
-    next_inspection_at,
+    purchased_at,
     updated_at,
     created_at
 FROM serialized_units
@@ -148,7 +141,7 @@ func (q *Queries) ListByInventoryID(ctx context.Context, inventoryID string) ([]
 			&i.UnitNumber,
 			&i.SerialNumber,
 			&i.Notes,
-			&i.NextInspectionAt,
+			&i.PurchasedAt,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
@@ -170,26 +163,26 @@ UPDATE serialized_units
 SET
     status_id = ?,
     serial_number = ?,
-    next_inspection_at = ?,
     notes = ?,
+    purchased_at = ?,
     updated_at = unixepoch()
 WHERE id = ?
 `
 
 type UpdateParams struct {
-	StatusID         int64
-	SerialNumber     sql.NullString
-	NextInspectionAt sql.NullInt64
-	Notes            sql.NullString
-	ID               string
+	StatusID     int64
+	SerialNumber sql.NullString
+	Notes        sql.NullString
+	PurchasedAt  sql.NullInt64
+	ID           string
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
 	_, err := q.db.ExecContext(ctx, update,
 		arg.StatusID,
 		arg.SerialNumber,
-		arg.NextInspectionAt,
 		arg.Notes,
+		arg.PurchasedAt,
 		arg.ID,
 	)
 	return err

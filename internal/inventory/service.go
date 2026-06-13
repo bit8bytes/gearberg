@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
@@ -79,15 +80,6 @@ func (s *Service) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkInve
 	return item, nil
 }
 
-// UpdateTx updates an inventory item within an existing transaction.
-func (s *Service) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (*Inventory, error) {
-	item, err := s.repo.UpdateTx(ctx, tx, u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateTx: %w", err)
-	}
-	return item, nil
-}
-
 // CreateSerialized creates a new serialized inventory item with all its units in a single transaction.
 func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedInventory) (*Inventory, error) {
 	item, err := s.repo.CreateSerialized(ctx, tx, c)
@@ -97,13 +89,43 @@ func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSeri
 	return item, nil
 }
 
-// Update updates an inventory item.
-func (s *Service) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
-	item, err := s.repo.Update(ctx, u)
-	if err != nil {
-		return nil, fmt.Errorf("Update: %w", err)
+// UpdateDetails updates the details-tab fields. For bulk items it also updates
+// the stock quantity; for serialized items only the inventory row is written.
+func (s *Service) UpdateDetails(ctx context.Context, u UpdateInventoryDetails) error {
+	if u.Type == Bulk {
+		if err := s.repo.UpdateDetailsBulk(ctx, u); err != nil {
+			return fmt.Errorf("UpdateDetails: %w", err)
+		}
+		return nil
 	}
-	return item, nil
+	if err := s.repo.UpdateDetails(ctx, u); err != nil {
+		return fmt.Errorf("UpdateDetails: %w", err)
+	}
+	return nil
+}
+
+// UpdatePricing updates the pricing-tab fields.
+func (s *Service) UpdatePricing(ctx context.Context, u UpdateInventoryPricing) error {
+	if err := s.repo.UpdatePricing(ctx, u); err != nil {
+		return fmt.Errorf("UpdatePricing: %w", err)
+	}
+	return nil
+}
+
+// UpdateProperties updates the properties-tab fields.
+func (s *Service) UpdateProperties(ctx context.Context, u UpdateInventoryProperties) error {
+	if err := s.repo.UpdateProperties(ctx, u); err != nil {
+		return fmt.Errorf("UpdateProperties: %w", err)
+	}
+	return nil
+}
+
+// UpdateInspection updates the inspection_interval_days field.
+func (s *Service) UpdateInspection(ctx context.Context, u UpdateInventoryInspection) error {
+	if err := s.repo.UpdateInspection(ctx, u); err != nil {
+		return fmt.Errorf("UpdateInspection: %w", err)
+	}
+	return nil
 }
 
 // SetImage links or unlinks a storage object from an inventory item.
@@ -123,10 +145,20 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 }
 
 // ListUnits returns all inventory units for the given inventory item, ordered by unit_number.
+// Each unit's LastInspectionAt is populated from the most recent inspection record.
 func (s *Service) ListUnits(ctx context.Context, inventoryID string) ([]Unit, error) {
 	units, err := s.repo.ListUnits(ctx, inventoryID)
 	if err != nil {
 		return nil, fmt.Errorf("ListUnits: %w", err)
+	}
+	latestAt, err := s.repo.ListLatestInspectionAtByInventoryID(ctx, inventoryID)
+	if err != nil {
+		return nil, fmt.Errorf("ListUnits: %w", err)
+	}
+	for i, u := range units {
+		if at, ok := latestAt[u.ID]; ok {
+			units[i].LastInspectionAt = &at
+		}
 	}
 	return units, nil
 }
@@ -192,20 +224,26 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID, _ string) error {
 	return nil
 }
 
-// UpdateBulk updates a bulk inventory item and its stock quantity atomically.
-func (s *Service) UpdateBulk(ctx context.Context, u UpdateBulkInventory) (*Inventory, error) {
-	item, err := s.repo.UpdateBulk(ctx, u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulk: %w", err)
+// LogInspection records a new inspection entry for a unit.
+// Returns ErrFutureInspectionDate when InspectedAt is after today (UTC midnight).
+func (s *Service) LogInspection(ctx context.Context, l LogInspection) (*Inspection, error) {
+	now := time.Now().UTC()
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+	if time.Unix(l.InspectedAt, 0).UTC().After(todayEnd) {
+		return nil, ErrFutureInspectionDate
 	}
-	return item, nil
+	entry, err := s.repo.LogInspection(ctx, l)
+	if err != nil {
+		return nil, fmt.Errorf("LogInspection: %w", err)
+	}
+	return entry, nil
 }
 
-// UpdateBulkTx updates a bulk inventory item within an existing transaction.
-func (s *Service) UpdateBulkTx(ctx context.Context, tx *sql.Tx, u UpdateBulkInventory) (*Inventory, error) {
-	item, err := s.repo.UpdateBulkTx(ctx, tx, u)
+// ListInspections returns all inspection entries for a unit, newest first.
+func (s *Service) ListInspections(ctx context.Context, unitID string) ([]Inspection, error) {
+	entries, err := s.repo.ListInspections(ctx, unitID)
 	if err != nil {
-		return nil, fmt.Errorf("UpdateBulkTx: %w", err)
+		return nil, fmt.Errorf("ListInspections: %w", err)
 	}
-	return item, nil
+	return entries, nil
 }

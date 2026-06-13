@@ -2,10 +2,14 @@
 package inventory
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
+
+// ErrFutureInspectionDate is returned by LogInspection when InspectedAt is after today.
+var ErrFutureInspectionDate = errors.New("inspection date cannot be in the future")
 
 // PurchasePriceInput formats the purchase price as a plain decimal string for use in
 // form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
@@ -22,6 +26,11 @@ func priceInput(v *int64) string {
 		return ""
 	}
 	return fmt.Sprintf("%.2f", float64(*v)/100)
+}
+
+// InspectionIntervalDaysInput returns inspection interval in days as a string, or "" when nil.
+func (inv *Inventory) InspectionIntervalDaysInput() string {
+	return optionalInt64Input(inv.InspectionIntervalDays)
 }
 
 // WeightGInput returns weight in grams as a string, or "" when nil.
@@ -63,30 +72,31 @@ func optionalInt64Input(v *int64) string {
 
 // Inventory represents a single inventory item.
 type Inventory struct {
-	ID              string
-	OrgID           string
-	Type            Type
-	UsageType       UsageType
-	Name            string
-	Code            int64
-	CategoryID      string
-	CategoryName    string
-	CategoryColor   string
-	ManufacturerID  string
-	StorageObjectID *string
-	ImageURL        string
-	TotalStock      int64
-	PurchasePrice   *int64
-	RentalPrice     *int64
-	Notes           string
-	WeightG         *int64
-	WidthMM         *int64
-	HeightMM        *int64
-	DepthMM         *int64
-	PowerMW         *int64
-	CurrentMA       *int64
-	CreatedAt       int64
-	UpdatedAt       int64
+	ID                     string
+	OrgID                  string
+	Type                   Type
+	UsageType              UsageType
+	Name                   string
+	Code                   int64
+	CategoryID             string
+	CategoryName           string
+	CategoryColor          string
+	ManufacturerID         string
+	StorageObjectID        *string
+	ImageURL               string
+	TotalStock             int64
+	PurchasePrice          *int64
+	RentalPrice            *int64
+	Notes                  string
+	WeightG                *int64
+	WidthMM                *int64
+	HeightMM               *int64
+	DepthMM                *int64
+	PowerMW                *int64
+	CurrentMA              *int64
+	InspectionIntervalDays *int64
+	CreatedAt              int64
+	UpdatedAt              int64
 }
 
 // Base holds fields shared between bulk and serialized creation.
@@ -116,10 +126,9 @@ type CreateBulkInventory struct {
 
 // CreateUnit holds the data required to create a single serialized inventory unit.
 type CreateUnit struct {
-	ID               string
-	InventoryID      string
-	SerialNumber     string
-	NextInspectionAt *int64
+	ID           string
+	InventoryID  string
+	SerialNumber string
 }
 
 // CreateSerializedInventory holds the data required to create a serialized inventory item with units.
@@ -130,41 +139,151 @@ type CreateSerializedInventory struct {
 
 // Unit represents a single serialized unit.
 type Unit struct {
-	ID                string
-	InventoryID       string
-	StatusID          int64
-	UnitNumber        int64
-	SerialNumber      string
-	Notes             string
-	NextInspectionAt  *int64
-	OverdueInspection int64
-	CreatedAt         int64
-	UpdatedAt         int64
+	ID               string
+	InventoryID      string
+	StatusID         int64
+	UnitNumber       int64
+	SerialNumber     string
+	Notes            string
+	PurchasedAt      *int64
+	LastInspectionAt *int64 // populated from inspection records; takes precedence over PurchasedAt for scheduling
+	CreatedAt        int64
+	UpdatedAt        int64
 }
 
-// UpdateInventory holds the data required to update an inventory item.
-type UpdateInventory struct {
+// PurchasedAtInput formats the purchased_at timestamp as "YYYY-MM-DD" for use in
+// a date input. Returns "" when nil.
+func (u *Unit) PurchasedAtInput() string {
+	if u.PurchasedAt == nil {
+		return ""
+	}
+	return time.Unix(*u.PurchasedAt, 0).UTC().Format("2006-01-02")
+}
+
+// nextInspectionBase returns the unix timestamp to use as the baseline for
+// scheduling the next inspection. The most recent inspection (any result) takes
+// priority over purchased_at so that any logged inspection resets the clock.
+func (u *Unit) nextInspectionBase() *int64 {
+	if u.LastInspectionAt != nil {
+		return u.LastInspectionAt
+	}
+	return u.PurchasedAt
+}
+
+// nextInspectionAt returns the time of the next required inspection,
+// or nil when no baseline date or interval is configured.
+func (u *Unit) nextInspectionAt(intervalDays *int64) *time.Time {
+	base := u.nextInspectionBase()
+	if base == nil || intervalDays == nil {
+		return nil
+	}
+	t := time.Unix(*base+*intervalDays*86400, 0).UTC()
+	return &t
+}
+
+// NextInspectionAtDisplay returns "YYYY-MM-DD" or "" when no baseline date or interval is available.
+func (u *Unit) NextInspectionAtDisplay(intervalDays *int64) string {
+	t := u.nextInspectionAt(intervalDays)
+	if t == nil {
+		return ""
+	}
+	return t.Format("2006-01-02")
+}
+
+func (u *Unit) inspectionDaysOffset(intervalDays *int64) (int64, bool) {
+	next := u.nextInspectionAt(intervalDays)
+	if next == nil {
+		return 0, false
+	}
+	now := time.Now().UTC()
+	// Truncate both to midnight so we compare calendar days, not clock time.
+	nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	nextDay := time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, time.UTC)
+	return int64(nextDay.Sub(nowDay).Hours() / 24), true
+}
+
+// NextInspectionInDays returns the number of calendar days until the next
+// required inspection, or "" when no baseline date or interval is available.
+// Negative values are reported as "N days overdue".
+func (u *Unit) NextInspectionInDays(intervalDays *int64) string {
+	days, ok := u.inspectionDaysOffset(intervalDays)
+	if !ok {
+		return ""
+	}
+	switch {
+	case days < 0:
+		return fmt.Sprintf("%d days overdue", -days)
+	case days == 0:
+		return "Today"
+	default:
+		return fmt.Sprintf("%d days", days)
+	}
+}
+
+// IsInspectionOverdue reports whether the next inspection date has passed.
+func (u *Unit) IsInspectionOverdue(intervalDays *int64) bool {
+	days, ok := u.inspectionDaysOffset(intervalDays)
+	return ok && days < 0
+}
+
+// UpdateInventoryDetails holds the data required to update the details tab fields.
+type UpdateInventoryDetails struct {
 	ID             string
+	Type           Type
 	Name           string
 	CategoryID     string
 	ManufacturerID string
-	Code           int64
-	PurchasePrice  *int64
-	RentalPrice    *int64
 	Notes          string
-	WeightG        *int64
-	WidthMM        *int64
-	HeightMM       *int64
-	DepthMM        *int64
-	PowerMW        *int64
-	CurrentMA      *int64
+	// TotalStock is only applied for bulk inventory items.
+	TotalStock int64
 }
 
-// UpdateBulkInventory holds the data required to update a bulk inventory item,
-// including the new quantity stored in bulk_stock.
-type UpdateBulkInventory struct {
-	UpdateInventory
-	TotalStock int64
+// UpdateInventoryPricing holds the data required to update the pricing tab fields.
+type UpdateInventoryPricing struct {
+	ID            string
+	PurchasePrice *int64
+	RentalPrice   *int64
+}
+
+// UpdateInventoryProperties holds the data required to update the properties tab fields.
+type UpdateInventoryProperties struct {
+	ID        string
+	WeightG   *int64
+	WidthMM   *int64
+	HeightMM  *int64
+	DepthMM   *int64
+	PowerMW   *int64
+	CurrentMA *int64
+}
+
+// Inspection represents a single unit inspection log entry.
+type Inspection struct {
+	ID          string
+	UnitID      string
+	InspectedAt int64
+	Passed      bool
+	Notes       string
+	CreatedAt   int64
+}
+
+// InspectedAtDisplay formats the inspected_at timestamp as "YYYY-MM-DD".
+func (i Inspection) InspectedAtDisplay() string {
+	return time.Unix(i.InspectedAt, 0).UTC().Format("2006-01-02")
+}
+
+// LogInspection holds the data required to create an inspection entry.
+type LogInspection struct {
+	ID          string
+	UnitID      string
+	InspectedAt int64
+	Passed      bool
+	Notes       string
+}
+
+// UpdateInventoryInspection holds the data required to update the inspection tab fields.
+type UpdateInventoryInspection struct {
+	ID                     string
+	InspectionIntervalDays *int64
 }
 
 // SetImage links or unlinks a storage object from an inventory item.
@@ -196,27 +315,11 @@ func (u UnitStatusEntry) Label() string {
 	return strings.Join(words, " ")
 }
 
-// OverdueInspectionInLabel returns a human-readable string for how many days until
-// the unit's next inspection is required. Negative values mean overdue.
-// Returns "" when no inspection date is set.
-func (u *Unit) OverdueInspectionInLabel() string {
-	if u.NextInspectionAt == nil {
-		return ""
-	}
-	days := (*u.NextInspectionAt - time.Now().Unix()) / 86400
-	return fmt.Sprintf("%d days", days)
-}
-
-// IsInspectionOverdue reports whether the unit's next inspection date has passed.
-func (u *Unit) IsInspectionOverdue() bool {
-	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
-}
-
 // UpdateUnit holds the data required to update a single unit's editable fields.
 type UpdateUnit struct {
-	ID               string
-	StatusID         int64
-	SerialNumber     string
-	Notes            string
-	NextInspectionAt *int64
+	ID           string
+	StatusID     int64
+	SerialNumber string
+	Notes        string
+	PurchasedAt  *int64
 }

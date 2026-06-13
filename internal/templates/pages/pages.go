@@ -67,14 +67,20 @@ var (
 	// InventoryNew is the unified create-item form page (bulk or serialized).
 	InventoryNew = newPage("pages/inventory/new.tmpl", layouts.Center)
 
-	// InventoryDetailBulk is the bulk item detail/edit page.
-	InventoryDetailBulk = newPage("pages/inventory/detail-bulk.tmpl", layouts.Center)
+	// InventoryDetail is the item details tab page.
+	InventoryDetail = newPage("pages/inventory/detail.tmpl", layouts.Inventory)
 
-	// InventoryDetailSerialized is the serialized item detail/edit page.
-	InventoryDetailSerialized = newPage("pages/inventory/detail-serialized.tmpl", layouts.Center)
+	// InventoryPricing is the item pricing tab page.
+	InventoryPricing = newPage("pages/inventory/pricing.tmpl", layouts.Inventory)
 
-	// InventoryUnits is the unit management page for a serialized item.
-	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Center)
+	// InventoryProperties is the item properties tab page.
+	InventoryProperties = newPage("pages/inventory/properties.tmpl", layouts.Inventory)
+
+	// InventoryUnits is the unit management tab page for a serialized item.
+	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Inventory)
+
+	// InventoryInspection is the inspection configuration tab page.
+	InventoryInspection = newPage("pages/inventory/inspection.tmpl", layouts.Inventory)
 
 	// InventoryImport is the CSV upload form page.
 	InventoryImport = newPage("pages/inventory/import.tmpl", layouts.Center)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -67,6 +68,19 @@ type inventoryUnitsData struct {
 	ItemCode     int64
 	Units        []inventory.Unit
 	UnitStatuses []inventory.UnitStatusEntry
+	Item         *inventory.Inventory
+	Categories   []categories.EquipmentCategory
+	Inspections  map[string][]inventory.Inspection
+	Today        string
+}
+
+type inventoryInspectionData struct {
+	OrgID       string
+	ID          string
+	Item        *inventory.Inventory
+	Units       []inventory.Unit
+	Inspections map[string][]inventory.Inspection
+	Today       string
 }
 
 func (app *application) getInventoryExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -305,7 +319,7 @@ func (app *application) createSerializedItem(w http.ResponseWriter, r *http.Requ
 	if appErr := app.processInventoryImage(r, orgID, itemID, form.Image, form.ImageHeader); appErr != nil {
 		return appErr
 	}
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID), http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
 	return nil
 }
 
@@ -330,21 +344,18 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
-	page := pages.InventoryDetailBulk
-	if item.Type == inventory.Serialized {
-		page = pages.InventoryDetailSerialized
-	}
-	return app.html.Render(w, r, http.StatusOK, page, data)
+	data.Form = &inventory.DetailsForm{}
+	itemData := inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	data.Data = itemData
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
 
-func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Request) *httperr.Error {
+func (app *application) postInventoryItemDetails(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	form, err := inventory.Parse(r)
+	form, err := inventory.ParseDetails(r)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
@@ -353,90 +364,76 @@ func (app *application) postInventoryItemBulk(w http.ResponseWriter, r *http.Req
 		return appErr
 	}
 
-	if !form.ValidateBulk() {
-		return app.renderInventoryEdit(w, r, orgID, itemID, &form)
-	}
-
-	item, err := app.services.inventory.UpdateBulk(ctx, inventory.UpdateBulkInventory{
-		UpdateInventory: inventory.UpdateInventory{
-			ID:             itemID,
-			Name:           form.Name,
-			CategoryID:     form.CategoryID,
-			ManufacturerID: form.ManufacturerID,
-			Code:           form.CodeInt64(),
-			PurchasePrice:  form.PurchasePriceCents(),
-			RentalPrice:    form.RentalPriceCents(),
-			Notes:          form.Notes,
-			WeightG:        form.WeightGInt64(),
-			WidthMM:        form.WidthMMInt64(),
-			HeightMM:       form.HeightMMInt64(),
-			DepthMM:        form.DepthMMInt64(),
-			PowerMW:        form.PowerMW(),
-			CurrentMA:      form.CurrentMA(),
-		},
-		TotalStock: form.TotalStockInt64(),
-	})
-	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
-			form.AddError("code", "This code is already used by another item")
-			return app.renderInventoryEdit(w, r, orgID, itemID, &form)
+	if !form.Validate() {
+		item, err := app.services.inventory.GetByID(ctx, itemID)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 		}
-		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+		app.resolveItemURLs(item)
+		deps, appErr := app.loadInventoryFormDeps(r, orgID)
+		if appErr != nil {
+			return appErr
+		}
+		data := app.html.TemplateData(r)
+		data.Form = &form
+		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryDetail, data)
 	}
 
-	app.resolveItemURLs(item)
-
-	deps, appErr := app.loadInventoryFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-
-	data := app.html.TemplateData(r)
-	data.Form = &inventory.Form{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
-	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetailBulk, data)
-}
-
-func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
-	orgID := r.PathValue("org_id")
-	itemID := r.PathValue("id")
-
-	form, err := inventory.Parse(r)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
-	}
-
-	if appErr := app.processInventoryImage(r, orgID, itemID, form.Image, form.ImageHeader); appErr != nil {
-		return appErr
-	}
-
-	if !form.ValidateSerialized() {
-		return app.renderInventoryEdit(w, r, orgID, itemID, &form)
-	}
-
-	item, err := app.services.inventory.Update(ctx, inventory.UpdateInventory{
+	itemType := inventory.TypeFromString(form.TypeID)
+	if err := app.services.inventory.UpdateDetails(ctx, inventory.UpdateInventoryDetails{
 		ID:             itemID,
+		Type:           itemType,
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
-		Code:           form.CodeInt64(),
-		PurchasePrice:  form.PurchasePriceCents(),
-		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
-		WeightG:        form.WeightGInt64(),
-		WidthMM:        form.WidthMMInt64(),
-		HeightMM:       form.HeightMMInt64(),
-		DepthMM:        form.DepthMMInt64(),
-		PowerMW:        form.PowerMW(),
-		CurrentMA:      form.CurrentMA(),
-	})
-	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
-			form.AddError("code", "This code is already used by another item")
-			return app.renderInventoryEdit(w, r, orgID, itemID, &form)
-		}
+		TotalStock:     form.TotalStockInt64(),
+	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID), http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) postInventoryItemProperties(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	form, err := inventory.ParseProperties(r)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	if err := app.services.inventory.UpdateProperties(ctx, inventory.UpdateInventoryProperties{
+		ID:        itemID,
+		WeightG:   form.WeightGInt64(),
+		WidthMM:   form.WidthMMInt64(),
+		HeightMM:  form.HeightMMInt64(),
+		DepthMM:   form.DepthMMInt64(),
+		PowerMW:   form.PowerMW(),
+		CurrentMA: form.CurrentMA(),
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/properties", http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) getInventoryItemPricing(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	item, err := app.services.inventory.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 
 	app.resolveItemURLs(item)
@@ -447,9 +444,166 @@ func (app *application) postInventoryItemSerialized(w http.ResponseWriter, r *ht
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &inventory.Form{}
+	data.Form = &inventory.PricingForm{}
 	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
-	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetailSerialized, data)
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryPricing, data)
+}
+
+func (app *application) postInventoryItemPricing(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	form, err := inventory.ParsePricing(r)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	if !form.Validate() {
+		item, err := app.services.inventory.GetByID(ctx, itemID)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		}
+		app.resolveItemURLs(item)
+		deps, appErr := app.loadInventoryFormDeps(r, orgID)
+		if appErr != nil {
+			return appErr
+		}
+		data := app.html.TemplateData(r)
+		data.Form = &form
+		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryPricing, data)
+	}
+
+	if err := app.services.inventory.UpdatePricing(ctx, inventory.UpdateInventoryPricing{
+		ID:            itemID,
+		PurchasePrice: form.PurchasePriceCents(),
+		RentalPrice:   form.RentalPriceCents(),
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/pricing", http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) getInventoryItemInspection(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	item, err := app.services.inventory.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	app.resolveItemURLs(item)
+
+	insData, appErr := app.loadInspectionPageData(ctx, orgID, itemID, item)
+	if appErr != nil {
+		return appErr
+	}
+
+	data := app.html.TemplateData(r)
+	data.Form = &inventory.InspectionForm{}
+	data.Data = insData
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryInspection, data)
+}
+
+func (app *application) postInventoryItemInspection(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	form, err := inventory.ParseInspection(r)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	if !form.Validate() {
+		item, err := app.services.inventory.GetByID(ctx, itemID)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		}
+		app.resolveItemURLs(item)
+		insData, appErr := app.loadInspectionPageData(ctx, orgID, itemID, item)
+		if appErr != nil {
+			return appErr
+		}
+		data := app.html.TemplateData(r)
+		data.Form = &form
+		data.Data = insData
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryInspection, data)
+	}
+
+	if err := app.services.inventory.UpdateInspection(ctx, inventory.UpdateInventoryInspection{
+		ID:                     itemID,
+		InspectionIntervalDays: form.IntervalDaysInt64(),
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to update inspection settings.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/inspection", http.StatusSeeOther)
+	return nil
+}
+
+// loadInspectionPageData builds inventoryInspectionData for GET and POST re-renders of the inspection tab.
+func (app *application) loadInspectionPageData(ctx context.Context, orgID, itemID string, item *inventory.Inventory) (inventoryInspectionData, *httperr.Error) {
+	var units []inventory.Unit
+	inspections := map[string][]inventory.Inspection{}
+
+	if item.Type == inventory.Serialized {
+		var err error
+		units, err = app.services.inventory.ListUnits(ctx, itemID)
+		if err != nil {
+			return inventoryInspectionData{}, &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
+		}
+		for _, u := range units {
+			entries, err := app.services.inventory.ListInspections(ctx, u.ID)
+			if err != nil {
+				return inventoryInspectionData{}, &httperr.Error{Error: err, Message: "Failed to retrieve inspection log.", Code: http.StatusInternalServerError}
+			}
+			inspections[u.ID] = entries
+		}
+	}
+
+	return inventoryInspectionData{
+		OrgID:       orgID,
+		ID:          itemID,
+		Item:        item,
+		Units:       units,
+		Inspections: inspections,
+		Today:       time.Now().UTC().Format("2006-01-02"),
+	}, nil
+}
+
+func (app *application) getInventoryItemProperties(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	item, err := app.services.inventory.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Inventory item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	app.resolveItemURLs(item)
+
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
+	}
+
+	data := app.html.TemplateData(r)
+	data.Form = &inventory.PropertiesForm{}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	return app.html.Render(w, r, http.StatusOK, pages.InventoryProperties, data)
 }
 
 func (app *application) postInventoryAddUnit(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -477,15 +631,15 @@ func (app *application) postInventoryAddUnit(w http.ResponseWriter, r *http.Requ
 	// AddUnit creates an empty unit; we patch it immediately if serial/date were supplied.
 	// This avoids a separate "edit after add" round-trip for users who fill the form.
 	// We don't know the new unit ID here, so we list units and update the last one.
-	if form.SerialNumber != "" || form.NextInspectionAt != "" || form.Notes != "" {
+	if form.SerialNumber != "" || form.Notes != "" || form.PurchasedAt != "" {
 		units, listErr := app.services.inventory.ListUnits(ctx, itemID)
 		if listErr == nil && len(units) > 0 {
 			last := units[len(units)-1]
 			_ = app.services.inventory.UpdateUnit(ctx, inventory.UpdateUnit{
-				ID:               last.ID,
-				SerialNumber:     form.SerialNumber,
-				Notes:            form.Notes,
-				NextInspectionAt: form.NextInspectionAtUnix(),
+				ID:           last.ID,
+				SerialNumber: form.SerialNumber,
+				Notes:        form.Notes,
+				PurchasedAt:  form.PurchasedAtUnix(),
 			})
 		}
 	}
@@ -510,11 +664,11 @@ func (app *application) postInventoryUpdateUnit(w http.ResponseWriter, r *http.R
 	}
 
 	if err := app.services.inventory.UpdateUnit(ctx, inventory.UpdateUnit{
-		ID:               unitID,
-		StatusID:         form.StatusIDInt64(),
-		SerialNumber:     form.SerialNumber,
-		Notes:            form.Notes,
-		NextInspectionAt: form.NextInspectionAtUnix(),
+		ID:           unitID,
+		StatusID:     form.StatusIDInt64(),
+		SerialNumber: form.SerialNumber,
+		Notes:        form.Notes,
+		PurchasedAt:  form.PurchasedAtUnix(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
 	}
@@ -550,6 +704,8 @@ func (app *application) getInventoryUnits(w http.ResponseWriter, r *http.Request
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 
+	app.resolveItemURLs(item)
+
 	units, err := app.services.inventory.ListUnits(ctx, itemID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
@@ -560,8 +716,33 @@ func (app *application) getInventoryUnits(w http.ResponseWriter, r *http.Request
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit statuses.", Code: http.StatusInternalServerError}
 	}
 
+	deps, appErr := app.loadInventoryFormDeps(r, orgID)
+	if appErr != nil {
+		return appErr
+	}
+
+	inspections := map[string][]inventory.Inspection{}
+	for _, u := range units {
+		entries, err := app.services.inventory.ListInspections(ctx, u.ID)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to retrieve inspection log.", Code: http.StatusInternalServerError}
+		}
+		inspections[u.ID] = entries
+	}
+
 	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units, UnitStatuses: statuses}
+	data.Data = inventoryUnitsData{
+		OrgID:        orgID,
+		ItemID:       itemID,
+		ItemName:     item.Name,
+		ItemCode:     item.Code,
+		Units:        units,
+		UnitStatuses: statuses,
+		Item:         item,
+		Categories:   deps.Categories,
+		Inspections:  inspections,
+		Today:        time.Now().UTC().Format("2006-01-02"),
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryUnits, data)
 }
 
@@ -617,28 +798,41 @@ func unitQRFilename(name string, code, unitNumber int64) string {
 	return slug + "-" + strconv.FormatInt(code, 10) + "-" + strconv.FormatInt(unitNumber, 10) + ".png"
 }
 
-// renderInventoryUnits re-fetches units and renders the units page with 422, used when unit validation fails.
-func (app *application) renderInventoryUnits(w http.ResponseWriter, r *http.Request, orgID, itemID string) *httperr.Error {
+func (app *application) postInventoryLogInspection(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+	unitID := r.PathValue("unit_id")
 
-	item, err := app.services.inventory.GetByID(ctx, itemID)
+	form, err := inventory.ParseInspectionEntry(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	units, err := app.services.inventory.ListUnits(ctx, itemID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
+	if !form.Validate() {
+
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+		return nil
 	}
 
-	statuses, err := app.services.inventory.ListUnitStatuses(ctx)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve unit statuses.", Code: http.StatusInternalServerError}
+	if _, err := app.services.inventory.LogInspection(ctx, inventory.LogInspection{
+		ID:          ksuid.New().String(),
+		UnitID:      unitID,
+		InspectedAt: form.InspectedAtUnix(),
+		Passed:      form.PassedBool(),
+		Notes:       form.Notes,
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to log inspection.", Code: http.StatusInternalServerError}
 	}
 
-	data := app.html.TemplateData(r)
-	data.Data = inventoryUnitsData{OrgID: orgID, ItemID: itemID, ItemName: item.Name, ItemCode: item.Code, Units: units, UnitStatuses: statuses}
-	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryUnits, data)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+	return nil
+}
+
+// renderInventoryUnits redirects to the units page, used when unit validation fails.
+func (app *application) renderInventoryUnits(w http.ResponseWriter, r *http.Request, orgID, itemID string) *httperr.Error {
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/inventory/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+	return nil
 }
 
 // processInventoryImage stores and links an uploaded image. No-op when file is nil.
@@ -740,32 +934,6 @@ func (app *application) loadInventoryFormDeps(r *http.Request, orgID string) (in
 		currency = orgSettings.Currency
 	}
 	return inventoryFormDeps{Categories: cats, Manufacturers: mfrs, Currency: currency}, nil
-}
-
-// renderInventoryEdit re-fetches the item and categories and renders the edit
-// form with 422 Unprocessable Entity, used when validation fails.
-// f may be nil for serialized items where the item form is valid but a unit form failed.
-func (app *application) renderInventoryEdit(w http.ResponseWriter, r *http.Request, orgID, itemID string, f *inventory.Form) *httperr.Error {
-	item, err := app.services.inventory.GetByID(r.Context(), itemID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
-	}
-	app.resolveItemURLs(item)
-	deps, appErr := app.loadInventoryFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-	if f == nil {
-		f = &inventory.Form{}
-	}
-	data := app.html.TemplateData(r)
-	data.Form = f
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
-	page := pages.InventoryDetailBulk
-	if item.Type == inventory.Serialized {
-		page = pages.InventoryDetailSerialized
-	}
-	return app.html.Render(w, r, http.StatusUnprocessableEntity, page, data)
 }
 
 // linkInventoryImage associates a storage object with an inventory item.

@@ -79,6 +79,7 @@ erDiagram
     integer depth_mm
     integer power_mw
     integer current_ma
+    integer inspection_interval_days
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
@@ -98,7 +99,7 @@ erDiagram
     integer unit_number "NOT NULL"
     text serial_number
     text notes
-    integer next_inspection_at
+    integer purchased_at
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
@@ -133,6 +134,15 @@ erDiagram
     integer created_at "NOT NULL DEFAULT unixepoch"
   }
 
+  unit_inspections {
+    text id PK
+    text unit_id FK "NOT NULL ON DELETE CASCADE"
+    integer inspected_at "NOT NULL"
+    integer passed "NOT NULL DEFAULT 1"
+    text notes
+    integer created_at "NOT NULL DEFAULT unixepoch"
+  }
+
   inventory_types ||--o{ inventory : "types"
   usage_types ||--o{ inventory : "usage"
   unit_statuses ||--o{ serialized_units : "statuses"
@@ -143,6 +153,7 @@ erDiagram
   equipment_categories ||--o{ inventory : "categorizes"
   manufacturers ||--o{ inventory : "makes"
   inventory ||--o{ serialized_units : "has units"
+  serialized_units ||--o{ unit_inspections : "has inspections"
   inventory ||--o| bulk_stock : "has stock"
   storage_objects ||--o{ inventory : "image"
   storage_objects ||--o{ inventory : "qr"

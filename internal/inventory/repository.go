@@ -10,6 +10,7 @@ import (
 	genbs "github.com/bit8bytes/gearberg/internal/database/queries/gen/bulkstock"
 	geninv "github.com/bit8bytes/gearberg/internal/database/queries/gen/inventory"
 	gensu "github.com/bit8bytes/gearberg/internal/database/queries/gen/serializedunits"
+	genui "github.com/bit8bytes/gearberg/internal/database/queries/gen/unitinspections"
 	"github.com/bit8bytes/gearberg/internal/inventory/units"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 )
@@ -20,6 +21,7 @@ type Repository struct {
 	inventory       *geninv.Queries
 	serializedUnits *gensu.Queries
 	bulkStock       *genbs.Queries
+	unitInspections *genui.Queries
 }
 
 // NewRepository returns a new Repository.
@@ -29,6 +31,7 @@ func NewRepository(db *sql.DB) *Repository {
 		inventory:       geninv.New(db),
 		serializedUnits: gensu.New(db),
 		bulkStock:       genbs.New(db),
+		unitInspections: genui.New(db),
 	}
 }
 
@@ -93,27 +96,28 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Inventory, error)
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
 	m := Inventory{
-		ID:              row.ID,
-		OrgID:           row.OrgID,
-		Type:            Type(row.TypeID),
-		UsageType:       UsageType(row.UsageTypeID),
-		Name:            row.Name,
-		Code:            row.Code,
-		CategoryID:      row.CategoryID,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Int64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		WeightG:         database.Int64Ptr(row.WeightG),
-		WidthMM:         database.Int64Ptr(row.WidthMm),
-		HeightMM:        database.Int64Ptr(row.HeightMm),
-		DepthMM:         database.Int64Ptr(row.DepthMm),
-		PowerMW:         database.Int64Ptr(row.PowerMw),
-		CurrentMA:       database.Int64Ptr(row.CurrentMa),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
+		ID:                     row.ID,
+		OrgID:                  row.OrgID,
+		Type:                   Type(row.TypeID),
+		UsageType:              UsageType(row.UsageTypeID),
+		Name:                   row.Name,
+		Code:                   row.Code,
+		CategoryID:             row.CategoryID,
+		ManufacturerID:         database.String(row.ManufacturerID),
+		StorageObjectID:        database.StringPtr(row.StorageObjectID),
+		TotalStock:             row.TotalStock,
+		PurchasePrice:          database.Int64Ptr(row.PurchasePrice),
+		RentalPrice:            database.Int64Ptr(row.RentalPrice),
+		Notes:                  database.String(row.Notes),
+		WeightG:                database.Int64Ptr(row.WeightG),
+		WidthMM:                database.Int64Ptr(row.WidthMm),
+		HeightMM:               database.Int64Ptr(row.HeightMm),
+		DepthMM:                database.Int64Ptr(row.DepthMm),
+		PowerMW:                database.Int64Ptr(row.PowerMw),
+		CurrentMA:              database.Int64Ptr(row.CurrentMa),
+		InspectionIntervalDays: database.Int64Ptr(row.InspectionIntervalDays),
+		CreatedAt:              row.CreatedAt,
+		UpdatedAt:              row.UpdatedAt,
 	}
 	return &m, nil
 }
@@ -238,11 +242,10 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 
 	for _, u := range c.Units {
 		_, err := suQ.CreateUnit(ctx, gensu.CreateUnitParams{
-			ID:               u.ID,
-			InventoryID:      row.ID,
-			StatusID:         int64(units.UnitAvailable),
-			SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
-			NextInspectionAt: database.NullInt64(u.NextInspectionAt),
+			ID:           u.ID,
+			InventoryID:  row.ID,
+			StatusID:     int64(units.UnitAvailable),
+			SerialNumber: database.NullString(database.StringOrNil(u.SerialNumber)),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("CreateSerialized: create unit: %w", database.NormalizeError(err))
@@ -274,147 +277,85 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	return &m, nil
 }
 
-// updateWith executes the shared-fields UPDATE and then re-fetches the full item (including stock).
-func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u UpdateInventory) (*Inventory, error) {
-	if err := q.Update(ctx, geninv.UpdateParams{
+// UpdateDetails updates the details-tab columns for a serialized inventory item.
+func (r *Repository) UpdateDetails(ctx context.Context, u UpdateInventoryDetails) error {
+	if err := r.inventory.UpdateDetails(ctx, geninv.UpdateDetailsParams{
 		ID:             u.ID,
 		Name:           u.Name,
 		CategoryID:     u.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(u.ManufacturerID)),
-		Code:           u.Code,
-		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
-		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
-		WeightG:        database.NullInt64Ptr(u.WeightG),
-		WidthMm:        database.NullInt64Ptr(u.WidthMM),
-		HeightMm:       database.NullInt64Ptr(u.HeightMM),
-		DepthMm:        database.NullInt64Ptr(u.DepthMM),
-		PowerMw:        database.NullInt64Ptr(u.PowerMW),
-		CurrentMa:      database.NullInt64Ptr(u.CurrentMA),
 	}); err != nil {
-		return nil, fmt.Errorf("updateWith: %w", database.NormalizeError(err))
+		return fmt.Errorf("UpdateDetails: %w", database.NormalizeError(err))
 	}
-	// Re-fetch so TotalStock is populated from COALESCE.
-	row, err := q.GetByID(ctx, u.ID)
+	return nil
+}
+
+// UpdateDetailsBulk updates the details-tab columns and bulk_stock quantity atomically.
+func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateInventoryDetails) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("updateWith: get: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: %w", err)
 	}
-	m := Inventory{
-		ID:              row.ID,
-		OrgID:           row.OrgID,
-		Type:            Type(row.TypeID),
-		UsageType:       UsageType(row.UsageTypeID),
-		Name:            row.Name,
-		Code:            row.Code,
-		CategoryID:      row.CategoryID,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Int64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		WeightG:         database.Int64Ptr(row.WeightG),
-		WidthMM:         database.Int64Ptr(row.WidthMm),
-		HeightMM:        database.Int64Ptr(row.HeightMm),
-		DepthMM:         database.Int64Ptr(row.DepthMm),
-		PowerMW:         database.Int64Ptr(row.PowerMw),
-		CurrentMA:       database.Int64Ptr(row.CurrentMa),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
-	}
-	return &m, nil
-}
-
-// UpdateTx updates the inventory item identified by u.ID within an existing transaction.
-func (r *Repository) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (*Inventory, error) {
-	return r.updateWith(ctx, r.inventory.WithTx(tx), u)
-}
-
-// Update updates the fields of the inventory item identified by u.ID.
-func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
-	return r.updateWith(ctx, r.inventory, u)
-}
-
-// updateBulkWith updates shared inventory fields + bulk_stock quantity atomically.
-func (r *Repository) updateBulkWith(ctx context.Context, invQ *geninv.Queries, bsQ *genbs.Queries, u UpdateBulkInventory) (*Inventory, error) {
-	if err := invQ.Update(ctx, geninv.UpdateParams{
+	defer tx.Rollback() //nolint:errcheck
+	if err := r.inventory.WithTx(tx).UpdateDetails(ctx, geninv.UpdateDetailsParams{
 		ID:             u.ID,
 		Name:           u.Name,
 		CategoryID:     u.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(u.ManufacturerID)),
-		Code:           u.Code,
-		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
-		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
-		WeightG:        database.NullInt64Ptr(u.WeightG),
-		WidthMm:        database.NullInt64Ptr(u.WidthMM),
-		HeightMm:       database.NullInt64Ptr(u.HeightMM),
-		DepthMm:        database.NullInt64Ptr(u.DepthMM),
-		PowerMw:        database.NullInt64Ptr(u.PowerMW),
-		CurrentMa:      database.NullInt64Ptr(u.CurrentMA),
 	}); err != nil {
-		return nil, fmt.Errorf("updateBulkWith: %w", database.NormalizeError(err))
+		return fmt.Errorf("UpdateDetailsBulk: %w", database.NormalizeError(err))
 	}
-	if err := bsQ.SetQuantity(ctx, genbs.SetQuantityParams{
+	if err := r.bulkStock.WithTx(tx).SetQuantity(ctx, genbs.SetQuantityParams{
 		InventoryID: u.ID,
 		Quantity:    u.TotalStock,
 	}); err != nil {
-		return nil, fmt.Errorf("updateBulkWith: bulk_stock: %w", database.NormalizeError(err))
-	}
-	row, err := invQ.GetByID(ctx, u.ID)
-	if err != nil {
-		return nil, fmt.Errorf("updateBulkWith: get: %w", err)
-	}
-	m := Inventory{
-		ID:              row.ID,
-		OrgID:           row.OrgID,
-		Type:            Type(row.TypeID),
-		UsageType:       UsageType(row.UsageTypeID),
-		Name:            row.Name,
-		Code:            row.Code,
-		CategoryID:      row.CategoryID,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Int64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		WeightG:         database.Int64Ptr(row.WeightG),
-		WidthMM:         database.Int64Ptr(row.WidthMm),
-		HeightMM:        database.Int64Ptr(row.HeightMm),
-		DepthMM:         database.Int64Ptr(row.DepthMm),
-		PowerMW:         database.Int64Ptr(row.PowerMw),
-		CurrentMA:       database.Int64Ptr(row.CurrentMa),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
-	}
-	return &m, nil
-}
-
-// UpdateBulk updates a bulk inventory item and its bulk_stock quantity atomically.
-func (r *Repository) UpdateBulk(ctx context.Context, u UpdateBulkInventory) (*Inventory, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulk: %w", err)
-	}
-	defer tx.Rollback() //nolint:errcheck
-	m, err := r.updateBulkWith(ctx, r.inventory.WithTx(tx), r.bulkStock.WithTx(tx), u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulk: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: bulk_stock: %w", database.NormalizeError(err))
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("UpdateBulk: commit: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: commit: %w", err)
 	}
-	return m, nil
+	return nil
 }
 
-// UpdateBulkTx updates a bulk inventory item within an existing transaction.
-func (r *Repository) UpdateBulkTx(ctx context.Context, tx *sql.Tx, u UpdateBulkInventory) (*Inventory, error) {
-	m, err := r.updateBulkWith(ctx, r.inventory.WithTx(tx), r.bulkStock.WithTx(tx), u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulkTx: %w", err)
+// UpdatePricing updates the pricing-tab columns for an inventory item.
+func (r *Repository) UpdatePricing(ctx context.Context, u UpdateInventoryPricing) error {
+	if err := r.inventory.UpdatePricing(ctx, geninv.UpdatePricingParams{
+		ID:            u.ID,
+		PurchasePrice: database.NullInt64Ptr(u.PurchasePrice),
+		RentalPrice:   database.NullInt64Ptr(u.RentalPrice),
+	}); err != nil {
+		return fmt.Errorf("UpdatePricing: %w", database.NormalizeError(err))
 	}
-	return m, nil
+	return nil
+}
+
+// UpdateProperties updates the properties-tab columns for an inventory item.
+func (r *Repository) UpdateProperties(ctx context.Context, u UpdateInventoryProperties) error {
+	if err := r.inventory.UpdateProperties(ctx, geninv.UpdatePropertiesParams{
+		ID:        u.ID,
+		WeightG:   database.NullInt64Ptr(u.WeightG),
+		WidthMm:   database.NullInt64Ptr(u.WidthMM),
+		HeightMm:  database.NullInt64Ptr(u.HeightMM),
+		DepthMm:   database.NullInt64Ptr(u.DepthMM),
+		PowerMw:   database.NullInt64Ptr(u.PowerMW),
+		CurrentMa: database.NullInt64Ptr(u.CurrentMA),
+	}); err != nil {
+		return fmt.Errorf("UpdateProperties: %w", database.NormalizeError(err))
+	}
+	return nil
+}
+
+// UpdateInspection updates the inspection_interval_days column for an inventory item.
+func (r *Repository) UpdateInspection(ctx context.Context, u UpdateInventoryInspection) error {
+	if err := r.inventory.UpdateInspection(ctx, geninv.UpdateInspectionParams{
+		ID:                     u.ID,
+		InspectionIntervalDays: database.NullInt64Ptr(u.InspectionIntervalDays),
+	}); err != nil {
+		return fmt.Errorf("UpdateInspection: %w", database.NormalizeError(err))
+	}
+	return nil
 }
 
 // ListUnits returns all serialized units for the given inventory item, ordered by unit_number.
@@ -426,15 +367,15 @@ func (r *Repository) ListUnits(ctx context.Context, inventoryID string) ([]Unit,
 	us := make([]Unit, 0, len(rows))
 	for _, row := range rows {
 		us = append(us, Unit{
-			ID:               row.ID,
-			InventoryID:      row.InventoryID,
-			StatusID:         row.StatusID,
-			UnitNumber:       row.UnitNumber,
-			SerialNumber:     database.String(row.SerialNumber),
-			Notes:            database.String(row.Notes),
-			NextInspectionAt: database.Int64Ptr(row.NextInspectionAt),
-			CreatedAt:        row.CreatedAt,
-			UpdatedAt:        row.UpdatedAt,
+			ID:           row.ID,
+			InventoryID:  row.InventoryID,
+			StatusID:     row.StatusID,
+			UnitNumber:   row.UnitNumber,
+			SerialNumber: database.String(row.SerialNumber),
+			Notes:        database.String(row.Notes),
+			PurchasedAt:  database.Int64Ptr(row.PurchasedAt),
+			CreatedAt:    row.CreatedAt,
+			UpdatedAt:    row.UpdatedAt,
 		})
 	}
 	return us, nil
@@ -489,15 +430,15 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		return nil, fmt.Errorf("GetUnit: %w", err)
 	}
 	u := Unit{
-		ID:               row.ID,
-		InventoryID:      row.InventoryID,
-		StatusID:         row.StatusID,
-		UnitNumber:       row.UnitNumber,
-		SerialNumber:     database.String(row.SerialNumber),
-		Notes:            database.String(row.Notes),
-		NextInspectionAt: database.Int64Ptr(row.NextInspectionAt),
-		CreatedAt:        row.CreatedAt,
-		UpdatedAt:        row.UpdatedAt,
+		ID:           row.ID,
+		InventoryID:  row.InventoryID,
+		StatusID:     row.StatusID,
+		UnitNumber:   row.UnitNumber,
+		SerialNumber: database.String(row.SerialNumber),
+		Notes:        database.String(row.Notes),
+		PurchasedAt:  database.Int64Ptr(row.PurchasedAt),
+		CreatedAt:    row.CreatedAt,
+		UpdatedAt:    row.UpdatedAt,
 	}
 	return &u, nil
 }
@@ -505,11 +446,10 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 // AddUnit inserts a new empty unit for the inventory item.
 func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 	row, err := r.serializedUnits.CreateUnit(ctx, gensu.CreateUnitParams{
-		ID:               a.ID,
-		InventoryID:      a.InventoryID,
-		StatusID:         int64(units.UnitAvailable),
-		SerialNumber:     database.NullString(nil),
-		NextInspectionAt: database.NullInt64(nil),
+		ID:           a.ID,
+		InventoryID:  a.InventoryID,
+		StatusID:     int64(units.UnitAvailable),
+		SerialNumber: database.NullString(nil),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", database.NormalizeError(err))
@@ -540,11 +480,11 @@ func (r *Repository) ListUnitStatuses(ctx context.Context) ([]UnitStatusEntry, e
 // UpdateUnit updates the editable fields of a unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.serializedUnits.Update(ctx, gensu.UpdateParams{
-		StatusID:         u.StatusID,
-		SerialNumber:     database.NullString(database.StringOrNil(u.SerialNumber)),
-		NextInspectionAt: database.NullInt64(u.NextInspectionAt),
-		Notes:            database.NullString(database.StringOrNil(u.Notes)),
-		ID:               u.ID,
+		StatusID:     u.StatusID,
+		SerialNumber: database.NullString(database.StringOrNil(u.SerialNumber)),
+		Notes:        database.NullString(database.StringOrNil(u.Notes)),
+		PurchasedAt:  database.NullInt64Ptr(u.PurchasedAt),
+		ID:           u.ID,
 	}); err != nil {
 		return fmt.Errorf("UpdateUnit: %w", database.NormalizeError(err))
 	}
@@ -557,4 +497,68 @@ func (r *Repository) DeleteUnit(ctx context.Context, id string) error {
 		return fmt.Errorf("DeleteUnit: %w", database.NormalizeError(err))
 	}
 	return nil
+}
+
+// LogInspection inserts a new inspection entry for a unit.
+func (r *Repository) LogInspection(ctx context.Context, l LogInspection) (*Inspection, error) {
+	var passed int64
+	if l.Passed {
+		passed = 1
+	}
+	row, err := r.unitInspections.CreateInspection(ctx, genui.CreateInspectionParams{
+		ID:          l.ID,
+		UnitID:      l.UnitID,
+		InspectedAt: l.InspectedAt,
+		Passed:      passed,
+		Notes:       database.NullString(database.StringOrNil(l.Notes)),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("LogInspection: %w", database.NormalizeError(err))
+	}
+	return &Inspection{
+		ID:          row.ID,
+		UnitID:      row.UnitID,
+		InspectedAt: row.InspectedAt,
+		Passed:      row.Passed == 1,
+		Notes:       database.String(row.Notes),
+		CreatedAt:   row.CreatedAt,
+	}, nil
+}
+
+// ListLatestInspectionAtByInventoryID returns a map of unit ID → most recent
+// inspection timestamp for all units belonging to inventoryID.
+func (r *Repository) ListLatestInspectionAtByInventoryID(ctx context.Context, inventoryID string) (map[string]int64, error) {
+	rows, err := r.unitInspections.ListLatestInspectedAtByInventoryID(ctx, inventoryID)
+	if err != nil {
+		return nil, fmt.Errorf("ListLatestInspectionAtByInventoryID: %w", err)
+	}
+	m := make(map[string]int64, len(rows))
+	for _, row := range rows {
+		at, ok := row.InspectedAt.(int64)
+		if !ok {
+			continue
+		}
+		m[row.UnitID] = at
+	}
+	return m, nil
+}
+
+// ListInspections returns all inspection entries for a unit, newest first.
+func (r *Repository) ListInspections(ctx context.Context, unitID string) ([]Inspection, error) {
+	rows, err := r.unitInspections.ListByUnitID(ctx, unitID)
+	if err != nil {
+		return nil, fmt.Errorf("ListInspections: %w", err)
+	}
+	out := make([]Inspection, len(rows))
+	for i, row := range rows {
+		out[i] = Inspection{
+			ID:          row.ID,
+			UnitID:      row.UnitID,
+			InspectedAt: row.InspectedAt,
+			Passed:      row.Passed == 1,
+			Notes:       database.String(row.Notes),
+			CreatedAt:   row.CreatedAt,
+		}
+	}
+	return out, nil
 }
