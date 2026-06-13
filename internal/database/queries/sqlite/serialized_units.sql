@@ -4,22 +4,19 @@ INSERT INTO serialized_units (
     inventory_id,
     status_id,
     unit_number,
-    serial_number,
-    next_inspection_at
+    serial_number
 ) VALUES (
     sqlc.arg(id),
     sqlc.arg(inventory_id),
     sqlc.arg(status_id),
     (SELECT COALESCE(MAX(unit_number), 0) + 1 FROM serialized_units WHERE inventory_id = sqlc.arg(inventory_id)),
-    sqlc.arg(serial_number),
-    sqlc.arg(next_inspection_at)
+    sqlc.arg(serial_number)
 ) RETURNING
     id,
     inventory_id,
     status_id,
     unit_number,
     serial_number,
-    next_inspection_at,
     created_at;
 
 -- name: ListByInventoryID :many
@@ -30,7 +27,7 @@ SELECT
     unit_number,
     serial_number,
     notes,
-    next_inspection_at,
+    purchased_at,
     updated_at,
     created_at
 FROM serialized_units
@@ -45,7 +42,7 @@ SELECT
     unit_number,
     serial_number,
     notes,
-    next_inspection_at,
+    purchased_at,
     updated_at,
     created_at
 FROM serialized_units
@@ -56,8 +53,8 @@ UPDATE serialized_units
 SET
     status_id = ?,
     serial_number = ?,
-    next_inspection_at = ?,
     notes = ?,
+    purchased_at = ?,
     updated_at = unixepoch()
 WHERE id = ?;
 

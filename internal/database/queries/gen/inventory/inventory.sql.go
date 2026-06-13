@@ -197,6 +197,7 @@ SELECT
     i.depth_mm,
     i.power_mw,
     i.current_ma,
+    i.inspection_interval_days,
     i.updated_at,
     i.created_at
 FROM inventory i
@@ -205,27 +206,28 @@ WHERE i.id = ?
 `
 
 type GetByIDRow struct {
-	ID              string
-	OrgID           string
-	TypeID          int64
-	UsageTypeID     int64
-	Name            string
-	Code            int64
-	CategoryID      string
-	ManufacturerID  sql.NullString
-	StorageObjectID sql.NullString
-	TotalStock      int64
-	PurchasePrice   sql.NullInt64
-	RentalPrice     sql.NullInt64
-	Notes           sql.NullString
-	WeightG         sql.NullInt64
-	WidthMm         sql.NullInt64
-	HeightMm        sql.NullInt64
-	DepthMm         sql.NullInt64
-	PowerMw         sql.NullInt64
-	CurrentMa       sql.NullInt64
-	UpdatedAt       int64
-	CreatedAt       int64
+	ID                     string
+	OrgID                  string
+	TypeID                 int64
+	UsageTypeID            int64
+	Name                   string
+	Code                   int64
+	CategoryID             string
+	ManufacturerID         sql.NullString
+	StorageObjectID        sql.NullString
+	TotalStock             int64
+	PurchasePrice          sql.NullInt64
+	RentalPrice            sql.NullInt64
+	Notes                  sql.NullString
+	WeightG                sql.NullInt64
+	WidthMm                sql.NullInt64
+	HeightMm               sql.NullInt64
+	DepthMm                sql.NullInt64
+	PowerMw                sql.NullInt64
+	CurrentMa              sql.NullInt64
+	InspectionIntervalDays sql.NullInt64
+	UpdatedAt              int64
+	CreatedAt              int64
 }
 
 func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
@@ -251,6 +253,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.DepthMm,
 		&i.PowerMw,
 		&i.CurrentMa,
+		&i.InspectionIntervalDays,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -502,6 +505,24 @@ func (q *Queries) UpdateDetails(ctx context.Context, arg UpdateDetailsParams) er
 		arg.Notes,
 		arg.ID,
 	)
+	return err
+}
+
+const updateInspection = `-- name: UpdateInspection :exec
+UPDATE inventory
+SET
+    inspection_interval_days = ?1,
+    updated_at = unixepoch()
+WHERE id = ?2
+`
+
+type UpdateInspectionParams struct {
+	InspectionIntervalDays sql.NullInt64
+	ID                     string
+}
+
+func (q *Queries) UpdateInspection(ctx context.Context, arg UpdateInspectionParams) error {
+	_, err := q.db.ExecContext(ctx, updateInspection, arg.InspectionIntervalDays, arg.ID)
 	return err
 }
 

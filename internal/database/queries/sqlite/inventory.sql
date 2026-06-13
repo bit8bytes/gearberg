@@ -110,6 +110,7 @@ SELECT
     i.depth_mm,
     i.power_mw,
     i.current_ma,
+    i.inspection_interval_days,
     i.updated_at,
     i.created_at
 FROM inventory i
@@ -143,6 +144,13 @@ SET
     depth_mm = sqlc.arg(depth_mm),
     power_mw = sqlc.arg(power_mw),
     current_ma = sqlc.arg(current_ma),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);
+
+-- name: UpdateInspection :exec
+UPDATE inventory
+SET
+    inspection_interval_days = sqlc.arg(inspection_interval_days),
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);
 

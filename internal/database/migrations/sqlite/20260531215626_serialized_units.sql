@@ -7,7 +7,7 @@ CREATE TABLE serialized_units (
   unit_number INTEGER NOT NULL,
   serial_number TEXT,
   notes TEXT,
-  next_inspection_at INTEGER,
+  purchased_at INTEGER,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch()),
   UNIQUE(inventory_id, unit_number)

@@ -21,6 +21,7 @@
         Units
         <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
       </a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/inspection" role="tab" class="tab">Inspection</a>
       {{ end }}{{ end }}
     </div>
   </div>

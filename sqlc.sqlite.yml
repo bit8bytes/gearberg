@@ -90,3 +90,13 @@ sql:
         out: "internal/database/queries/gen/bulkstock"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/unit_inspections.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "unitinspections"
+        out: "internal/database/queries/gen/unitinspections"
+        emit_interface: true
+        omit_unused_structs: true

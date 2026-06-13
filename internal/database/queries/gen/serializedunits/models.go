@@ -9,13 +9,13 @@ import (
 )
 
 type SerializedUnit struct {
-	ID               string
-	InventoryID      string
-	StatusID         int64
-	UnitNumber       int64
-	SerialNumber     sql.NullString
-	Notes            sql.NullString
-	NextInspectionAt sql.NullInt64
-	UpdatedAt        int64
-	CreatedAt        int64
+	ID           string
+	InventoryID  string
+	StatusID     int64
+	UnitNumber   int64
+	SerialNumber sql.NullString
+	Notes        sql.NullString
+	PurchasedAt  sql.NullInt64
+	UpdatedAt    int64
+	CreatedAt    int64
 }

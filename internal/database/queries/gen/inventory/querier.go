@@ -17,6 +17,7 @@ type Querier interface {
 	ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllByOrgIDRow, error)
 	ListUnitStatuses(ctx context.Context) ([]UnitStatus, error)
 	UpdateDetails(ctx context.Context, arg UpdateDetailsParams) error
+	UpdateInspection(ctx context.Context, arg UpdateInspectionParams) error
 	UpdatePricing(ctx context.Context, arg UpdatePricingParams) error
 	UpdateProperties(ctx context.Context, arg UpdatePropertiesParams) error
 	UpdateStorageObject(ctx context.Context, arg UpdateStorageObjectParams) error

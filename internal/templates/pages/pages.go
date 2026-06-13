@@ -79,6 +79,9 @@ var (
 	// InventoryUnits is the unit management tab page for a serialized item.
 	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Inventory)
 
+	// InventoryInspection is the inspection configuration tab page.
+	InventoryInspection = newPage("pages/inventory/inspection.tmpl", layouts.Inventory)
+
 	// InventoryImport is the CSV upload form page.
 	InventoryImport = newPage("pages/inventory/import.tmpl", layouts.Center)
 

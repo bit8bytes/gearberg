@@ -48,46 +48,50 @@
 </div>
 <div class="max-w-5xl w-full mx-auto">
   {{ if .Data.Inventories }}
-  <table class="table w-full overflow-x-scroll">
-    <thead>
-      <tr>
-        <th></th>
-        <th>NAME</th>
-        <th>CODE</th>
-        <th>CATEGORY</th>
-        <th>STOCK</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{ range .Data.Inventories }}
-      <tr>
-        <td class="w-16 items-center">
-          <div class="w-12 h-12 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
-            {{ if .ImageURL }}
-            <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-cover" />
-            {{ end }}
-          </div>
-        </td>
-        <td class="w-1/2">
-          <a href="/orgs/{{ $.Data.OrgID }}/inventory/{{ .ID }}"
-            class="font-bold link link-hover">
-            {{ .Name }}
-          </a>
-          <br />
-          <span class="text-xs text-secondary">{{ .Type.Label }}</span>
-        </td>
-        <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
-        <td>
-          <span class="inline-flex items-center gap-1.5">
-            {{ if .CategoryColor }}<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ .CategoryColor }}"/></svg>{{ end }}
-            <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a>
-          </span>
-        </td>
-        <td>{{ .TotalStock }}</td>
-      </tr>
-      {{ end }}
-    </tbody>
-  </table>
+  <div class="overflow-x-auto">
+    <table class="table w-full overflow-x-scroll">
+      <thead>
+        <tr>
+          <th></th>
+          <th>NAME</th>
+          <th>CODE</th>
+          <th>CATEGORY</th>
+          <th>STOCK</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Inventories }}
+        <tr>
+          <td class="w-16 items-center">
+            <div class="w-12 h-12 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
+              {{ if .ImageURL }}
+              <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-cover" />
+              {{ end }}
+            </div>
+          </td>
+          <td class="w-1/2">
+            <a href="/orgs/{{ $.Data.OrgID }}/inventory/{{ .ID }}"
+              class="font-bold link link-hover">
+              {{ .Name }}
+            </a>
+            <br />
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs text-secondary">{{ .Type.Label }}</span>
+              </div>
+          </td>
+          <td>{{ if .Code }}{{ .Code }}{{ end }}</td>
+          <td>
+            <span class="inline-flex items-center gap-1.5">
+              {{ if .CategoryColor }}<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="{{ .CategoryColor }}"/></svg>{{ end }}
+              <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a>
+            </span>
+          </td>
+          <td>{{ .TotalStock }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
   {{ if gt .Data.Pagination.LastPage 1 }}
   <div class="flex items-center gap-1 px-4 py-4">
     {{ $cur := .Data.Pagination.CurrentPage }}

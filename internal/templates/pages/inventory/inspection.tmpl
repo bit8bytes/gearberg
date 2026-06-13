@@ -1,0 +1,60 @@
+{{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }} — Inspection{{ end }}{{ end }}
+
+{{ define "page" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
+    <div>
+      <h3>{{ .Data.Item.Name }}</h3>
+      <p class="text-sm text-base-content/50 font-mono">#{{ .Data.Item.Code }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}" role="tab" class="tab">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/properties" role="tab" class="tab">Properties</a>
+      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/units" role="tab" class="tab">
+        Units
+        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
+      </a>
+      {{ end }}{{ end }}
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/inspection" role="tab" class="tab tab-active">Inspection</a>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-5xl w-full mx-auto px-4 my-2">
+  <form method="POST" class="flex flex-col gap-4" novalidate>
+
+    <div class="flex flex-col gap-1">
+      <label for="inspection_interval_days">Inspection Interval <span class="text-base-content/40 text-xs">days (optional)</span></label>
+      <input
+        id="inspection_interval_days"
+        type="number"
+        name="inspection_interval_days"
+        min="1"
+        class="input"
+        value="{{ if .Form.IntervalDays }}{{ .Form.IntervalDays }}{{ else if .Data.Item }}{{ .Data.Item.InspectionIntervalDaysInput }}{{ end }}"
+      />
+      <span class="text-base-content/40 text-xs">Used to calculate the next inspection date.</span>
+      {{ with index .Form.Errors "inspection_interval_days" }}
+        <p class="text-error text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div>
+      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/inspection" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Save
+      </button>
+    </div>
+
+  </form>
+</div>
+
+
+{{ end }}

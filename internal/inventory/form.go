@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bit8bytes/toolbox/validator"
 )
@@ -135,6 +136,35 @@ func (f *PricingForm) Validate() bool {
 // All fields are optional; this method exists for a consistent call pattern.
 func (f *PropertiesForm) Validate() bool { return f.Valid() }
 
+// InspectionForm holds parsed input and validation state for the inspection tab.
+type InspectionForm struct {
+	IntervalDays string
+	validator.Validator
+}
+
+// ParseInspection reads the inspection-tab form fields from r.
+func ParseInspection(r *http.Request) (InspectionForm, error) {
+	if err := r.ParseForm(); err != nil {
+		return InspectionForm{}, fmt.Errorf("parse form: %w", err)
+	}
+	return InspectionForm{
+		IntervalDays: strings.TrimSpace(r.PostForm.Get("inspection_interval_days")),
+	}, nil
+}
+
+// Validate checks InspectionForm fields and returns true when all pass.
+func (f *InspectionForm) Validate() bool {
+	if validator.NotBlank(f.IntervalDays) {
+		n, err := strconv.ParseInt(f.IntervalDays, 10, 64)
+		f.Check(err == nil, "inspection_interval_days", "Must be a whole number")
+		f.Check(err != nil || n >= 1, "inspection_interval_days", "Must be at least 1")
+	}
+	return f.Valid()
+}
+
+// IntervalDaysInt64 returns the parsed interval as *int64 (nil when blank).
+func (f *InspectionForm) IntervalDaysInt64() *int64 { return parseOptionalInt64(f.IntervalDays) }
+
 // TotalStockInt64 returns the parsed TotalStock value. Call only after Validate() returns true.
 func (f *DetailsForm) TotalStockInt64() int64 {
 	n, _ := strconv.ParseInt(f.TotalStock, 10, 64)
@@ -168,6 +198,49 @@ func (f *PropertiesForm) PowerMW() *int64 { return parseOptionalWattsToMW(f.Powe
 
 // CurrentMA converts the user-entered amps string to milliamps, or nil when blank.
 func (f *PropertiesForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) }
+
+// InspectionEntryForm holds parsed input for logging a single inspection event.
+type InspectionEntryForm struct {
+	InspectedAt string // YYYY-MM-DD
+	Passed      string // "on" when the checkbox is checked; absence means failed
+	Notes       string
+	validator.Validator
+}
+
+// ParseInspectionEntry reads inspection log fields from r.
+func ParseInspectionEntry(r *http.Request) (InspectionEntryForm, error) {
+	if err := r.ParseForm(); err != nil {
+		return InspectionEntryForm{}, fmt.Errorf("parse form: %w", err)
+	}
+	return InspectionEntryForm{
+		InspectedAt: strings.TrimSpace(r.PostForm.Get("inspected_at")),
+		Passed:      r.PostForm.Get("passed"),
+		Notes:       strings.TrimSpace(r.PostForm.Get("notes")),
+	}, nil
+}
+
+// Validate checks InspectionEntryForm fields and returns true when all pass.
+func (f *InspectionEntryForm) Validate() bool {
+	if validator.NotBlank(f.InspectedAt) {
+		t, err := time.Parse("2006-01-02", f.InspectedAt)
+		if t.After(time.Now()) {
+			f.AddError("inspected_at", "Date cannot be in the future")
+		}
+		f.Check(err == nil, "inspected_at", "Must be a valid date (YYYY-MM-DD)")
+	} else {
+		f.AddError("inspected_at", "This field cannot be blank")
+	}
+	return f.Valid()
+}
+
+// InspectedAtUnix parses the YYYY-MM-DD date and returns a Unix timestamp.
+func (f *InspectionEntryForm) InspectedAtUnix() int64 {
+	t, _ := time.Parse("2006-01-02", f.InspectedAt)
+	return t.UTC().Unix()
+}
+
+// PassedBool returns true when the passed select value is "1".
+func (f *InspectionEntryForm) PassedBool() bool { return f.Passed == "1" }
 
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {

@@ -22,6 +22,7 @@ CREATE TABLE inventory (
   depth_mm INTEGER,
   power_mw INTEGER,
   current_ma INTEGER,
+  inspection_interval_days INTEGER,
   UNIQUE(org_id, code)
 ) STRICT;
 -- +goose StatementEnd

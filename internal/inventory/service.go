@@ -119,6 +119,14 @@ func (s *Service) UpdateProperties(ctx context.Context, u UpdateInventoryPropert
 	return nil
 }
 
+// UpdateInspection updates the inspection_interval_days field.
+func (s *Service) UpdateInspection(ctx context.Context, u UpdateInventoryInspection) error {
+	if err := s.repo.UpdateInspection(ctx, u); err != nil {
+		return fmt.Errorf("UpdateInspection: %w", err)
+	}
+	return nil
+}
+
 // SetImage links or unlinks a storage object from an inventory item.
 func (s *Service) SetImage(ctx context.Context, si SetImage) error {
 	if err := s.repo.SetImage(ctx, si); err != nil {
@@ -136,10 +144,20 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 }
 
 // ListUnits returns all inventory units for the given inventory item, ordered by unit_number.
+// Each unit's LastInspectionAt is populated from the most recent inspection record.
 func (s *Service) ListUnits(ctx context.Context, inventoryID string) ([]Unit, error) {
 	units, err := s.repo.ListUnits(ctx, inventoryID)
 	if err != nil {
 		return nil, fmt.Errorf("ListUnits: %w", err)
+	}
+	latestAt, err := s.repo.ListLatestInspectionAtByInventoryID(ctx, inventoryID)
+	if err != nil {
+		return nil, fmt.Errorf("ListUnits: %w", err)
+	}
+	for i, u := range units {
+		if at, ok := latestAt[u.ID]; ok {
+			units[i].LastInspectionAt = &at
+		}
 	}
 	return units, nil
 }
@@ -203,4 +221,22 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID, _ string) error {
 		return fmt.Errorf("DeleteUnit: %w", err)
 	}
 	return nil
+}
+
+// LogInspection records a new inspection entry for a unit.
+func (s *Service) LogInspection(ctx context.Context, l LogInspection) (*Inspection, error) {
+	entry, err := s.repo.LogInspection(ctx, l)
+	if err != nil {
+		return nil, fmt.Errorf("LogInspection: %w", err)
+	}
+	return entry, nil
+}
+
+// ListInspections returns all inspection entries for a unit, newest first.
+func (s *Service) ListInspections(ctx context.Context, unitID string) ([]Inspection, error) {
+	entries, err := s.repo.ListInspections(ctx, unitID)
+	if err != nil {
+		return nil, fmt.Errorf("ListInspections: %w", err)
+	}
+	return entries, nil
 }
