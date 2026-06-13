@@ -475,52 +475,81 @@ func (q *Queries) ListUnitStatuses(ctx context.Context) ([]UnitStatus, error) {
 	return items, nil
 }
 
-const update = `-- name: Update :exec
+const updateDetails = `-- name: UpdateDetails :exec
 UPDATE inventory
 SET
-    name = ?,
-    category_id = ?,
-    manufacturer_id = ?,
-    code = ?,
-    purchase_price = ?,
-    rental_price = ?,
-    notes = ?,
-    weight_g = ?,
-    width_mm = ?,
-    height_mm = ?,
-    depth_mm = ?,
-    power_mw = ?,
-    current_ma = ?,
+    name = ?1,
+    category_id = ?2,
+    manufacturer_id = ?3,
+    notes = ?4,
     updated_at = unixepoch()
-WHERE id = ?
+WHERE id = ?5
 `
 
-type UpdateParams struct {
+type UpdateDetailsParams struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID sql.NullString
-	Code           int64
-	PurchasePrice  sql.NullInt64
-	RentalPrice    sql.NullInt64
 	Notes          sql.NullString
-	WeightG        sql.NullInt64
-	WidthMm        sql.NullInt64
-	HeightMm       sql.NullInt64
-	DepthMm        sql.NullInt64
-	PowerMw        sql.NullInt64
-	CurrentMa      sql.NullInt64
 	ID             string
 }
 
-func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
-	_, err := q.db.ExecContext(ctx, update,
+func (q *Queries) UpdateDetails(ctx context.Context, arg UpdateDetailsParams) error {
+	_, err := q.db.ExecContext(ctx, updateDetails,
 		arg.Name,
 		arg.CategoryID,
 		arg.ManufacturerID,
-		arg.Code,
-		arg.PurchasePrice,
-		arg.RentalPrice,
 		arg.Notes,
+		arg.ID,
+	)
+	return err
+}
+
+const updatePricing = `-- name: UpdatePricing :exec
+UPDATE inventory
+SET
+    purchase_price = ?1,
+    rental_price = ?2,
+    updated_at = unixepoch()
+WHERE id = ?3
+`
+
+type UpdatePricingParams struct {
+	PurchasePrice sql.NullInt64
+	RentalPrice   sql.NullInt64
+	ID            string
+}
+
+func (q *Queries) UpdatePricing(ctx context.Context, arg UpdatePricingParams) error {
+	_, err := q.db.ExecContext(ctx, updatePricing, arg.PurchasePrice, arg.RentalPrice, arg.ID)
+	return err
+}
+
+const updateProperties = `-- name: UpdateProperties :exec
+UPDATE inventory
+SET
+    weight_g = ?1,
+    width_mm = ?2,
+    height_mm = ?3,
+    depth_mm = ?4,
+    power_mw = ?5,
+    current_ma = ?6,
+    updated_at = unixepoch()
+WHERE id = ?7
+`
+
+type UpdatePropertiesParams struct {
+	WeightG   sql.NullInt64
+	WidthMm   sql.NullInt64
+	HeightMm  sql.NullInt64
+	DepthMm   sql.NullInt64
+	PowerMw   sql.NullInt64
+	CurrentMa sql.NullInt64
+	ID        string
+}
+
+func (q *Queries) UpdateProperties(ctx context.Context, arg UpdatePropertiesParams) error {
+	_, err := q.db.ExecContext(ctx, updateProperties,
 		arg.WeightG,
 		arg.WidthMm,
 		arg.HeightMm,

@@ -1,15 +1,31 @@
 {{ define "title" }}{{ .Data.ItemName }} — Units{{ end }}
 
 {{ define "page" }}
-<div class="flex-1 min-w-0 max-w-4xl mx-auto mt-8">
-  <div class="flex items-center justify-between mb-6">
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
     <div>
-      <h1>Units</h1>
-      <span class="text-base-content/60 text-sm">{{ .Data.ItemName }}</span>
+      <h3>{{ .Data.Item.Name }}</h3>
+      <p class="text-sm text-base-content/50 font-mono">#{{ .Data.ItemCode }}</p>
     </div>
-    <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}" class="btn">Back</a>
   </div>
+</div>
 
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}" role="tab" class="tab">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/pricing" role="tab" class="tab">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/properties" role="tab" class="tab">Properties</a>
+      <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/units" role="tab" class="tab tab-active">
+        Units
+        <span class="badge badge-sm ml-1">{{ len .Data.Units }}</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<div class="max-w-5xl w-full mx-auto px-4 my-8">  
   {{/* Unit-level forms live outside the table to avoid nesting. */}}
   {{ range .Data.Units }}
   <form id="unit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}"></form>

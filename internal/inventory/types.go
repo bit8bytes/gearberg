@@ -26,6 +26,18 @@ func (k Type) String() string {
 	}
 }
 
+// TypeFromString returns the Type matching name ("bulk" or "serialized"), or 0 when unknown.
+func TypeFromString(name string) Type {
+	switch name {
+	case "bulk":
+		return Bulk
+	case "serialized":
+		return Serialized
+	default:
+		return 0
+	}
+}
+
 // Label returns the human-friendly label for the inventory type.
 func (k Type) Label() string {
 	switch k {

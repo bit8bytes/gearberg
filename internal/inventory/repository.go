@@ -274,147 +274,74 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	return &m, nil
 }
 
-// updateWith executes the shared-fields UPDATE and then re-fetches the full item (including stock).
-func (r *Repository) updateWith(ctx context.Context, q *geninv.Queries, u UpdateInventory) (*Inventory, error) {
-	if err := q.Update(ctx, geninv.UpdateParams{
+// UpdateDetails updates the details-tab columns for a serialized inventory item.
+func (r *Repository) UpdateDetails(ctx context.Context, u UpdateInventoryDetails) error {
+	if err := r.inventory.UpdateDetails(ctx, geninv.UpdateDetailsParams{
 		ID:             u.ID,
 		Name:           u.Name,
 		CategoryID:     u.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(u.ManufacturerID)),
-		Code:           u.Code,
-		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
-		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
-		WeightG:        database.NullInt64Ptr(u.WeightG),
-		WidthMm:        database.NullInt64Ptr(u.WidthMM),
-		HeightMm:       database.NullInt64Ptr(u.HeightMM),
-		DepthMm:        database.NullInt64Ptr(u.DepthMM),
-		PowerMw:        database.NullInt64Ptr(u.PowerMW),
-		CurrentMa:      database.NullInt64Ptr(u.CurrentMA),
 	}); err != nil {
-		return nil, fmt.Errorf("updateWith: %w", database.NormalizeError(err))
+		return fmt.Errorf("UpdateDetails: %w", database.NormalizeError(err))
 	}
-	// Re-fetch so TotalStock is populated from COALESCE.
-	row, err := q.GetByID(ctx, u.ID)
+	return nil
+}
+
+// UpdateDetailsBulk updates the details-tab columns and bulk_stock quantity atomically.
+func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateInventoryDetails) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("updateWith: get: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: %w", err)
 	}
-	m := Inventory{
-		ID:              row.ID,
-		OrgID:           row.OrgID,
-		Type:            Type(row.TypeID),
-		UsageType:       UsageType(row.UsageTypeID),
-		Name:            row.Name,
-		Code:            row.Code,
-		CategoryID:      row.CategoryID,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Int64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		WeightG:         database.Int64Ptr(row.WeightG),
-		WidthMM:         database.Int64Ptr(row.WidthMm),
-		HeightMM:        database.Int64Ptr(row.HeightMm),
-		DepthMM:         database.Int64Ptr(row.DepthMm),
-		PowerMW:         database.Int64Ptr(row.PowerMw),
-		CurrentMA:       database.Int64Ptr(row.CurrentMa),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
-	}
-	return &m, nil
-}
-
-// UpdateTx updates the inventory item identified by u.ID within an existing transaction.
-func (r *Repository) UpdateTx(ctx context.Context, tx *sql.Tx, u UpdateInventory) (*Inventory, error) {
-	return r.updateWith(ctx, r.inventory.WithTx(tx), u)
-}
-
-// Update updates the fields of the inventory item identified by u.ID.
-func (r *Repository) Update(ctx context.Context, u UpdateInventory) (*Inventory, error) {
-	return r.updateWith(ctx, r.inventory, u)
-}
-
-// updateBulkWith updates shared inventory fields + bulk_stock quantity atomically.
-func (r *Repository) updateBulkWith(ctx context.Context, invQ *geninv.Queries, bsQ *genbs.Queries, u UpdateBulkInventory) (*Inventory, error) {
-	if err := invQ.Update(ctx, geninv.UpdateParams{
+	defer tx.Rollback() //nolint:errcheck
+	if err := r.inventory.WithTx(tx).UpdateDetails(ctx, geninv.UpdateDetailsParams{
 		ID:             u.ID,
 		Name:           u.Name,
 		CategoryID:     u.CategoryID,
 		ManufacturerID: database.NullString(database.StringOrNil(u.ManufacturerID)),
-		Code:           u.Code,
-		PurchasePrice:  database.NullInt64Ptr(u.PurchasePrice),
-		RentalPrice:    database.NullInt64Ptr(u.RentalPrice),
 		Notes:          database.NullString(database.StringOrNil(u.Notes)),
-		WeightG:        database.NullInt64Ptr(u.WeightG),
-		WidthMm:        database.NullInt64Ptr(u.WidthMM),
-		HeightMm:       database.NullInt64Ptr(u.HeightMM),
-		DepthMm:        database.NullInt64Ptr(u.DepthMM),
-		PowerMw:        database.NullInt64Ptr(u.PowerMW),
-		CurrentMa:      database.NullInt64Ptr(u.CurrentMA),
 	}); err != nil {
-		return nil, fmt.Errorf("updateBulkWith: %w", database.NormalizeError(err))
+		return fmt.Errorf("UpdateDetailsBulk: %w", database.NormalizeError(err))
 	}
-	if err := bsQ.SetQuantity(ctx, genbs.SetQuantityParams{
+	if err := r.bulkStock.WithTx(tx).SetQuantity(ctx, genbs.SetQuantityParams{
 		InventoryID: u.ID,
 		Quantity:    u.TotalStock,
 	}); err != nil {
-		return nil, fmt.Errorf("updateBulkWith: bulk_stock: %w", database.NormalizeError(err))
-	}
-	row, err := invQ.GetByID(ctx, u.ID)
-	if err != nil {
-		return nil, fmt.Errorf("updateBulkWith: get: %w", err)
-	}
-	m := Inventory{
-		ID:              row.ID,
-		OrgID:           row.OrgID,
-		Type:            Type(row.TypeID),
-		UsageType:       UsageType(row.UsageTypeID),
-		Name:            row.Name,
-		Code:            row.Code,
-		CategoryID:      row.CategoryID,
-		ManufacturerID:  database.String(row.ManufacturerID),
-		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		TotalStock:      row.TotalStock,
-		PurchasePrice:   database.Int64Ptr(row.PurchasePrice),
-		RentalPrice:     database.Int64Ptr(row.RentalPrice),
-		Notes:           database.String(row.Notes),
-		WeightG:         database.Int64Ptr(row.WeightG),
-		WidthMM:         database.Int64Ptr(row.WidthMm),
-		HeightMM:        database.Int64Ptr(row.HeightMm),
-		DepthMM:         database.Int64Ptr(row.DepthMm),
-		PowerMW:         database.Int64Ptr(row.PowerMw),
-		CurrentMA:       database.Int64Ptr(row.CurrentMa),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
-	}
-	return &m, nil
-}
-
-// UpdateBulk updates a bulk inventory item and its bulk_stock quantity atomically.
-func (r *Repository) UpdateBulk(ctx context.Context, u UpdateBulkInventory) (*Inventory, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulk: %w", err)
-	}
-	defer tx.Rollback() //nolint:errcheck
-	m, err := r.updateBulkWith(ctx, r.inventory.WithTx(tx), r.bulkStock.WithTx(tx), u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulk: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: bulk_stock: %w", database.NormalizeError(err))
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("UpdateBulk: commit: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: commit: %w", err)
 	}
-	return m, nil
+	return nil
 }
 
-// UpdateBulkTx updates a bulk inventory item within an existing transaction.
-func (r *Repository) UpdateBulkTx(ctx context.Context, tx *sql.Tx, u UpdateBulkInventory) (*Inventory, error) {
-	m, err := r.updateBulkWith(ctx, r.inventory.WithTx(tx), r.bulkStock.WithTx(tx), u)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateBulkTx: %w", err)
+// UpdatePricing updates the pricing-tab columns for an inventory item.
+func (r *Repository) UpdatePricing(ctx context.Context, u UpdateInventoryPricing) error {
+	if err := r.inventory.UpdatePricing(ctx, geninv.UpdatePricingParams{
+		ID:            u.ID,
+		PurchasePrice: database.NullInt64Ptr(u.PurchasePrice),
+		RentalPrice:   database.NullInt64Ptr(u.RentalPrice),
+	}); err != nil {
+		return fmt.Errorf("UpdatePricing: %w", database.NormalizeError(err))
 	}
-	return m, nil
+	return nil
+}
+
+// UpdateProperties updates the properties-tab columns for an inventory item.
+func (r *Repository) UpdateProperties(ctx context.Context, u UpdateInventoryProperties) error {
+	if err := r.inventory.UpdateProperties(ctx, geninv.UpdatePropertiesParams{
+		ID:        u.ID,
+		WeightG:   database.NullInt64Ptr(u.WeightG),
+		WidthMm:   database.NullInt64Ptr(u.WidthMM),
+		HeightMm:  database.NullInt64Ptr(u.HeightMM),
+		DepthMm:   database.NullInt64Ptr(u.DepthMM),
+		PowerMw:   database.NullInt64Ptr(u.PowerMW),
+		CurrentMa: database.NullInt64Ptr(u.CurrentMA),
+	}); err != nil {
+		return fmt.Errorf("UpdateProperties: %w", database.NormalizeError(err))
+	}
+	return nil
 }
 
 // ListUnits returns all serialized units for the given inventory item, ordered by unit_number.

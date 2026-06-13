@@ -116,24 +116,35 @@ FROM inventory i
 LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.id = ?;
 
--- name: Update :exec
+-- name: UpdateDetails :exec
 UPDATE inventory
 SET
-    name = ?,
-    category_id = ?,
-    manufacturer_id = ?,
-    code = ?,
-    purchase_price = ?,
-    rental_price = ?,
-    notes = ?,
-    weight_g = ?,
-    width_mm = ?,
-    height_mm = ?,
-    depth_mm = ?,
-    power_mw = ?,
-    current_ma = ?,
+    name = sqlc.arg(name),
+    category_id = sqlc.arg(category_id),
+    manufacturer_id = sqlc.arg(manufacturer_id),
+    notes = sqlc.arg(notes),
     updated_at = unixepoch()
-WHERE id = ?;
+WHERE id = sqlc.arg(id);
+
+-- name: UpdatePricing :exec
+UPDATE inventory
+SET
+    purchase_price = sqlc.arg(purchase_price),
+    rental_price = sqlc.arg(rental_price),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);
+
+-- name: UpdateProperties :exec
+UPDATE inventory
+SET
+    weight_g = sqlc.arg(weight_g),
+    width_mm = sqlc.arg(width_mm),
+    height_mm = sqlc.arg(height_mm),
+    depth_mm = sqlc.arg(depth_mm),
+    power_mw = sqlc.arg(power_mw),
+    current_ma = sqlc.arg(current_ma),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);
 
 -- name: UpdateStorageObject :exec
 UPDATE inventory
