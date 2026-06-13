@@ -11,7 +11,7 @@
 </div>
 
 <div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
     <div role="tablist" class="tabs tabs-border">
       <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}" role="tab" class="tab">Details</a>
       <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/pricing" role="tab" class="tab">Pricing</a>
@@ -25,7 +25,7 @@
 </div>
 
 
-<div class="max-w-5xl w-full mx-auto px-4 my-8">  
+<div class="max-w-5xl w-full mx-auto mb-16">
   {{/* Unit-level forms live outside the table to avoid nesting. */}}
   {{ range .Data.Units }}
   <form id="unit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}"></form>
@@ -33,100 +33,119 @@
   {{ end }}
   <form id="unit-add" method="POST" action="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ItemID }}/units"></form>
 
+  {{ if .Data.Units }}
   <div class="overflow-x-auto">
-    <table class="table table-sm w-full">
-      <thead>
-        <tr>
-          <th class="w-10">#</th>
-          <th>Status</th>
-          <th>Serial Number</th>
-          <th>Next Inspection</th>
-          <th>Notes</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ if .Data.Units }}
-        {{ range .Data.Units }}
-        <tr>
-          <td class="align-top text-base-content/40 whitespace-nowrap">{{ $.Data.ItemCode }}-{{ .UnitNumber }}</td>
-          <td class="align-top">
-            <select form="unit-{{ .ID }}" name="status_id" class="select select-sm">
-              {{ $currentStatusID := .StatusID }}
-              {{ range $.Data.UnitStatuses }}
-              <option value="{{ .ID }}"{{ if eq .ID $currentStatusID }} selected{{ end }}>{{ .Label }}</option>
-              {{ end }}
-            </select>
-          </td>
-          <td class="align-top">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th class="w-10">#</th>
+        <th>STATUS</th>
+        <th>MANUFACTURER SERIAL NUMBER</th>
+        <th>NEXT INSPECTION</th>
+        <th>NOTES</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Data.Units }}
+      <tr>
+        <td class="whitespace-nowrap">
+          <span class="badge badge-ghost font-mono text-xs">{{ $.Data.ItemCode }}-{{ .UnitNumber }}</span>
+        </td>
+        <td>
+          <div class="flex items-center gap-1">
+          {{ if eq .StatusID 1 }}<span class="w-4 h-4 text-success shrink-0">{{ template "available-icon" . }}</span>
+          {{ else if eq .StatusID 2 }}<span class="w-4 h-4 text-error shrink-0">{{ template "damaged-icon" . }}</span>
+          {{ else if eq .StatusID 3 }}<span class="w-4 h-4 text-warning shrink-0">{{ template "under-repair-icon" . }}</span>
+          {{ else if eq .StatusID 4 }}<span class="w-4 h-4 text-base-content/40 shrink-0">{{ template "retired-icon" . }}</span>
+          {{ else if eq .StatusID 5 }}<span class="w-4 h-4 text-info shrink-0">{{ template "inhouse-icon" . }}</span>
+          {{ end }}
+          <select form="unit-{{ .ID }}" name="status_id" class="select select-sm select-ghost bg-base-100">
+            {{ $currentStatusID := .StatusID }}
+            {{ range $.Data.UnitStatuses }}
+            <option value="{{ .ID }}"{{ if eq .ID $currentStatusID }} selected{{ end }}>{{ .Label }}</option>
+            {{ end }}
+          </select>
+          </div>
+        </td>
+        <td class="align-top">
+          <input
+            form="unit-{{ .ID }}"
+            type="text"
+            name="serial_number"
+            value="{{ .SerialNumber }}"
+            maxlength="200"
+            class="input input-sm input-ghost w-full"
+            placeholder="—"
+          />
+        </td>
+        <td class="align-top">
+          <div class="flex flex-col gap-1">
             <input
               form="unit-{{ .ID }}"
-              type="text"
-              name="serial_number"
-              value="{{ .SerialNumber }}"
-              maxlength="200"
-              class="input input-sm w-full"
-              placeholder="—"
+              type="date"
+              name="next_inspection_at"
+              value="{{ unixDate .NextInspectionAt }}"
+              class="input input-sm input-ghost"
             />
-          </td>
-          <td class="align-top">
-            <div class="flex flex-col gap-1">
-              <input
-                form="unit-{{ .ID }}"
-                type="date"
-                name="next_inspection_at"
-                value="{{ unixDate .NextInspectionAt }}"
-                class="input input-sm"
-              />
-              {{ $label := .OverdueInspectionInLabel }}
-              {{ if $label }}
-              <span class="{{ if .IsInspectionOverdue }}text-error{{ else }}text-base-content/60{{ end }} text-xs">{{ $label }}</span>
-              {{ end }}
-            </div>
-          </td>
-          <td class="align-top">
-            <input
-              form="unit-{{ .ID }}"
-              name="notes"
-              maxlength="1000"
-              class="input input-sm w-full"
-              placeholder="—"
-              value="{{ .Notes }}"
-            />
-          </td>
-          <td class="align-top text-right">
-            <div class="flex gap-1 justify-end">
-              <a
-                href="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}/qr"
-                class="btn btn-sm btn-ghost"
-                title="Download QR code"
-              ><span class="w-4 h-4">{{ template "qr-icon" . }}</span></a>
-              <button form="unit-{{ .ID }}" type="submit" class="btn btn-sm btn-primary">Save</button>
-              <button
-                form="unit-{{ .ID }}-delete"
-                type="submit"
-                class="btn btn-sm btn-error btn-outline"
-                data-confirm="Delete unit {{ $.Data.ItemCode }}-{{ .UnitNumber }}?"
-              >Delete</button>
-            </div>
-          </td>
-        </tr>
-        {{ end }}
-        {{ else }}
-        <tr>
-          <td colspan="6" class="text-sm text-base-content/40 py-4">No units recorded.</td>
-        </tr>
-        {{ end }}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="6" class="text-right">
-            <button form="unit-add" type="submit" class="btn btn-sm btn-primary">Add unit</button>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
+            {{ $label := .OverdueInspectionInLabel }}
+            {{ if $label }}
+            <span class="{{ if .IsInspectionOverdue }}text-error{{ else }}text-base-content/60{{ end }} text-xs">{{ $label }}</span>
+            {{ end }}
+          </div>
+        </td>
+        <td class="align-top">
+          <input
+            form="unit-{{ .ID }}"
+            name="notes"
+            maxlength="1000"
+            class="input input-sm input-ghost w-full"
+            placeholder="—"
+            value="{{ .Notes }}"
+          />
+        </td>
+        <td class="align-top text-right">
+          <div class="flex gap-1 justify-end">
+            <button form="unit-{{ .ID }}" type="submit" class="btn btn-sm btn-primary">Save</button>
+            <details class="dropdown dropdown-end">
+              <summary class="btn btn-sm btn-ghost btn-square">···</summary>
+              <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-44 p-1 shadow border border-base-300">
+                <li>
+                  <a href="/orgs/{{ $.Data.OrgID }}/inventory/{{ $.Data.ItemID }}/units/{{ .ID }}/qr">
+                    <span class="w-4 h-4">{{ template "qr-icon" . }}</span>
+                    Download QR
+                  </a>
+                </li>
+                <li>
+                  <button
+                    form="unit-{{ .ID }}-delete"
+                    type="submit"
+                    class="text-error"
+                    data-confirm="Delete unit {{ $.Data.ItemCode }}-{{ .UnitNumber }}?"
+                  >Delete</button>
+                </li>
+              </ul>
+            </details>
+          </div>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="6" class="text-right pt-2 px-4">
+          <button form="unit-add" type="submit" class="btn btn-sm btn-primary">Add unit</button>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
   </div>
+  {{ else }}
+  <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+    <p class="text-sm">No units recorded. <button form="unit-add" type="submit" class="link">Add the first unit.</button></p>
+  </div>
+  {{ end }}
 
 </div>
+
 {{ end }}

@@ -11,7 +11,7 @@
 </div>
 
 <div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 h-14 flex items-center overflow-x-auto scrollbar-none">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
     <div role="tablist" class="tabs tabs-border">
       <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}" role="tab" class="tab">Details</a>
       <a href="/orgs/{{ .Data.OrgID }}/inventory/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
@@ -26,7 +26,7 @@
   </div>
 </div>
 
-<div class="max-w-5xl w-full mx-auto px-4 my-8">  
+<div class="max-w-5xl w-full mx-auto px-4 my-2">  
   <form method="POST" class="flex flex-col gap-4" novalidate>
 
     <p class="text-sm font-medium text-base-content/50 uppercase tracking-wide">Physical</p>
