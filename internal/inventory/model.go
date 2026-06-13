@@ -2,10 +2,14 @@
 package inventory
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
+
+// ErrFutureInspectionDate is returned by LogInspection when InspectedAt is after today.
+var ErrFutureInspectionDate = errors.New("inspection date cannot be in the future")
 
 // PurchasePriceInput formats the purchase price as a plain decimal string for use in
 // form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
@@ -166,25 +170,32 @@ func (u *Unit) nextInspectionBase() *int64 {
 	return u.PurchasedAt
 }
 
-// NextInspectionAtDisplay computes the expected next inspection date, returning
-// "YYYY-MM-DD" or "" when no baseline date or interval is available.
-func (u *Unit) NextInspectionAtDisplay(intervalDays *int64) string {
+// nextInspectionAt returns the time of the next required inspection,
+// or nil when no baseline date or interval is configured.
+func (u *Unit) nextInspectionAt(intervalDays *int64) *time.Time {
 	base := u.nextInspectionBase()
 	if base == nil || intervalDays == nil {
+		return nil
+	}
+	t := time.Unix(*base+*intervalDays*86400, 0).UTC()
+	return &t
+}
+
+// NextInspectionAtDisplay returns "YYYY-MM-DD" or "" when no baseline date or interval is available.
+func (u *Unit) NextInspectionAtDisplay(intervalDays *int64) string {
+	t := u.nextInspectionAt(intervalDays)
+	if t == nil {
 		return ""
 	}
-	next := *base + *intervalDays*86400
-	return time.Unix(next, 0).UTC().Format("2006-01-02")
+	return t.Format("2006-01-02")
 }
 
 func (u *Unit) inspectionDaysOffset(intervalDays *int64) (int64, bool) {
-	base := u.nextInspectionBase()
-	if base == nil || intervalDays == nil {
+	next := u.nextInspectionAt(intervalDays)
+	if next == nil {
 		return 0, false
 	}
-	nextUnix := *base + *intervalDays*86400
 	now := time.Now().UTC()
-	next := time.Unix(nextUnix, 0).UTC()
 	// Truncate both to midnight so we compare calendar days, not clock time.
 	nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	nextDay := time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, time.UTC)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
@@ -224,7 +225,13 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID, _ string) error {
 }
 
 // LogInspection records a new inspection entry for a unit.
+// Returns ErrFutureInspectionDate when InspectedAt is after today (UTC midnight).
 func (s *Service) LogInspection(ctx context.Context, l LogInspection) (*Inspection, error) {
+	now := time.Now().UTC()
+	todayEnd := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+	if time.Unix(l.InspectedAt, 0).UTC().After(todayEnd) {
+		return nil, ErrFutureInspectionDate
+	}
 	entry, err := s.repo.LogInspection(ctx, l)
 	if err != nil {
 		return nil, fmt.Errorf("LogInspection: %w", err)

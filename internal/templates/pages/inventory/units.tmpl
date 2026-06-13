@@ -93,17 +93,21 @@
             {{ end }}
           </td>
           <td class="text-sm">
-            {{ $nextDays := .NextInspectionInDays $.Data.Item.InspectionIntervalDays }}
-            {{ if $nextDays }}
-              {{ if .IsInspectionOverdue $.Data.Item.InspectionIntervalDays }}
-                <span class="text-error font-medium">{{ $nextDays }}</span>
-              {{ else if eq $nextDays "Today" }}
-                <span class="text-warning font-medium">Today</span>
-              {{ else }}
-                {{ $nextDays }}
-              {{ end }}
-            {{ else }}
+            {{ if and $unitInspections (not (index $unitInspections 0).Passed) }}
               <span class="text-base-content/30">—</span>
+            {{ else }}
+              {{ $nextDays := .NextInspectionInDays $.Data.Item.InspectionIntervalDays }}
+              {{ if $nextDays }}
+                {{ if .IsInspectionOverdue $.Data.Item.InspectionIntervalDays }}
+                  <span class="text-error font-medium">{{ $nextDays }}</span>
+                {{ else if eq $nextDays "Today" }}
+                  <span class="text-warning font-medium">Today</span>
+                {{ else }}
+                  {{ $nextDays }}
+                {{ end }}
+              {{ else }}
+                <span class="text-base-content/30">—</span>
+              {{ end }}
             {{ end }}
           </td>
           {{ end }}
