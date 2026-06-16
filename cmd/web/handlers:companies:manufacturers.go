@@ -51,17 +51,15 @@ func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request)
 
 func (app *application) getManufacturerNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
-	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 	data := app.html.TemplateData(r)
 	data.Form = &manufacturers.Form{}
-	data.Data = manufacturerData{OrgID: id, ReturnTo: returnTo}
+	data.Data = manufacturerData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.ManufacturersNew, data)
 }
 
 func (app *application) postManufacturerNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("org_id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := manufacturers.Parse(r)
 	if err != nil {
@@ -71,7 +69,7 @@ func (app *application) postManufacturerNew(w http.ResponseWriter, r *http.Reque
 	reRender := func(f *manufacturers.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = manufacturerData{OrgID: id, ReturnTo: returnTo}
+		data.Data = manufacturerData{OrgID: id}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersNew, data)
 	}
 
@@ -102,9 +100,6 @@ func (app *application) postManufacturerNew(w http.ResponseWriter, r *http.Reque
 	}
 
 	dest := "/orgs/" + url.PathEscape(id) + "/settings/manufacturers"
-	if returnTo != "" {
-		dest = returnTo
-	}
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }
@@ -113,7 +108,6 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	mfrID := r.PathValue("id")
-	returnTo := safeReturnTo(r.URL.Query().Get("return_to"))
 
 	manufacturer, err := app.services.manufacturers.GetByID(ctx, mfrID)
 	if err != nil {
@@ -126,7 +120,7 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 
 	data := app.html.TemplateData(r)
 	data.Form = &manufacturers.Form{}
-	data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID, ReturnTo: returnTo}
+	data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID}
 	return app.html.Render(w, r, http.StatusOK, pages.ManufacturersDetail, data)
 }
 
@@ -134,7 +128,6 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	mfrID := r.PathValue("id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	form, err := manufacturers.Parse(r)
 	if err != nil {
@@ -144,7 +137,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 	reRender := func(f *manufacturers.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = manufacturerData{OrgID: orgID, ID: mfrID, ReturnTo: returnTo}
+		data.Data = manufacturerData{OrgID: orgID, ID: mfrID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersDetail, data)
 	}
 
@@ -169,9 +162,6 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 	}
 
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/manufacturers/" + url.PathEscape(mfrID)
-	if returnTo != "" {
-		dest = returnTo
-	}
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }
@@ -180,7 +170,6 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 	mfrID := r.PathValue("id")
-	returnTo := safeReturnTo(r.FormValue("return_to"))
 
 	if err := app.services.manufacturers.Delete(ctx, mfrID); err != nil {
 		if errors.Is(err, database.ErrForeignKeyViolation) {
@@ -192,7 +181,7 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 			f.AddError("delete", "Cannot delete: this manufacturer is assigned to one or more inventory items.")
 			data := app.html.TemplateData(r)
 			data.Form = f
-			data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID, ReturnTo: returnTo}
+			data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID}
 			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersDetail, data)
 		}
 		return &httperr.Error{
@@ -203,9 +192,6 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 	}
 
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/manufacturers"
-	if returnTo != "" {
-		dest = returnTo
-	}
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }

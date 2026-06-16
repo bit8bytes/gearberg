@@ -10,7 +10,6 @@
   </div>
 
   <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/manufacturers/new" class="flex flex-col gap-4" novalidate>
-    <input type="hidden" name="return_to" value="{{ .Data.ReturnTo }}">
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input

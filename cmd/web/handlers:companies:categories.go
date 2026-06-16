@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -24,13 +23,6 @@ type equipmentCategoryData struct {
 	OrgID    string
 	Category *categories.EquipmentCategory
 	ID       string
-}
-
-func safeReturnTo(s string) string {
-	if strings.HasPrefix(s, "/") && !strings.HasPrefix(s, "//") {
-		return s
-	}
-	return ""
 }
 
 func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Request) *httperr.Error {
