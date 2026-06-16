@@ -23,7 +23,6 @@ type manufacturerData struct {
 	OrgID        string
 	Manufacturer *manufacturers.Manufacturer
 	ID           string
-	ReturnTo     string
 }
 
 func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -111,6 +110,9 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 
 	manufacturer, err := app.services.manufacturers.GetByID(ctx, mfrID)
 	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Manufacturer not found.", Code: http.StatusNotFound}
+		}
 		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve manufacturer.",
@@ -126,7 +128,6 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 
 func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	orgID := r.PathValue("org_id")
 	mfrID := r.PathValue("id")
 
 	form, err := manufacturers.Parse(r)
@@ -134,10 +135,18 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
+	mfr, err := app.services.manufacturers.GetByID(ctx, mfrID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Manufacturer not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturer.", Code: http.StatusInternalServerError}
+	}
+
 	reRender := func(f *manufacturers.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = manufacturerData{OrgID: orgID, ID: mfrID}
+		data.Data = manufacturerData{OrgID: mfr.OrgID, Manufacturer: mfr, ID: mfrID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersDetail, data)
 	}
 
@@ -161,7 +170,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/manufacturers/" + url.PathEscape(mfrID)
+	dest := "/orgs/" + mfr.OrgID + "/settings/manufacturers/" + mfr.ID
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
 	return nil
 }
@@ -175,6 +184,9 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 		if errors.Is(err, database.ErrForeignKeyViolation) {
 			manufacturer, fetchErr := app.services.manufacturers.GetByID(ctx, mfrID)
 			if fetchErr != nil {
+				if errors.Is(fetchErr, database.ErrNotFound) {
+					return &httperr.Error{Error: fetchErr, Message: "Manufacturer not found.", Code: http.StatusNotFound}
+				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve manufacturer.", Code: http.StatusInternalServerError}
 			}
 			f := &manufacturers.Form{}
