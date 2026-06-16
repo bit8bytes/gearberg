@@ -1,4 +1,4 @@
 {{ define "scripts" }}
-<script type="module" src="/dist/components.js" nonce="{{ .Nonce }}"></script>
-<script src="/dist/index.js" nonce="{{ .Nonce }}"></script>
+<script type="module" src="/dist/components.js{{ if .Revision }}?revision={{ .Revision }}{{end}}" nonce="{{ .Nonce }}"></script>
+<script src="/dist/index.js{{ if .Revision }}?revision={{ .Revision }}{{end}}" nonce="{{ .Nonce }}"></script>
 {{ end }}
