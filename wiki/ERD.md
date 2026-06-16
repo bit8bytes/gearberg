@@ -67,6 +67,7 @@ erDiagram
     text manufacturer_id FK "ON DELETE RESTRICT"
     integer type_id FK "NOT NULL ON DELETE RESTRICT"
     integer usage_type_id FK "NOT NULL ON DELETE RESTRICT"
+    text location_id FK "ON DELETE SET NULL"
     text name "NOT NULL"
     integer code "NOT NULL UNIQUE(org_id,code)"
     text storage_object_id FK "ON DELETE SET NULL"
@@ -90,7 +91,7 @@ erDiagram
     integer id PK
     text name "UNIQUE NOT NULL"
   }
-  %% seeded with available, damaged, under_repair, retired
+  %% seeded with available, damaged, under_repair, retired, inhouse
 
   serialized_units {
     text id PK
@@ -143,6 +144,12 @@ erDiagram
     integer created_at "NOT NULL DEFAULT unixepoch"
   }
 
+  locations {
+    text id PK
+    text org_id FK "NOT NULL ON DELETE CASCADE"
+    text name "NOT NULL"
+  }
+
   inventory_types ||--o{ inventory : "types"
   usage_types ||--o{ inventory : "usage"
   unit_statuses ||--o{ serialized_units : "statuses"
@@ -157,4 +164,5 @@ erDiagram
   inventory ||--o| bulk_stock : "has stock"
   storage_objects ||--o{ inventory : "image"
   storage_objects ||--o{ inventory : "qr"
+  inventory }|--o| locations : "has"
 ```
