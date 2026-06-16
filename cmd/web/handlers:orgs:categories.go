@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -24,13 +23,6 @@ type equipmentCategoryData struct {
 	OrgID    string
 	Category *categories.EquipmentCategory
 	ID       string
-}
-
-func safeReturnTo(s string) string {
-	if strings.HasPrefix(s, "/") && !strings.HasPrefix(s, "//") {
-		return s
-	}
-	return ""
 }
 
 func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -97,7 +89,7 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		}
 		if errors.Is(err, database.ErrLimitExceeded) {
 			limit := app.services.equipmentcategories.MaxCategories()
-			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per orgs.", limit))
+			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per org.", limit))
 			return reRender(&form)
 		}
 		return &httperr.Error{
@@ -118,6 +110,9 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 
 	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
 	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment category not found.", Code: http.StatusNotFound}
+		}
 		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to retrieve equipment category.",
@@ -141,10 +136,18 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
+	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment category not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
+	}
+
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
+		data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
@@ -182,6 +185,9 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 		if errors.Is(err, database.ErrForeignKeyViolation) {
 			category, fetchErr := app.services.equipmentcategories.GetByID(ctx, catID)
 			if fetchErr != nil {
+				if errors.Is(fetchErr, database.ErrNotFound) {
+					return &httperr.Error{Error: fetchErr, Message: "Equipment category not found.", Code: http.StatusNotFound}
+				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
 			}
 			f := &categories.Form{}
