@@ -64,6 +64,12 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("GET /orgs/{org_id}/settings/manufacturers/{id}", app.html.Handle(app.getManufacturer))
 	mux.HandleFunc("POST /orgs/{org_id}/settings/manufacturers/{id}", app.html.Handle(app.postManufacturer))
 	mux.HandleFunc("POST /orgs/{org_id}/settings/manufacturers/{id}/delete", app.html.Handle(app.postDeleteManufacturer))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/locations", app.html.Handle(app.getLocations))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/locations/new", app.html.Handle(app.getLocationNew))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/locations/new", app.html.Handle(app.postLocationNew))
+	mux.HandleFunc("GET /orgs/{org_id}/settings/locations/{id}", app.html.Handle(app.getLocation))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/locations/{id}", app.html.Handle(app.postLocation))
+	mux.HandleFunc("POST /orgs/{org_id}/settings/locations/{id}/delete", app.html.Handle(app.postDeleteLocation))
 
 	antiCSRF := http.NewCrossOriginProtection()
 	logRequest := newRequestLogger(app.logger)

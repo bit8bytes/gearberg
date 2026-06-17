@@ -1,0 +1,30 @@
+{{ define "title" }}Locations{{ end }}
+{{ define "sidebar-locations" }}bg-base-300 font-semibold{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl">
+  <div class="flex items-center justify-between mb-1">
+    <h2 class="heading heading--md">Locations</h2>
+    {{ if ge (len .Data.Locations) .Data.MaxLocations }}
+    <div class="tooltip" data-tip="Maximum of {{ .Data.MaxLocations }} locations reached">
+      <button class="btn btn-primary" disabled>New Location</button>
+    </div>
+    {{ else }}
+    <a href="/orgs/{{ .Data.OrgID }}/settings/locations/new" class="btn btn-primary">New Location</a>
+    {{ end }}
+  </div>
+  <p class="text-sm text-neutral mb-6">Storage locations for equipment in your inventory.</p>
+
+  {{ if .Data.Locations }}
+  <ul class="flex flex-col gap-2">
+    {{ range .Data.Locations }}
+    <li class="flex items-center justify-between p-3 rounded border border-base-300">
+      <a href="/orgs/{{ $.Data.OrgID }}/settings/locations/{{ .ID }}" class="hover:underline">{{ .Name }}</a>
+    </li>
+    {{ end }}
+  </ul>
+  {{ else }}
+  <p class="text-neutral">No locations yet.</p>
+  {{ end }}
+</div>
+{{ end }}

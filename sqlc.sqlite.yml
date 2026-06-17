@@ -100,3 +100,13 @@ sql:
         out: "internal/database/queries/gen/unitinspections"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/locations.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "locations"
+        out: "internal/database/queries/gen/locations"
+        emit_interface: true
+        omit_unused_structs: true

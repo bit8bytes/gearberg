@@ -1,14 +1,13 @@
-{{ define "title" }}New Manufacturer{{ end }}
+{{ define "title" }}New Location{{ end }}
 
 {{ define "page" }}
-{{ $back := printf "/orgs/%s/settings/manufacturers" .Data.OrgID }}
 <div class="flex-1 max-w-xs mx-auto mt-8">
   <div class="flex items-center justify-between mb-6">
-    <h1 class="">New Manufacturer</h1>
-    <a href="{{ $back }}" class="btn">Back</a>
+    <h1 class="">New Location</h1>
+    <a href="/orgs/{{ .Data.OrgID }}/settings/locations" class="btn">Back</a>
   </div>
 
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/manufacturers/new" class="flex flex-col gap-4" novalidate>
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/locations/new" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="name">Name</label>
       <input
@@ -26,7 +25,7 @@
 
     <div class="flex gap-2">
       <button type="submit" class="btn btn-primary">Create</button>
-      <a href="{{ $back }}" class="btn">Cancel</a>
+      <a href="/orgs/{{ .Data.OrgID }}/settings/locations" class="btn">Cancel</a>
     </div>
   </form>
 </div>

@@ -99,7 +99,7 @@ func (app *application) postManufacturerNew(w http.ResponseWriter, r *http.Reque
 	}
 
 	dest := "/orgs/" + url.PathEscape(id) + "/settings/manufacturers"
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec
 	return nil
 }
 
@@ -171,7 +171,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 	}
 
 	dest := "/orgs/" + mfr.OrgID + "/settings/manufacturers/" + mfr.ID
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec
 	return nil
 }
 
@@ -204,6 +204,6 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 	}
 
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/manufacturers"
-	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is either a hard-coded path or validated by safeReturnTo (must start with "/" and not "//").
+	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec
 	return nil
 }

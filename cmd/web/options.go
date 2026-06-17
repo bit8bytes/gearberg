@@ -18,6 +18,7 @@ type options struct {
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
+	MaxOrgLocations     int
 	MaxStorageBytes     int64
 }
 
@@ -37,6 +38,7 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
+	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 
@@ -57,20 +59,30 @@ func parseServeOptions(args []string) (*options, error) {
 		}
 	}
 
-	if cfg.StorageDSN == "" {
-		return nil, fmt.Errorf("storage-dsn is required")
-	}
-	if cfg.MaxOrgs <= 0 {
-		return nil, fmt.Errorf("max orgs must be greater than 0")
-	}
-	if cfg.MaxOrgCategories <= 0 {
-		return nil, fmt.Errorf("max categories must be greater than 0")
-	}
-	if cfg.MaxOrgManufacturers <= 0 {
-		return nil, fmt.Errorf("max manufacturers must be greater than 0")
+	if err := cfg.validate(); err != nil {
+		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func (cfg *options) validate() error {
+	if cfg.StorageDSN == "" {
+		return fmt.Errorf("storage-dsn is required")
+	}
+	if cfg.MaxOrgs <= 0 {
+		return fmt.Errorf("max orgs must be greater than 0")
+	}
+	if cfg.MaxOrgCategories <= 0 {
+		return fmt.Errorf("max categories must be greater than 0")
+	}
+	if cfg.MaxOrgManufacturers <= 0 {
+		return fmt.Errorf("max manufacturers must be greater than 0")
+	}
+	if cfg.MaxOrgLocations <= 0 {
+		return fmt.Errorf("max locations must be greater than 0")
+	}
+	return nil
 }
 
 func parseVerifyOptions(args []string) (*options, error) {

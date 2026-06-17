@@ -18,6 +18,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	invimports "github.com/bit8bytes/gearberg/internal/inventory/imports"
+	"github.com/bit8bytes/gearberg/internal/locations"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
@@ -127,6 +128,7 @@ type services struct {
 	orgsettings         *settings.Service
 	equipmentcategories *categories.Service
 	manufacturers       *manufacturers.Service
+	locations           *locations.Service
 	inventory           *inventory.Service
 	inventoryImports    *invimports.Service
 	storageManager      *storage.Manager
@@ -145,8 +147,11 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 	manufacturersRepo := manufacturers.NewRepository(db)
 	manufacturersSvc := manufacturers.NewService(manufacturersRepo, manufacturers.Options{MaxManufacturers: opts.MaxOrgManufacturers})
 
+	locationsRepo := locations.NewRepository(db)
+	locationsSvc := locations.NewService(locationsRepo, locations.Options{MaxLocations: opts.MaxOrgLocations})
+
 	inventoryRepo := inventory.NewRepository(db)
-	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc, manufacturersSvc)
+	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
 
 	inventoryImportsRepo := invimports.NewRepository(db)
 	inventoryImportsSvc := invimports.NewService(inventoryImportsRepo, db, inventorySvc, equipmentcategoriesSvc, manufacturersSvc)
@@ -167,6 +172,7 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 		orgsettings:         orgsettingsSvc,
 		equipmentcategories: equipmentcategoriesSvc,
 		manufacturers:       manufacturersSvc,
+		locations:           locationsSvc,
 		inventory:           inventorySvc,
 		inventoryImports:    inventoryImportsSvc,
 		storageManager:      storageMgr,

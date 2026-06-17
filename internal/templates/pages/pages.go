@@ -61,6 +61,15 @@ var (
 	// ManufacturersDetail is the manufacturer detail/edit page.
 	ManufacturersDetail = newPage("pages/orgs/manufacturers/detail.tmpl", layouts.Center)
 
+	// LocationsIndex is the Locations settings page.
+	LocationsIndex = newPage("pages/orgs/locations/index.tmpl", layouts.Settings)
+
+	// LocationsNew is the create-location form page.
+	LocationsNew = newPage("pages/orgs/locations/new.tmpl", layouts.Center)
+
+	// LocationsDetail is the location detail/edit page.
+	LocationsDetail = newPage("pages/orgs/locations/detail.tmpl", layouts.Center)
+
 	// Inventory is the inventory list page.
 	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)
 

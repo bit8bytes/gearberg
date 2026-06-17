@@ -94,6 +94,22 @@
       </select>
     </div>
 
+    <div class="flex flex-col gap-1">
+      <label for="location_id">Location <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <select id="location_id" name="location_id" class="select">
+        <option value="">None</option>
+        {{ range .Data.Locations }}
+          <option value="{{ .ID }}"
+            {{ if $.Form.LocationID }}
+              {{ if eq $.Form.LocationID .ID }}selected{{ end }}
+            {{ else if $.Data.Item }}
+              {{ if eq $.Data.Item.LocationID .ID }}selected{{ end }}
+            {{ end }}
+          >{{ .Name }}</option>
+        {{ end }}
+      </select>
+    </div>
+
 {{ if .Data.Item }}{{ if eq .Data.Item.Type 1 }}
     <div class="flex flex-col gap-1">
       <label for="total_stock">Total Stock</label>

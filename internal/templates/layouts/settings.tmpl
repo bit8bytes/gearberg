@@ -31,6 +31,10 @@
            class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-manufacturers" . }}hover:bg-base-200{{ end }}">
           Manufacturers
         </a>
+        <a href="/orgs/{{ .Data.OrgID }}/settings/locations"
+           class="flex items-center px-3 py-1.5 rounded text-sm {{ block "sidebar-locations" . }}hover:bg-base-200{{ end }}">
+          Locations
+        </a>
       </aside>
     </div>
   </div>

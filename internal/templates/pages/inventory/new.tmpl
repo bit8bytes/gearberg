@@ -64,6 +64,25 @@
       </combo-box>
     </div>
 
+    <div class="flex flex-col gap-1">
+      <label for="location_input">Location <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <combo-box
+        input-id="location_input"
+        name="location_id"
+        name-new="location_name"
+        placeholder="Search or add location…"
+        {{ if and (eq .Form.LocationID "") .Form.LocationName }}selected-name="{{ .Form.LocationName }}"{{ end }}
+      >
+        <template>
+          {{ range .Data.Locations }}
+            <option value="{{ .ID }}"{{ if eq .ID $.Form.LocationID }} selected{{ end }}>
+              {{ .Name }}
+            </option>
+          {{ end }}
+        </template>
+      </combo-box>
+    </div>
+
     <input type="hidden" name="usage_type_id" value="rental" />
 
     <div class="flex flex-col gap-1">
