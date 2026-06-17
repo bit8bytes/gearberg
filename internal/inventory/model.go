@@ -82,6 +82,8 @@ type Inventory struct {
 	CategoryName           string
 	CategoryColor          string
 	ManufacturerID         string
+	LocationID             string
+	LocationName           string
 	StorageObjectID        *string
 	ImageURL               string
 	TotalStock             int64
@@ -107,6 +109,7 @@ type Base struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID string
+	LocationID     *string
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string
@@ -233,6 +236,7 @@ type UpdateInventoryDetails struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID string
+	LocationID     string
 	Notes          string
 	// TotalStock is only applied for bulk inventory items.
 	TotalStock int64

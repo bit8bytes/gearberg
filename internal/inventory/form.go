@@ -20,6 +20,7 @@ type DetailsForm struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID string
+	LocationID     string
 	TotalStock     string // only used for bulk items
 	Notes          string
 	Image          multipart.File
@@ -61,6 +62,7 @@ func ParseDetails(r *http.Request) (DetailsForm, error) {
 		Name:           strings.TrimSpace(r.PostForm.Get("name")),
 		CategoryID:     strings.TrimSpace(r.PostForm.Get("category_id")),
 		ManufacturerID: strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
+		LocationID:     strings.TrimSpace(r.PostForm.Get("location_id")),
 		TotalStock:     strings.TrimSpace(r.PostForm.Get("total_stock")),
 		Notes:          strings.TrimSpace(r.PostForm.Get("notes")),
 	}
@@ -251,6 +253,8 @@ type NewForm struct {
 	CategoryName     string // set when user typed a new category name not yet in the DB
 	ManufacturerID   string
 	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
+	LocationID       string
+	LocationName     string // set when user typed a new location name not yet in the DB
 	Count            string // total_stock for bulk; number of units to generate for serialized
 	PurchasePrice    string
 	RentalPrice      string
@@ -279,6 +283,8 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		CategoryName:     strings.TrimSpace(r.PostForm.Get("category_name")),
 		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
 		ManufacturerName: strings.TrimSpace(r.PostForm.Get("manufacturer_name")),
+		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
+		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
 		Count:            strings.TrimSpace(r.PostForm.Get("count")),
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),

@@ -20,6 +20,7 @@ import (
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/inventory"
 	invunits "github.com/bit8bytes/gearberg/internal/inventory/units"
+	"github.com/bit8bytes/gearberg/internal/locations"
 	"github.com/bit8bytes/gearberg/internal/orgs/categories"
 	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
@@ -58,6 +59,7 @@ type inventoryItemData struct {
 	ID            string
 	Categories    []categories.EquipmentCategory
 	Manufacturers []manufacturers.Manufacturer
+	Locations     []locations.Location
 	Currency      string
 }
 
@@ -202,7 +204,7 @@ func (app *application) getInventoryNew(w http.ResponseWriter, r *http.Request) 
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.NewForm{}
-	data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryNew, data)
 }
 
@@ -221,7 +223,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+		data.Data = inventoryItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryNew, data)
 	}
 
@@ -241,6 +243,7 @@ func (app *application) postInventoryNew(w http.ResponseWriter, r *http.Request)
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
+		LocationID:     database.StringOrNil(form.LocationID),
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
@@ -288,6 +291,13 @@ func (app *application) resolveNewFormRefs(r *http.Request, orgID string, form *
 			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
 		}
 		form.ManufacturerID = mfrID
+	}
+	if form.LocationID == "" && form.LocationName != "" {
+		locID, err := app.services.locations.EnsureByName(ctx, orgID, form.LocationName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve location.", Code: http.StatusInternalServerError}
+		}
+		form.LocationID = locID
 	}
 	return nil
 }
@@ -345,7 +355,7 @@ func (app *application) getInventoryItem(w http.ResponseWriter, r *http.Request)
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.DetailsForm{}
-	itemData := inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	itemData := inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 	data.Data = itemData
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryDetail, data)
 }
@@ -376,7 +386,7 @@ func (app *application) postInventoryItemDetails(w http.ResponseWriter, r *http.
 		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryDetail, data)
 	}
 
@@ -387,6 +397,7 @@ func (app *application) postInventoryItemDetails(w http.ResponseWriter, r *http.
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
+		LocationID:     form.LocationID,
 		Notes:          form.Notes,
 		TotalStock:     form.TotalStockInt64(),
 	}); err != nil {
@@ -445,7 +456,7 @@ func (app *application) getInventoryItemPricing(w http.ResponseWriter, r *http.R
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.PricingForm{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryPricing, data)
 }
 
@@ -471,7 +482,7 @@ func (app *application) postInventoryItemPricing(w http.ResponseWriter, r *http.
 		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+		data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.InventoryPricing, data)
 	}
 
@@ -602,7 +613,7 @@ func (app *application) getInventoryItemProperties(w http.ResponseWriter, r *htt
 
 	data := app.html.TemplateData(r)
 	data.Form = &inventory.PropertiesForm{}
-	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Currency: deps.Currency}
+	data.Data = inventoryItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
 	return app.html.Render(w, r, http.StatusOK, pages.InventoryProperties, data)
 }
 
@@ -915,6 +926,7 @@ func (app *application) resolveInventoryURLs(items []inventory.Inventory) {
 type inventoryFormDeps struct {
 	Categories    []categories.EquipmentCategory
 	Manufacturers []manufacturers.Manufacturer
+	Locations     []locations.Location
 	Currency      string
 }
 
@@ -928,12 +940,16 @@ func (app *application) loadInventoryFormDeps(r *http.Request, orgID string) (in
 	if err != nil {
 		return inventoryFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
 	}
+	locs, err := app.services.inventory.ListLocations(ctx, orgID)
+	if err != nil {
+		return inventoryFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve locations.", Code: http.StatusInternalServerError}
+	}
 	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
 	currency := ""
 	if orgSettings != nil {
 		currency = orgSettings.Currency
 	}
-	return inventoryFormDeps{Categories: cats, Manufacturers: mfrs, Currency: currency}, nil
+	return inventoryFormDeps{Categories: cats, Manufacturers: mfrs, Locations: locs, Currency: currency}, nil
 }
 
 // linkInventoryImage associates a storage object with an inventory item.

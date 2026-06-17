@@ -29,6 +29,7 @@ INSERT INTO inventory (
     name,
     category_id,
     manufacturer_id,
+    location_id,
     type_id,
     usage_type_id,
     code,
@@ -49,8 +50,8 @@ INSERT INTO inventory (
     ?5,
     ?6,
     ?7,
-    (SELECT COALESCE(MAX(code), 0) + 1 FROM inventory WHERE org_id = ?2),
     ?8,
+    (SELECT COALESCE(MAX(code), 0) + 1 FROM inventory WHERE org_id = ?2),
     ?9,
     ?10,
     ?11,
@@ -58,13 +59,15 @@ INSERT INTO inventory (
     ?13,
     ?14,
     ?15,
-    ?16
+    ?16,
+    ?17
 ) RETURNING
     id,
     org_id,
     name,
     category_id,
     manufacturer_id,
+    location_id,
     storage_object_id,
     type_id,
     usage_type_id,
@@ -87,6 +90,7 @@ type CreateParams struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID sql.NullString
+	LocationID     sql.NullString
 	TypeID         int64
 	UsageTypeID    int64
 	PurchasePrice  sql.NullInt64
@@ -106,6 +110,7 @@ type CreateRow struct {
 	Name            string
 	CategoryID      string
 	ManufacturerID  sql.NullString
+	LocationID      sql.NullString
 	StorageObjectID sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
@@ -129,6 +134,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.Name,
 		arg.CategoryID,
 		arg.ManufacturerID,
+		arg.LocationID,
 		arg.TypeID,
 		arg.UsageTypeID,
 		arg.PurchasePrice,
@@ -148,6 +154,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.Name,
 		&i.CategoryID,
 		&i.ManufacturerID,
+		&i.LocationID,
 		&i.StorageObjectID,
 		&i.TypeID,
 		&i.UsageTypeID,
@@ -186,6 +193,8 @@ SELECT
     i.code,
     i.category_id,
     i.manufacturer_id,
+    i.location_id,
+    COALESCE(l.name, '') AS location_name,
     i.storage_object_id,
     COALESCE(bs.quantity, (SELECT COUNT(*) FROM serialized_units su WHERE su.inventory_id = i.id)) AS total_stock,
     i.purchase_price,
@@ -201,6 +210,7 @@ SELECT
     i.updated_at,
     i.created_at
 FROM inventory i
+LEFT JOIN locations l ON l.id = i.location_id
 LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.id = ?
 `
@@ -214,6 +224,8 @@ type GetByIDRow struct {
 	Code                   int64
 	CategoryID             string
 	ManufacturerID         sql.NullString
+	LocationID             sql.NullString
+	LocationName           string
 	StorageObjectID        sql.NullString
 	TotalStock             int64
 	PurchasePrice          sql.NullInt64
@@ -242,6 +254,8 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.Code,
 		&i.CategoryID,
 		&i.ManufacturerID,
+		&i.LocationID,
+		&i.LocationName,
 		&i.StorageObjectID,
 		&i.TotalStock,
 		&i.PurchasePrice,
@@ -270,6 +284,8 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     COALESCE(ec.color, '') AS category_color,
     i.manufacturer_id,
+    i.location_id,
+    COALESCE(l.name, '') AS location_name,
     i.storage_object_id,
     i.type_id,
     i.usage_type_id,
@@ -282,6 +298,7 @@ SELECT
     COUNT(*) OVER() AS total_records
 FROM inventory i
 LEFT JOIN equipment_categories ec ON ec.id = i.category_id
+LEFT JOIN locations l ON l.id = i.location_id
 LEFT JOIN bulk_stock bs ON bs.inventory_id = i.id
 WHERE i.org_id = ?1
   AND (?2 = '' OR i.name LIKE '%' || ?2 || '%')
@@ -307,6 +324,8 @@ type ListRow struct {
 	CategoryName    string
 	CategoryColor   string
 	ManufacturerID  sql.NullString
+	LocationID      sql.NullString
+	LocationName    string
 	StorageObjectID sql.NullString
 	TypeID          int64
 	UsageTypeID     int64
@@ -343,6 +362,8 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.CategoryName,
 			&i.CategoryColor,
 			&i.ManufacturerID,
+			&i.LocationID,
+			&i.LocationName,
 			&i.StorageObjectID,
 			&i.TypeID,
 			&i.UsageTypeID,
@@ -484,15 +505,17 @@ SET
     name = ?1,
     category_id = ?2,
     manufacturer_id = ?3,
-    notes = ?4,
+    location_id = ?4,
+    notes = ?5,
     updated_at = unixepoch()
-WHERE id = ?5
+WHERE id = ?6
 `
 
 type UpdateDetailsParams struct {
 	Name           string
 	CategoryID     string
 	ManufacturerID sql.NullString
+	LocationID     sql.NullString
 	Notes          sql.NullString
 	ID             string
 }
@@ -502,6 +525,7 @@ func (q *Queries) UpdateDetails(ctx context.Context, arg UpdateDetailsParams) er
 		arg.Name,
 		arg.CategoryID,
 		arg.ManufacturerID,
+		arg.LocationID,
 		arg.Notes,
 		arg.ID,
 	)
