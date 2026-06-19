@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE inventory_types (
+CREATE TABLE equipment_types (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
 ) STRICT;
@@ -8,5 +8,5 @@ CREATE TABLE inventory_types (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS inventory_types;
+DROP TABLE IF EXISTS equipment_types;
 -- +goose StatementEnd

@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE unit_statuses (
+CREATE TABLE tracking_types (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
 ) STRICT;
@@ -8,5 +8,5 @@ CREATE TABLE unit_statuses (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS unit_statuses;
+DROP TABLE IF EXISTS tracking_types;
 -- +goose StatementEnd
