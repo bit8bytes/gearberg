@@ -8,6 +8,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	genequip "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipment"
+	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcombinationitems"
 	genidcounter "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentitemidcounter"
 	genitems "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentitems"
 	"github.com/bit8bytes/gearberg/internal/pagination"
@@ -20,6 +21,7 @@ type Repository struct {
 	equipment              *genequip.Queries
 	equipmentItems         *genitems.Queries
 	equipmentItemIDCounter *genidcounter.Queries
+	content                *gencontent.Queries
 }
 
 // NewRepository returns a new Repository.
@@ -29,6 +31,7 @@ func NewRepository(db *sql.DB) *Repository {
 		equipment:              genequip.New(db),
 		equipmentItems:         genitems.New(db),
 		equipmentItemIDCounter: genidcounter.New(db),
+		content:                gencontent.New(db),
 	}
 }
 
@@ -72,6 +75,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			LocationID:      database.String(row.LocationID),
 			LocationName:    row.LocationName,
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
+			HasContent:      row.HasContent == 1,
 			TotalStock:      row.TotalStock,
 			PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -103,6 +107,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		LocationID:      database.String(row.LocationID),
 		LocationName:    row.LocationName,
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
+		HasContent:      row.HasContent == 1,
 		TotalStock:      row.TotalStock,
 		PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -143,7 +148,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		UsageTypeID:    c.UsageTypeID,
 		LocationID:     database.NullString(c.LocationID),
 		Name:           c.Name,
-		HasContent:     0,
+		HasContent:     c.HasContent,
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:    database.NullInt64Ptr(c.PurchasePrice),
 		Notes:          database.NullString(database.StringOrNil(c.Notes)),
@@ -228,7 +233,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		UsageTypeID:    c.UsageTypeID,
 		LocationID:     database.NullString(c.LocationID),
 		Name:           c.Name,
-		HasContent:     0,
+		HasContent:     c.HasContent,
 		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:    database.NullInt64Ptr(c.PurchasePrice),
 		Notes:          database.NullString(database.StringOrNil(c.Notes)),
@@ -513,4 +518,80 @@ func (r *Repository) DeleteUnit(ctx context.Context, id string) error {
 		return fmt.Errorf("DeleteUnit: %w", database.NormalizeError(err))
 	}
 	return nil
+}
+
+// ListContent returns all content items for the equipment definition with equipmentID.
+func (r *Repository) ListContent(ctx context.Context, equipmentID string) ([]ContentItem, error) {
+	rows, err := r.content.ListByEquipmentID(ctx, equipmentID)
+	if err != nil {
+		return nil, fmt.Errorf("ListContent: %w", err)
+	}
+	items := make([]ContentItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, ContentItem{
+			ID:          row.ID,
+			EquipmentID: row.EquipmentID,
+			MemberID:    row.MemberEquipmentID,
+			MemberName:  row.MemberName,
+			MemberType:  Type(row.MemberTrackingTypeID.Int64),
+			Quantity:    row.Quantity,
+		})
+	}
+	return items, nil
+}
+
+// AssignContent inserts a new content entry. Returns database.ErrUniqueConstraint when
+// the member is already assigned to this equipment definition.
+func (r *Repository) AssignContent(ctx context.Context, a AssignContent) (*ContentItem, error) {
+	row, err := r.content.Create(ctx, gencontent.CreateParams{
+		ID:                a.ID,
+		EquipmentID:       a.EquipmentID,
+		MemberEquipmentID: a.MemberID,
+		Quantity:          a.Quantity,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("AssignContent: %w", database.NormalizeError(err))
+	}
+	return &ContentItem{
+		ID:          row.ID,
+		EquipmentID: row.EquipmentID,
+		MemberID:    row.MemberEquipmentID,
+		Quantity:    row.Quantity,
+	}, nil
+}
+
+// RemoveContent deletes the content entry with id.
+func (r *Repository) RemoveContent(ctx context.Context, id string) error {
+	if err := r.content.Delete(ctx, id); err != nil {
+		return fmt.Errorf("RemoveContent: %w", database.NormalizeError(err))
+	}
+	return nil
+}
+
+// ListContainersByMemberID returns all container equipment definitions that include
+// memberID in their content definition, ordered by name.
+func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID string) ([]PartOf, error) {
+	rows, err := r.content.ListContainersByMemberID(ctx, memberID)
+	if err != nil {
+		return nil, fmt.Errorf("ListContainersByMemberID: %w", err)
+	}
+	items := make([]PartOf, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, PartOf{ID: row.ID, Name: row.Name})
+	}
+	return items, nil
+}
+
+// TotalDemandByMemberID returns the total units of memberID committed across all
+// combination assignments: sum of (containerTotalStock × perContainerQuantity).
+func (r *Repository) TotalDemandByMemberID(ctx context.Context, memberID string) (int64, error) {
+	v, err := r.content.TotalDemandByMemberID(ctx, memberID)
+	if err != nil {
+		return 0, fmt.Errorf("TotalDemandByMemberID: %w", err)
+	}
+	// sqlc maps COALESCE(SUM(...), 0) to interface{} for SQLite; the driver returns int64.
+	if n, ok := v.(int64); ok {
+		return n, nil
+	}
+	return 0, nil
 }

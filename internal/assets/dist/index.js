@@ -83,12 +83,22 @@ document.addEventListener("change", (e) => {
     if (hint) hint.classList.toggle("hidden", typeValue !== "serialized");
   }
 
+  function syncHasContent(typeValue) {
+    const row = document.querySelector("[data-has-content-row]");
+    const toggle = document.querySelector("[data-has-content-toggle]");
+    if (!row) return;
+    const visible = typeValue === "serialized";
+    row.style.display = visible ? "" : "none";
+    if (!visible && toggle) toggle.checked = false;
+  }
+
   document.addEventListener("change", (e) => {
     const card = e.target.closest("[data-type-option]");
     if (!card) return;
     const selector = card.closest("[data-type-selector]");
     if (selector) syncTypeCards(selector);
     syncCountLabel(e.target.value);
+    syncHasContent(e.target.value);
   });
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -96,7 +106,10 @@ document.addEventListener("change", (e) => {
     if (!selector) return;
     syncTypeCards(selector);
     const checked = selector.querySelector("input[type='radio']:checked");
-    if (checked) syncCountLabel(checked.value);
+    if (checked) {
+      syncCountLabel(checked.value);
+      syncHasContent(checked.value);
+    }
   });
 })();
 

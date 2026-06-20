@@ -88,6 +88,9 @@ var (
 	// EquipmentUnits is the unit management tab page for a serialized item.
 	EquipmentUnits = newPage("pages/equipment/units.tmpl", layouts.Equipment)
 
+	// EquipmentContent is the content management tab page for an item with has_content=true.
+	EquipmentContent = newPage("pages/equipment/content.tmpl", layouts.Equipment)
+
 	// EquipmentImport is the CSV upload form page.
 	EquipmentImport = newPage("pages/equipment/import.tmpl", layouts.Center)
 

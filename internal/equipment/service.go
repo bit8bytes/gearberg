@@ -238,3 +238,58 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID string) error {
 	}
 	return nil
 }
+
+// ListContent returns all content items for equipmentID, enriched with each member's
+// current stock and total demand across all combination assignments so callers can
+// surface warnings without additional lookups.
+func (s *Service) ListContent(ctx context.Context, equipmentID string) ([]ContentItem, error) {
+	items, err := s.repo.ListContent(ctx, equipmentID)
+	if err != nil {
+		return nil, fmt.Errorf("ListContent: %w", err)
+	}
+	for i, item := range items {
+		member, err := s.repo.GetByID(ctx, item.MemberID)
+		if err != nil {
+			continue
+		}
+		demand, err := s.repo.TotalDemandByMemberID(ctx, item.MemberID)
+		if err != nil {
+			continue
+		}
+		items[i].AvailableStock = member.TotalStock
+		items[i].RequiredStock = demand
+	}
+	return items, nil
+}
+
+// AssignContent adds an equipment definition as content of a container. Returns
+// database.ErrUniqueConstraint when already assigned, or an error when memberID == equipmentID.
+// Stock sufficiency is not enforced here; callers should surface warnings via ListContent.
+func (s *Service) AssignContent(ctx context.Context, a AssignContent) (*ContentItem, error) {
+	if a.MemberID == a.EquipmentID {
+		return nil, fmt.Errorf("AssignContent: an item cannot contain itself")
+	}
+	item, err := s.repo.AssignContent(ctx, a)
+	if err != nil {
+		return nil, fmt.Errorf("AssignContent: %w", err)
+	}
+	return item, nil
+}
+
+// RemoveContent deletes the content entry with id.
+func (s *Service) RemoveContent(ctx context.Context, id string) error {
+	if err := s.repo.RemoveContent(ctx, id); err != nil {
+		return fmt.Errorf("RemoveContent: %w", err)
+	}
+	return nil
+}
+
+// ListContainers returns all container equipment definitions that include memberID
+// in their content definition.
+func (s *Service) ListContainers(ctx context.Context, memberID string) ([]PartOf, error) {
+	items, err := s.repo.ListContainersByMemberID(ctx, memberID)
+	if err != nil {
+		return nil, fmt.Errorf("ListContainers: %w", err)
+	}
+	return items, nil
+}

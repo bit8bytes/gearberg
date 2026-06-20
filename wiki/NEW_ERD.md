@@ -170,7 +170,8 @@ erDiagram
   %% tracking=bulk: stock managed via equipment_items.quantity
   %% tracking=serialized: one equipment_items row per physical unit
   %% tracking=virtual: no direct stock; availability derived from content items at rental time
-  %% has_content: only meaningful for bulk and serialized; virtual always has content
+  %% has_content: only valid for serialized items; virtual always has content; bulk never has content
+  %% has_content=true: equipment_combination_items defines what goes inside this physical container
   %% prices stored net (excl. VAT); VAT applied at invoice time using org_settings.vat_rate
 
   equipment_items {
@@ -189,9 +190,8 @@ erDiagram
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
-  %% serial_number: auto-generated (MAX+1 per org), always set, never null; unique per org
+  %% serial_number: auto-generated, always set, never null; unique per org
   %% manufacturer_serial: optional user-supplied serial printed on the physical unit
-  %% code: optional user-facing identifier (e.g. "Light-352"); nullable for bulk container allocation rows
   %% configurable number series (prefix, start, padding) deferred; serial_number TEXT already supports it
   %% bulk: one row for free stock + one row per container assignment, quantity=N each
   %% virtual: no rows
@@ -204,12 +204,14 @@ erDiagram
     text member_equipment_id FK "NOT NULL ON DELETE CASCADE"
     integer quantity "NOT NULL DEFAULT 1"
   }
-  %% equipment_id must reference a virtual equipment row (enforced in service layer)
-  %% member_equipment_id references any physical equipment definition (bulk or serialized)
+  %% equipment_id references either a virtual equipment row OR a serialized row with has_content=true
+  %% member_equipment_id references any equipment definition (bulk or serialized)
   %% UNIQUE(equipment_id, member_equipment_id)
-  %% defines the standard content of a virtual combination (the recipe)
+  %% for virtual equipment: defines the standard content of a kit (the recipe)
+  %% for serialized containers (has_content=true): defines what goes inside this type of physical container
+  %% member_equipment_id must not equal equipment_id (no self-referential content; enforced in service layer)
   %% content can be modified per project (future: rental line items override); not in scope now
-  %% when the combination is planned on a project, all member items are reserved from stock
+  %% when planned on a project, all member items are reserved from stock
 
   equipment_imports {
     text id PK

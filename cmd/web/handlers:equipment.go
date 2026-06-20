@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -59,6 +60,7 @@ type equipmentItemData struct {
 	Manufacturers []manufacturers.Manufacturer
 	Locations     []locations.Location
 	Currency      string
+	PartOf        []equipment.PartOf
 }
 
 type equipmentUnitsData struct {
@@ -69,6 +71,24 @@ type equipmentUnitsData struct {
 	Units      []equipment.Unit
 	Item       *equipment.Equipment
 	Categories []categories.EquipmentCategory
+	PartOf     []equipment.PartOf
+}
+
+type equipmentContentData struct {
+	OrgID        string
+	ID           string
+	Item         *equipment.Equipment
+	Content      []equipment.ContentItem
+	AllEquipment []equipment.Equipment
+	PartOf       []equipment.PartOf
+}
+
+func (app *application) loadPartOf(ctx context.Context, equipmentID string) ([]equipment.PartOf, *httperr.Error) {
+	partOf, err := app.services.equipment.ListContainers(ctx, equipmentID)
+	if err != nil {
+		return nil, &httperr.Error{Error: err, Message: "Failed to load container memberships.", Code: http.StatusInternalServerError}
+	}
+	return partOf, nil
 }
 
 func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -230,6 +250,7 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
 		LocationID:     database.StringOrNil(form.LocationID),
+		HasContent:     form.HasContentInt64(),
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
@@ -304,9 +325,14 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 		return appErr
 	}
 
+	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+	if loadPartOfErr != nil {
+		return loadPartOfErr
+	}
+
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.DetailsForm{}
-	itemData := equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+	itemData := equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
 	data.Data = itemData
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
@@ -335,9 +361,13 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		if appErr != nil {
 			return appErr
 		}
+		partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+		if loadPartOfErr != nil {
+			return loadPartOfErr
+		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
 
@@ -405,9 +435,14 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 		return appErr
 	}
 
+	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+	if loadPartOfErr != nil {
+		return loadPartOfErr
+	}
+
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.PricingForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPricing, data)
 }
 
@@ -431,9 +466,13 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 		if appErr != nil {
 			return appErr
 		}
+		partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+		if loadPartOfErr != nil {
+			return loadPartOfErr
+		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentPricing, data)
 	}
 
@@ -469,9 +508,14 @@ func (app *application) getEquipmentItemProperties(w http.ResponseWriter, r *htt
 		return appErr
 	}
 
+	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+	if loadPartOfErr != nil {
+		return loadPartOfErr
+	}
+
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.PropertiesForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentProperties, data)
 }
 
@@ -588,6 +632,11 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 		return appErr
 	}
 
+	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+	if loadPartOfErr != nil {
+		return loadPartOfErr
+	}
+
 	data := app.html.TemplateData(r)
 	data.Data = equipmentUnitsData{
 		OrgID:      orgID,
@@ -596,6 +645,7 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 		Units:      units,
 		Item:       item,
 		Categories: deps.Categories,
+		PartOf:     partOf,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentUnits, data)
 }
@@ -796,6 +846,127 @@ func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.R
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) loadContentPageData(ctx context.Context, orgID, itemID string) (*equipment.Equipment, []equipment.ContentItem, []equipment.Equipment, *httperr.Error) {
+	item, err := app.services.equipment.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return nil, nil, nil, &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+		}
+		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+	content, err := app.services.equipment.ListContent(ctx, itemID)
+	if err != nil {
+		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
+	}
+	all, err := app.services.equipment.ListAll(ctx, orgID)
+	if err != nil {
+		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
+	}
+	return item, content, all, nil
+}
+
+func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	item, content, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
+	if appErr != nil {
+		return appErr
+	}
+	app.resolveItemURLs(item)
+
+	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
+	if loadPartOfErr != nil {
+		return loadPartOfErr
+	}
+
+	data := app.html.TemplateData(r)
+	data.Form = &equipment.ContentForm{}
+	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf}
+	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
+}
+
+// equipmentIDByName returns the ID of the first equipment whose Name matches name, or "".
+func equipmentIDByName(all []equipment.Equipment, name string) string {
+	for _, e := range all {
+		if e.Name == name {
+			return e.ID
+		}
+	}
+	return ""
+}
+
+func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	form, err := equipment.ParseContent(r)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	reRender := func(f *equipment.ContentForm, extraErr string) *httperr.Error {
+		item, content, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
+		if appErr != nil {
+			return appErr
+		}
+		app.resolveItemURLs(item)
+		partOf, _ := app.loadPartOf(ctx, itemID)
+		if extraErr != "" {
+			f.AddError("assign", extraErr)
+		}
+		data := app.html.TemplateData(r)
+		data.Form = f
+		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
+	}
+
+	if !form.Validate() {
+		return reRender(&form, "")
+	}
+
+	_, _, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
+	if appErr != nil {
+		return appErr
+	}
+	memberID := equipmentIDByName(all, form.MemberName)
+	if memberID == "" {
+		return reRender(&form, "No equipment found with that name.")
+	}
+
+	_, err = app.services.equipment.AssignContent(ctx, equipment.AssignContent{
+		ID:          ksuid.New().String(),
+		EquipmentID: itemID,
+		MemberID:    memberID,
+		Quantity:    form.QuantityInt64(),
+	})
+	if err != nil {
+		if errors.Is(err, database.ErrUniqueConstraint) {
+			return reRender(&form, "This item is already assigned as content.")
+		}
+		return reRender(&form, "Failed to assign content item.")
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/content", http.StatusSeeOther)
+	return nil
+}
+
+func (app *application) postEquipmentRemoveContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+	contentID := r.PathValue("content_id")
+
+	if err := app.services.equipment.RemoveContent(ctx, contentID); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to remove content item.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/content", http.StatusSeeOther)
 	return nil
 }
 

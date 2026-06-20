@@ -330,6 +330,7 @@ type NewForm struct {
 	LocationID       string
 	LocationName     string // set when user typed a new location name not yet in the DB
 	Count            string // total_stock for bulk; number of units to generate for serialized
+	HasContent       bool   // true when the checkbox is checked
 	PurchasePrice    string
 	RentalPrice      string
 	Notes            string
@@ -360,6 +361,7 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
 		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
 		Count:            strings.TrimSpace(r.PostForm.Get("count")),
+		HasContent:       r.PostForm.Get("has_content") == "on",
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
@@ -382,6 +384,9 @@ func ParseNew(r *http.Request) (NewForm, error) {
 func (f *NewForm) Validate() bool {
 	f.Check(f.TypeID == "bulk" || f.TypeID == "serialized", "type_id", "Must be bulk or serialized")
 	f.Check(f.UsageTypeID == "rental" || f.UsageTypeID == "sale", "usage_type_id", "Must be rental or sale")
+	if f.TypeID == "bulk" {
+		f.HasContent = false
+	}
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
 	f.Check(validator.NotBlank(f.CategoryID) || validator.NotBlank(f.CategoryName), "category_id", "A category must be selected")
@@ -429,6 +434,14 @@ func (f *NewForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) 
 func (f *NewForm) CountInt64() int64 {
 	n, _ := strconv.ParseInt(f.Count, 10, 64)
 	return n
+}
+
+// HasContentInt64 returns 1 when has_content is checked, 0 otherwise.
+func (f *NewForm) HasContentInt64() int64 {
+	if f.HasContent {
+		return 1
+	}
+	return 0
 }
 
 // PurchasePriceCents returns the purchase price in the smallest currency unit, or nil when blank.
@@ -479,6 +492,43 @@ func parseOptionalWattsToMW(s string) *int64 {
 	}
 	v := int64(math.Round(f * 1000))
 	return &v
+}
+
+// ContentForm holds parsed input and validation state for assigning content to an equipment item.
+type ContentForm struct {
+	MemberName string
+	Quantity   string
+	validator.Validator
+}
+
+// ParseContent reads the content assign form fields from r.
+func ParseContent(r *http.Request) (ContentForm, error) {
+	if err := r.ParseForm(); err != nil {
+		return ContentForm{}, fmt.Errorf("parse form: %w", err)
+	}
+	return ContentForm{
+		MemberName: strings.TrimSpace(r.PostForm.Get("member_name")),
+		Quantity:   strings.TrimSpace(r.PostForm.Get("quantity")),
+	}, nil
+}
+
+// Validate checks ContentForm fields and returns true when all checks pass.
+func (f *ContentForm) Validate() bool {
+	f.Check(validator.NotBlank(f.MemberName), "member_name", "An item must be selected")
+	if validator.NotBlank(f.Quantity) {
+		n, err := strconv.ParseInt(f.Quantity, 10, 64)
+		f.Check(err == nil, "quantity", "Must be a whole number")
+		f.Check(err != nil || n >= 1, "quantity", "Must be at least 1")
+	} else {
+		f.AddError("quantity", "This field cannot be blank")
+	}
+	return f.Valid()
+}
+
+// QuantityInt64 returns the parsed Quantity. Call only after Validate() returns true.
+func (f *ContentForm) QuantityInt64() int64 {
+	n, _ := strconv.ParseInt(f.Quantity, 10, 64)
+	return n
 }
 
 // parseOptionalAmpsToMA parses a decimal amps string and returns milliamps. Returns nil when blank.

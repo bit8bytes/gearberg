@@ -80,6 +80,7 @@ type Equipment struct {
 	LocationName           string
 	StorageObjectID        *string
 	ImageURL               string
+	HasContent             bool
 	TotalStock             int64
 	PurchasePrice          *int64
 	RentalPrice            *int64
@@ -95,6 +96,42 @@ type Equipment struct {
 	UpdatedAt              int64
 }
 
+// ContentItem represents a single entry in an equipment's content definition.
+type ContentItem struct {
+	ID             string
+	EquipmentID    string
+	MemberID       string
+	MemberName     string
+	MemberType     Type
+	Quantity       int64
+	AvailableStock int64 // member's current total stock; 0 if lookup fails
+	RequiredStock  int64 // container.TotalStock × Quantity
+}
+
+// StockShort reports whether the member has insufficient stock to cover all container units.
+func (c ContentItem) StockShort() bool {
+	return c.RequiredStock > 0 && c.AvailableStock < c.RequiredStock
+}
+
+// AssignContent holds the data required to assign an equipment as content of a container.
+type AssignContent struct {
+	ID          string
+	EquipmentID string
+	MemberID    string
+	Quantity    int64
+}
+
+// RemoveContent holds the data required to remove a content entry.
+type RemoveContent struct {
+	ID string
+}
+
+// PartOf identifies a container equipment that includes this item in its content definition.
+type PartOf struct {
+	ID   string
+	Name string
+}
+
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
 	ID             string
@@ -104,6 +141,7 @@ type Base struct {
 	CategoryID     string
 	ManufacturerID string
 	LocationID     *string
+	HasContent     int64
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string

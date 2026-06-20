@@ -1,0 +1,128 @@
+{{ define "title" }}{{ .Data.Item.Name }} — Content{{ end }}
+
+{{ define "page" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 min-h-24 py-4 flex items-center justify-between">
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2">
+        <h3>{{ .Data.Item.Name }}</h3>
+        <span class="badge badge-ghost badge-sm">Combination</span>
+      </div>
+      {{ if .Data.PartOf }}
+      <div class="flex items-center gap-1 text-xs text-base-content/50">
+        <span>Part of:</span>
+        {{ range .Data.PartOf }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="link">{{ .Name }}</a>{{ end }}
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab">Properties</a>
+      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab">
+        Units
+        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
+      </a>
+      {{ end }}{{ end }}
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" role="tab" class="tab tab-active">
+        Content
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-5xl w-full mx-auto px-4 my-6 flex flex-col gap-6">
+
+  {{/* Assign form */}}
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" class="flex flex-col gap-3" novalidate>
+    <h4>Add Content Item</h4>
+    <div class="flex gap-2 items-start">
+      <div class="flex flex-col gap-1 flex-1">
+        <input
+          list="members-datalist"
+          name="member_name"
+          value="{{ .Form.MemberName }}"
+          placeholder="Search equipment…"
+          autocomplete="off"
+          class="input w-full"
+        />
+        <datalist id="members-datalist">
+          {{ range .Data.AllEquipment }}
+            <option value="{{ .Name }}"></option>
+          {{ end }}
+        </datalist>
+        {{ with index .Form.Errors "member_name" }}
+          <p class="text-error text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+      <div class="flex flex-col gap-1 w-24">
+        <input
+          type="number"
+          name="quantity"
+          value="{{ if .Form.Quantity }}{{ .Form.Quantity }}{{ else }}1{{ end }}"
+          min="1"
+          placeholder="Qty"
+          class="input w-full"
+        />
+        {{ with index .Form.Errors "quantity" }}
+          <p class="text-error text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+      <button type="submit" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Add
+      </button>
+    </div>
+    {{ with index .Form.Errors "assign" }}
+      <p class="text-error text-sm">{{ . }}</p>
+    {{ end }}
+  </form>
+
+  {{/* Content list */}}
+  {{ if .Data.Content }}
+  <div class="overflow-x-auto">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th>ITEM</th>
+          <th>QTY</th>
+          <th>STOCK</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Content }}
+        <tr>
+          <td class="text-sm">{{ .MemberName }}</td>
+          <td class="text-sm">{{ .Quantity }}</td>
+          <td class="text-sm">
+            {{ if .StockShort }}
+            <span class="text-warning text-xs" title="{{ .AvailableStock }} available, {{ .RequiredStock }} needed">
+              ⚠ {{ .AvailableStock }} / {{ .RequiredStock }}
+            </span>
+            {{ else }}
+            <span class="text-base-content/40">{{ .AvailableStock }} / {{ .RequiredStock }}</span>
+            {{ end }}
+          </td>
+          <td class="text-right">
+            <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/content/{{ .ID }}/delete">
+              <button type="submit" class="btn btn-ghost btn-sm text-error">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+  {{ else }}
+  <p class="text-base-content/50 text-sm">No content assigned yet.</p>
+  {{ end }}
+
+</div>
+{{ end }}
