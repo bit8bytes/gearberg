@@ -1,0 +1,144 @@
+{{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }}{{ end }}{{ end }}
+
+{{ define "page" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
+    <div>
+      <h3>{{ .Data.Item.Name }}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab tab-active">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab">Properties</a>
+      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab">
+        Units
+        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
+      </a>
+      {{ end }}{{ end }}
+    </div>
+  </div>
+</div>
+
+<div class="max-w-5xl w-full mx-auto px-4 my-2">  
+  <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
+    <input type="hidden" name="type_id" value="{{ .Data.Item.Type }}">
+
+    <div class="flex flex-col gap-1">
+      <label>Photo</label>
+      <label for="image" class="cursor-pointer w-24 h-24 rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-image-preview>
+        {{ if and .Data.Item .Data.Item.ImageURL }}
+        <img class="w-full h-full object-cover" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
+        {{ else }}
+        {{ template "camera-icon" . }}
+        <img class="hidden h-full object-cover" data-image-preview-img alt="Preview" />
+        {{ end }}
+      </label>
+      <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="name">Name</label>
+      <input
+        id="name"
+        type="text"
+        name="name"
+        value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Item }}{{ .Data.Item.Name }}{{ end }}"
+        maxlength="200"
+        class="input"
+      />
+      {{ with index .Form.Errors "name" }}
+        <p class="text-error text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="category_id">Category</label>
+      <select id="category_id" name="category_id" class="select">
+        <option value="">Select a category</option>
+        {{ range .Data.Categories }}
+          <option value="{{ .ID }}"
+            {{ if $.Form.CategoryID }}
+              {{ if eq $.Form.CategoryID .ID }}selected{{ end }}
+            {{ else if $.Data.Item }}
+              {{ if eq $.Data.Item.CategoryID .ID }}selected{{ end }}
+            {{ end }}
+          >{{ .Name }}</option>
+        {{ end }}
+      </select>
+      {{ with index .Form.Errors "category_id" }}
+        <p class="text-error text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="manufacturer_id">Manufacturer</label>
+      <select id="manufacturer_id" name="manufacturer_id" class="select" {{ if not .Data.Manufacturers }}disabled{{ end }}>
+        <option value="">None</option>
+        {{ range .Data.Manufacturers }}
+          <option value="{{ .ID }}"
+            {{ if $.Form.ManufacturerID }}
+              {{ if eq $.Form.ManufacturerID .ID }}selected{{ end }}
+            {{ else if $.Data.Item }}
+              {{ if eq $.Data.Item.ManufacturerID .ID }}selected{{ end }}
+            {{ end }}
+          >{{ .Name }}</option>
+        {{ end }}
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="location_id">Location <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <select id="location_id" name="location_id" class="select">
+        <option value="">None</option>
+        {{ range .Data.Locations }}
+          <option value="{{ .ID }}"
+            {{ if $.Form.LocationID }}
+              {{ if eq $.Form.LocationID .ID }}selected{{ end }}
+            {{ else if $.Data.Item }}
+              {{ if eq $.Data.Item.LocationID .ID }}selected{{ end }}
+            {{ end }}
+          >{{ .Name }}</option>
+        {{ end }}
+      </select>
+    </div>
+
+{{ if .Data.Item }}{{ if eq .Data.Item.Type 1 }}
+    <div class="flex flex-col gap-1">
+      <label for="total_stock">Total Stock</label>
+      <input
+        id="total_stock"
+        type="number"
+        name="total_stock"
+        value="{{ if .Form.TotalStock }}{{ .Form.TotalStock }}{{ else if .Data.Item }}{{ .Data.Item.TotalStock }}{{ end }}"
+        min="1"
+        class="input"
+      />
+      {{ with index .Form.Errors "total_stock" }}
+        <p class="text-error text-sm">{{ . }}</p>
+      {{ end }}
+    </div>
+    {{ end }}{{ end }}
+
+    <div class="flex flex-col gap-1">
+      <label for="notes">Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
+      <textarea id="notes" name="notes" class="textarea" rows="3">{{ if .Form.Notes }}{{ .Form.Notes }}{{ else if .Data.Item }}{{ .Data.Item.Notes }}{{ end }}</textarea>
+    </div>
+
+    <div class="flex gap-2">
+      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/details" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Save
+      </button>
+      <button data-confirm="Delete inventory item?" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/delete" type="submit" class="btn btn-error btn-outline">Delete</button>
+    </div>
+
+  </form>
+
+</div>
+{{ end }}

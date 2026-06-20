@@ -25,7 +25,7 @@ func encodeGetHealthzResponse(response *HealthzResponse, w http.ResponseWriter, 
 	return nil
 }
 
-func encodeListInventoryResponse(response *InventoryListResponse, w http.ResponseWriter, span trace.Span) error {
+func encodeListEquipmentResponse(response *EquipmentListResponse, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))

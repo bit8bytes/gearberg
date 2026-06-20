@@ -7,6 +7,7 @@ package equipmentcategories
 
 import (
 	"context"
+	"database/sql"
 )
 
 const countByOrgID = `-- name: CountByOrgID :one
@@ -14,7 +15,7 @@ SELECT COUNT(*) FROM equipment_categories
 WHERE org_id = ?
 `
 
-func (q *Queries) CountByOrgID(ctx context.Context, orgID string) (int64, error) {
+func (q *Queries) CountByOrgID(ctx context.Context, orgID sql.NullString) (int64, error) {
 	row := q.db.QueryRowContext(ctx, countByOrgID, orgID)
 	var count int64
 	err := row.Scan(&count)
@@ -25,10 +26,8 @@ const create = `-- name: Create :one
 INSERT INTO equipment_categories (
     id,
     org_id,
-    name,
-    color
+    name
 ) VALUES (
-    ?,
     ?,
     ?,
     ?
@@ -36,38 +35,29 @@ INSERT INTO equipment_categories (
     id,
     org_id,
     name,
-    color,
     created_at
 `
 
 type CreateParams struct {
 	ID    string
-	OrgID string
+	OrgID sql.NullString
 	Name  string
-	Color string
 }
 
 type CreateRow struct {
 	ID        string
-	OrgID     string
+	OrgID     sql.NullString
 	Name      string
-	Color     string
 	CreatedAt int64
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create,
-		arg.ID,
-		arg.OrgID,
-		arg.Name,
-		arg.Color,
-	)
+	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.OrgID, arg.Name)
 	var i CreateRow
 	err := row.Scan(
 		&i.ID,
 		&i.OrgID,
 		&i.Name,
-		&i.Color,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -88,7 +78,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
@@ -107,7 +96,6 @@ func (q *Queries) GetAll(ctx context.Context) ([]EquipmentCategory, error) {
 			&i.ID,
 			&i.OrgID,
 			&i.Name,
-			&i.Color,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
@@ -129,7 +117,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
@@ -143,7 +130,6 @@ func (q *Queries) GetByID(ctx context.Context, id string) (EquipmentCategory, er
 		&i.ID,
 		&i.OrgID,
 		&i.Name,
-		&i.Color,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -155,7 +141,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
@@ -163,7 +148,7 @@ WHERE org_id = ? AND name = ?
 `
 
 type GetByNameParams struct {
-	OrgID string
+	OrgID sql.NullString
 	Name  string
 }
 
@@ -174,7 +159,6 @@ func (q *Queries) GetByName(ctx context.Context, arg GetByNameParams) (Equipment
 		&i.ID,
 		&i.OrgID,
 		&i.Name,
-		&i.Color,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -186,14 +170,13 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
 WHERE org_id = ?
 `
 
-func (q *Queries) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
+func (q *Queries) GetByOrgID(ctx context.Context, orgID sql.NullString) ([]EquipmentCategory, error) {
 	rows, err := q.db.QueryContext(ctx, getByOrgID, orgID)
 	if err != nil {
 		return nil, err
@@ -206,7 +189,6 @@ func (q *Queries) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCate
 			&i.ID,
 			&i.OrgID,
 			&i.Name,
-			&i.Color,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
@@ -227,32 +209,28 @@ const update = `-- name: Update :one
 UPDATE equipment_categories
 SET
     name = ?,
-    color = ?,
     updated_at = unixepoch()
 WHERE id = ?
 RETURNING
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 `
 
 type UpdateParams struct {
-	Name  string
-	Color string
-	ID    string
+	Name string
+	ID   string
 }
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) (EquipmentCategory, error) {
-	row := q.db.QueryRowContext(ctx, update, arg.Name, arg.Color, arg.ID)
+	row := q.db.QueryRowContext(ctx, update, arg.Name, arg.ID)
 	var i EquipmentCategory
 	err := row.Scan(
 		&i.ID,
 		&i.OrgID,
 		&i.Name,
-		&i.Color,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)

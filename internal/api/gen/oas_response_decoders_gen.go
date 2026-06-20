@@ -54,7 +54,7 @@ func decodeGetHealthzResponse(resp *http.Response) (res *HealthzResponse, _ erro
 	return res, validate.UnexpectedStatusCodeWithResponse(resp)
 }
 
-func decodeListInventoryResponse(resp *http.Response) (res *InventoryListResponse, _ error) {
+func decodeListEquipmentResponse(resp *http.Response) (res *EquipmentListResponse, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -70,7 +70,7 @@ func decodeListInventoryResponse(resp *http.Response) (res *InventoryListRespons
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InventoryListResponse
+			var response EquipmentListResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

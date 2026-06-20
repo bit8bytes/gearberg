@@ -20,9 +20,6 @@
     {{ range .Data.Categories }}
     <li class="flex items-center justify-between p-3 rounded border border-base-300">
       <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .ID }}" class="flex items-center gap-2 hover:underline">
-        {{ if .Color }}
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="6" fill="{{ .Color }}"/></svg>
-        {{ end }}
         {{ .Name }}
       </a>
     </li>

@@ -102,9 +102,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/inventory"
+				case '/': // Prefix: "/equipment"
 
-					if l := len("/inventory"); len(elem) >= l && elem[0:l] == "/inventory" {
+					if l := len("/equipment"); len(elem) >= l && elem[0:l] == "/equipment" {
 						elem = elem[l:]
 					} else {
 						break
@@ -114,7 +114,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleListInventoryRequest([1]string{
+							s.handleListEquipmentRequest([1]string{
 								args[0],
 							}, elemIsEscaped, w, r)
 						default:
@@ -272,9 +272,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/inventory"
+				case '/': // Prefix: "/equipment"
 
-					if l := len("/inventory"); len(elem) >= l && elem[0:l] == "/inventory" {
+					if l := len("/equipment"); len(elem) >= l && elem[0:l] == "/equipment" {
 						elem = elem[l:]
 					} else {
 						break
@@ -284,11 +284,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = ListInventoryOperation
-							r.summary = "List inventory items for an org"
-							r.operationID = "listInventory"
+							r.name = ListEquipmentOperation
+							r.summary = "List equipment items for an org"
+							r.operationID = "listEquipment"
 							r.operationGroup = ""
-							r.pathPattern = "/orgs/{org_id}/inventory"
+							r.pathPattern = "/orgs/{org_id}/equipment"
 							r.args = args
 							r.count = 1
 							return r, true

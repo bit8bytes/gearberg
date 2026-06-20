@@ -14,12 +14,12 @@ type Handler interface {
 	//
 	// GET /healthz
 	GetHealthz(ctx context.Context) (*HealthzResponse, error)
-	// ListInventory implements listInventory operation.
+	// ListEquipment implements listEquipment operation.
 	//
-	// List inventory items for an org.
+	// List equipment items for an org.
 	//
-	// GET /orgs/{org_id}/inventory
-	ListInventory(ctx context.Context, params ListInventoryParams) (*InventoryListResponse, error)
+	// GET /orgs/{org_id}/equipment
+	ListEquipment(ctx context.Context, params ListEquipmentParams) (*EquipmentListResponse, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

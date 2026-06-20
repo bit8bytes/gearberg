@@ -2,10 +2,9 @@
 -- +goose StatementBegin
 CREATE TABLE equipment_items (
   id TEXT PRIMARY KEY,
-  equipment_id TEXT NOT NULL REFERENCES equipments(id) ON DELETE CASCADE,
+  equipment_id TEXT NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,
   parent_equipment_item_id TEXT REFERENCES equipment_items(id) ON DELETE SET NULL,
-  serial_number TEXT NOT NULL,
-  code TEXT,
+  internal_id INTEGER NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 1,
   quantity INTEGER NOT NULL DEFAULT 1,
   remark TEXT,

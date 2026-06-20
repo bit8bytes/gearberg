@@ -4,11 +4,14 @@
 
 package equipmentcategories
 
+import (
+	"database/sql"
+)
+
 type EquipmentCategory struct {
 	ID        string
-	OrgID     string
+	OrgID     sql.NullString
 	Name      string
-	Color     string
 	UpdatedAt int64
 	CreatedAt int64
 }

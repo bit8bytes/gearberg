@@ -33,12 +33,12 @@ type Invoker interface {
 	//
 	// GET /healthz
 	GetHealthz(ctx context.Context) (*HealthzResponse, error)
-	// ListInventory invokes listInventory operation.
+	// ListEquipment invokes listEquipment operation.
 	//
-	// List inventory items for an org.
+	// List equipment items for an org.
 	//
-	// GET /orgs/{org_id}/inventory
-	ListInventory(ctx context.Context, params ListInventoryParams) (*InventoryListResponse, error)
+	// GET /orgs/{org_id}/equipment
+	ListEquipment(ctx context.Context, params ListEquipmentParams) (*EquipmentListResponse, error)
 }
 
 // Client implements OAS client.
@@ -157,21 +157,21 @@ func (c *Client) sendGetHealthz(ctx context.Context) (res *HealthzResponse, err 
 	return result, nil
 }
 
-// ListInventory invokes listInventory operation.
+// ListEquipment invokes listEquipment operation.
 //
-// List inventory items for an org.
+// List equipment items for an org.
 //
-// GET /orgs/{org_id}/inventory
-func (c *Client) ListInventory(ctx context.Context, params ListInventoryParams) (*InventoryListResponse, error) {
-	res, err := c.sendListInventory(ctx, params)
+// GET /orgs/{org_id}/equipment
+func (c *Client) ListEquipment(ctx context.Context, params ListEquipmentParams) (*EquipmentListResponse, error) {
+	res, err := c.sendListEquipment(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendListInventory(ctx context.Context, params ListInventoryParams) (res *InventoryListResponse, err error) {
+func (c *Client) sendListEquipment(ctx context.Context, params ListEquipmentParams) (res *EquipmentListResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("listInventory"),
+		otelogen.OperationID("listEquipment"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.URLTemplateKey.String("/orgs/{org_id}/inventory"),
+		semconv.URLTemplateKey.String("/orgs/{org_id}/equipment"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -187,7 +187,7 @@ func (c *Client) sendListInventory(ctx context.Context, params ListInventoryPara
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, ListInventoryOperation,
+	ctx, span := c.cfg.Tracer.Start(ctx, ListEquipmentOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -224,7 +224,7 @@ func (c *Client) sendListInventory(ctx context.Context, params ListInventoryPara
 		}
 		pathParts[1] = encoded
 	}
-	pathParts[2] = "/inventory"
+	pathParts[2] = "/equipment"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -279,7 +279,7 @@ func (c *Client) sendListInventory(ctx context.Context, params ListInventoryPara
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeListInventoryResponse(resp)
+	result, err := decodeListEquipmentResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

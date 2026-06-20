@@ -70,35 +70,32 @@ var (
 	// LocationsDetail is the location detail/edit page.
 	LocationsDetail = newPage("pages/orgs/locations/detail.tmpl", layouts.Center)
 
-	// Inventory is the inventory list page.
-	Inventory = newPage("pages/inventory/index.tmpl", layouts.Inventory)
+	// Equipment is the equipment list page.
+	Equipment = newPage("pages/equipment/index.tmpl", layouts.Equipment)
 
-	// InventoryNew is the unified create-item form page (bulk or serialized).
-	InventoryNew = newPage("pages/inventory/new.tmpl", layouts.Center)
+	// EquipmentNew is the unified create-item form page (bulk or serialized).
+	EquipmentNew = newPage("pages/equipment/new.tmpl", layouts.Center)
 
-	// InventoryDetail is the item details tab page.
-	InventoryDetail = newPage("pages/inventory/detail.tmpl", layouts.Inventory)
+	// EquipmentDetail is the item details tab page.
+	EquipmentDetail = newPage("pages/equipment/detail.tmpl", layouts.Equipment)
 
-	// InventoryPricing is the item pricing tab page.
-	InventoryPricing = newPage("pages/inventory/pricing.tmpl", layouts.Inventory)
+	// EquipmentPricing is the item pricing tab page.
+	EquipmentPricing = newPage("pages/equipment/pricing.tmpl", layouts.Equipment)
 
-	// InventoryProperties is the item properties tab page.
-	InventoryProperties = newPage("pages/inventory/properties.tmpl", layouts.Inventory)
+	// EquipmentProperties is the item properties tab page.
+	EquipmentProperties = newPage("pages/equipment/properties.tmpl", layouts.Equipment)
 
-	// InventoryUnits is the unit management tab page for a serialized item.
-	InventoryUnits = newPage("pages/inventory/units.tmpl", layouts.Inventory)
+	// EquipmentUnits is the unit management tab page for a serialized item.
+	EquipmentUnits = newPage("pages/equipment/units.tmpl", layouts.Equipment)
 
-	// InventoryInspection is the inspection configuration tab page.
-	InventoryInspection = newPage("pages/inventory/inspection.tmpl", layouts.Inventory)
+	// EquipmentImport is the CSV upload form page.
+	EquipmentImport = newPage("pages/equipment/import.tmpl", layouts.Center)
 
-	// InventoryImport is the CSV upload form page.
-	InventoryImport = newPage("pages/inventory/import.tmpl", layouts.Center)
+	// EquipmentImportPreview is the staging review and confirm page.
+	EquipmentImportPreview = newPage("pages/equipment/import-preview.tmpl", layouts.Equipment)
 
-	// InventoryImportPreview is the staging review and confirm page.
-	InventoryImportPreview = newPage("pages/inventory/import-preview.tmpl", layouts.Inventory)
-
-	// InventoryPrint is the bare print view of the inventory list.
-	InventoryPrint = newPage("pages/inventory/print.tmpl", layouts.Print)
+	// EquipmentPrint is the bare print view of the equipment list.
+	EquipmentPrint = newPage("pages/equipment/print.tmpl", layouts.Print)
 
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)

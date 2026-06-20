@@ -8,6 +8,217 @@ import (
 	"github.com/go-faster/errors"
 )
 
+// Ref: #/components/schemas/EquipmentItem
+type EquipmentItem struct {
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Code         int64                  `json:"code"`
+	TotalStock   int64                  `json:"total_stock"`
+	Type         EquipmentItemType      `json:"type"`
+	UsageType    EquipmentItemUsageType `json:"usage_type"`
+	CategoryName OptString              `json:"category_name"`
+}
+
+// GetID returns the value of ID.
+func (s *EquipmentItem) GetID() string {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *EquipmentItem) GetName() string {
+	return s.Name
+}
+
+// GetCode returns the value of Code.
+func (s *EquipmentItem) GetCode() int64 {
+	return s.Code
+}
+
+// GetTotalStock returns the value of TotalStock.
+func (s *EquipmentItem) GetTotalStock() int64 {
+	return s.TotalStock
+}
+
+// GetType returns the value of Type.
+func (s *EquipmentItem) GetType() EquipmentItemType {
+	return s.Type
+}
+
+// GetUsageType returns the value of UsageType.
+func (s *EquipmentItem) GetUsageType() EquipmentItemUsageType {
+	return s.UsageType
+}
+
+// GetCategoryName returns the value of CategoryName.
+func (s *EquipmentItem) GetCategoryName() OptString {
+	return s.CategoryName
+}
+
+// SetID sets the value of ID.
+func (s *EquipmentItem) SetID(val string) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *EquipmentItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetCode sets the value of Code.
+func (s *EquipmentItem) SetCode(val int64) {
+	s.Code = val
+}
+
+// SetTotalStock sets the value of TotalStock.
+func (s *EquipmentItem) SetTotalStock(val int64) {
+	s.TotalStock = val
+}
+
+// SetType sets the value of Type.
+func (s *EquipmentItem) SetType(val EquipmentItemType) {
+	s.Type = val
+}
+
+// SetUsageType sets the value of UsageType.
+func (s *EquipmentItem) SetUsageType(val EquipmentItemUsageType) {
+	s.UsageType = val
+}
+
+// SetCategoryName sets the value of CategoryName.
+func (s *EquipmentItem) SetCategoryName(val OptString) {
+	s.CategoryName = val
+}
+
+type EquipmentItemType string
+
+const (
+	EquipmentItemTypeBulk       EquipmentItemType = "bulk"
+	EquipmentItemTypeSerialized EquipmentItemType = "serialized"
+)
+
+// AllValues returns all EquipmentItemType values.
+func (EquipmentItemType) AllValues() []EquipmentItemType {
+	return []EquipmentItemType{
+		EquipmentItemTypeBulk,
+		EquipmentItemTypeSerialized,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EquipmentItemType) MarshalText() ([]byte, error) {
+	switch s {
+	case EquipmentItemTypeBulk:
+		return []byte(s), nil
+	case EquipmentItemTypeSerialized:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EquipmentItemType) UnmarshalText(data []byte) error {
+	switch EquipmentItemType(data) {
+	case EquipmentItemTypeBulk:
+		*s = EquipmentItemTypeBulk
+		return nil
+	case EquipmentItemTypeSerialized:
+		*s = EquipmentItemTypeSerialized
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type EquipmentItemUsageType string
+
+const (
+	EquipmentItemUsageTypeRental EquipmentItemUsageType = "rental"
+	EquipmentItemUsageTypeSale   EquipmentItemUsageType = "sale"
+)
+
+// AllValues returns all EquipmentItemUsageType values.
+func (EquipmentItemUsageType) AllValues() []EquipmentItemUsageType {
+	return []EquipmentItemUsageType{
+		EquipmentItemUsageTypeRental,
+		EquipmentItemUsageTypeSale,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EquipmentItemUsageType) MarshalText() ([]byte, error) {
+	switch s {
+	case EquipmentItemUsageTypeRental:
+		return []byte(s), nil
+	case EquipmentItemUsageTypeSale:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EquipmentItemUsageType) UnmarshalText(data []byte) error {
+	switch EquipmentItemUsageType(data) {
+	case EquipmentItemUsageTypeRental:
+		*s = EquipmentItemUsageTypeRental
+		return nil
+	case EquipmentItemUsageTypeSale:
+		*s = EquipmentItemUsageTypeSale
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/EquipmentListResponse
+type EquipmentListResponse struct {
+	Items        []EquipmentItem `json:"items"`
+	CurrentPage  int             `json:"current_page"`
+	LastPage     int             `json:"last_page"`
+	TotalRecords int             `json:"total_records"`
+}
+
+// GetItems returns the value of Items.
+func (s *EquipmentListResponse) GetItems() []EquipmentItem {
+	return s.Items
+}
+
+// GetCurrentPage returns the value of CurrentPage.
+func (s *EquipmentListResponse) GetCurrentPage() int {
+	return s.CurrentPage
+}
+
+// GetLastPage returns the value of LastPage.
+func (s *EquipmentListResponse) GetLastPage() int {
+	return s.LastPage
+}
+
+// GetTotalRecords returns the value of TotalRecords.
+func (s *EquipmentListResponse) GetTotalRecords() int {
+	return s.TotalRecords
+}
+
+// SetItems sets the value of Items.
+func (s *EquipmentListResponse) SetItems(val []EquipmentItem) {
+	s.Items = val
+}
+
+// SetCurrentPage sets the value of CurrentPage.
+func (s *EquipmentListResponse) SetCurrentPage(val int) {
+	s.CurrentPage = val
+}
+
+// SetLastPage sets the value of LastPage.
+func (s *EquipmentListResponse) SetLastPage(val int) {
+	s.LastPage = val
+}
+
+// SetTotalRecords sets the value of TotalRecords.
+func (s *EquipmentListResponse) SetTotalRecords(val int) {
+	s.TotalRecords = val
+}
+
 // Ref: #/components/schemas/HealthzResponse
 type HealthzResponse struct {
 	Status          string    `json:"status"`
@@ -54,217 +265,6 @@ func (s *HealthzResponse) SetDatabaseVersion(val string) {
 // SetTimestamp sets the value of Timestamp.
 func (s *HealthzResponse) SetTimestamp(val time.Time) {
 	s.Timestamp = val
-}
-
-// Ref: #/components/schemas/InventoryItem
-type InventoryItem struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Code         int64                  `json:"code"`
-	TotalStock   int64                  `json:"total_stock"`
-	Type         InventoryItemType      `json:"type"`
-	UsageType    InventoryItemUsageType `json:"usage_type"`
-	CategoryName OptString              `json:"category_name"`
-}
-
-// GetID returns the value of ID.
-func (s *InventoryItem) GetID() string {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *InventoryItem) GetName() string {
-	return s.Name
-}
-
-// GetCode returns the value of Code.
-func (s *InventoryItem) GetCode() int64 {
-	return s.Code
-}
-
-// GetTotalStock returns the value of TotalStock.
-func (s *InventoryItem) GetTotalStock() int64 {
-	return s.TotalStock
-}
-
-// GetType returns the value of Type.
-func (s *InventoryItem) GetType() InventoryItemType {
-	return s.Type
-}
-
-// GetUsageType returns the value of UsageType.
-func (s *InventoryItem) GetUsageType() InventoryItemUsageType {
-	return s.UsageType
-}
-
-// GetCategoryName returns the value of CategoryName.
-func (s *InventoryItem) GetCategoryName() OptString {
-	return s.CategoryName
-}
-
-// SetID sets the value of ID.
-func (s *InventoryItem) SetID(val string) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *InventoryItem) SetName(val string) {
-	s.Name = val
-}
-
-// SetCode sets the value of Code.
-func (s *InventoryItem) SetCode(val int64) {
-	s.Code = val
-}
-
-// SetTotalStock sets the value of TotalStock.
-func (s *InventoryItem) SetTotalStock(val int64) {
-	s.TotalStock = val
-}
-
-// SetType sets the value of Type.
-func (s *InventoryItem) SetType(val InventoryItemType) {
-	s.Type = val
-}
-
-// SetUsageType sets the value of UsageType.
-func (s *InventoryItem) SetUsageType(val InventoryItemUsageType) {
-	s.UsageType = val
-}
-
-// SetCategoryName sets the value of CategoryName.
-func (s *InventoryItem) SetCategoryName(val OptString) {
-	s.CategoryName = val
-}
-
-type InventoryItemType string
-
-const (
-	InventoryItemTypeBulk       InventoryItemType = "bulk"
-	InventoryItemTypeSerialized InventoryItemType = "serialized"
-)
-
-// AllValues returns all InventoryItemType values.
-func (InventoryItemType) AllValues() []InventoryItemType {
-	return []InventoryItemType{
-		InventoryItemTypeBulk,
-		InventoryItemTypeSerialized,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s InventoryItemType) MarshalText() ([]byte, error) {
-	switch s {
-	case InventoryItemTypeBulk:
-		return []byte(s), nil
-	case InventoryItemTypeSerialized:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *InventoryItemType) UnmarshalText(data []byte) error {
-	switch InventoryItemType(data) {
-	case InventoryItemTypeBulk:
-		*s = InventoryItemTypeBulk
-		return nil
-	case InventoryItemTypeSerialized:
-		*s = InventoryItemTypeSerialized
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-type InventoryItemUsageType string
-
-const (
-	InventoryItemUsageTypeRental InventoryItemUsageType = "rental"
-	InventoryItemUsageTypeSale   InventoryItemUsageType = "sale"
-)
-
-// AllValues returns all InventoryItemUsageType values.
-func (InventoryItemUsageType) AllValues() []InventoryItemUsageType {
-	return []InventoryItemUsageType{
-		InventoryItemUsageTypeRental,
-		InventoryItemUsageTypeSale,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s InventoryItemUsageType) MarshalText() ([]byte, error) {
-	switch s {
-	case InventoryItemUsageTypeRental:
-		return []byte(s), nil
-	case InventoryItemUsageTypeSale:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *InventoryItemUsageType) UnmarshalText(data []byte) error {
-	switch InventoryItemUsageType(data) {
-	case InventoryItemUsageTypeRental:
-		*s = InventoryItemUsageTypeRental
-		return nil
-	case InventoryItemUsageTypeSale:
-		*s = InventoryItemUsageTypeSale
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-// Ref: #/components/schemas/InventoryListResponse
-type InventoryListResponse struct {
-	Items        []InventoryItem `json:"items"`
-	CurrentPage  int             `json:"current_page"`
-	LastPage     int             `json:"last_page"`
-	TotalRecords int             `json:"total_records"`
-}
-
-// GetItems returns the value of Items.
-func (s *InventoryListResponse) GetItems() []InventoryItem {
-	return s.Items
-}
-
-// GetCurrentPage returns the value of CurrentPage.
-func (s *InventoryListResponse) GetCurrentPage() int {
-	return s.CurrentPage
-}
-
-// GetLastPage returns the value of LastPage.
-func (s *InventoryListResponse) GetLastPage() int {
-	return s.LastPage
-}
-
-// GetTotalRecords returns the value of TotalRecords.
-func (s *InventoryListResponse) GetTotalRecords() int {
-	return s.TotalRecords
-}
-
-// SetItems sets the value of Items.
-func (s *InventoryListResponse) SetItems(val []InventoryItem) {
-	s.Items = val
-}
-
-// SetCurrentPage sets the value of CurrentPage.
-func (s *InventoryListResponse) SetCurrentPage(val int) {
-	s.CurrentPage = val
-}
-
-// SetLastPage sets the value of LastPage.
-func (s *InventoryListResponse) SetLastPage(val int) {
-	s.LastPage = val
-}
-
-// SetTotalRecords sets the value of TotalRecords.
-func (s *InventoryListResponse) SetTotalRecords(val int) {
-	s.TotalRecords = val
 }
 
 // NewOptInt returns new OptInt with value set to v.

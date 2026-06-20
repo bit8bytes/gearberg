@@ -44,5 +44,5 @@ WHERE id = sqlc.arg(id);
 -- name: GetStorageUsedByOrg :one
 SELECT CAST(COALESCE(SUM(so.size), 0) AS INTEGER) AS bytes_used
 FROM storage_objects so
-INNER JOIN inventory i ON i.storage_object_id = so.id
-WHERE i.org_id = sqlc.arg(org_id);
+INNER JOIN equipment e ON e.storage_object_id = so.id
+WHERE e.org_id = sqlc.arg(org_id);

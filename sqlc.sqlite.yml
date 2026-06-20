@@ -32,22 +32,62 @@ sql:
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/manufacturers.sql"
+    queries: "internal/database/queries/sqlite/equipment_manufacturers.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
       go:
-        package: "manufacturers"
-        out: "internal/database/queries/gen/manufacturers"
+        package: "equipmentmanufacturers"
+        out: "internal/database/queries/gen/equipmentmanufacturers"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/inventory.sql"
+    queries: "internal/database/queries/sqlite/equipment.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
       go:
-        package: "inventory"
-        out: "internal/database/queries/gen/inventory"
+        package: "equipment"
+        out: "internal/database/queries/gen/equipment"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/equipment_item_id_counter.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "equipmentitemidcounter"
+        out: "internal/database/queries/gen/equipmentitemidcounter"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/equipment_items.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "equipmentitems"
+        out: "internal/database/queries/gen/equipmentitems"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/equipment_imports.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "equipmentimports"
+        out: "internal/database/queries/gen/equipmentimports"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/warehouse_locations.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "warehouselocations"
+        out: "internal/database/queries/gen/warehouselocations"
         emit_interface: true
         omit_unused_structs: true
 
@@ -58,55 +98,5 @@ sql:
       go:
         package: "storage"
         out: "internal/database/queries/gen/storage"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/inventory_imports.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "invimports"
-        out: "internal/database/queries/gen/invimports"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/serialized_units.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "serializedunits"
-        out: "internal/database/queries/gen/serializedunits"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/bulk_stock.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "bulkstock"
-        out: "internal/database/queries/gen/bulkstock"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/unit_inspections.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "unitinspections"
-        out: "internal/database/queries/gen/unitinspections"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/locations.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "locations"
-        out: "internal/database/queries/gen/locations"
         emit_interface: true
         omit_unused_structs: true

@@ -1,0 +1,162 @@
+{{ define "title" }}{{ .Data.ItemName }} — Units{{ end }}
+
+{{ define "page" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
+    <div>
+      <h3>{{ .Data.Item.Name }}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}" role="tab" class="tab">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/pricing" role="tab" class="tab">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/properties" role="tab" class="tab">Properties</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units" role="tab" class="tab tab-active">
+        Units
+        <span class="badge badge-sm ml-1">{{ len .Data.Units }}</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-5xl w-full mx-auto mb-16">
+
+  {{/* Delete forms live outside the table to avoid nesting. */}}
+  {{ range .Data.Units }}
+  <form id="unit-{{ .ID }}-delete" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}/delete"></form>
+  {{ end }}
+
+  {{ if .Data.Units }}
+  <div class="overflow-x-auto">
+    <table class="table w-full mb-24">
+      <thead>
+        <tr>
+          <th>CODE</th>
+          <th>MFR SERIAL</th>
+          <th>PURCHASE PRICE</th>
+          <th>PURCHASED</th>
+          <th>NOTES</th>
+          {{ if $.Data.Item.InspectionIntervalDays }}
+          <th>LAST INSPECTION</th>
+          <th>NEXT INSPECTION</th>
+          {{ end }}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Units }}
+        <tr>
+          <td class="whitespace-nowrap">
+            <span class="badge badge-ghost font-mono text-xs">{{ .InternalID }}</span>
+          </td>
+          <td class="text-sm">{{ if .ManufacturerSerialNumber }}{{ .ManufacturerSerialNumber }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm">{{ if .PurchasePriceInput }}{{ .PurchasePriceInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm">{{ if .Notes }}{{ .Notes }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          {{ if $.Data.Item.InspectionIntervalDays }}
+          <td class="text-sm">{{ if .LastInspectionAt }}<span class="text-base-content/30">—</span>{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm"><span class="text-base-content/30">—</span></td>
+          {{ end }}
+          <td class="text-right">
+            <div class="flex gap-1 justify-end">
+              <button data-modal-target="unit-modal-{{ .ID }}" class="btn btn-sm btn-ghost">Edit</button>
+              <details class="dropdown dropdown-end">
+                <summary class="btn btn-sm btn-ghost btn-square">
+                  <span class="w-4 h-4">{{ template "dot-menu-icon" . }}</span>
+                </summary>
+                <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-1 shadow border border-base-300">
+                  <li>
+                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}/qr" title="Download QR">
+                      <span class="w-4 h-4">{{ template "qr-icon" . }}</span>
+                      QR Code
+                    </a>
+                  </li>
+                  <li>
+                    <button
+                      form="unit-{{ .ID }}-delete"
+                      type="submit"
+                      class="text-error"
+                      data-confirm="Delete unit {{ .InternalID }}?"
+                    >
+                    <span class="w-4 h-4">{{ template "delete-icon" . }}</span>
+                    Delete</button>
+                  </li>
+                </ul>
+              </details>
+            </div>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="10" class="text-right pt-2 px-4">
+            <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units">
+              <button type="submit" class="btn btn-sm btn-primary">Add unit</button>
+            </form>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  {{ else }}
+  <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+    <p class="text-sm">No units recorded.
+      <form class="inline" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units">
+        <button type="submit" class="link">Add the first unit.</button>
+      </form>
+    </p>
+  </div>
+  {{ end }}
+
+  {{/* Unit edit modals — one per unit */}}
+  {{ range .Data.Units }}
+  <dialog id="unit-modal-{{ .ID }}" class="modal">
+    <div class="modal-box max-w-md flex flex-col gap-4">
+      <h3 class="font-semibold">Unit #{{ .InternalID }}</h3>
+
+      <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}" class="flex flex-col gap-4">
+
+        <div class="flex flex-col gap-1">
+          <label>Manufacturer Serial Number <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <input type="text" name="serial_number" value="{{ .ManufacturerSerialNumber }}" maxlength="200" class="input w-full" placeholder="—" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label>Quantity</label>
+          <input type="number" name="quantity" value="{{ .Quantity }}" min="1" class="input w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label>Purchased <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <input type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label>Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <textarea name="notes" maxlength="1000" class="textarea w-full" placeholder="—">{{ .Notes }}</textarea>
+        </div>
+
+      </form>
+
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn btn-ghost">Cancel</button>
+        </form>
+        <button type="submit" form="unit-edit-{{ .ID }}" class="btn btn-primary" data-loading-trigger>
+          {{ template "loading-spinner" . }}
+          Save
+        </button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+  {{ end }}
+
+</div>
+
+{{ end }}

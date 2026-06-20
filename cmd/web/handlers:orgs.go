@@ -84,7 +84,7 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 		}
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/orgs/%s/inventory", org.ID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/orgs/%s/equipment", org.ID), http.StatusSeeOther)
 	return nil
 }
 

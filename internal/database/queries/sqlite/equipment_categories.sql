@@ -2,10 +2,8 @@
 INSERT INTO equipment_categories (
     id,
     org_id,
-    name,
-    color
+    name
 ) VALUES (
-    ?,
     ?,
     ?,
     ?
@@ -13,7 +11,6 @@ INSERT INTO equipment_categories (
     id,
     org_id,
     name,
-    color,
     created_at;
 
 -- name: GetByID :one
@@ -21,7 +18,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
@@ -32,7 +28,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories;
@@ -42,7 +37,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories
@@ -52,14 +46,12 @@ WHERE org_id = ?;
 UPDATE equipment_categories
 SET
     name = ?,
-    color = ?,
     updated_at = unixepoch()
 WHERE id = ?
 RETURNING
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at;
 
@@ -68,7 +60,6 @@ SELECT
     id,
     org_id,
     name,
-    color,
     updated_at,
     created_at
 FROM equipment_categories

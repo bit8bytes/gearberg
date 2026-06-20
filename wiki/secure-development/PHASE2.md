@@ -38,7 +38,7 @@ Gearberg is a self-hostable, open-source (AGPL v3) web application for inventory
 | C2 | Internal | Intended for operator use only |
 | C3 | Confidential | Sensitive or legally regulated |
 
-### Data Inventory
+### Data Equipment
 
 | Data | Class | Legal basis |
 |---|---|---|

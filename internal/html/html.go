@@ -53,7 +53,6 @@ func (rnd *HTML) Handle(fn httperr.HandlerFunc) http.HandlerFunc {
 			traceID := trace.From(r.Context())
 			err.TraceID = traceID.String()
 			rnd.logger.ErrorContext(r.Context(), "handler error",
-				slog.Int("status", err.Code),
 				slog.String("message", err.Message),
 				slog.Any("err", err.Error),
 				slog.String("trace_id", err.TraceID),

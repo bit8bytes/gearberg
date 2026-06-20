@@ -155,22 +155,22 @@ func (s *Server) handleGetHealthzRequest(args [0]string, argsEscaped bool, w htt
 	}
 }
 
-// handleListInventoryRequest handles listInventory operation.
+// handleListEquipmentRequest handles listEquipment operation.
 //
-// List inventory items for an org.
+// List equipment items for an org.
 //
-// GET /orgs/{org_id}/inventory
-func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /orgs/{org_id}/equipment
+func (s *Server) handleListEquipmentRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	statusWriter := &codeRecorder{ResponseWriter: w}
 	w = statusWriter
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("listInventory"),
+		otelogen.OperationID("listEquipment"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/orgs/{org_id}/inventory"),
+		semconv.HTTPRouteKey.String("/orgs/{org_id}/equipment"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), ListInventoryOperation,
+	ctx, span := s.cfg.Tracer.Start(r.Context(), ListEquipmentOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -225,11 +225,11 @@ func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: ListInventoryOperation,
-			ID:   "listInventory",
+			Name: ListEquipmentOperation,
+			ID:   "listEquipment",
 		}
 	)
-	params, err := decodeListInventoryParams(args, argsEscaped, r)
+	params, err := decodeListEquipmentParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -242,13 +242,13 @@ func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w 
 
 	var rawBody []byte
 
-	var response *InventoryListResponse
+	var response *EquipmentListResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    ListInventoryOperation,
-			OperationSummary: "List inventory items for an org",
-			OperationID:      "listInventory",
+			OperationName:    ListEquipmentOperation,
+			OperationSummary: "List equipment items for an org",
+			OperationID:      "listEquipment",
 			Body:             nil,
 			RawBody:          rawBody,
 			Params: middleware.Parameters{
@@ -270,8 +270,8 @@ func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w 
 
 		type (
 			Request  = struct{}
-			Params   = ListInventoryParams
-			Response = *InventoryListResponse
+			Params   = ListEquipmentParams
+			Response = *EquipmentListResponse
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -280,14 +280,14 @@ func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w 
 		](
 			m,
 			mreq,
-			unpackListInventoryParams,
+			unpackListEquipmentParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.ListInventory(ctx, params)
+				response, err = s.h.ListEquipment(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.ListInventory(ctx, params)
+		response, err = s.h.ListEquipment(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)
@@ -295,7 +295,7 @@ func (s *Server) handleListInventoryRequest(args [1]string, argsEscaped bool, w 
 		return
 	}
 
-	if err := encodeListInventoryResponse(response, w, span); err != nil {
+	if err := encodeListEquipmentResponse(response, w, span); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

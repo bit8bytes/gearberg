@@ -22,11 +22,11 @@ func (UnimplementedHandler) GetHealthz(ctx context.Context) (r *HealthzResponse,
 	return r, ht.ErrNotImplemented
 }
 
-// ListInventory implements listInventory operation.
+// ListEquipment implements listEquipment operation.
 //
-// List inventory items for an org.
+// List equipment items for an org.
 //
-// GET /orgs/{org_id}/inventory
-func (UnimplementedHandler) ListInventory(ctx context.Context, params ListInventoryParams) (r *InventoryListResponse, _ error) {
+// GET /orgs/{org_id}/equipment
+func (UnimplementedHandler) ListEquipment(ctx context.Context, params ListEquipmentParams) (r *EquipmentListResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }

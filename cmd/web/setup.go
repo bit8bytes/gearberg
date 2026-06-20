@@ -16,12 +16,12 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/database/migrations"
-	"github.com/bit8bytes/gearberg/internal/inventory"
-	invimports "github.com/bit8bytes/gearberg/internal/inventory/imports"
-	"github.com/bit8bytes/gearberg/internal/locations"
+	"github.com/bit8bytes/gearberg/internal/equipment"
+	"github.com/bit8bytes/gearberg/internal/equipment/categories"
+	invimports "github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipment/locations"
+	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs"
-	"github.com/bit8bytes/gearberg/internal/orgs/categories"
-	"github.com/bit8bytes/gearberg/internal/orgs/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates"
@@ -129,8 +129,8 @@ type services struct {
 	equipmentcategories *categories.Service
 	manufacturers       *manufacturers.Service
 	locations           *locations.Service
-	inventory           *inventory.Service
-	inventoryImports    *invimports.Service
+	equipment           *equipment.Service
+	equipmentImports    *invimports.Service
 	storageManager      *storage.Manager
 }
 
@@ -150,11 +150,11 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 	locationsRepo := locations.NewRepository(db)
 	locationsSvc := locations.NewService(locationsRepo, locations.Options{MaxLocations: opts.MaxOrgLocations})
 
-	inventoryRepo := inventory.NewRepository(db)
-	inventorySvc := inventory.NewService(inventoryRepo, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
+	inventoryRepo := equipment.NewRepository(db)
+	inventorySvc := equipment.NewService(inventoryRepo, db, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
 
-	inventoryImportsRepo := invimports.NewRepository(db)
-	inventoryImportsSvc := invimports.NewService(inventoryImportsRepo, db, inventorySvc, equipmentcategoriesSvc, manufacturersSvc)
+	equipmentImportsRepo := invimports.NewRepository(db)
+	equipmentImportsSvc := invimports.NewService(equipmentImportsRepo, db, inventorySvc, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
 
 	store, err := storage.Open("local", opts.StorageDSN, logger)
 	if err != nil {
@@ -173,8 +173,8 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger) (*services, e
 		equipmentcategories: equipmentcategoriesSvc,
 		manufacturers:       manufacturersSvc,
 		locations:           locationsSvc,
-		inventory:           inventorySvc,
-		inventoryImports:    inventoryImportsSvc,
+		equipment:           inventorySvc,
+		equipmentImports:    equipmentImportsSvc,
 		storageManager:      storageMgr,
 	}, nil
 }
