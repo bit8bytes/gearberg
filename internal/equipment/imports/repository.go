@@ -53,7 +53,7 @@ func (r *Repository) Insert(ctx context.Context, row Row) (*Row, error) {
 		PurchasePrice:       row.PurchasePrice,
 		PurchasedAt:         row.PurchasedAt,
 		ManufacturerSerial:  row.ManufacturerSerial,
-		LastInspectedAt:     row.LastInspectedAt,
+		NextInspectionAt:     row.NextInspectionAt,
 		IsActive:            row.IsActive,
 		Remark:              row.Remark,
 	})
@@ -148,7 +148,7 @@ func fromRecord(rec genimports.EquipmentImport) Row {
 		PurchasePrice:       rec.PurchasePrice,
 		PurchasedAt:         rec.PurchasedAt,
 		ManufacturerSerial:  rec.ManufacturerSerial,
-		LastInspectedAt:     rec.LastInspectedAt,
+		NextInspectionAt:     rec.NextInspectionAt,
 		IsActive:            rec.IsActive,
 		Remark:              rec.Remark,
 	}

@@ -3,24 +3,7 @@
 {{ define "page" }}
 {{ template "equipment-header" . }}
 
-<div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
-    <div role="tablist" class="tabs tabs-border">
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab">Details</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab">Properties</a>
-      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab">
-        Units
-        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
-      </a>
-      {{ end }}{{ end }}
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" role="tab" class="tab tab-active">
-        Content
-      </a>
-    </div>
-  </div>
-</div>
+{{ template "equipment-tab-nav" . }}
 
 <div class="max-w-5xl w-full mx-auto px-4 my-6 flex flex-col gap-6">
 

@@ -61,17 +61,19 @@ type equipmentItemData struct {
 	Locations     []locations.Location
 	Currency      string
 	PartOf        []equipment.PartOf
+	ActiveTab string
 }
 
 type equipmentUnitsData struct {
 	OrgID      string
-	ItemID     string
+	ID         string
 	ItemName   string
 	ItemCode   int64
 	Units      []equipment.Unit
 	Item       *equipment.Equipment
 	Categories []categories.EquipmentCategory
 	PartOf     []equipment.PartOf
+	ActiveTab  string
 }
 
 type equipmentContentData struct {
@@ -81,6 +83,7 @@ type equipmentContentData struct {
 	Content      []equipment.ContentItem
 	AllEquipment []equipment.Equipment
 	PartOf       []equipment.PartOf
+	ActiveTab    string
 }
 
 func (app *application) loadPartOf(ctx context.Context, equipmentID string) ([]equipment.PartOf, *httperr.Error) {
@@ -332,7 +335,7 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.DetailsForm{}
-	itemData := equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
+	itemData := equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "details"}
 	data.Data = itemData
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
@@ -367,7 +370,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "details"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
 
@@ -442,7 +445,7 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.PricingForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "pricing"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPricing, data)
 }
 
@@ -472,7 +475,7 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "pricing"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentPricing, data)
 	}
 
@@ -515,7 +518,7 @@ func (app *application) getEquipmentItemProperties(w http.ResponseWriter, r *htt
 
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.PropertiesForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf}
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "properties"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentProperties, data)
 }
 
@@ -585,6 +588,7 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 		Quantity:                 form.QuantityInt64(),
 		PurchasePrice:            form.PurchasePriceCents(),
 		PurchasedAt:              form.PurchasedAtUnix(),
+		NextInspectionAt:         form.NextInspectionAtUnix(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
 	}
@@ -640,12 +644,13 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 	data := app.html.TemplateData(r)
 	data.Data = equipmentUnitsData{
 		OrgID:      orgID,
-		ItemID:     itemID,
+		ID:         itemID,
 		ItemName:   item.Name,
 		Units:      units,
 		Item:       item,
 		Categories: deps.Categories,
 		PartOf:     partOf,
+		ActiveTab:  "units",
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentUnits, data)
 }
@@ -886,7 +891,7 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.ContentForm{}
-	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf}
+	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf, ActiveTab: "content"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }
 
@@ -922,7 +927,7 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf}
+		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf, ActiveTab: "content"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
 	}
 

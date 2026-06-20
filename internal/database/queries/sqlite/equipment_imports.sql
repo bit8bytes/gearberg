@@ -31,7 +31,7 @@ INSERT INTO equipment_imports (
     purchase_price,
     purchased_at,
     manufacturer_serial,
-    last_inspected_at,
+    next_inspection_at,
     is_active,
     remark
 ) VALUES (

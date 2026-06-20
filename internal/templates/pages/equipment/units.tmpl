@@ -3,44 +3,27 @@
 {{ define "page" }}
 {{ template "equipment-header" . }}
 
-<div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
-    <div role="tablist" class="tabs tabs-border">
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}" role="tab" class="tab">Details</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/pricing" role="tab" class="tab">Pricing</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/properties" role="tab" class="tab">Properties</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units" role="tab" class="tab tab-active">
-        Units
-        <span class="badge badge-sm ml-1">{{ len .Data.Units }}</span>
-      </a>
-      {{ if .Data.Item }}{{ if .Data.Item.HasContent }}
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/content" role="tab" class="tab">Content</a>
-      {{ end }}{{ end }}
-    </div>
-  </div>
-</div>
+{{ template "equipment-tab-nav" . }}
 
 <div class="max-w-5xl w-full mx-auto mb-16">
 
   {{/* Delete forms live outside the table to avoid nesting. */}}
   {{ range .Data.Units }}
-  <form id="unit-{{ .ID }}-delete" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}/delete"></form>
+  <form id="unit-{{ .ID }}-delete" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/delete"></form>
   {{ end }}
 
   {{ if .Data.Units }}
-  <div class="overflow-x-auto">
-    <table class="table w-full mb-24">
+  <div class="overflow-x-auto my-8 pb-16">
+    <table class="table table-sm hover w-full">
       <thead>
         <tr>
           <th>CODE</th>
+          <th>STATUS</th>
           <th>MFR SERIAL</th>
-          <th>PURCHASE PRICE</th>
+          <th>NEXT INSPECTION</th>
+          <th class="text-right">PURCHASE PRICE</th>
           <th>PURCHASED</th>
           <th>NOTES</th>
-          {{ if $.Data.Item.InspectionIntervalDays }}
-          <th>LAST INSPECTION</th>
-          <th>NEXT INSPECTION</th>
-          {{ end }}
           <th></th>
         </tr>
       </thead>
@@ -50,14 +33,35 @@
           <td class="whitespace-nowrap">
             <span class="badge badge-ghost font-mono text-xs">{{ .InternalID }}</span>
           </td>
+          <td>
+            {{ if .IsActive }}
+              <span class="badge badge-success badge-sm">Active</span>
+            {{ else }}
+              <span class="badge badge-ghost badge-sm">Inactive</span>
+            {{ end }}
+          </td>
           <td class="text-sm">{{ if .ManufacturerSerialNumber }}{{ .ManufacturerSerialNumber }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          <td class="text-sm">{{ if .PurchasePriceInput }}{{ .PurchasePriceInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          <td class="text-sm">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          <td class="text-sm">{{ if .Notes }}{{ .Notes }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          {{ if $.Data.Item.InspectionIntervalDays }}
-          <td class="text-sm">{{ if .LastInspectionAt }}<span class="text-base-content/30">—</span>{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          <td class="text-sm"><span class="text-base-content/30">—</span></td>
-          {{ end }}
+          <td class="text-sm">
+            {{ $next := .NextInspectionAtInput }}
+            {{ $label := .NextInspectionLabel }}
+            {{ if $next }}
+            <div class="flex flex-col gap-0.5">
+              <span class="font-mono text-xs">{{ $next }}</span>
+              {{ if $label }}
+                {{ if .IsInspectionOverdue }}
+                  <span class="text-xs text-error font-medium">{{ $label }}</span>
+                {{ else }}
+                  <span class="text-xs text-base-content/40">{{ $label }}</span>
+                {{ end }}
+              {{ end }}
+            </div>
+            {{ else }}<span class="text-base-content/30">—</span>{{ end }}
+          </td>
+          <td class="text-sm text-right">{{ if .PurchasePriceInput }}{{ .PurchasePriceInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="font-mono text-xs">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm max-w-xs">
+            {{ if .Notes }}<span class="truncate block" title="{{ .Notes }}">{{ .Notes }}</span>{{ else }}<span class="text-base-content/30">—</span>{{ end }}
+          </td>
           <td class="text-right">
             <div class="flex gap-1 justify-end">
               <button data-modal-target="unit-modal-{{ .ID }}" class="btn btn-sm btn-ghost">Edit</button>
@@ -67,7 +71,7 @@
                 </summary>
                 <ul class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-1 shadow border border-base-300">
                   <li>
-                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}/qr" title="Download QR">
+                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/qr" title="Download QR">
                       <span class="w-4 h-4">{{ template "qr-icon" . }}</span>
                       QR Code
                     </a>
@@ -92,7 +96,7 @@
       <tfoot>
         <tr>
           <td colspan="10" class="text-right pt-2 px-4">
-            <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units">
+            <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units">
               <button type="submit" class="btn btn-sm btn-primary">Add unit</button>
             </form>
           </td>
@@ -103,7 +107,7 @@
   {{ else }}
   <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
     <p class="text-sm">No units recorded.
-      <form class="inline" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ItemID }}/units">
+      <form class="inline" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units">
         <button type="submit" class="link">Add the first unit.</button>
       </form>
     </p>
@@ -116,7 +120,14 @@
     <div class="modal-box max-w-md flex flex-col gap-4">
       <h3 class="font-semibold">Unit #{{ .InternalID }}</h3>
 
-      <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ItemID }}/units/{{ .ID }}" class="flex flex-col gap-4">
+      <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}" class="flex flex-col gap-4">
+
+        <div class="flex items-center justify-between">
+          <label class="label cursor-pointer gap-3">
+            <span>Active</span>
+            <input type="checkbox" name="status_id" value="1" class="toggle toggle-success" {{ if .IsActive }}checked{{ end }} />
+          </label>
+        </div>
 
         <div class="flex flex-col gap-1">
           <label>Manufacturer Serial Number <span class="text-base-content/40 text-xs">(optional)</span></label>
@@ -124,13 +135,18 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label>Quantity</label>
-          <input type="number" name="quantity" value="{{ .Quantity }}" min="1" class="input w-full" />
+          <label>Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <input type="text" name="purchase_price" value="{{ .PurchasePriceInput }}" class="input w-full" placeholder="—" />
         </div>
 
         <div class="flex flex-col gap-1">
           <label>Purchased <span class="text-base-content/40 text-xs">(optional)</span></label>
           <input type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label>Next Inspection <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <input type="date" name="next_inspection_at" value="{{ .NextInspectionAtInput }}" class="input w-full" />
         </div>
 
         <div class="flex flex-col gap-1">

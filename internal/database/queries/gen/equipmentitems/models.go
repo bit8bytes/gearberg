@@ -18,7 +18,7 @@ type EquipmentItem struct {
 	Remark                sql.NullString
 	PurchasePrice         sql.NullInt64
 	PurchasedAt           sql.NullInt64
-	LastInspectedAt       sql.NullInt64
+	NextInspectionAt      sql.NullInt64
 	ManufacturerSerial    sql.NullString
 	UpdatedAt             int64
 	CreatedAt             int64

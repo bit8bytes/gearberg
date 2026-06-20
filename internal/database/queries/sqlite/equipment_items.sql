@@ -8,7 +8,7 @@ INSERT INTO equipment_items (
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial
 ) VALUES (
     sqlc.arg(id),
@@ -19,7 +19,7 @@ INSERT INTO equipment_items (
     sqlc.arg(remark),
     sqlc.arg(purchase_price),
     sqlc.arg(purchased_at),
-    sqlc.arg(last_inspected_at),
+    sqlc.arg(next_inspection_at),
     sqlc.arg(manufacturer_serial)
 ) RETURNING
     id,
@@ -31,7 +31,7 @@ INSERT INTO equipment_items (
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     created_at;
 
@@ -46,7 +46,7 @@ SELECT
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     updated_at,
     created_at
@@ -64,7 +64,7 @@ SELECT
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     updated_at,
     created_at
@@ -80,7 +80,7 @@ SET
     remark = sqlc.arg(remark),
     purchase_price = sqlc.arg(purchase_price),
     purchased_at = sqlc.arg(purchased_at),
-    last_inspected_at = sqlc.arg(last_inspected_at),
+    next_inspection_at = sqlc.arg(next_inspection_at),
     manufacturer_serial = sqlc.arg(manufacturer_serial),
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);

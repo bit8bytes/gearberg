@@ -3,24 +3,7 @@
 {{ define "page" }}
 {{ template "equipment-header" . }}
 
-<div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
-    <div role="tablist" class="tabs tabs-border">
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab tab-active">Details</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab">Pricing</a>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab">Properties</a>
-      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab">
-        Units
-        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
-      </a>
-      {{ end }}{{ end }}
-      {{ if .Data.Item }}{{ if .Data.Item.HasContent }}
-      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" role="tab" class="tab">Content</a>
-      {{ end }}{{ end }}
-    </div>
-  </div>
-</div>
+{{ template "equipment-tab-nav" . }}
 
 <div class="max-w-5xl w-full mx-auto px-4 my-8">
   <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
@@ -45,30 +28,30 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
-          <div class="flex flex-col gap-1 md:col-span-2">
-            <label class="label">Type</label>
-            <input type="text" value="{{ .Data.Item.Type.Label }}" class="input w-full" disabled />
-          </div>
-
+          
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="name" class="label">Name</label>
             <input
-              id="name"
-              type="text"
-              name="name"
-              value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Item }}{{ .Data.Item.Name }}{{ end }}"
-              maxlength="200"
-              class="input w-full"
+            id="name"
+            type="text"
+            name="name"
+            value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Item }}{{ .Data.Item.Name }}{{ end }}"
+            maxlength="200"
+            class="input w-full"
             />
             {{ with index .Form.Errors "name" }}
-              <p class="text-error text-sm">{{ . }}</p>
+            <p class="text-error text-sm">{{ . }}</p>
             {{ end }}
           </div>
 
           <div class="flex flex-col gap-1 md:col-span-2">
+            <label class="label">Tracking Type</label>
+            <input type="text" value="{{ .Data.Item.Type.Label }}" class="input w-full" disabled />
+          </div>
+          
+          <div class="flex flex-col gap-1 md:col-span-2">
             <label for="category_id" class="label">Category</label>
-            <select id="category_id" name="category_id" class="select w-full">
+            <select id="category_id" name="category_id" class="select w-full" {{ if not .Data.Categories }}disabled{{ end }}>
               <option value="">Select a category</option>
               {{ range .Data.Categories }}
                 <option value="{{ .ID }}"
@@ -103,7 +86,7 @@
 
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="location_id" class="label">Stock Location</label>
-            <select id="location_id" name="location_id" class="select w-full">
+            <select id="location_id" name="location_id" class="select w-full" {{ if not .Data.Locations }}disabled{{ end }}>
               <option value="">None</option>
               {{ range .Data.Locations }}
                 <option value="{{ .ID }}"

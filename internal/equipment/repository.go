@@ -109,6 +109,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
 		HasContent:      row.HasContent == 1,
 		TotalStock:      row.TotalStock,
+		ContentCount:    row.ContentCount,
 		PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
@@ -390,7 +391,7 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 			Quantity:                 row.Quantity,
 			PurchasePrice:            database.Int64Ptr(row.PurchasePrice),
 			PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
-			LastInspectionAt:         database.Int64Ptr(row.LastInspectedAt),
+			NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
 			CreatedAt:                row.CreatedAt,
 			UpdatedAt:                row.UpdatedAt,
 		})
@@ -455,7 +456,7 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		Quantity:                 row.Quantity,
 		PurchasePrice:            database.Int64Ptr(row.PurchasePrice),
 		PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
-		LastInspectionAt:         database.Int64Ptr(row.LastInspectedAt),
+		NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
 		CreatedAt:                row.CreatedAt,
 		UpdatedAt:                row.UpdatedAt,
 	}
@@ -490,20 +491,13 @@ func (r *Repository) AddUnit(ctx context.Context, orgID string, a AddUnit) (*Uni
 
 // UpdateUnit updates the editable fields of a unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
-	existing, err := r.equipmentItems.GetByID(ctx, u.ID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return database.ErrNotFound
-		}
-		return fmt.Errorf("UpdateUnit: %w", err)
-	}
 	if err := r.equipmentItems.Update(ctx, genitems.UpdateParams{
 		IsActive:           u.StatusID,
 		Quantity:           u.Quantity,
 		Remark:             database.NullString(database.StringOrNil(u.Notes)),
 		PurchasePrice:      database.NullInt64Ptr(u.PurchasePrice),
 		PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
-		LastInspectedAt:    existing.LastInspectedAt,
+		NextInspectionAt:    database.NullInt64Ptr(u.NextInspectionAt),
 		ManufacturerSerial: database.NullString(database.StringOrNil(u.ManufacturerSerialNumber)),
 		ID:                 u.ID,
 	}); err != nil {

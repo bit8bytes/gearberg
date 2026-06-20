@@ -47,7 +47,7 @@ type Row struct {
 	PurchasePrice       string
 	PurchasedAt         string
 	ManufacturerSerial  string
-	LastInspectedAt     string
+	NextInspectionAt     string
 	IsActive            string
 	Remark              string
 }
@@ -76,7 +76,7 @@ type RawRow struct {
 	PurchasePrice      string
 	PurchasedAt        string
 	ManufacturerSerial string
-	LastInspectedAt    string
+	NextInspectionAt    string
 	IsActive           string
 	Remark             string
 }

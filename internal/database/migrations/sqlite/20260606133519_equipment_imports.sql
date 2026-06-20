@@ -34,7 +34,7 @@ CREATE TABLE equipment_imports (
   purchase_price TEXT NOT NULL DEFAULT '',
   purchased_at TEXT NOT NULL DEFAULT '',
   manufacturer_serial TEXT NOT NULL DEFAULT '',
-  last_inspected_at TEXT NOT NULL DEFAULT '',
+  next_inspection_at TEXT NOT NULL DEFAULT '',
   is_active TEXT NOT NULL DEFAULT '1',
   remark TEXT NOT NULL DEFAULT ''
 ) STRICT;

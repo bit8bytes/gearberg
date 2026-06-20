@@ -195,7 +195,7 @@ func readImportRows(cr *csv.Reader) ([]imports.RawRow, string) {
 			PurchasePrice:      strings.TrimSpace(record[19]),
 			PurchasedAt:        strings.TrimSpace(record[20]),
 			ManufacturerSerial: strings.TrimSpace(record[21]),
-			LastInspectedAt:    strings.TrimSpace(record[22]),
+			NextInspectionAt:    strings.TrimSpace(record[22]),
 			IsActive:           strings.TrimSpace(record[23]),
 			Remark:             strings.TrimSpace(record[24]),
 		})

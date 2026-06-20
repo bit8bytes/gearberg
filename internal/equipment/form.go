@@ -251,6 +251,7 @@ type UnitForm struct {
 	Quantity                 string
 	PurchasePrice            string // decimal e.g. "19.99"
 	PurchasedAt              string // YYYY-MM-DD
+	NextInspectionAt         string // YYYY-MM-DD
 	StatusID                 string
 	validator.Validator
 }
@@ -267,6 +268,7 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 		Quantity:                 strings.TrimSpace(r.PostForm.Get("quantity")),
 		PurchasePrice:            strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		PurchasedAt:              strings.TrimSpace(r.PostForm.Get("purchased_at")),
+		NextInspectionAt:         strings.TrimSpace(r.PostForm.Get("next_inspection_at")),
 		StatusID:                 strings.TrimSpace(r.PostForm.Get("status_id")),
 	}, nil
 }
@@ -310,6 +312,19 @@ func (f *UnitForm) PurchasedAtUnix() *int64 {
 		return nil
 	}
 	t, err := time.Parse("2006-01-02", f.PurchasedAt)
+	if err != nil {
+		return nil
+	}
+	v := t.UTC().Unix()
+	return &v
+}
+
+// NextInspectionAtUnix parses the YYYY-MM-DD date and returns a *int64 Unix timestamp, or nil when blank.
+func (f *UnitForm) NextInspectionAtUnix() *int64 {
+	if f.NextInspectionAt == "" {
+		return nil
+	}
+	t, err := time.Parse("2006-01-02", f.NextInspectionAt)
 	if err != nil {
 		return nil
 	}

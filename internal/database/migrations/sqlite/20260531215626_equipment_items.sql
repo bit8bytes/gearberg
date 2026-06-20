@@ -10,7 +10,7 @@ CREATE TABLE equipment_items (
   remark TEXT,
   purchase_price INTEGER,
   purchased_at INTEGER,
-  last_inspected_at INTEGER,
+  next_inspection_at INTEGER,
   manufacturer_serial TEXT,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch())

@@ -82,6 +82,7 @@ type Equipment struct {
 	ImageURL               string
 	HasContent             bool
 	TotalStock             int64
+	ContentCount           int64
 	PurchasePrice          *int64
 	RentalPrice            *int64
 	Notes                  string
@@ -193,7 +194,7 @@ type Unit struct {
 	Quantity                 int64
 	PurchasePrice            *int64
 	PurchasedAt              *int64
-	LastInspectionAt         *int64
+	NextInspectionAt         *int64
 	CreatedAt                int64
 	UpdatedAt                int64
 }
@@ -210,6 +211,34 @@ func (u *Unit) PurchasedAtInput() string {
 	}
 	return time.Unix(*u.PurchasedAt, 0).UTC().Format("2006-01-02")
 }
+
+// NextInspectionAtInput formats the next_inspection_at timestamp as "YYYY-MM-DD". Returns "" when nil.
+func (u *Unit) NextInspectionAtInput() string {
+	if u.NextInspectionAt == nil {
+		return ""
+	}
+	return time.Unix(*u.NextInspectionAt, 0).UTC().Format("2006-01-02")
+}
+
+// NextInspectionLabel returns a human-readable countdown: "Xd overdue", "in Xd", or "" when nil.
+func (u *Unit) NextInspectionLabel() string {
+	if u.NextInspectionAt == nil {
+		return ""
+	}
+	days := (*u.NextInspectionAt - time.Now().Unix()) / 86400
+	if days < 0 {
+		return fmt.Sprintf("%dd overdue", -days)
+	}
+	return fmt.Sprintf("in %dd", days)
+}
+
+// IsInspectionOverdue returns true when the next inspection date has passed.
+func (u *Unit) IsInspectionOverdue() bool {
+	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
+}
+
+// IsActive returns true when the unit's is_active flag is set.
+func (u *Unit) IsActive() bool { return u.StatusID == 1 }
 
 // UpdateEquipmentDetails holds the data required to update the details tab fields.
 type UpdateEquipmentDetails struct {
@@ -280,4 +309,5 @@ type UpdateUnit struct {
 	Quantity                 int64
 	PurchasePrice            *int64
 	PurchasedAt              *int64
+	NextInspectionAt         *int64
 }

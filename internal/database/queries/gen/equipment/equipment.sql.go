@@ -210,6 +210,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    (SELECT COUNT(*) FROM equipment_combination_items WHERE equipment_id = e.id) AS content_count,
     e.rental_price,
     e.resale_price,
     e.notes,
@@ -241,6 +242,7 @@ type GetByIDRow struct {
 	Name            string
 	HasContent      int64
 	TotalStock      int64
+	ContentCount    int64
 	RentalPrice     sql.NullInt64
 	ResalePrice     sql.NullInt64
 	Notes           sql.NullString
@@ -271,6 +273,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.Name,
 		&i.HasContent,
 		&i.TotalStock,
+		&i.ContentCount,
 		&i.RentalPrice,
 		&i.ResalePrice,
 		&i.Notes,

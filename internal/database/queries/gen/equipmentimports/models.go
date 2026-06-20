@@ -41,7 +41,7 @@ type EquipmentImport struct {
 	PurchasePrice       string
 	PurchasedAt         string
 	ManufacturerSerial  string
-	LastInspectedAt     string
+	NextInspectionAt    string
 	IsActive            string
 	Remark              string
 }

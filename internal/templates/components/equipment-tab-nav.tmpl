@@ -1,0 +1,23 @@
+{{ define "equipment-tab-nav" }}
+<div class="w-full bg-base-100 border-b border-base-200">
+  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+    <div role="tablist" class="tabs tabs-border">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab{{ if eq .Data.ActiveTab "details" }} tab-active{{ end }}">Details</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab{{ if eq .Data.ActiveTab "pricing" }} tab-active{{ end }}">Pricing</a>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab{{ if eq .Data.ActiveTab "properties" }} tab-active{{ end }}">Properties</a>
+      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab{{ if eq .Data.ActiveTab "units" }} tab-active{{ end }}">
+        Units
+        <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
+      </a>
+      {{ end }}{{ end }}
+      {{ if .Data.Item }}{{ if .Data.Item.HasContent }}
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" role="tab" class="tab{{ if eq .Data.ActiveTab "content" }} tab-active{{ end }}">
+        Content
+        {{ if .Data.Item.ContentCount }}<span class="badge badge-sm ml-1">{{ .Data.Item.ContentCount }}</span>{{ end }}
+      </a>
+      {{ end }}{{ end }}
+    </div>
+  </div>
+</div>
+{{ end }}

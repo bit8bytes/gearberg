@@ -20,7 +20,7 @@ INSERT INTO equipment_items (
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial
 ) VALUES (
     ?1,
@@ -43,7 +43,7 @@ INSERT INTO equipment_items (
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     created_at
 `
@@ -57,7 +57,7 @@ type CreateParams struct {
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
 	PurchasedAt        sql.NullInt64
-	LastInspectedAt    sql.NullInt64
+	NextInspectionAt   sql.NullInt64
 	ManufacturerSerial sql.NullString
 }
 
@@ -71,7 +71,7 @@ type CreateRow struct {
 	Remark                sql.NullString
 	PurchasePrice         sql.NullInt64
 	PurchasedAt           sql.NullInt64
-	LastInspectedAt       sql.NullInt64
+	NextInspectionAt      sql.NullInt64
 	ManufacturerSerial    sql.NullString
 	CreatedAt             int64
 }
@@ -86,7 +86,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.Remark,
 		arg.PurchasePrice,
 		arg.PurchasedAt,
-		arg.LastInspectedAt,
+		arg.NextInspectionAt,
 		arg.ManufacturerSerial,
 	)
 	var i CreateRow
@@ -100,7 +100,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.Remark,
 		&i.PurchasePrice,
 		&i.PurchasedAt,
-		&i.LastInspectedAt,
+		&i.NextInspectionAt,
 		&i.ManufacturerSerial,
 		&i.CreatedAt,
 	)
@@ -128,7 +128,7 @@ SELECT
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     updated_at,
     created_at
@@ -149,7 +149,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (EquipmentItem, error)
 		&i.Remark,
 		&i.PurchasePrice,
 		&i.PurchasedAt,
-		&i.LastInspectedAt,
+		&i.NextInspectionAt,
 		&i.ManufacturerSerial,
 		&i.UpdatedAt,
 		&i.CreatedAt,
@@ -168,7 +168,7 @@ SELECT
     remark,
     purchase_price,
     purchased_at,
-    last_inspected_at,
+    next_inspection_at,
     manufacturer_serial,
     updated_at,
     created_at
@@ -196,7 +196,7 @@ func (q *Queries) ListByEquipmentID(ctx context.Context, equipmentID string) ([]
 			&i.Remark,
 			&i.PurchasePrice,
 			&i.PurchasedAt,
-			&i.LastInspectedAt,
+			&i.NextInspectionAt,
 			&i.ManufacturerSerial,
 			&i.UpdatedAt,
 			&i.CreatedAt,
@@ -240,7 +240,7 @@ SET
     remark = ?3,
     purchase_price = ?4,
     purchased_at = ?5,
-    last_inspected_at = ?6,
+    next_inspection_at = ?6,
     manufacturer_serial = ?7,
     updated_at = unixepoch()
 WHERE id = ?8
@@ -252,7 +252,7 @@ type UpdateParams struct {
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
 	PurchasedAt        sql.NullInt64
-	LastInspectedAt    sql.NullInt64
+	NextInspectionAt   sql.NullInt64
 	ManufacturerSerial sql.NullString
 	ID                 string
 }
@@ -264,7 +264,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
 		arg.Remark,
 		arg.PurchasePrice,
 		arg.PurchasedAt,
-		arg.LastInspectedAt,
+		arg.NextInspectionAt,
 		arg.ManufacturerSerial,
 		arg.ID,
 	)
