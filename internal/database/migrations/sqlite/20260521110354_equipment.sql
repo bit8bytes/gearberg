@@ -4,7 +4,7 @@ CREATE TABLE equipment (
   id TEXT PRIMARY KEY,
   org_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
   tracking_type_id INTEGER REFERENCES tracking_types(id) ON DELETE RESTRICT,
-  category_id TEXT NOT NULL REFERENCES equipment_categories(id) ON DELETE RESTRICT,
+  category_id TEXT REFERENCES equipment_categories(id) ON DELETE RESTRICT,
   manufacturer_id TEXT REFERENCES equipment_manufacturers(id) ON DELETE RESTRICT,
   usage_type_id INTEGER NOT NULL REFERENCES usage_types(id) ON DELETE RESTRICT,
   location_id TEXT REFERENCES warehouse_locations(id) ON DELETE SET NULL,

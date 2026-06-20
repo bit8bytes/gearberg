@@ -146,7 +146,7 @@ erDiagram
     text org_id FK "NOT NULL ON DELETE CASCADE"
     integer type_id FK "NOT NULL ON DELETE RESTRICT"
     integer tracking_type_id FK "ON DELETE RESTRICT"
-    text category_id FK "NOT NULL ON DELETE RESTRICT"
+    text category_id FK "ON DELETE RESTRICT"
     text manufacturer_id FK "ON DELETE RESTRICT"
     text usage_type_id FK "NOT NULL ON DELETE RESTRICT"
     text location_id FK "ON DELETE SET NULL"

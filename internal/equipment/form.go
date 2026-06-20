@@ -104,7 +104,6 @@ func ParseProperties(r *http.Request) (PropertiesForm, error) {
 func (f *DetailsForm) Validate() bool {
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
-	f.Check(validator.NotBlank(f.CategoryID), "category_id", "A category must be selected")
 
 	if f.TypeID == "bulk" {
 		if validator.NotBlank(f.TotalStock) {
@@ -353,7 +352,7 @@ func ParseNew(r *http.Request) (NewForm, error) {
 	f := NewForm{
 		TypeID:           strings.TrimSpace(r.PostForm.Get("type_id")),
 		UsageTypeID:      strings.TrimSpace(r.PostForm.Get("usage_type_id")),
-		Name:             strings.TrimSpace(r.PostForm.Get("name")),
+		Name:             strings.TrimSpace(r.PostForm.Get("equipment_name")),
 		CategoryID:       strings.TrimSpace(r.PostForm.Get("category_id")),
 		CategoryName:     strings.TrimSpace(r.PostForm.Get("category_name")),
 		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
@@ -389,8 +388,6 @@ func (f *NewForm) Validate() bool {
 	}
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
-	f.Check(validator.NotBlank(f.CategoryID) || validator.NotBlank(f.CategoryName), "category_id", "A category must be selected")
-
 	if validator.NotBlank(f.Count) {
 		n, err := strconv.ParseInt(f.Count, 10, 64)
 		f.Check(err == nil, "count", "Must be a whole number")

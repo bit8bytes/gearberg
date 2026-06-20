@@ -91,7 +91,7 @@ type CreateParams struct {
 	ID             string
 	OrgID          string
 	TrackingTypeID sql.NullInt64
-	CategoryID     string
+	CategoryID     sql.NullString
 	ManufacturerID sql.NullString
 	UsageTypeID    int64
 	LocationID     sql.NullString
@@ -113,7 +113,7 @@ type CreateRow struct {
 	ID              string
 	OrgID           string
 	TrackingTypeID  sql.NullInt64
-	CategoryID      string
+	CategoryID      sql.NullString
 	ManufacturerID  sql.NullString
 	UsageTypeID     int64
 	LocationID      sql.NullString
@@ -232,7 +232,7 @@ type GetByIDRow struct {
 	ID              string
 	OrgID           string
 	TrackingTypeID  sql.NullInt64
-	CategoryID      string
+	CategoryID      sql.NullString
 	ManufacturerID  sql.NullString
 	UsageTypeID     int64
 	LocationID      sql.NullString
@@ -336,7 +336,7 @@ type ListRow struct {
 	ID               string
 	OrgID            string
 	Name             string
-	CategoryID       string
+	CategoryID       sql.NullString
 	CategoryName     string
 	ManufacturerID   sql.NullString
 	LocationID       sql.NullString
@@ -438,7 +438,7 @@ type ListAllByOrgIDRow struct {
 	ID              string
 	OrgID           string
 	Name            string
-	CategoryID      string
+	CategoryID      sql.NullString
 	CategoryName    string
 	ManufacturerID  sql.NullString
 	StorageObjectID sql.NullString
@@ -507,7 +507,7 @@ WHERE id = ?6
 
 type UpdateDetailsParams struct {
 	Name           string
-	CategoryID     string
+	CategoryID     sql.NullString
 	ManufacturerID sql.NullString
 	LocationID     sql.NullString
 	Notes          sql.NullString

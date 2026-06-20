@@ -1,22 +1,7 @@
 {{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }} — Pricing{{ end }}{{ end }}
 
 {{ define "page" }}
-<div class="w-full bg-base-200 border-b border-base-300">
-  <div class="max-w-5xl mx-auto px-4 min-h-24 py-4 flex items-center justify-between">
-    <div class="flex flex-col gap-1">
-      <div class="flex items-center gap-2">
-        <h3>{{ .Data.Item.Name }}</h3>
-        {{ if .Data.Item.HasContent }}<span class="badge badge-ghost badge-sm">Combination</span>{{ end }}
-      </div>
-      {{ if .Data.PartOf }}
-      <div class="flex items-center gap-1 text-xs text-base-content/50">
-        <span>Part of:</span>
-        {{ range .Data.PartOf }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="link">{{ .Name }}</a>{{ end }}
-      </div>
-      {{ end }}
-    </div>
-  </div>
-</div>
+{{ template "equipment-header" . }}
 
 <div class="w-full bg-base-100 border-b border-base-200">
   <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
@@ -37,45 +22,52 @@
   </div>
 </div>
 
-<div class="max-w-5xl w-full mx-auto px-4 my-2">  
+<div class="max-w-5xl w-full mx-auto px-4 my-8">
   <form method="POST" class="flex flex-col gap-4" novalidate>
 
-    <div class="flex flex-col gap-2">
-      <div class="flex flex-col gap-1 flex-1">
-        <label for="purchase_price">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
-        <label class="input">
-          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
-          <input
-            id="purchase_price"
-            type="text"
-            inputmode="decimal"
-            name="purchase_price"
-            value="{{ if .Form.PurchasePrice }}{{ .Form.PurchasePrice }}{{ else if .Data.Item }}{{ .Data.Item.PurchasePriceInput }}{{ end }}"
-          />
-        </label>
-        {{ with index .Form.Errors "purchase_price" }}
-          <p class="text-error text-sm">{{ . }}</p>
-        {{ end }}
-      </div>
-      <div class="flex flex-col gap-1 flex-1">
-        <label for="rental_price">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
-        <label class="input">
-          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
-          <input
-            id="rental_price"
-            type="text"
-            inputmode="decimal"
-            name="rental_price"
-            value="{{ if .Form.RentalPrice }}{{ .Form.RentalPrice }}{{ else if .Data.Item }}{{ .Data.Item.RentalPriceInput }}{{ end }}"
-          />
-        </label>
-        {{ with index .Form.Errors "rental_price" }}
-          <p class="text-error text-sm">{{ . }}</p>
-        {{ end }}
-      </div>
-    </div>
+    <fieldset class="border border-base-300 rounded-lg p-4">
+      <legend class="px-1 text-sm font-medium text-base-content/60">Pricing</legend>
 
-    <div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="purchase_price" class="label">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <label class="input w-full">
+            {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+            <input
+              id="purchase_price"
+              type="text"
+              inputmode="decimal"
+              name="purchase_price"
+              value="{{ if .Form.PurchasePrice }}{{ .Form.PurchasePrice }}{{ else if .Data.Item }}{{ .Data.Item.PurchasePriceInput }}{{ end }}"
+            />
+          </label>
+          {{ with index .Form.Errors "purchase_price" }}
+            <p class="text-error text-sm">{{ . }}</p>
+          {{ end }}
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="rental_price" class="label">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <label class="input w-full">
+            {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+            <input
+              id="rental_price"
+              type="text"
+              inputmode="decimal"
+              name="rental_price"
+              value="{{ if .Form.RentalPrice }}{{ .Form.RentalPrice }}{{ else if .Data.Item }}{{ .Data.Item.RentalPriceInput }}{{ end }}"
+            />
+          </label>
+          {{ with index .Form.Errors "rental_price" }}
+            <p class="text-error text-sm">{{ . }}</p>
+          {{ end }}
+        </div>
+
+      </div>
+    </fieldset>
+
+    <div class="flex gap-2">
       <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" class="btn btn-primary" data-loading-trigger>
         {{ template "loading-spinner" . }}
         Save

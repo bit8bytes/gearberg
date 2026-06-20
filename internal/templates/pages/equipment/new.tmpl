@@ -1,184 +1,148 @@
 {{ define "title" }}Add Item{{ end }}
 
 {{ define "page" }}
-<div class="flex-1 max-w-lg mx-auto my-8">
+<div class="flex-1 max-w-3xl mx-auto my-8">
   <h1 class="mb-6">Add Item</h1>
 
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/new" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
-
-    <div class="flex flex-col gap-1">
-      <label>Photo</label>
-      <label for="image" class="cursor-pointer w-24 h-24 rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-image-preview>
-        {{ template "camera-icon" . }}
-        <img class="hidden w-full h-full object-cover" data-image-preview-img alt="Preview" />
-      </label>
-      <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="name">Name</label>
-      <input id="name" type="text" name="name" value="{{ .Form.Name }}" maxlength="200" class="input w-full" />
-      {{ with index .Form.Errors "name" }}
-        <p class="text-red-500 text-sm">{{ . }}</p>
-      {{ end }}
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="category_input">Category</label>
-      <combo-box
-        input-id="category_input"
-        name="category_id"
-        name-new="category_name"
-        placeholder="Search or add category…"
-        {{ if and (eq .Form.CategoryID "") .Form.CategoryName }}selected-name="{{ .Form.CategoryName }}"{{ end }}
-      >
-        <template>
-          {{ range .Data.Categories }}
-            <option value="{{ .ID }}"{{ if eq .ID $.Form.CategoryID }} selected{{ end }}>
-              {{ .Name }}
-            </option>
-          {{ end }}
-        </template>
-      </combo-box>
-      {{ with index .Form.Errors "category_id" }}
-        <p class="text-red-500 text-sm">{{ . }}</p>
-      {{ end }}
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="manufacturer_input">Manufacturer <span class="text-base-content/40 text-xs">(optional)</span></label>
-      <combo-box
-        input-id="manufacturer_input"
-        name="manufacturer_id"
-        name-new="manufacturer_name"
-        placeholder="Search or add manufacturer…"
-        {{ if and (eq .Form.ManufacturerID "") .Form.ManufacturerName }}selected-name="{{ .Form.ManufacturerName }}"{{ end }}
-      >
-        <template>
-          {{ range .Data.Manufacturers }}
-            <option value="{{ .ID }}"{{ if eq .ID $.Form.ManufacturerID }} selected{{ end }}>
-              {{ .Name }}
-            </option>
-          {{ end }}
-        </template>
-      </combo-box>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="location_input">Location <span class="text-base-content/40 text-xs">(optional)</span></label>
-      <combo-box
-        input-id="location_input"
-        name="location_id"
-        name-new="location_name"
-        placeholder="Search or add location…"
-        {{ if and (eq .Form.LocationID "") .Form.LocationName }}selected-name="{{ .Form.LocationName }}"{{ end }}
-      >
-        <template>
-          {{ range .Data.Locations }}
-            <option value="{{ .ID }}"{{ if eq .ID $.Form.LocationID }} selected{{ end }}>
-              {{ .Name }}
-            </option>
-          {{ end }}
-        </template>
-      </combo-box>
-    </div>
-
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/new" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="usage_type_id" value="rental" />
 
-    <div class="flex flex-col gap-1">
-      <label>Type</label>
-      <div class="grid grid-cols-2 gap-3" data-type-selector>
-        <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
-          <input
-            type="radio"
-            name="type_id"
-            value="bulk"
-            class="sr-only"
-            tabindex="0" 
-            {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}checked{{ end }}
-          />
-          <div class="w-5 h-5">{{ template "bulk-icon" . }}</div>
-          <span class="font-medium text-sm">Bulk</span>
-          <span class="text-xs text-base-content/50">Track a total quantity</span>
-        </label>
-        <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if eq .Form.TypeID "serialized" }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
-          <input
-            type="radio"
-            name="type_id"
-            value="serialized"
-            class="sr-only"
-            {{ if eq .Form.TypeID "serialized" }}checked{{ end }}
-          />
-          <div class="w-5 h-5">{{ template "serialized-icon" . }}</div>
-          <span class="font-medium text-sm">Serialized</span>
-          <span class="text-xs text-base-content/50">Track individual units with serial numbers</span>
-        </label>
+    <div class="flex flex-col gap-4">
+
+      <fieldset class="border border-base-300 rounded-lg p-4">
+        <legend class="px-1 text-sm font-medium text-base-content/60">General</legend>
+
+        <div class="flex flex-col gap-4">
+
+          <div class="shrink-0 w-28 flex flex-col gap-1">
+            <label for="image" class="label">Photo</label>
+            <label for="image" class="cursor-pointer w-full aspect-square rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-image-preview>
+              {{ template "camera-icon" . }}
+              <img class="hidden w-full h-full object-cover" data-image-preview-img alt="Preview" />
+            </label>
+            <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
+          </div>
+
+          <div class="flex-1 flex flex-col">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="name" class="label">Name</label>
+                <input id="name" type="text" name="equipment_name" value="{{ .Form.Name }}" maxlength="200" class="input w-full" autofocus />
+                {{ with index .Form.Errors "name" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="count" class="label">Quantity</label>
+                <input
+                  id="count"
+                  type="number"
+                  name="count"
+                  value="{{ if .Form.Count }}{{ .Form.Count }}{{ else }}1{{ end }}"
+                  min="1"
+                  class="input w-full"
+                />
+                {{ with index .Form.Errors "count" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="rental_price" class="label">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <label class="input w-full">
+                  {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+                  <input id="rental_price" type="text" inputmode="decimal" name="rental_price" value="{{ .Form.RentalPrice }}" />
+                </label>
+                {{ with index .Form.Errors "rental_price" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="category_input" class="label">Category <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <combo-box
+                  class="block w-full"
+                  input-id="category_input"
+                  name="category_id"
+                  name-new="category_name"
+                  placeholder="Search or add…"
+                  {{ if and (eq .Form.CategoryID "") .Form.CategoryName }}selected-name="{{ .Form.CategoryName }}"{{ end }}
+                >
+                  <template>
+                    {{ range .Data.Categories }}
+                      <option value="{{ .ID }}"{{ if eq .ID $.Form.CategoryID }} selected{{ end }}>
+                        {{ .Name }}
+                      </option>
+                    {{ end }}
+                  </template>
+                </combo-box>
+                {{ with index .Form.Errors "category_id" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </fieldset>
+
+      <fieldset class="flex flex-col gap-4 border border-base-300 rounded-lg p-4">
+        <legend class="px-1 text-sm font-medium text-base-content/60">Type</legend>
+
+        <div class="flex flex-col gap-1">
+          <div class="grid grid-cols-2 gap-3" data-type-selector>
+            <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+              <input
+                type="radio"
+                name="type_id"
+                value="bulk"
+                class="sr-only"
+                tabindex="0"
+                {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}checked{{ end }}
+              />
+              <div class="w-5 h-5">{{ template "bulk-icon" . }}</div>
+              <span class="font-medium text-sm">Bulk</span>
+              <span class="text-xs text-base-content/50">Track a total quantity</span>
+            </label>
+            <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if eq .Form.TypeID "serialized" }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+              <input
+                type="radio"
+                name="type_id"
+                value="serialized"
+                class="sr-only"
+                {{ if eq .Form.TypeID "serialized" }}checked{{ end }}
+              />
+              <div class="w-5 h-5">{{ template "serialized-icon" . }}</div>
+              <span class="font-medium text-sm">Serialized</span>
+              <span class="text-xs text-base-content/50">Track individual units with serial numbers</span>
+            </label>
+          </div>
+          {{ with index .Form.Errors "type_id" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
+        </div>
+
+        <div class="flex items-center justify-between" data-has-content-row>
+          <div class="flex flex-col gap-0.5">
+            <span class="label-text">Has Content</span>
+            <span class="text-xs text-base-content/50">This item can hold other items (e.g. a case or bag)</span>
+          </div>
+          <input type="checkbox" name="has_content" value="on" class="toggle" {{ if .Form.HasContent }}checked{{ end }} data-has-content-toggle />
+        </div>
+      </fieldset>
+
+      <div class="flex gap-2">
+        <button type="submit" tabindex="0" class="btn btn-primary" data-loading-trigger>
+          {{ template "loading-spinner" . }}
+          Add Item
+        </button>
+        <a tabindex="0" href="/orgs/{{ .Data.OrgID }}/equipment" class="btn">Cancel</a>
       </div>
-      {{ with index .Form.Errors "type_id" }}
-        <p class="text-red-500 text-sm">{{ . }}</p>
-      {{ end }}
-    </div>
 
-    <div class="flex items-center justify-between" data-has-content-row>
-      <div class="flex flex-col gap-0.5">
-        <span class="label-text">Has Content</span>
-        <span class="text-xs text-base-content/50">This item can hold other items (e.g. a case or bag)</span>
-      </div>
-      <input type="checkbox" name="has_content" value="on" class="toggle" {{ if .Form.HasContent }}checked{{ end }} data-has-content-toggle />
     </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="count"><span data-count-label>{{ if eq .Form.TypeID "serialized" }}Units to Create{{ else }}Quantity{{ end }}</span></label>
-      <input
-        id="count"
-        type="number"
-        name="count"
-        value="{{ if .Form.Count }}{{ .Form.Count }}{{ else }}1{{ end }}"
-        min="1"
-        class="input w-full"
-      />
-      <p data-count-hint class="text-xs text-base-content/50 {{ if ne .Form.TypeID "serialized" }}hidden{{ end }}">You can add serial numbers and inspection dates after creating.</p>
-      {{ with index .Form.Errors "count" }}
-        <p class="text-red-500 text-sm">{{ . }}</p>
-      {{ end }}
-    </div>
-
-    <div class="flex gap-2">
-      <div class="flex flex-col gap-1 flex-1">
-        <label for="purchase_price">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
-        <label class="input w-full">
-          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
-          <input id="purchase_price" type="text" inputmode="decimal" name="purchase_price" value="{{ .Form.PurchasePrice }}" />
-        </label>
-        {{ with index .Form.Errors "purchase_price" }}
-          <p class="text-red-500 text-sm">{{ . }}</p>
-        {{ end }}
-      </div>
-      <div class="flex flex-col gap-1 flex-1">
-        <label for="rental_price">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
-        <label class="input w-full">
-          {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
-          <input id="rental_price" type="text" inputmode="decimal" name="rental_price" value="{{ .Form.RentalPrice }}" />
-        </label>
-        {{ with index .Form.Errors "rental_price" }}
-          <p class="text-red-500 text-sm">{{ . }}</p>
-        {{ end }}
-      </div>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label for="notes">Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
-      <textarea id="notes" name="notes" class="textarea w-full" rows="3">{{ .Form.Notes }}</textarea>
-    </div>
-
-    <div class="flex gap-2">
-      <button type="submit" tabindex="0"  class="btn btn-primary" data-loading-trigger>
-        {{ template "loading-spinner" . }}
-        Add Item
-      </button>
-      <a tabindex="0" href="/orgs/{{ .Data.OrgID }}/equipment" class="btn">Cancel</a>
-    </div>
-
   </form>
 </div>
 {{ end }}
