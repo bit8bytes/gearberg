@@ -35,6 +35,7 @@ type equipmentData struct {
 	Filtered          bool
 	Query             string
 	Category          string
+	Sort              string
 	ShowArchived      bool
 	PageBaseURL       template.URL
 	PrintURL          template.URL
@@ -171,6 +172,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
+	sort := qs.Get("sort")
 	showArchived := qs.Get("archived") == "true"
 
 	page, err := strconv.Atoi(qs.Get("page"))
@@ -183,7 +185,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PageSize: 25,
 	}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, showArchived, f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, sort, showArchived, f)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
@@ -198,10 +200,11 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		Filtered:          query != "" || category != "",
 		Query:             query,
 		Category:          category,
+		Sort:              sort,
 		ShowArchived:      showArchived,
-		PageBaseURL:       template.URL(equipmentPageURL(id, query, category, showArchived)),   // #nosec G203
-		PrintURL:          template.URL(equipmentPrintURL(id, query, category, showArchived)),  // #nosec G203
-		ToggleArchivedURL: template.URL(equipmentPageURL(id, query, category, !showArchived)), // #nosec G203
+		PageBaseURL:       template.URL(equipmentPageURL(id, query, category, sort, showArchived)),  // #nosec G203
+		PrintURL:          template.URL(equipmentPrintURL(id, query, category, showArchived)),       // #nosec G203
+		ToggleArchivedURL: template.URL(equipmentPageURL(id, query, category, sort, !showArchived)), // #nosec G203
 		Pagination:        meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
@@ -753,13 +756,16 @@ func (app *application) storeEquipmentImage(r *http.Request, orgID, itemID strin
 }
 
 // equipmentPageURL builds the paginated base URL for the inventory list.
-func equipmentPageURL(orgID, query, category string, showArchived bool) string {
+func equipmentPageURL(orgID, query, category, sort string, showArchived bool) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment?"
 	if category != "" {
 		base += "category=" + url.QueryEscape(category) + "&"
 	}
 	if query != "" {
 		base += "q=" + url.QueryEscape(query) + "&"
+	}
+	if sort != "" {
+		base += "sort=" + url.QueryEscape(sort) + "&"
 	}
 	if showArchived {
 		base += "archived=true&"
@@ -1030,20 +1036,7 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
-	// Filter client-side to mirror the index page's query/category/archived params.
-	filtered := make([]equipment.Equipment, 0, len(items))
-	for _, item := range items {
-		if item.IsArchived != showArchived {
-			continue
-		}
-		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
-			continue
-		}
-		if category != "" && item.CategoryName != category {
-			continue
-		}
-		filtered = append(filtered, item)
-	}
+	filtered := filterEquipmentForPrint(items, query, category, showArchived)
 
 	app.resolveEquipmentURLs(filtered)
 
@@ -1070,4 +1063,21 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 		VatRateDisplay: vatRateDisplay,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPrint, data)
+}
+
+func filterEquipmentForPrint(items []equipment.Equipment, query, category string, showArchived bool) []equipment.Equipment {
+	filtered := make([]equipment.Equipment, 0, len(items))
+	for _, item := range items {
+		if item.IsArchived != showArchived {
+			continue
+		}
+		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
+			continue
+		}
+		if category != "" && item.CategoryName != category {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	return filtered
 }

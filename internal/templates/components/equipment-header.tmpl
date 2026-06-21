@@ -12,7 +12,7 @@
         {{ if and (eq .Data.Item.Kind 1) .Data.PartOf }}
         <div class="flex items-center gap-1 text-xs text-base-content/50">
           <span>Part of:</span>
-          {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}" class="link">{{ $p.Name }}</a>{{ end }}
+          {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}/content" class="link">{{ $p.Name }}</a>{{ end }}
         </div>
         {{ end }}
       </div>
@@ -22,8 +22,14 @@
           <li>
             <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/archive" class="flex w-full">
               <button type="submit" class="flex items-center gap-1 w-full">
-                <span class="w-4 h-4">{{ template "archive-icon" }}</span>
-                {{ if .Data.Item.IsArchived }}Unarchive{{ else }}Archive{{ end }}
+                
+                {{ if .Data.Item.IsArchived }}
+                  <span class="w-4 h-4">{{ template "unarchive-icon" }}</span>  
+                  Unarchive
+                {{ else }}
+                  <span class="w-4 h-4">{{ template "archive-icon" }}</span>  
+                  Archive
+                {{ end }}
               </button>
             </form>
           </li>

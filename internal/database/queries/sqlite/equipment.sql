@@ -32,10 +32,50 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
-  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%')
+  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || sqlc.arg(name_query) || '%'))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
   AND e.is_archived = sqlc.arg(is_archived)
 ORDER BY e.name ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
+
+-- name: ListByCode :many
+SELECT
+    e.id,
+    e.org_id,
+    e.name,
+    e.category_id,
+    COALESCE(ec.name, '') AS category_name,
+    e.manufacturer_id,
+    e.location_id,
+    COALESCE(wl.name, '') AS location_name,
+    e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
+    e.tracking_type_id,
+    COALESCE(tt.name, '') AS tracking_type_name,
+    e.usage_type_id,
+    CASE
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        ELSE 0
+    END AS total_stock,
+    e.is_archived,
+    e.rental_price,
+    e.resale_price,
+    e.notes,
+    e.updated_at,
+    e.created_at,
+    COUNT(*) OVER() AS total_records
+FROM equipment e
+LEFT JOIN equipment_categories ec ON ec.id = e.category_id
+LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
+LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
+WHERE e.org_id = sqlc.arg(org_id)
+  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || sqlc.arg(name_query) || '%'))
+  AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
+  AND e.is_archived = sqlc.arg(is_archived)
+ORDER BY (SELECT MIN(ei_o.internal_id) FROM equipment_items ei_o WHERE ei_o.equipment_id = e.id) ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CountByOrgID :one

@@ -348,7 +348,7 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
-  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%')
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || ?2 || '%'))
   AND (?3 = '' OR ec.name = ?3)
   AND e.is_archived = ?4
 ORDER BY e.name ASC
@@ -523,6 +523,134 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.Notes,
 			&i.UpdatedAt,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listByCode = `-- name: ListByCode :many
+SELECT
+    e.id,
+    e.org_id,
+    e.name,
+    e.category_id,
+    COALESCE(ec.name, '') AS category_name,
+    e.manufacturer_id,
+    e.location_id,
+    COALESCE(wl.name, '') AS location_name,
+    e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
+    e.tracking_type_id,
+    COALESCE(tt.name, '') AS tracking_type_name,
+    e.usage_type_id,
+    CASE
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        ELSE 0
+    END AS total_stock,
+    e.is_archived,
+    e.rental_price,
+    e.resale_price,
+    e.notes,
+    e.updated_at,
+    e.created_at,
+    COUNT(*) OVER() AS total_records
+FROM equipment e
+LEFT JOIN equipment_categories ec ON ec.id = e.category_id
+LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
+LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
+WHERE e.org_id = ?1
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || ?2 || '%'))
+  AND (?3 = '' OR ec.name = ?3)
+  AND e.is_archived = ?4
+ORDER BY (SELECT MIN(ei_o.internal_id) FROM equipment_items ei_o WHERE ei_o.equipment_id = e.id) ASC
+LIMIT ?6 OFFSET ?5
+`
+
+type ListByCodeParams struct {
+	OrgID      string
+	NameQuery  interface{}
+	Category   interface{}
+	IsArchived int64
+	PageOffset int64
+	PageLimit  int64
+}
+
+type ListByCodeRow struct {
+	ID                string
+	OrgID             string
+	Name              string
+	CategoryID        sql.NullString
+	CategoryName      string
+	ManufacturerID    sql.NullString
+	LocationID        sql.NullString
+	LocationName      string
+	StorageObjectID   sql.NullString
+	EquipmentTypeID   int64
+	EquipmentTypeName string
+	TrackingTypeID    sql.NullInt64
+	TrackingTypeName  string
+	UsageTypeID       int64
+	TotalStock        int64
+	IsArchived        int64
+	RentalPrice       sql.NullInt64
+	ResalePrice       sql.NullInt64
+	Notes             sql.NullString
+	UpdatedAt         int64
+	CreatedAt         int64
+	TotalRecords      int64
+}
+
+func (q *Queries) ListByCode(ctx context.Context, arg ListByCodeParams) ([]ListByCodeRow, error) {
+	rows, err := q.db.QueryContext(ctx, listByCode,
+		arg.OrgID,
+		arg.NameQuery,
+		arg.Category,
+		arg.IsArchived,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListByCodeRow
+	for rows.Next() {
+		var i ListByCodeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrgID,
+			&i.Name,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.ManufacturerID,
+			&i.LocationID,
+			&i.LocationName,
+			&i.StorageObjectID,
+			&i.EquipmentTypeID,
+			&i.EquipmentTypeName,
+			&i.TrackingTypeID,
+			&i.TrackingTypeName,
+			&i.UsageTypeID,
+			&i.TotalStock,
+			&i.IsArchived,
+			&i.RentalPrice,
+			&i.ResalePrice,
+			&i.Notes,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+			&i.TotalRecords,
 		); err != nil {
 			return nil, err
 		}
