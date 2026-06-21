@@ -122,11 +122,12 @@
 
       <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}" class="flex flex-col gap-4">
 
-        <div class="flex items-center justify-between">
-          <label class="label cursor-pointer gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="label cursor-pointer gap-3 self-start">
             <span>Active</span>
             <input type="checkbox" name="status_id" value="1" class="toggle toggle-success" {{ if .IsActive }}checked{{ end }} />
           </label>
+          <p class="text-base-content/50 text-xs">Inactive units are not available for rental.</p>
         </div>
 
         <div class="flex flex-col gap-1">

@@ -20,20 +20,6 @@
         <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-sm border border-base-200 w-40 p-1 z-10">
           <li>
-            <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/archive" class="flex w-full">
-              <button type="submit" class="flex items-center gap-1 w-full">
-                
-                {{ if .Data.Item.IsArchived }}
-                  <span class="w-4 h-4">{{ template "unarchive-icon" }}</span>  
-                  Unarchive
-                {{ else }}
-                  <span class="w-4 h-4">{{ template "archive-icon" }}</span>  
-                  Archive
-                {{ end }}
-              </button>
-            </form>
-          </li>
-          <li>
             <button
               data-modal-target="delete_equipment_modal"
               class="flex items-center gap-1 w-full text-error">
