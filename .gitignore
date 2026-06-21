@@ -35,6 +35,7 @@ bin
 tmp
 result*
 workdir
+web
 
 # nixos
 .direnv
