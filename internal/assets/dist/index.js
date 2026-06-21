@@ -214,13 +214,8 @@ document.addEventListener("click", (e) => {
     if (hint) hint.classList.toggle("hidden", typeValue !== "serialized");
   }
 
-  function syncHasContent(typeValue) {
-    const row = document.querySelector("[data-has-content-row]");
-    const toggle = document.querySelector("[data-has-content-toggle]");
-    if (!row) return;
-    const visible = typeValue === "serialized";
-    row.style.display = visible ? "" : "none";
-    if (!visible && toggle) toggle.checked = false;
+  function syncHasContent() {
+    // has_content is available for both bulk and serialized
   }
 
   document.addEventListener("change", (e) => {

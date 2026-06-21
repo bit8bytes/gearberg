@@ -15,15 +15,24 @@
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-36 p-2 shadow border border-base-300">
-          <li><a href="/orgs/{{ .Data.OrgID }}/equipment/export">
-            <span class="w-4 h-4">{{ template "export-icon" . }}</span>
-            Export</a></li>
-          <li><a href="/orgs/{{ .Data.OrgID }}/equipment/import">
-            <span class="w-4 h-4">{{ template "import-icon" . }}</span>
-            Import</a></li>
-          <li><a href="{{ .Data.PrintURL }}" target="_blank">
-            <span class="w-4 h-4">{{ template "print-icon" . }}</span>
-            Print</a></li>
+          <li>
+            <a href="{{ .Data.PrintURL }}" target="_blank">
+              <span class="w-4 h-4">{{ template "print-icon" . }}</span>
+              Print
+            </a>
+          </li>
+          <li>
+            <a href="/orgs/{{ .Data.OrgID }}/equipment/export">
+              <span class="w-4 h-4">{{ template "export-icon" . }}</span>
+              Export
+            </a>
+          </li>
+          <li>
+            <a href="/orgs/{{ .Data.OrgID }}/equipment/import">
+              <span class="w-4 h-4">{{ template "import-icon" . }}</span>
+              Import
+            </a>
+          </li>
         </ul>
       </div>
       <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">+ Add Item</a>

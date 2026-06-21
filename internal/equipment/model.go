@@ -83,6 +83,7 @@ type Equipment struct {
 	ImageURL               string
 	TotalStock             int64
 	ContentCount           int64
+	HasContent             bool
 	PurchasePrice          *int64
 	RentalPrice            *int64
 	Notes                  string
@@ -142,6 +143,7 @@ type Base struct {
 	CategoryID     string
 	ManufacturerID string
 	LocationID     *string
+	HasContent     bool
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string

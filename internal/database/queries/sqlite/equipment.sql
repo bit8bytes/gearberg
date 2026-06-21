@@ -51,6 +51,7 @@ INSERT INTO equipment (
     usage_type_id,
     location_id,
     name,
+    has_content,
     rental_price,
     resale_price,
     notes,
@@ -71,6 +72,7 @@ INSERT INTO equipment (
     sqlc.arg(usage_type_id),
     sqlc.arg(location_id),
     sqlc.arg(name),
+    sqlc.arg(has_content),
     sqlc.arg(rental_price),
     sqlc.arg(resale_price),
     sqlc.arg(notes),
@@ -92,6 +94,7 @@ INSERT INTO equipment (
     location_id,
     storage_object_id,
     name,
+    has_content,
     rental_price,
     resale_price,
     notes,
@@ -118,6 +121,7 @@ SELECT
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.name,
+    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)

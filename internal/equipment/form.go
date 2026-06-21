@@ -344,6 +344,7 @@ type NewForm struct {
 	LocationID       string
 	LocationName     string // set when user typed a new location name not yet in the DB
 	Count            string // total_stock for bulk; number of units to generate for serialized
+	HasContent       string // "1" when checked, "" when unchecked
 	PurchasePrice    string
 	RentalPrice      string
 	Notes            string
@@ -374,6 +375,7 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
 		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
 		Count:            strings.TrimSpace(r.PostForm.Get("count")),
+		HasContent:       r.PostForm.Get("has_content"),
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
@@ -418,6 +420,9 @@ func (f *NewForm) Validate() bool {
 
 	return f.Valid()
 }
+
+// HasContentBool returns true when the has_content checkbox was checked.
+func (f *NewForm) HasContentBool() bool { return f.HasContent == "1" }
 
 // WeightGInt64 returns weight_g as *int64 (nil when blank).
 func (f *NewForm) WeightGInt64() *int64 { return parseOptionalInt64(f.WeightG) }

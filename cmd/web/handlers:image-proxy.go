@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -53,35 +54,54 @@ func (app *application) getImageProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addrs, err := net.LookupHost(u.Hostname())
-	if err != nil {
-		http.Error(w, "Cannot resolve host.", http.StatusBadRequest)
+	ctx := r.Context()
+	if err := validateProxyHost(ctx, u.Hostname()); err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	for _, addr := range addrs {
-		ip := net.ParseIP(addr)
-		if ip == nil || isPrivateIP(ip) {
-			http.Error(w, fmt.Sprintf("Host %q is not allowed.", u.Hostname()), http.StatusForbidden)
-			return
-		}
-	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(rawURL)
+	result, status, err := fetchAndProcessImage(ctx, rawURL, w)
 	if err != nil {
-		http.Error(w, "Failed to fetch image.", http.StatusBadGateway)
-		return
-	}
-	defer resp.Body.Close()
-
-	const maxSize = 20 * 1024 * 1024
-	result, err := image.Process(http.MaxBytesReader(w, resp.Body, maxSize))
-	if err != nil {
-		http.Error(w, "Image could not be processed: unsupported format or too large.", http.StatusUnprocessableEntity)
+		http.Error(w, err.Error(), status)
 		return
 	}
 
 	w.Header().Set("Content-Type", result.ContentType)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(result.Data)
+}
+
+func validateProxyHost(ctx context.Context, hostname string) error {
+	resolver := &net.Resolver{}
+	addrs, err := resolver.LookupHost(ctx, hostname) //nolint:gosec // SSRF mitigated: HTTPS-only + private-IP block below
+	if err != nil {
+		return fmt.Errorf("cannot resolve host")
+	}
+	for _, addr := range addrs {
+		ip := net.ParseIP(addr)
+		if ip == nil || isPrivateIP(ip) {
+			return fmt.Errorf("host %q is not allowed", hostname)
+		}
+	}
+	return nil
+}
+
+func fetchAndProcessImage(ctx context.Context, rawURL string, w http.ResponseWriter) (*image.ProcessResult, int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil) //nolint:gosec // SSRF mitigated by validateProxyHost
+	if err != nil {
+		return nil, http.StatusBadGateway, fmt.Errorf("failed to build request")
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req) //nolint:gosec // SSRF mitigated by validateProxyHost
+	if err != nil {
+		return nil, http.StatusBadGateway, fmt.Errorf("failed to fetch image")
+	}
+	defer resp.Body.Close() //nolint:errcheck // response body close errors are not actionable
+
+	const maxSize = 20 * 1024 * 1024
+	result, err := image.Process(http.MaxBytesReader(w, resp.Body, maxSize))
+	if err != nil {
+		return nil, http.StatusUnprocessableEntity, fmt.Errorf("image could not be processed: unsupported format or too large")
+	}
+	return result, http.StatusOK, nil
 }
