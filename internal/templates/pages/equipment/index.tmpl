@@ -53,6 +53,9 @@
         {{ end }}
       </select>
     </form>
+    <a href="{{ .Data.ToggleArchivedURL }}" class="btn btn-sm shrink-0{{ if .Data.ShowArchived }} btn-neutral{{ else }} btn-ghost{{ end }}">
+      {{ template "archive-icon" . }}
+    </a>
   </div>
 </div>
 <div class="max-w-5xl w-full mx-auto">

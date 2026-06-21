@@ -22,7 +22,7 @@ func (app *application) ListEquipment(ctx context.Context, params gen.ListEquipm
 	page := params.Page.Or(1)
 	f := pagination.Filters{Page: page, PageSize: 25}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", false, f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch equipment: %w", err)
 	}

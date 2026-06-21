@@ -19,6 +19,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
@@ -33,6 +34,7 @@ LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%')
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
+  AND e.is_archived = sqlc.arg(is_archived)
 ORDER BY e.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
@@ -52,6 +54,7 @@ INSERT INTO equipment (
     location_id,
     name,
     has_content,
+    is_archived,
     rental_price,
     resale_price,
     notes,
@@ -73,6 +76,7 @@ INSERT INTO equipment (
     sqlc.arg(location_id),
     sqlc.arg(name),
     sqlc.arg(has_content),
+    sqlc.arg(is_archived),
     sqlc.arg(rental_price),
     sqlc.arg(resale_price),
     sqlc.arg(notes),
@@ -95,6 +99,7 @@ INSERT INTO equipment (
     storage_object_id,
     name,
     has_content,
+    is_archived,
     rental_price,
     resale_price,
     notes,
@@ -122,6 +127,7 @@ SELECT
     e.storage_object_id,
     e.name,
     e.has_content,
+    e.is_archived,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -205,6 +211,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
@@ -216,3 +223,10 @@ LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?
 ORDER BY e.name ASC;
+
+-- name: UpdateArchived :exec
+UPDATE equipment
+SET
+    is_archived = sqlc.arg(is_archived),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);

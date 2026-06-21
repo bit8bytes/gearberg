@@ -66,10 +66,10 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	return item, nil
 }
 
-// GetFiltered returns a page of inventory items for orgID, filtered by query
-// and category, sorted and paginated according to f.
-func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
-	items, total, err := s.repo.List(ctx, orgID, query, category, f)
+// GetFiltered returns a page of inventory items for orgID, filtered by query,
+// category, and archive status, sorted and paginated according to f.
+func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
+	items, total, err := s.repo.List(ctx, orgID, query, category, showArchived, f)
 	if err != nil {
 		return nil, pagination.Metadata{}, fmt.Errorf("GetFiltered: %w", err)
 	}
@@ -165,6 +165,14 @@ func (s *Service) SetImage(ctx context.Context, si SetImage) error {
 func (s *Service) Delete(ctx context.Context, id string) error {
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("Delete: %w", err)
+	}
+	return nil
+}
+
+// Archive sets the archived status of an equipment item.
+func (s *Service) Archive(ctx context.Context, a ArchiveEquipment) error {
+	if err := s.repo.Archive(ctx, a); err != nil {
+		return fmt.Errorf("Archive: %w", err)
 	}
 	return nil
 }

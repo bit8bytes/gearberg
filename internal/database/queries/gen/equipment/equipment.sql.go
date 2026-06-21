@@ -34,6 +34,7 @@ INSERT INTO equipment (
     location_id,
     name,
     has_content,
+    is_archived,
     rental_price,
     resale_price,
     notes,
@@ -64,7 +65,8 @@ INSERT INTO equipment (
     ?17,
     ?18,
     ?19,
-    ?20
+    ?20,
+    ?21
 ) RETURNING
     id,
     org_id,
@@ -77,6 +79,7 @@ INSERT INTO equipment (
     storage_object_id,
     name,
     has_content,
+    is_archived,
     rental_price,
     resale_price,
     notes,
@@ -101,6 +104,7 @@ type CreateParams struct {
 	LocationID      sql.NullString
 	Name            string
 	HasContent      int64
+	IsArchived      int64
 	RentalPrice     sql.NullInt64
 	ResalePrice     sql.NullInt64
 	Notes           sql.NullString
@@ -125,6 +129,7 @@ type CreateRow struct {
 	StorageObjectID sql.NullString
 	Name            string
 	HasContent      int64
+	IsArchived      int64
 	RentalPrice     sql.NullInt64
 	ResalePrice     sql.NullInt64
 	Notes           sql.NullString
@@ -150,6 +155,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.LocationID,
 		arg.Name,
 		arg.HasContent,
+		arg.IsArchived,
 		arg.RentalPrice,
 		arg.ResalePrice,
 		arg.Notes,
@@ -174,6 +180,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.StorageObjectID,
 		&i.Name,
 		&i.HasContent,
+		&i.IsArchived,
 		&i.RentalPrice,
 		&i.ResalePrice,
 		&i.Notes,
@@ -214,6 +221,7 @@ SELECT
     e.storage_object_id,
     e.name,
     e.has_content,
+    e.is_archived,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -253,6 +261,7 @@ type GetByIDRow struct {
 	StorageObjectID   sql.NullString
 	Name              string
 	HasContent        int64
+	IsArchived        int64
 	TotalStock        int64
 	ContentCount      int64
 	RentalPrice       sql.NullInt64
@@ -286,6 +295,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.StorageObjectID,
 		&i.Name,
 		&i.HasContent,
+		&i.IsArchived,
 		&i.TotalStock,
 		&i.ContentCount,
 		&i.RentalPrice,
@@ -325,6 +335,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
@@ -339,14 +350,16 @@ LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
   AND (?2 = '' OR e.name LIKE '%' || ?2 || '%')
   AND (?3 = '' OR ec.name = ?3)
+  AND e.is_archived = ?4
 ORDER BY e.name ASC
-LIMIT ?5 OFFSET ?4
+LIMIT ?6 OFFSET ?5
 `
 
 type ListParams struct {
 	OrgID      string
 	NameQuery  interface{}
 	Category   interface{}
+	IsArchived int64
 	PageOffset int64
 	PageLimit  int64
 }
@@ -367,6 +380,7 @@ type ListRow struct {
 	TrackingTypeName  string
 	UsageTypeID       int64
 	TotalStock        int64
+	IsArchived        int64
 	RentalPrice       sql.NullInt64
 	ResalePrice       sql.NullInt64
 	Notes             sql.NullString
@@ -380,6 +394,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 		arg.OrgID,
 		arg.NameQuery,
 		arg.Category,
+		arg.IsArchived,
 		arg.PageOffset,
 		arg.PageLimit,
 	)
@@ -406,6 +421,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.TrackingTypeName,
 			&i.UsageTypeID,
 			&i.TotalStock,
+			&i.IsArchived,
 			&i.RentalPrice,
 			&i.ResalePrice,
 			&i.Notes,
@@ -444,6 +460,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
@@ -470,6 +487,7 @@ type ListAllByOrgIDRow struct {
 	TrackingTypeID    sql.NullInt64
 	UsageTypeID       int64
 	TotalStock        int64
+	IsArchived        int64
 	RentalPrice       sql.NullInt64
 	ResalePrice       sql.NullInt64
 	Notes             sql.NullString
@@ -499,6 +517,7 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.TrackingTypeID,
 			&i.UsageTypeID,
 			&i.TotalStock,
+			&i.IsArchived,
 			&i.RentalPrice,
 			&i.ResalePrice,
 			&i.Notes,
@@ -516,6 +535,24 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateArchived = `-- name: UpdateArchived :exec
+UPDATE equipment
+SET
+    is_archived = ?1,
+    updated_at = unixepoch()
+WHERE id = ?2
+`
+
+type UpdateArchivedParams struct {
+	IsArchived int64
+	ID         string
+}
+
+func (q *Queries) UpdateArchived(ctx context.Context, arg UpdateArchivedParams) error {
+	_, err := q.db.ExecContext(ctx, updateArchived, arg.IsArchived, arg.ID)
+	return err
 }
 
 const updateDetails = `-- name: UpdateDetails :exec

@@ -12,6 +12,7 @@ CREATE TABLE equipment (
   storage_object_id TEXT REFERENCES storage_objects(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   has_content INTEGER NOT NULL DEFAULT 0,
+  is_archived INTEGER NOT NULL DEFAULT 0,
   rental_price INTEGER,
   resale_price INTEGER,
   notes TEXT,

@@ -46,14 +46,17 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 
 // List returns a page of inventory items for orgID. When query is non-empty, only
 // items whose name contains query (case-insensitive) are returned. When category is
-// non-empty, only items in that category are returned. Returns total matching count.
-func (r *Repository) List(ctx context.Context, orgID, query, category string, f pagination.Filters) ([]Equipment, int, error) {
+// non-empty, only items in that category are returned. When showArchived is true,
+// only archived items are returned; otherwise only active items are returned.
+// Returns total matching count.
+func (r *Repository) List(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
 	rows, err := r.equipment.List(ctx, genequip.ListParams{
-		OrgID:      orgID,
-		NameQuery:  query,
-		Category:   category,
-		PageOffset: int64(f.Offset()),
-		PageLimit:  int64(f.Limit()),
+		OrgID:        orgID,
+		NameQuery:    query,
+		Category:     category,
+		IsArchived:   database.Bool(showArchived),
+		PageOffset:   int64(f.Offset()),
+		PageLimit:    int64(f.Limit()),
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("List: %w", err)
@@ -77,6 +80,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			LocationName:    row.LocationName,
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
 			TotalStock:      row.TotalStock,
+			IsArchived:      row.IsArchived == 1,
 			PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
 			Notes:           database.String(row.Notes),
@@ -111,6 +115,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		TotalStock:      row.TotalStock,
 		ContentCount:    row.ContentCount,
 		HasContent:      row.HasContent == 1,
+		IsArchived:      row.IsArchived == 1,
 		PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 		RentalPrice:     database.Int64Ptr(row.RentalPrice),
 		Notes:           database.String(row.Notes),
@@ -152,6 +157,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		LocationID:      database.NullString(c.LocationID),
 		Name:            c.Name,
 		HasContent:      database.Bool(c.HasContent),
+		IsArchived:      0,
 		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
 		Notes:           database.NullString(database.StringOrNil(c.Notes)),
@@ -240,6 +246,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		LocationID:      database.NullString(c.LocationID),
 		Name:            c.Name,
 		HasContent:      database.Bool(c.HasContent),
+		IsArchived:      0,
 		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
 		Notes:           database.NullString(database.StringOrNil(c.Notes)),
@@ -426,6 +433,7 @@ func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Equipment, er
 			ManufacturerID:  database.String(row.ManufacturerID),
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
 			TotalStock:      row.TotalStock,
+			IsArchived:      row.IsArchived == 1,
 			PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
 			Notes:           database.String(row.Notes),
@@ -434,6 +442,17 @@ func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Equipment, er
 		})
 	}
 	return items, nil
+}
+
+// Archive sets the is_archived flag on an inventory item.
+func (r *Repository) Archive(ctx context.Context, a ArchiveEquipment) error {
+	if err := r.equipment.UpdateArchived(ctx, genequip.UpdateArchivedParams{
+		ID:         a.ID,
+		IsArchived: database.Bool(a.IsArchived),
+	}); err != nil {
+		return fmt.Errorf("Archive: %w", database.NormalizeError(err))
+	}
+	return nil
 }
 
 // Delete removes the inventory item. Returns database.ErrForeignKeyViolation when

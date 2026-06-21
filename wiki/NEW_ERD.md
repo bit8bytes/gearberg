@@ -153,6 +153,7 @@ erDiagram
     text storage_object_id FK "ON DELETE SET NULL"
     text name "NOT NULL"
     integer has_content "NOT NULL DEFAULT 0"
+    integer is_archived "NOT NULL DEFAULT 0"
     integer rental_price "cents e.g. 1999 = 19.99"
     integer resale_price "cents e.g. 1999 = 19.99"
     text notes

@@ -84,6 +84,7 @@ type Equipment struct {
 	TotalStock             int64
 	ContentCount           int64
 	HasContent             bool
+	IsArchived             bool
 	PurchasePrice          *int64
 	RentalPrice            *int64
 	Notes                  string
@@ -270,6 +271,12 @@ type UpdateEquipmentProperties struct {
 	DepthMM   *int64
 	PowerMW   *int64
 	CurrentMA *int64
+}
+
+// ArchiveEquipment holds the data required to archive or unarchive an equipment item.
+type ArchiveEquipment struct {
+	ID         string
+	IsArchived bool
 }
 
 // SetImage links or unlinks a storage object from an inventory item.

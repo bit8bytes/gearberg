@@ -29,15 +29,17 @@ import (
 )
 
 type equipmentData struct {
-	OrgID       string
-	Categories  []categories.EquipmentCategory
-	Inventories []equipment.Equipment
-	Filtered    bool
-	Query       string
-	Category    string
-	PageBaseURL template.URL
-	PrintURL    template.URL
-	Pagination  pagination.Metadata
+	OrgID             string
+	Categories        []categories.EquipmentCategory
+	Inventories       []equipment.Equipment
+	Filtered          bool
+	Query             string
+	Category          string
+	ShowArchived      bool
+	PageBaseURL       template.URL
+	PrintURL          template.URL
+	ToggleArchivedURL template.URL
+	Pagination        pagination.Metadata
 }
 
 type equipmentPrintData struct {
@@ -169,6 +171,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
+	showArchived := qs.Get("archived") == "true"
 
 	page, err := strconv.Atoi(qs.Get("page"))
 	if err != nil || page < 1 {
@@ -180,7 +183,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PageSize: 25,
 	}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, showArchived, f)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
@@ -189,15 +192,17 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 
 	data := app.html.TemplateData(r)
 	data.Data = equipmentData{
-		OrgID:       id,
-		Categories:  cats,
-		Inventories: items,
-		Filtered:    query != "" || category != "",
-		Query:       query,
-		Category:    category,
-		PageBaseURL: template.URL(equipmentPageURL(id, query, category)),  // #nosec G203
-		PrintURL:    template.URL(equipmentPrintURL(id, query, category)), // #nosec G203
-		Pagination:  meta,
+		OrgID:             id,
+		Categories:        cats,
+		Inventories:       items,
+		Filtered:          query != "" || category != "",
+		Query:             query,
+		Category:          category,
+		ShowArchived:      showArchived,
+		PageBaseURL:       template.URL(equipmentPageURL(id, query, category, showArchived)),   // #nosec G203
+		PrintURL:          template.URL(equipmentPrintURL(id, query, category, showArchived)),  // #nosec G203
+		ToggleArchivedURL: template.URL(equipmentPageURL(id, query, category, !showArchived)), // #nosec G203
+		Pagination:        meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
 }
@@ -748,7 +753,7 @@ func (app *application) storeEquipmentImage(r *http.Request, orgID, itemID strin
 }
 
 // equipmentPageURL builds the paginated base URL for the inventory list.
-func equipmentPageURL(orgID, query, category string) string {
+func equipmentPageURL(orgID, query, category string, showArchived bool) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment?"
 	if category != "" {
 		base += "category=" + url.QueryEscape(category) + "&"
@@ -756,15 +761,15 @@ func equipmentPageURL(orgID, query, category string) string {
 	if query != "" {
 		base += "q=" + url.QueryEscape(query) + "&"
 	}
+	if showArchived {
+		base += "archived=true&"
+	}
 	return base
 }
 
 // equipmentPrintURL builds the print URL with optional filter params.
-func equipmentPrintURL(orgID, query, category string) string {
+func equipmentPrintURL(orgID, query, category string, showArchived bool) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment/print"
-	if category == "" && query == "" {
-		return base
-	}
 	sep := "?"
 	if category != "" {
 		base += sep + "category=" + url.QueryEscape(category)
@@ -772,6 +777,10 @@ func equipmentPrintURL(orgID, query, category string) string {
 	}
 	if query != "" {
 		base += sep + "q=" + url.QueryEscape(query)
+		sep = "&"
+	}
+	if showArchived {
+		base += sep + "archived=true"
 	}
 	return base
 }
@@ -827,6 +836,30 @@ func (app *application) linkEquipmentImage(r *http.Request, itemID, storageObjec
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
 	}
+	return nil
+}
+
+func (app *application) postArchiveEquipmentItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	item, err := app.services.equipment.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	if err := app.services.equipment.Archive(ctx, equipment.ArchiveEquipment{
+		ID:         itemID,
+		IsArchived: !item.IsArchived,
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to update archive status.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
 	return nil
 }
 
@@ -990,15 +1023,19 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
+	showArchived := qs.Get("archived") == "true"
 
 	items, err := app.services.equipment.ListAll(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
-	// Filter client-side to mirror the index page's query/category params.
+	// Filter client-side to mirror the index page's query/category/archived params.
 	filtered := make([]equipment.Equipment, 0, len(items))
 	for _, item := range items {
+		if item.IsArchived != showArchived {
+			continue
+		}
 		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
 			continue
 		}
