@@ -22,7 +22,9 @@
         />
         <datalist id="members-datalist">
           {{ range .Data.AllEquipment }}
+            {{ if and (ne .ID $.Data.ID) (not .HasContent) (ne .Kind.String "virtual") }}
             <option value="{{ .Name }}"></option>
+            {{ end }}
           {{ end }}
         </datalist>
         {{ with index .Form.Errors "member_name" }}

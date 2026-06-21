@@ -452,6 +452,7 @@ func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Equipment, er
 			ManufacturerID:  database.String(row.ManufacturerID),
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
 			TotalStock:      row.TotalStock,
+			HasContent:      row.HasContent == 1,
 			IsArchived:      row.IsArchived == 1,
 			PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -619,4 +620,3 @@ func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID stri
 	}
 	return items, nil
 }
-

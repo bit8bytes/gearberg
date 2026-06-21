@@ -251,6 +251,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,

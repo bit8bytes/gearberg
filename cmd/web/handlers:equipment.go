@@ -869,14 +869,30 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }
 
-// equipmentIDByName returns the ID of the first equipment whose Name matches name, or "".
-func equipmentIDByName(all []equipment.Equipment, name string) string {
-	for _, e := range all {
-		if e.Name == name {
-			return e.ID
+// equipmentByName returns the first equipment whose Name matches name, or nil.
+func equipmentByName(all []equipment.Equipment, name string) *equipment.Equipment {
+	for i := range all {
+		if all[i].Name == name {
+			return &all[i]
 		}
 	}
-	return ""
+	return nil
+}
+
+// validateContentMember checks that member can be added as content of containerID.
+// Returns a non-empty error message when the assignment should be rejected.
+func validateContentMember(all []equipment.Equipment, name, containerID string) (string, string) {
+	member := equipmentByName(all, name)
+	if member == nil {
+		return "", "No equipment found with that name."
+	}
+	if member.ID == containerID {
+		return "", "An item cannot contain itself."
+	}
+	if member.HasContent || member.Kind == equipment.Virtual {
+		return "", "Cannot add a container as content."
+	}
+	return member.ID, ""
 }
 
 func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -913,9 +929,9 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 	if appErr != nil {
 		return appErr
 	}
-	memberID := equipmentIDByName(all, form.MemberName)
-	if memberID == "" {
-		return reRender(&form, "No equipment found with that name.")
+	memberID, memberErr := validateContentMember(all, form.MemberName, itemID)
+	if memberErr != "" {
+		return reRender(&form, memberErr)
 	}
 
 	_, err = app.services.equipment.AssignContent(ctx, equipment.AssignContent{

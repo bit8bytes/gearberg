@@ -460,6 +460,7 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,
@@ -487,6 +488,7 @@ type ListAllByOrgIDRow struct {
 	TrackingTypeID    sql.NullInt64
 	UsageTypeID       int64
 	TotalStock        int64
+	HasContent        int64
 	IsArchived        int64
 	RentalPrice       sql.NullInt64
 	ResalePrice       sql.NullInt64
@@ -517,6 +519,7 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.TrackingTypeID,
 			&i.UsageTypeID,
 			&i.TotalStock,
+			&i.HasContent,
 			&i.IsArchived,
 			&i.RentalPrice,
 			&i.ResalePrice,
