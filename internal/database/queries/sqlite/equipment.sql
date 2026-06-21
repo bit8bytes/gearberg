@@ -9,10 +9,11 @@ SELECT
     e.location_id,
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     COALESCE(tt.name, '') AS tracking_type_name,
     e.usage_type_id,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -27,6 +28,7 @@ SELECT
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%')
@@ -42,13 +44,13 @@ WHERE org_id = ?;
 INSERT INTO equipment (
     id,
     org_id,
+    equipment_type_id,
     tracking_type_id,
     category_id,
     manufacturer_id,
     usage_type_id,
     location_id,
     name,
-    has_content,
     rental_price,
     resale_price,
     notes,
@@ -62,13 +64,13 @@ INSERT INTO equipment (
 ) VALUES (
     sqlc.arg(id),
     sqlc.arg(org_id),
+    sqlc.arg(equipment_type_id),
     sqlc.arg(tracking_type_id),
     sqlc.arg(category_id),
     sqlc.arg(manufacturer_id),
     sqlc.arg(usage_type_id),
     sqlc.arg(location_id),
     sqlc.arg(name),
-    sqlc.arg(has_content),
     sqlc.arg(rental_price),
     sqlc.arg(resale_price),
     sqlc.arg(notes),
@@ -82,6 +84,7 @@ INSERT INTO equipment (
 ) RETURNING
     id,
     org_id,
+    equipment_type_id,
     tracking_type_id,
     category_id,
     manufacturer_id,
@@ -89,7 +92,6 @@ INSERT INTO equipment (
     location_id,
     storage_object_id,
     name,
-    has_content,
     rental_price,
     resale_price,
     notes,
@@ -106,6 +108,8 @@ INSERT INTO equipment (
 SELECT
     e.id,
     e.org_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     e.category_id,
     e.manufacturer_id,
@@ -114,7 +118,6 @@ SELECT
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.name,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -134,6 +137,7 @@ SELECT
     e.updated_at,
     e.created_at
 FROM equipment e
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.id = ?;
@@ -188,9 +192,10 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     e.manufacturer_id,
     e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     e.usage_type_id,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -203,6 +208,7 @@ SELECT
     e.created_at
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?
 ORDER BY e.name ASC;

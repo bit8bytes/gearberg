@@ -9,7 +9,7 @@
           <li>{{ .Data.Item.Name }}</li>
         </ul>
       </div>
-      {{ if and (eq .Data.Item.Type.String "serialized") .Data.PartOf }}
+      {{ if and (eq .Data.Item.Kind 1) .Data.PartOf }}
       <div class="flex items-center gap-1 text-xs text-base-content/50">
         <span>Part of:</span>
         {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}" class="link">{{ $p.Name }}</a>{{ end }}

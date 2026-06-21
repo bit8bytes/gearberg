@@ -66,6 +66,7 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 		items = append(items, Equipment{
 			ID:              row.ID,
 			OrgID:           row.OrgID,
+			Kind:            KindFromString(row.EquipmentTypeName),
 			Type:            Type(row.TrackingTypeID.Int64),
 			UsageType:       UsageType(row.UsageTypeID),
 			Name:            row.Name,
@@ -75,7 +76,6 @@ func (r *Repository) List(ctx context.Context, orgID, query, category string, f 
 			LocationID:      database.String(row.LocationID),
 			LocationName:    row.LocationName,
 			StorageObjectID: database.StringPtr(row.StorageObjectID),
-			HasContent:      row.HasContent == 1,
 			TotalStock:      row.TotalStock,
 			PurchasePrice:   database.Int64Ptr(row.ResalePrice),
 			RentalPrice:     database.Int64Ptr(row.RentalPrice),
@@ -99,6 +99,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 	m := Equipment{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
+		Kind:            KindFromString(row.EquipmentTypeName),
 		Type:            Type(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
@@ -107,7 +108,6 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		LocationID:      database.String(row.LocationID),
 		LocationName:    row.LocationName,
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
-		HasContent:      row.HasContent == 1,
 		TotalStock:      row.TotalStock,
 		ContentCount:    row.ContentCount,
 		PurchasePrice:   database.Int64Ptr(row.ResalePrice),
@@ -141,18 +141,18 @@ func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
 // as eqQ and itemQ to avoid acquiring a second write lock while the first is still held.
 func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, itemQ *genitems.Queries, cntQ *genidcounter.Queries, c CreateBulkEquipment) (*Equipment, error) {
 	row, err := eqQ.Create(ctx, genequip.CreateParams{
-		ID:             c.ID,
-		OrgID:          c.OrgID,
-		TrackingTypeID: sql.NullInt64{Int64: Bulk.ID(), Valid: true},
-		CategoryID:     database.NullString(database.StringOrNil(c.CategoryID)),
-		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
-		UsageTypeID:    c.UsageTypeID,
-		LocationID:     database.NullString(c.LocationID),
-		Name:           c.Name,
-		HasContent:     c.HasContent,
-		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
-		ResalePrice:    database.NullInt64Ptr(c.PurchasePrice),
-		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+		ID:              c.ID,
+		OrgID:           c.OrgID,
+		EquipmentTypeID: Physical.ID(),
+		TrackingTypeID:  sql.NullInt64{Int64: Bulk.ID(), Valid: true},
+		CategoryID:      database.NullString(database.StringOrNil(c.CategoryID)),
+		ManufacturerID:  database.NullString(database.StringOrNil(c.ManufacturerID)),
+		UsageTypeID:     c.UsageTypeID,
+		LocationID:      database.NullString(c.LocationID),
+		Name:            c.Name,
+		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
+		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
+		Notes:           database.NullString(database.StringOrNil(c.Notes)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("createBulkWith: %w", database.NormalizeError(err))
@@ -173,6 +173,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 	m := Equipment{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
+		Kind:            Physical,
 		Type:            Type(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
@@ -226,18 +227,18 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	eqQ := r.equipment.WithTx(tx)
 	itemQ := r.equipmentItems.WithTx(tx)
 	row, err := eqQ.Create(ctx, genequip.CreateParams{
-		ID:             c.ID,
-		OrgID:          c.OrgID,
-		TrackingTypeID: sql.NullInt64{Int64: Serialized.ID(), Valid: true},
-		CategoryID:     database.NullString(database.StringOrNil(c.CategoryID)),
-		ManufacturerID: database.NullString(database.StringOrNil(c.ManufacturerID)),
-		UsageTypeID:    c.UsageTypeID,
-		LocationID:     database.NullString(c.LocationID),
-		Name:           c.Name,
-		HasContent:     c.HasContent,
-		RentalPrice:    database.NullInt64Ptr(c.RentalPrice),
-		ResalePrice:    database.NullInt64Ptr(c.PurchasePrice),
-		Notes:          database.NullString(database.StringOrNil(c.Notes)),
+		ID:              c.ID,
+		OrgID:           c.OrgID,
+		EquipmentTypeID: Physical.ID(),
+		TrackingTypeID:  sql.NullInt64{Int64: Serialized.ID(), Valid: true},
+		CategoryID:      database.NullString(database.StringOrNil(c.CategoryID)),
+		ManufacturerID:  database.NullString(database.StringOrNil(c.ManufacturerID)),
+		UsageTypeID:     c.UsageTypeID,
+		LocationID:      database.NullString(c.LocationID),
+		Name:            c.Name,
+		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
+		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
+		Notes:           database.NullString(database.StringOrNil(c.Notes)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
@@ -264,6 +265,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	m := Equipment{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
+		Kind:            Physical,
 		Type:            Type(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
@@ -410,6 +412,7 @@ func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Equipment, er
 		items = append(items, Equipment{
 			ID:              row.ID,
 			OrgID:           row.OrgID,
+			Kind:            KindFromString(row.EquipmentTypeName),
 			Type:            Type(row.TrackingTypeID.Int64),
 			UsageType:       UsageType(row.UsageTypeID),
 			Name:            row.Name,

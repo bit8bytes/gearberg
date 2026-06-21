@@ -344,7 +344,6 @@ type NewForm struct {
 	LocationID       string
 	LocationName     string // set when user typed a new location name not yet in the DB
 	Count            string // total_stock for bulk; number of units to generate for serialized
-	HasContent       bool   // true when the checkbox is checked
 	PurchasePrice    string
 	RentalPrice      string
 	Notes            string
@@ -375,7 +374,6 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
 		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
 		Count:            strings.TrimSpace(r.PostForm.Get("count")),
-		HasContent:       r.PostForm.Get("has_content") == "on",
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
@@ -398,9 +396,6 @@ func ParseNew(r *http.Request) (NewForm, error) {
 func (f *NewForm) Validate() bool {
 	f.Check(f.TypeID == "bulk" || f.TypeID == "serialized", "type_id", "Must be bulk or serialized")
 	f.Check(f.UsageTypeID == "rental" || f.UsageTypeID == "sale", "usage_type_id", "Must be rental or sale")
-	if f.TypeID == "bulk" {
-		f.HasContent = false
-	}
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
 	if validator.NotBlank(f.Count) {
@@ -446,14 +441,6 @@ func (f *NewForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) 
 func (f *NewForm) CountInt64() int64 {
 	n, _ := strconv.ParseInt(f.Count, 10, 64)
 	return n
-}
-
-// HasContentInt64 returns 1 when has_content is checked, 0 otherwise.
-func (f *NewForm) HasContentInt64() int64 {
-	if f.HasContent {
-		return 1
-	}
-	return 0
 }
 
 // PurchasePriceCents returns the purchase price in the smallest currency unit, or nil when blank.

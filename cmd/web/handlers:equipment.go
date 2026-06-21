@@ -253,7 +253,6 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
 		LocationID:     database.StringOrNil(form.LocationID),
-		HasContent:     form.HasContentInt64(),
 		PurchasePrice:  form.PurchasePriceCents(),
 		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
@@ -861,6 +860,9 @@ func (app *application) loadContentPageData(ctx context.Context, orgID, itemID s
 			return nil, nil, nil, &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+	if item.Kind != equipment.Virtual {
+		return nil, nil, nil, &httperr.Error{Error: nil, Message: "Content is only available for virtual combinations.", Code: http.StatusForbidden}
 	}
 	content, err := app.services.equipment.ListContent(ctx, itemID)
 	if err != nil {

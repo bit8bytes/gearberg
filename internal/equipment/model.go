@@ -70,6 +70,7 @@ func optionalInt64Input(v *int64) string {
 type Equipment struct {
 	ID                     string
 	OrgID                  string
+	Kind                   Kind
 	Type                   Type
 	UsageType              UsageType
 	Name                   string
@@ -80,7 +81,6 @@ type Equipment struct {
 	LocationName           string
 	StorageObjectID        *string
 	ImageURL               string
-	HasContent             bool
 	TotalStock             int64
 	ContentCount           int64
 	PurchasePrice          *int64
@@ -142,7 +142,6 @@ type Base struct {
 	CategoryID     string
 	ManufacturerID string
 	LocationID     *string
-	HasContent     int64
 	PurchasePrice  *int64
 	RentalPrice    *int64
 	Notes          string

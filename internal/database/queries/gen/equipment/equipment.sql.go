@@ -26,13 +26,13 @@ const create = `-- name: Create :one
 INSERT INTO equipment (
     id,
     org_id,
+    equipment_type_id,
     tracking_type_id,
     category_id,
     manufacturer_id,
     usage_type_id,
     location_id,
     name,
-    has_content,
     rental_price,
     resale_price,
     notes,
@@ -66,6 +66,7 @@ INSERT INTO equipment (
 ) RETURNING
     id,
     org_id,
+    equipment_type_id,
     tracking_type_id,
     category_id,
     manufacturer_id,
@@ -73,7 +74,6 @@ INSERT INTO equipment (
     location_id,
     storage_object_id,
     name,
-    has_content,
     rental_price,
     resale_price,
     notes,
@@ -88,30 +88,31 @@ INSERT INTO equipment (
 `
 
 type CreateParams struct {
-	ID             string
-	OrgID          string
-	TrackingTypeID sql.NullInt64
-	CategoryID     sql.NullString
-	ManufacturerID sql.NullString
-	UsageTypeID    int64
-	LocationID     sql.NullString
-	Name           string
-	HasContent     int64
-	RentalPrice    sql.NullInt64
-	ResalePrice    sql.NullInt64
-	Notes          sql.NullString
-	WeightG        sql.NullInt64
-	WidthMm        sql.NullInt64
-	HeightMm       sql.NullInt64
-	DepthMm        sql.NullInt64
-	VoltageV       sql.NullInt64
-	CurrentMa      sql.NullInt64
-	PowerMw        sql.NullInt64
+	ID              string
+	OrgID           string
+	EquipmentTypeID int64
+	TrackingTypeID  sql.NullInt64
+	CategoryID      sql.NullString
+	ManufacturerID  sql.NullString
+	UsageTypeID     int64
+	LocationID      sql.NullString
+	Name            string
+	RentalPrice     sql.NullInt64
+	ResalePrice     sql.NullInt64
+	Notes           sql.NullString
+	WeightG         sql.NullInt64
+	WidthMm         sql.NullInt64
+	HeightMm        sql.NullInt64
+	DepthMm         sql.NullInt64
+	VoltageV        sql.NullInt64
+	CurrentMa       sql.NullInt64
+	PowerMw         sql.NullInt64
 }
 
 type CreateRow struct {
 	ID              string
 	OrgID           string
+	EquipmentTypeID int64
 	TrackingTypeID  sql.NullInt64
 	CategoryID      sql.NullString
 	ManufacturerID  sql.NullString
@@ -119,7 +120,6 @@ type CreateRow struct {
 	LocationID      sql.NullString
 	StorageObjectID sql.NullString
 	Name            string
-	HasContent      int64
 	RentalPrice     sql.NullInt64
 	ResalePrice     sql.NullInt64
 	Notes           sql.NullString
@@ -137,13 +137,13 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 	row := q.db.QueryRowContext(ctx, create,
 		arg.ID,
 		arg.OrgID,
+		arg.EquipmentTypeID,
 		arg.TrackingTypeID,
 		arg.CategoryID,
 		arg.ManufacturerID,
 		arg.UsageTypeID,
 		arg.LocationID,
 		arg.Name,
-		arg.HasContent,
 		arg.RentalPrice,
 		arg.ResalePrice,
 		arg.Notes,
@@ -159,6 +159,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 	err := row.Scan(
 		&i.ID,
 		&i.OrgID,
+		&i.EquipmentTypeID,
 		&i.TrackingTypeID,
 		&i.CategoryID,
 		&i.ManufacturerID,
@@ -166,7 +167,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.LocationID,
 		&i.StorageObjectID,
 		&i.Name,
-		&i.HasContent,
 		&i.RentalPrice,
 		&i.ResalePrice,
 		&i.Notes,
@@ -196,6 +196,8 @@ const getByID = `-- name: GetByID :one
 SELECT
     e.id,
     e.org_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     e.category_id,
     e.manufacturer_id,
@@ -204,7 +206,6 @@ SELECT
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.name,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -224,37 +225,39 @@ SELECT
     e.updated_at,
     e.created_at
 FROM equipment e
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.id = ?
 `
 
 type GetByIDRow struct {
-	ID              string
-	OrgID           string
-	TrackingTypeID  sql.NullInt64
-	CategoryID      sql.NullString
-	ManufacturerID  sql.NullString
-	UsageTypeID     int64
-	LocationID      sql.NullString
-	LocationName    string
-	StorageObjectID sql.NullString
-	Name            string
-	HasContent      int64
-	TotalStock      int64
-	ContentCount    int64
-	RentalPrice     sql.NullInt64
-	ResalePrice     sql.NullInt64
-	Notes           sql.NullString
-	WeightG         sql.NullInt64
-	WidthMm         sql.NullInt64
-	HeightMm        sql.NullInt64
-	DepthMm         sql.NullInt64
-	VoltageV        sql.NullInt64
-	CurrentMa       sql.NullInt64
-	PowerMw         sql.NullInt64
-	UpdatedAt       int64
-	CreatedAt       int64
+	ID                string
+	OrgID             string
+	EquipmentTypeID   int64
+	EquipmentTypeName string
+	TrackingTypeID    sql.NullInt64
+	CategoryID        sql.NullString
+	ManufacturerID    sql.NullString
+	UsageTypeID       int64
+	LocationID        sql.NullString
+	LocationName      string
+	StorageObjectID   sql.NullString
+	Name              string
+	TotalStock        int64
+	ContentCount      int64
+	RentalPrice       sql.NullInt64
+	ResalePrice       sql.NullInt64
+	Notes             sql.NullString
+	WeightG           sql.NullInt64
+	WidthMm           sql.NullInt64
+	HeightMm          sql.NullInt64
+	DepthMm           sql.NullInt64
+	VoltageV          sql.NullInt64
+	CurrentMa         sql.NullInt64
+	PowerMw           sql.NullInt64
+	UpdatedAt         int64
+	CreatedAt         int64
 }
 
 func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
@@ -263,6 +266,8 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.OrgID,
+		&i.EquipmentTypeID,
+		&i.EquipmentTypeName,
 		&i.TrackingTypeID,
 		&i.CategoryID,
 		&i.ManufacturerID,
@@ -271,7 +276,6 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.LocationName,
 		&i.StorageObjectID,
 		&i.Name,
-		&i.HasContent,
 		&i.TotalStock,
 		&i.ContentCount,
 		&i.RentalPrice,
@@ -301,10 +305,11 @@ SELECT
     e.location_id,
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     COALESCE(tt.name, '') AS tracking_type_name,
     e.usage_type_id,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -319,6 +324,7 @@ SELECT
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
   AND (?2 = '' OR e.name LIKE '%' || ?2 || '%')
@@ -336,26 +342,27 @@ type ListParams struct {
 }
 
 type ListRow struct {
-	ID               string
-	OrgID            string
-	Name             string
-	CategoryID       sql.NullString
-	CategoryName     string
-	ManufacturerID   sql.NullString
-	LocationID       sql.NullString
-	LocationName     string
-	StorageObjectID  sql.NullString
-	TrackingTypeID   sql.NullInt64
-	TrackingTypeName string
-	UsageTypeID      int64
-	HasContent       int64
-	TotalStock       int64
-	RentalPrice      sql.NullInt64
-	ResalePrice      sql.NullInt64
-	Notes            sql.NullString
-	UpdatedAt        int64
-	CreatedAt        int64
-	TotalRecords     int64
+	ID                string
+	OrgID             string
+	Name              string
+	CategoryID        sql.NullString
+	CategoryName      string
+	ManufacturerID    sql.NullString
+	LocationID        sql.NullString
+	LocationName      string
+	StorageObjectID   sql.NullString
+	EquipmentTypeID   int64
+	EquipmentTypeName string
+	TrackingTypeID    sql.NullInt64
+	TrackingTypeName  string
+	UsageTypeID       int64
+	TotalStock        int64
+	RentalPrice       sql.NullInt64
+	ResalePrice       sql.NullInt64
+	Notes             sql.NullString
+	UpdatedAt         int64
+	CreatedAt         int64
+	TotalRecords      int64
 }
 
 func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
@@ -383,10 +390,11 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.LocationID,
 			&i.LocationName,
 			&i.StorageObjectID,
+			&i.EquipmentTypeID,
+			&i.EquipmentTypeName,
 			&i.TrackingTypeID,
 			&i.TrackingTypeName,
 			&i.UsageTypeID,
-			&i.HasContent,
 			&i.TotalStock,
 			&i.RentalPrice,
 			&i.ResalePrice,
@@ -417,9 +425,10 @@ SELECT
     COALESCE(ec.name, '') AS category_name,
     e.manufacturer_id,
     e.storage_object_id,
+    e.equipment_type_id,
+    COALESCE(et.name, '') AS equipment_type_name,
     e.tracking_type_id,
     e.usage_type_id,
-    e.has_content,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
@@ -432,28 +441,30 @@ SELECT
     e.created_at
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
+LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?
 ORDER BY e.name ASC
 `
 
 type ListAllByOrgIDRow struct {
-	ID              string
-	OrgID           string
-	Name            string
-	CategoryID      sql.NullString
-	CategoryName    string
-	ManufacturerID  sql.NullString
-	StorageObjectID sql.NullString
-	TrackingTypeID  sql.NullInt64
-	UsageTypeID     int64
-	HasContent      int64
-	TotalStock      int64
-	RentalPrice     sql.NullInt64
-	ResalePrice     sql.NullInt64
-	Notes           sql.NullString
-	UpdatedAt       int64
-	CreatedAt       int64
+	ID                string
+	OrgID             string
+	Name              string
+	CategoryID        sql.NullString
+	CategoryName      string
+	ManufacturerID    sql.NullString
+	StorageObjectID   sql.NullString
+	EquipmentTypeID   int64
+	EquipmentTypeName string
+	TrackingTypeID    sql.NullInt64
+	UsageTypeID       int64
+	TotalStock        int64
+	RentalPrice       sql.NullInt64
+	ResalePrice       sql.NullInt64
+	Notes             sql.NullString
+	UpdatedAt         int64
+	CreatedAt         int64
 }
 
 func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllByOrgIDRow, error) {
@@ -473,9 +484,10 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.CategoryName,
 			&i.ManufacturerID,
 			&i.StorageObjectID,
+			&i.EquipmentTypeID,
+			&i.EquipmentTypeName,
 			&i.TrackingTypeID,
 			&i.UsageTypeID,
-			&i.HasContent,
 			&i.TotalStock,
 			&i.RentalPrice,
 			&i.ResalePrice,

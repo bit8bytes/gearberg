@@ -24,6 +24,15 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 		}
 	}
 
+	for _, k := range []equipment.Kind{
+		equipment.Physical,
+		equipment.Virtual,
+	} {
+		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO equipment_types (id, name) VALUES (?, ?)`, k.ID(), k.String()); err != nil {
+			return fmt.Errorf("seed equipment_types: %w", err)
+		}
+	}
+
 	for _, u := range []equipment.UsageType{
 		equipment.Rental,
 		equipment.Sale,
