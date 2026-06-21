@@ -61,7 +61,7 @@ type equipmentItemData struct {
 	Locations     []locations.Location
 	Currency      string
 	PartOf        []equipment.PartOf
-	ActiveTab string
+	ActiveTab     string
 }
 
 type equipmentUnitsData struct {

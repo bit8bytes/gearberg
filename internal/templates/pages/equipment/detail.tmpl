@@ -14,18 +14,7 @@
 
       <div class="flex flex-col gap-4">
 
-        <div class="shrink-0 w-28 flex flex-col gap-1">
-          <label class="label">Photo</label>
-          <label for="image" class="cursor-pointer w-full aspect-square rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-image-preview>
-            {{ if and .Data.Item .Data.Item.ImageURL }}
-            <img class="w-full h-full object-cover" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
-            {{ else }}
-            {{ template "camera-icon" . }}
-            <img class="hidden w-full h-full object-cover" data-image-preview-img alt="Preview" />
-            {{ end }}
-          </label>
-          <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
-        </div>
+        {{ template "photo-picker" . }}
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           
@@ -132,10 +121,11 @@
         {{ template "loading-spinner" . }}
         Save
       </button>
-      <button data-confirm="Delete inventory item?" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/delete" type="submit" class="btn btn-error btn-outline">Delete</button>
     </div>
 
   </form>
+  {{ template "photo-picker-dialog" . }}
+  {{ template "photo-viewer-dialog" . }}
 
 </div>
 {{ end }}

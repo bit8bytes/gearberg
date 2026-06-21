@@ -106,7 +106,7 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 			PurchasePrice:      raw.PurchasePrice,
 			PurchasedAt:        raw.PurchasedAt,
 			ManufacturerSerial: raw.ManufacturerSerial,
-			NextInspectionAt:    raw.NextInspectionAt,
+			NextInspectionAt:   raw.NextInspectionAt,
 			IsActive:           raw.IsActive,
 			Remark:             raw.Remark,
 		}

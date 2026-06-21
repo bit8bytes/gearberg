@@ -18,6 +18,7 @@ func (app *application) routes() (http.Handler, error) {
 	}
 	mux.Handle("/api/v1/", apiServer)
 	mux.HandleFunc("GET /media/{id}", app.html.Handle(app.getMedia))
+	mux.HandleFunc("GET /image-proxy", app.getImageProxy)
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 

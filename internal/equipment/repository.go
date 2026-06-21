@@ -497,7 +497,7 @@ func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 		Remark:             database.NullString(database.StringOrNil(u.Notes)),
 		PurchasePrice:      database.NullInt64Ptr(u.PurchasePrice),
 		PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
-		NextInspectionAt:    database.NullInt64Ptr(u.NextInspectionAt),
+		NextInspectionAt:   database.NullInt64Ptr(u.NextInspectionAt),
 		ManufacturerSerial: database.NullString(database.StringOrNil(u.ManufacturerSerialNumber)),
 		ID:                 u.ID,
 	}); err != nil {

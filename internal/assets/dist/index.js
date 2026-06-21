@@ -45,7 +45,7 @@ document.addEventListener("click", (e) => {
 });
 
 // In-place image preview
-// Trigger: <input data-image-input> inside a container with <label data-image-preview>
+// Trigger: <input data-image-input> inside a form with [data-image-preview]
 document.addEventListener("change", (e) => {
   const input = e.target.closest("[data-image-input]");
   if (!input || !input.files[0]) return;
@@ -61,6 +61,137 @@ document.addEventListener("change", (e) => {
   };
   reader.readAsDataURL(input.files[0]);
 });
+
+// Photo expand button visibility
+// Show the expand button whenever [data-image-preview-img] has a non-empty src.
+function syncExpandButton() {
+  const img = document.querySelector("[data-image-preview-img]");
+  const btn = document.querySelector("[data-photo-expand]");
+  if (!btn) return;
+  const hasSrc = img && img.src && !img.src.endsWith(window.location.href);
+  btn.classList.toggle("hidden", !hasSrc);
+}
+document.addEventListener("DOMContentLoaded", syncExpandButton);
+document.addEventListener("change", (e) => {
+  if (e.target.closest("[data-image-input]") || e.target.closest("[data-camera-input]")) {
+    // Preview update happens asynchronously via FileReader; check after it settles.
+    setTimeout(syncExpandButton, 50);
+  }
+});
+
+// Photo viewer – copy current preview src into the viewer dialog before it opens.
+document.addEventListener("click", (e) => {
+  if (!e.target.closest('[data-modal-target="photo-viewer-dialog"]')) return;
+  const previewImg = document.querySelector("[data-image-preview-img]");
+  const viewerImg = document.querySelector("[data-photo-viewer-img]");
+  if (previewImg && viewerImg) viewerImg.src = previewImg.src;
+});
+
+// Photo picker dialog
+// Trigger: <button data-photo-option="camera|upload|url"> inside #photo-picker-dialog
+(function () {
+  function getForm(dialog) {
+    return document.querySelector("form[enctype='multipart/form-data']");
+  }
+
+  document.addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-photo-option]");
+    if (!opt) return;
+
+    const dialog = opt.closest("dialog");
+    const form = getForm(dialog);
+    const imageInput = form && form.querySelector("[data-image-input]");
+    const cameraInput = form && form.querySelector("[data-camera-input]");
+    const action = opt.dataset.photoOption;
+
+    if (action === "camera" && cameraInput) {
+      dialog.close();
+      cameraInput.click();
+    } else if (action === "upload" && imageInput) {
+      dialog.close();
+      imageInput.click();
+    } else if (action === "url") {
+      const urlSection = dialog.querySelector("[data-url-input-section]");
+      if (urlSection) {
+        urlSection.classList.remove("hidden");
+        const urlInput = urlSection.querySelector("[data-photo-url-input]");
+        if (urlInput) urlInput.focus();
+      }
+    }
+  });
+
+  // Reset URL section when dialog closes
+  document.addEventListener("close", (e) => {
+    const dialog = e.target.closest && e.target.closest("dialog") || (e.target.tagName === "DIALOG" ? e.target : null);
+    if (!dialog) return;
+    const urlSection = dialog.querySelector("[data-url-input-section]");
+    if (urlSection) {
+      urlSection.classList.add("hidden");
+      const urlInput = urlSection.querySelector("[data-photo-url-input]");
+      if (urlInput) urlInput.value = "";
+      const errorEl = urlSection.querySelector("[data-photo-url-error]");
+      if (errorEl) errorEl.classList.add("hidden");
+    }
+  }, true);
+
+  // Camera input → transfer file to main image input and trigger preview update
+  document.addEventListener("change", (e) => {
+    const cameraInput = e.target.closest("[data-camera-input]");
+    if (!cameraInput || !cameraInput.files[0]) return;
+    const form = cameraInput.closest("form");
+    const imageInput = form && form.querySelector("[data-image-input]");
+    if (!imageInput) return;
+    const dt = new DataTransfer();
+    dt.items.add(cameraInput.files[0]);
+    imageInput.files = dt.files;
+    imageInput.dispatchEvent(new Event("change", { bubbles: true }));
+    cameraInput.value = "";
+  });
+
+  // URL download → fetch via server proxy, set file on image input
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-photo-url-submit]");
+    if (!btn) return;
+
+    const urlSection = btn.closest("[data-url-input-section]");
+    const dialog = btn.closest("dialog");
+    const urlInput = urlSection && urlSection.querySelector("[data-photo-url-input]");
+    const errorEl = urlSection && urlSection.querySelector("[data-photo-url-error]");
+    const form = document.querySelector("form[enctype='multipart/form-data']");
+    const imageInput = form && form.querySelector("[data-image-input]");
+
+    const imageURL = urlInput ? urlInput.value.trim() : "";
+    if (!imageURL || !imageInput) return;
+
+    if (errorEl) errorEl.classList.add("hidden");
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Downloading…";
+
+    try {
+      const res = await fetch("/image-proxy?url=" + encodeURIComponent(imageURL));
+      if (!res.ok) {
+        throw new Error((await res.text()).trim() || "Download failed.");
+      }
+      const blob = await res.blob();
+      const filename = imageURL.split("/").pop().split("?")[0] || "image.jpg";
+      const file = new File([blob], filename, { type: blob.type });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      imageInput.files = dt.files;
+      imageInput.dispatchEvent(new Event("change", { bubbles: true }));
+      if (dialog) dialog.close();
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove("hidden");
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+})();
 
 // Type card selector + adaptive count label
 // Trigger: radio inputs inside [data-type-option] labels within [data-type-selector]
