@@ -52,22 +52,22 @@ sql:
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/equipment_item_id_counter.sql"
+    queries: "internal/database/queries/sqlite/equipment_serialized_items.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
       go:
-        package: "equipmentitemidcounter"
-        out: "internal/database/queries/gen/equipmentitemidcounter"
+        package: "equipmentserializeditems"
+        out: "internal/database/queries/gen/equipmentserializeditems"
         emit_interface: true
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/equipment_items.sql"
+    queries: "internal/database/queries/sqlite/equipment_bulk_items.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
       go:
-        package: "equipmentitems"
-        out: "internal/database/queries/gen/equipmentitems"
+        package: "equipmentbulkitems"
+        out: "internal/database/queries/gen/equipmentbulkitems"
         emit_interface: true
         omit_unused_structs: true
 

@@ -9,6 +9,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
+	"github.com/bit8bytes/gearberg/internal/uid"
 	"github.com/segmentio/ksuid"
 )
 
@@ -49,7 +50,7 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	}
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
-		units[i] = CreateUnit{ID: ksuid.New().String(), EquipmentID: c.ID}
+		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: uid.NewSerial()}
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -223,9 +224,9 @@ func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
 	return u, nil
 }
 
-// AddUnit adds a new empty unit to the serialized inventory item.
-func (s *Service) AddUnit(ctx context.Context, orgID string, a AddUnit) (*Unit, error) {
-	u, err := s.repo.AddUnit(ctx, orgID, a)
+// AddUnit adds a new unit to the serialized inventory item.
+func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
+	u, err := s.repo.AddUnit(ctx, a)
 	if err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", err)
 	}
@@ -248,25 +249,11 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID string) error {
 	return nil
 }
 
-// ListContent returns all content items for equipmentID, enriched with each member's
-// current stock and total demand across all combination assignments so callers can
-// surface warnings without additional lookups.
+// ListContent returns all content items for equipmentID.
 func (s *Service) ListContent(ctx context.Context, equipmentID string) ([]ContentItem, error) {
 	items, err := s.repo.ListContent(ctx, equipmentID)
 	if err != nil {
 		return nil, fmt.Errorf("ListContent: %w", err)
-	}
-	for i, item := range items {
-		member, err := s.repo.GetByID(ctx, item.MemberID)
-		if err != nil {
-			continue
-		}
-		demand, err := s.repo.TotalDemandByMemberID(ctx, item.MemberID)
-		if err != nil {
-			continue
-		}
-		items[i].AvailableStock = member.TotalStock
-		items[i].RequiredStock = demand
 	}
 	return items, nil
 }

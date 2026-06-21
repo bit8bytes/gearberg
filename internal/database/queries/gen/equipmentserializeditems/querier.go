@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.31.1
 
-package equipmentitems
+package equipmentserializeditems
 
 import (
 	"context"
@@ -11,9 +11,8 @@ import (
 type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
-	GetByID(ctx context.Context, id string) (EquipmentItem, error)
-	ListByEquipmentID(ctx context.Context, equipmentID string) ([]EquipmentItem, error)
-	SetQuantity(ctx context.Context, arg SetQuantityParams) error
+	GetByID(ctx context.Context, id string) (GetByIDRow, error)
+	ListByEquipmentID(ctx context.Context, equipmentID string) ([]ListByEquipmentIDRow, error)
 	Update(ctx context.Context, arg UpdateParams) error
 }
 

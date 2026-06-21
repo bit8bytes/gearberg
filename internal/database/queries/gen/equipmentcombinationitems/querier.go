@@ -13,7 +13,6 @@ type Querier interface {
 	Delete(ctx context.Context, id string) error
 	ListByEquipmentID(ctx context.Context, equipmentID string) ([]ListByEquipmentIDRow, error)
 	ListContainersByMemberID(ctx context.Context, memberEquipmentID string) ([]ListContainersByMemberIDRow, error)
-	TotalDemandByMemberID(ctx context.Context, memberEquipmentID string) (interface{}, error)
 }
 
 var _ Querier = (*Queries)(nil)

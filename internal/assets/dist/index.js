@@ -214,8 +214,15 @@ document.addEventListener("click", (e) => {
     if (hint) hint.classList.toggle("hidden", typeValue !== "serialized");
   }
 
-  function syncHasContent() {
-    // has_content is available for both bulk and serialized
+  function syncHasContent(typeValue) {
+    const row = document.querySelector("[data-has-content-row]");
+    if (!row) return;
+    const visible = typeValue === "serialized";
+    row.classList.toggle("hidden", !visible);
+    if (!visible) {
+      const toggle = row.querySelector("[data-has-content-toggle]");
+      if (toggle) toggle.checked = false;
+    }
   }
 
   document.addEventListener("change", (e) => {

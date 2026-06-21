@@ -17,7 +17,7 @@
     <table class="table table-sm hover w-full">
       <thead>
         <tr>
-          <th>INTERNAL ID</th>
+          <th>SERIAL</th>
           <th>STATUS</th>
           <th>MFR SERIAL</th>
           <th>NEXT INSPECTION</th>
@@ -31,7 +31,7 @@
         {{ range .Data.Units }}
         <tr>
           <td class="whitespace-nowrap">
-            <span class="badge badge-ghost font-mono text-xs">{{ .InternalID }}</span>
+            <span class="badge badge-ghost font-mono text-xs">{{ .SerialNumber }}</span>
           </td>
           <td>
             {{ if .IsActive }}
@@ -81,7 +81,7 @@
                       form="unit-{{ .ID }}-delete"
                       type="submit"
                       class="text-error"
-                      data-confirm="Delete unit {{ .InternalID }}?"
+                      data-confirm="Delete unit {{ .SerialNumber }}?"
                     >
                     <span class="w-4 h-4">{{ template "delete-icon" . }}</span>
                     Delete</button>
@@ -118,7 +118,7 @@
   {{ range .Data.Units }}
   <dialog id="unit-modal-{{ .ID }}" class="modal">
     <div class="modal-box max-w-md flex flex-col gap-4">
-      <h3 class="font-semibold">Unit #{{ .InternalID }}</h3>
+      <h3 class="font-semibold">Unit {{ .SerialNumber }}</h3>
 
       <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}" class="flex flex-col gap-4">
 

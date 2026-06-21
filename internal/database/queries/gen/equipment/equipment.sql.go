@@ -223,8 +223,8 @@ SELECT
     e.has_content,
     e.is_archived,
     CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
     (SELECT COUNT(*) FROM equipment_combination_items WHERE equipment_id = e.id) AS content_count,
@@ -331,8 +331,8 @@ SELECT
     COALESCE(tt.name, '') AS tracking_type_name,
     e.usage_type_id,
     CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
     e.is_archived,
@@ -348,7 +348,7 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
-  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || ?2 || '%'))
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || ?2 || '%' OR esi.serial_number LIKE '%' || ?2 || '%')))
   AND (?3 = '' OR ec.name = ?3)
   AND e.is_archived = ?4
 ORDER BY e.name ASC
@@ -456,8 +456,8 @@ SELECT
     e.tracking_type_id,
     e.usage_type_id,
     CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
     e.is_archived,
@@ -554,8 +554,8 @@ SELECT
     COALESCE(tt.name, '') AS tracking_type_name,
     e.usage_type_id,
     CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ei.quantity) FROM equipment_items ei WHERE ei.equipment_id = e.id AND ei.parent_equipment_item_id IS NULL), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_items ei WHERE ei.equipment_id = e.id)
+        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
+        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
     e.is_archived,
@@ -571,10 +571,10 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
-  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_items ei_s WHERE ei_s.equipment_id = e.id AND CAST(ei_s.internal_id AS TEXT) LIKE '%' || ?2 || '%'))
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || ?2 || '%' OR esi.serial_number LIKE '%' || ?2 || '%')))
   AND (?3 = '' OR ec.name = ?3)
   AND e.is_archived = ?4
-ORDER BY (SELECT MIN(ei_o.internal_id) FROM equipment_items ei_o WHERE ei_o.equipment_id = e.id) ASC
+ORDER BY (SELECT MIN(esi.code) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id) ASC
 LIMIT ?6 OFFSET ?5
 `
 

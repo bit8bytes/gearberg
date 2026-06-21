@@ -1,10 +1,11 @@
 -- name: Create :one
-INSERT INTO equipment_items (
+INSERT INTO equipment_serialized_items (
     id,
+    org_id,
     equipment_id,
-    internal_id,
+    serial_number,
+    code,
     is_active,
-    quantity,
     remark,
     purchase_price,
     purchased_at,
@@ -12,10 +13,11 @@ INSERT INTO equipment_items (
     manufacturer_serial
 ) VALUES (
     sqlc.arg(id),
+    sqlc.arg(org_id),
     sqlc.arg(equipment_id),
-    sqlc.arg(internal_id),
+    sqlc.arg(serial_number),
+    sqlc.arg(code),
     sqlc.arg(is_active),
-    sqlc.arg(quantity),
     sqlc.arg(remark),
     sqlc.arg(purchase_price),
     sqlc.arg(purchased_at),
@@ -23,11 +25,12 @@ INSERT INTO equipment_items (
     sqlc.arg(manufacturer_serial)
 ) RETURNING
     id,
+    org_id,
     equipment_id,
-    parent_equipment_item_id,
-    internal_id,
+    parent_item_id,
+    serial_number,
+    code,
     is_active,
-    quantity,
     remark,
     purchase_price,
     purchased_at,
@@ -39,10 +42,10 @@ INSERT INTO equipment_items (
 SELECT
     id,
     equipment_id,
-    parent_equipment_item_id,
-    internal_id,
+    parent_item_id,
+    serial_number,
+    code,
     is_active,
-    quantity,
     remark,
     purchase_price,
     purchased_at,
@@ -50,17 +53,17 @@ SELECT
     manufacturer_serial,
     updated_at,
     created_at
-FROM equipment_items
+FROM equipment_serialized_items
 WHERE id = ?;
 
 -- name: ListByEquipmentID :many
 SELECT
     id,
     equipment_id,
-    parent_equipment_item_id,
-    internal_id,
+    parent_item_id,
+    serial_number,
+    code,
     is_active,
-    quantity,
     remark,
     purchase_price,
     purchased_at,
@@ -68,15 +71,15 @@ SELECT
     manufacturer_serial,
     updated_at,
     created_at
-FROM equipment_items
+FROM equipment_serialized_items
 WHERE equipment_id = ?
-ORDER BY internal_id ASC;
+ORDER BY serial_number ASC;
 
 -- name: Update :exec
-UPDATE equipment_items
+UPDATE equipment_serialized_items
 SET
+    code = sqlc.arg(code),
     is_active = sqlc.arg(is_active),
-    quantity = sqlc.arg(quantity),
     remark = sqlc.arg(remark),
     purchase_price = sqlc.arg(purchase_price),
     purchased_at = sqlc.arg(purchased_at),
@@ -85,13 +88,6 @@ SET
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);
 
--- name: SetQuantity :exec
-UPDATE equipment_items
-SET
-    quantity = sqlc.arg(quantity),
-    updated_at = unixepoch()
-WHERE id = sqlc.arg(id);
-
 -- name: Delete :exec
-DELETE FROM equipment_items
+DELETE FROM equipment_serialized_items
 WHERE id = ?;

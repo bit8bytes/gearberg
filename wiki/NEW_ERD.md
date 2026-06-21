@@ -167,37 +167,34 @@ erDiagram
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
-  %% power_mw is optional; derived as voltage_v × current_ma when not set
-  %% tracking=bulk: stock managed via equipment_items.quantity
-  %% tracking=serialized: one equipment_items row per physical unit
-  %% tracking=virtual: no direct stock; availability derived from content items at rental time
-  %% has_content: only valid for serialized items; virtual always has content; bulk never has content
-  %% has_content=true: equipment_combination_items defines what goes inside this physical container
-  %% prices stored net (excl. VAT); VAT applied at invoice time using org_settings.vat_rate
 
-  equipment_items {
+  equipment_serialized_items {
     text id PK
     text equipment_id FK "NOT NULL ON DELETE CASCADE"
-    text parent_equipment_item_id FK "ON DELETE SET NULL"
+    text parent_item_id FK "ON DELETE SET NULL"
     text serial_number "NOT NULL UNIQUE(org_id,serial_number)"
     text code
     integer is_active "NOT NULL DEFAULT 1"
-    integer quantity "NOT NULL DEFAULT 1"
     text remark
     integer purchase_price "cents e.g. 1999 = 19.99"
     integer purchased_at
-    integer last_inspected_at
+    integer next_inspection_at
     text manufacturer_serial
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }
-  %% serial_number: auto-generated, always set, never null; unique per org
-  %% manufacturer_serial: optional user-supplied serial printed on the physical unit
-  %% configurable number series (prefix, start, padding) deferred; serial_number TEXT already supports it
-  %% bulk: one row for free stock + one row per container assignment, quantity=N each
-  %% virtual: no rows
-  %% parent_equipment_item_id: self-referential FK → equipment_items; indicates this item is inside a container instance
-  %% a unit may be reassigned to a different container; service layer warns if already assigned
+  %% parent_item_id: physical containment — "Mixer Unit #3 is inside Case Unit #1"
+
+  equipment_bulk_items {
+    text id PK
+    text equipment_id FK "NOT NULL ON DELETE CASCADE"
+    integer quantity "NOT NULL DEFAULT 1"
+    integer purchase_price "cents e.g. 1999 = 19.99"
+    integer purchased_at
+    text remark
+    integer created_at "NOT NULL DEFAULT unixepoch"
+    integer updated_at "NOT NULL DEFAULT unixepoch"
+  }
 
   equipment_combination_items {
     text id PK
@@ -205,14 +202,6 @@ erDiagram
     text member_equipment_id FK "NOT NULL ON DELETE CASCADE"
     integer quantity "NOT NULL DEFAULT 1"
   }
-  %% equipment_id references either a virtual equipment row OR a serialized row with has_content=true
-  %% member_equipment_id references any equipment definition (bulk or serialized)
-  %% UNIQUE(equipment_id, member_equipment_id)
-  %% for virtual equipment: defines the standard content of a kit (the recipe)
-  %% for serialized containers (has_content=true): defines what goes inside this type of physical container
-  %% member_equipment_id must not equal equipment_id (no self-referential content; enforced in service layer)
-  %% content can be modified per project (future: rental line items override); not in scope now
-  %% when planned on a project, all member items are reserved from stock
 
   equipment_imports {
     text id PK
@@ -255,7 +244,7 @@ erDiagram
   %% one row per equipment_items entry: serialized = one row per unit; bulk = one row with quantity
   %% type_label + tracking_label replace the old single tracking column (now two separate dimensions)
   %% existing_equipment_id: matched equipment definition for update actions
-  %% existing_item_id: matched equipment_items row for update actions
+  %% existing_item_id: matched equipment_serialized_items or equipment_bulk_items row for update actions
   %% has_content is not importable; derived from whether combination members exist
   %% groups and container membership are not importable via CSV; set up manually in the UI after import
 
@@ -276,8 +265,9 @@ erDiagram
   equipment_manufacturers ||--o{ equipment : "makes"
   equipment }|--o| warehouse_locations : "has"
   storage_objects ||--o{ equipment : "image"
-  equipment ||--o{ equipment_items : "has items"
-  equipment_items ||--o{ equipment_items : "contains"
+  equipment ||--o{ equipment_serialized_items : "has units"
+  equipment_serialized_items ||--o{ equipment_serialized_items : "contains"
+  equipment ||--o{ equipment_bulk_items : "has stock"
   equipment ||--o{ equipment_documents : "documents"
   storage_objects ||--o{ equipment_documents : "file"
   equipment ||--o{ equipment_combination_items : "virtual content"

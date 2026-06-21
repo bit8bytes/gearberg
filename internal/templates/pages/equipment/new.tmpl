@@ -118,7 +118,7 @@
           {{ end }}
         </div>
 
-        <div data-has-content-row>
+        <div data-has-content-row{{ if ne .Form.TypeID "serialized" }} class="hidden"{{ end }}>
           <label class="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" name="has_content" value="1" class="toggle toggle-primary toggle-sm"
               data-has-content-toggle

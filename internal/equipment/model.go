@@ -101,19 +101,12 @@ type Equipment struct {
 
 // ContentItem represents a single entry in an equipment's content definition.
 type ContentItem struct {
-	ID             string
-	EquipmentID    string
-	MemberID       string
-	MemberName     string
-	MemberType     Type
-	Quantity       int64
-	AvailableStock int64 // member's current total stock; 0 if lookup fails
-	RequiredStock  int64 // container.TotalStock × Quantity
-}
-
-// StockShort reports whether the member has insufficient stock to cover all container units.
-func (c ContentItem) StockShort() bool {
-	return c.RequiredStock > 0 && c.AvailableStock < c.RequiredStock
+	ID          string
+	EquipmentID string
+	MemberID    string
+	MemberName  string
+	MemberType  Type
+	Quantity    int64
 }
 
 // AssignContent holds the data required to assign an equipment as content of a container.
@@ -165,8 +158,10 @@ type CreateBulkEquipment struct {
 // CreateUnit holds the data required to create a single serialized inventory unit.
 type CreateUnit struct {
 	ID           string
+	OrgID        string
 	EquipmentID  string
 	SerialNumber string
+	Code         string
 }
 
 // CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
@@ -190,10 +185,10 @@ type Unit struct {
 	ID                       string
 	EquipmentID              string
 	StatusID                 int64
-	InternalID               int64 // globally unique integer for QR codes; never reused after deletion
+	SerialNumber             string
+	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
-	Quantity                 int64
 	PurchasePrice            *int64
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
@@ -287,8 +282,11 @@ type SetImage struct {
 
 // AddUnit holds the data required to add a single unit to a serialized inventory item.
 type AddUnit struct {
-	ID          string
-	EquipmentID string
+	ID           string
+	OrgID        string
+	EquipmentID  string
+	SerialNumber string
+	Code         string
 }
 
 // UnitStatusEntry is a row from the unit_statuses lookup table.
@@ -312,9 +310,9 @@ func (u UnitStatusEntry) Label() string {
 type UpdateUnit struct {
 	ID                       string
 	StatusID                 int64
+	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
-	Quantity                 int64
 	PurchasePrice            *int64
 	PurchasedAt              *int64
 	NextInspectionAt         *int64

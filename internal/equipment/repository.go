@@ -8,30 +8,30 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	genequip "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipment"
+	genbulk "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentbulkitems"
 	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcombinationitems"
-	genidcounter "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentitemidcounter"
-	genitems "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentitems"
+	genserialized "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentserializeditems"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/segmentio/ksuid"
 )
 
 // Repository provides data access for inventory items.
 type Repository struct {
-	db                     *sql.DB
-	equipment              *genequip.Queries
-	equipmentItems         *genitems.Queries
-	equipmentItemIDCounter *genidcounter.Queries
-	content                *gencontent.Queries
+	db              *sql.DB
+	equipment       *genequip.Queries
+	serializedItems *genserialized.Queries
+	bulkItems       *genbulk.Queries
+	content         *gencontent.Queries
 }
 
 // NewRepository returns a new Repository.
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{
-		db:                     db,
-		equipment:              genequip.New(db),
-		equipmentItems:         genitems.New(db),
-		equipmentItemIDCounter: genidcounter.New(db),
-		content:                gencontent.New(db),
+		db:              db,
+		equipment:       genequip.New(db),
+		serializedItems: genserialized.New(db),
+		bulkItems:       genbulk.New(db),
+		content:         gencontent.New(db),
 	}
 }
 
@@ -48,7 +48,7 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 // items whose name or unit code contains query are returned. When category is
 // non-empty, only items in that category are returned. When showArchived is true,
 // only archived items are returned; otherwise only active items are returned.
-// sortBy may be "code" to order by minimum unit internal_id; otherwise orders by name.
+// sortBy may be "code" to order by minimum unit code; otherwise orders by name.
 // Returns total matching count.
 func (r *Repository) List(ctx context.Context, orgID, query, category, sortBy string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
 	if sortBy == "code" {
@@ -183,10 +183,9 @@ func (r *Repository) SetImage(ctx context.Context, s SetImage) error {
 	return nil
 }
 
-// createBulkWith inserts an equipment row and its equipment_items row using the provided queries.
-// Callers are responsible for transaction management. cntQ must be scoped to the same transaction
-// as eqQ and itemQ to avoid acquiring a second write lock while the first is still held.
-func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, itemQ *genitems.Queries, cntQ *genidcounter.Queries, c CreateBulkEquipment) (*Equipment, error) {
+// createBulkWith inserts an equipment row and its equipment_bulk_items row using the provided queries.
+// Callers are responsible for transaction management.
+func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, bulkQ *genbulk.Queries, c CreateBulkEquipment) (*Equipment, error) {
 	row, err := eqQ.Create(ctx, genequip.CreateParams{
 		ID:              c.ID,
 		OrgID:           c.OrgID,
@@ -206,18 +205,12 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 	if err != nil {
 		return nil, fmt.Errorf("createBulkWith: %w", database.NormalizeError(err))
 	}
-	internalID, err := cntQ.NextInternalID(ctx, c.OrgID)
-	if err != nil {
-		return nil, fmt.Errorf("createBulkWith: %w", err)
-	}
-	if _, err := itemQ.Create(ctx, genitems.CreateParams{
+	if _, err := bulkQ.Create(ctx, genbulk.CreateParams{
 		ID:          ksuid.New().String(),
 		EquipmentID: row.ID,
-		InternalID:  internalID,
-		IsActive:    1,
 		Quantity:    c.TotalStock,
 	}); err != nil {
-		return nil, fmt.Errorf("createBulkWith: equipment_items: %w", database.NormalizeError(err))
+		return nil, fmt.Errorf("createBulkWith: equipment_bulk_items: %w", database.NormalizeError(err))
 	}
 	m := Equipment{
 		ID:              row.ID,
@@ -246,14 +239,14 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 	return &m, nil
 }
 
-// CreateBulk inserts a new bulk inventory item and its equipment_items row atomically.
+// CreateBulk inserts a new bulk inventory item and its equipment_bulk_items row atomically.
 func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkEquipment) (*Equipment, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", err)
 	}
 	defer tx.Rollback() //nolint:errcheck
-	m, err := r.createBulkWith(ctx, r.equipment.WithTx(tx), r.equipmentItems.WithTx(tx), r.equipmentItemIDCounter.WithTx(tx), c)
+	m, err := r.createBulkWith(ctx, r.equipment.WithTx(tx), r.bulkItems.WithTx(tx), c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulk: %w", err)
 	}
@@ -265,7 +258,7 @@ func (r *Repository) CreateBulk(ctx context.Context, c CreateBulkEquipment) (*Eq
 
 // CreateBulkTx inserts a new bulk inventory item within an existing transaction.
 func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkEquipment) (*Equipment, error) {
-	m, err := r.createBulkWith(ctx, r.equipment.WithTx(tx), r.equipmentItems.WithTx(tx), r.equipmentItemIDCounter.WithTx(tx), c)
+	m, err := r.createBulkWith(ctx, r.equipment.WithTx(tx), r.bulkItems.WithTx(tx), c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulkTx: %w", err)
 	}
@@ -275,7 +268,7 @@ func (r *Repository) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkE
 // CreateSerialized inserts a serialized inventory item and all its units atomically within tx.
 func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSerializedEquipment) (*Equipment, error) {
 	eqQ := r.equipment.WithTx(tx)
-	itemQ := r.equipmentItems.WithTx(tx)
+	itemQ := r.serializedItems.WithTx(tx)
 	row, err := eqQ.Create(ctx, genequip.CreateParams{
 		ID:              c.ID,
 		OrgID:           c.OrgID,
@@ -296,19 +289,14 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
 	}
 
-	cntQ := r.equipmentItemIDCounter.WithTx(tx)
 	for _, u := range c.Units {
-		unitInternalID, err := cntQ.NextInternalID(ctx, c.OrgID)
-		if err != nil {
-			return nil, fmt.Errorf("CreateSerialized: %w", err)
-		}
-		if _, err := itemQ.Create(ctx, genitems.CreateParams{
-			ID:                 u.ID,
-			EquipmentID:        row.ID,
-			InternalID:         unitInternalID,
-			IsActive:           1,
-			Quantity:           1,
-			ManufacturerSerial: database.NullString(database.StringOrNil(u.SerialNumber)),
+		if _, err := itemQ.Create(ctx, genserialized.CreateParams{
+			ID:           u.ID,
+			OrgID:        c.OrgID,
+			EquipmentID:  row.ID,
+			SerialNumber: u.SerialNumber,
+			Code:         database.NullString(database.StringOrNil(u.Code)),
+			IsActive:     1,
 		}); err != nil {
 			return nil, fmt.Errorf("CreateSerialized: create item: %w", database.NormalizeError(err))
 		}
@@ -341,7 +329,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 	return &m, nil
 }
 
-// UpdateDetails updates the details-tab columns for a serialized inventory item.
+// UpdateDetails updates the details-tab columns for an inventory item.
 func (r *Repository) UpdateDetails(ctx context.Context, u UpdateEquipmentDetails) error {
 	if err := r.equipment.UpdateDetails(ctx, genequip.UpdateDetailsParams{
 		ID:             u.ID,
@@ -356,7 +344,7 @@ func (r *Repository) UpdateDetails(ctx context.Context, u UpdateEquipmentDetails
 	return nil
 }
 
-// UpdateDetailsBulk updates the details-tab columns and equipment_items quantity atomically.
+// UpdateDetailsBulk updates the details-tab columns and equipment_bulk_items quantity atomically.
 func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateEquipmentDetails) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -373,23 +361,13 @@ func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateEquipmentDet
 	}); err != nil {
 		return fmt.Errorf("UpdateDetailsBulk: %w", database.NormalizeError(err))
 	}
-	items, err := r.equipmentItems.WithTx(tx).ListByEquipmentID(ctx, u.ID)
+	item, err := r.bulkItems.WithTx(tx).GetByEquipmentID(ctx, u.ID)
 	if err != nil {
-		return fmt.Errorf("UpdateDetailsBulk: list items: %w", err)
+		return fmt.Errorf("UpdateDetailsBulk: get bulk item: %w", err)
 	}
-	var stockItemID string
-	for _, item := range items {
-		if !item.ParentEquipmentItemID.Valid {
-			stockItemID = item.ID
-			break
-		}
-	}
-	if stockItemID == "" {
-		return fmt.Errorf("UpdateDetailsBulk: no stock item found for equipment %s", u.ID)
-	}
-	if err := r.equipmentItems.WithTx(tx).SetQuantity(ctx, genitems.SetQuantityParams{
+	if err := r.bulkItems.WithTx(tx).SetQuantity(ctx, genbulk.SetQuantityParams{
 		Quantity: u.TotalStock,
-		ID:       stockItemID,
+		ID:       item.ID,
 	}); err != nil {
 		return fmt.Errorf("UpdateDetailsBulk: set quantity: %w", database.NormalizeError(err))
 	}
@@ -428,9 +406,9 @@ func (r *Repository) UpdateProperties(ctx context.Context, u UpdateEquipmentProp
 	return nil
 }
 
-// ListUnits returns all equipment items for the given inventory item, ordered by serial_number.
+// ListUnits returns all serialized units for the given inventory item, ordered by serial_number.
 func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit, error) {
-	rows, err := r.equipmentItems.ListByEquipmentID(ctx, equipmentID)
+	rows, err := r.serializedItems.ListByEquipmentID(ctx, equipmentID)
 	if err != nil {
 		return nil, fmt.Errorf("ListUnits: %w", err)
 	}
@@ -440,10 +418,10 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 			ID:                       row.ID,
 			EquipmentID:              row.EquipmentID,
 			StatusID:                 row.IsActive,
-			InternalID:               row.InternalID,
+			SerialNumber:             row.SerialNumber,
+			Code:                     database.String(row.Code),
 			ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 			Notes:                    database.String(row.Remark),
-			Quantity:                 row.Quantity,
 			PurchasePrice:            database.Int64Ptr(row.PurchasePrice),
 			PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 			NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
@@ -505,9 +483,9 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// GetUnit returns the unit with id, or database.ErrNotFound when it does not exist.
+// GetUnit returns the serialized unit with id, or database.ErrNotFound when it does not exist.
 func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
-	row, err := r.equipmentItems.GetByID(ctx, id)
+	row, err := r.serializedItems.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, database.ErrNotFound
@@ -518,10 +496,10 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		ID:                       row.ID,
 		EquipmentID:              row.EquipmentID,
 		StatusID:                 row.IsActive,
-		InternalID:               row.InternalID,
+		SerialNumber:             row.SerialNumber,
+		Code:                     database.String(row.Code),
 		ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 		Notes:                    database.String(row.Remark),
-		Quantity:                 row.Quantity,
 		PurchasePrice:            database.Int64Ptr(row.PurchasePrice),
 		PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 		NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
@@ -531,37 +509,35 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 	return &u, nil
 }
 
-// AddUnit inserts a new empty unit for the inventory item.
-func (r *Repository) AddUnit(ctx context.Context, orgID string, a AddUnit) (*Unit, error) {
-	internalID, err := r.equipmentItemIDCounter.NextInternalID(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("AddUnit: %w", err)
-	}
-	row, err := r.equipmentItems.Create(ctx, genitems.CreateParams{
-		ID:          a.ID,
-		EquipmentID: a.EquipmentID,
-		InternalID:  internalID,
-		IsActive:    1,
-		Quantity:    1,
+// AddUnit inserts a new serialized unit for the inventory item.
+func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
+	row, err := r.serializedItems.Create(ctx, genserialized.CreateParams{
+		ID:           a.ID,
+		OrgID:        a.OrgID,
+		EquipmentID:  a.EquipmentID,
+		SerialNumber: a.SerialNumber,
+		Code:         database.NullString(database.StringOrNil(a.Code)),
+		IsActive:     1,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", database.NormalizeError(err))
 	}
 	u := Unit{
-		ID:          row.ID,
-		EquipmentID: row.EquipmentID,
-		StatusID:    row.IsActive,
-		InternalID:  row.InternalID,
-		CreatedAt:   row.CreatedAt,
+		ID:           row.ID,
+		EquipmentID:  row.EquipmentID,
+		StatusID:     row.IsActive,
+		SerialNumber: row.SerialNumber,
+		Code:         database.String(row.Code),
+		CreatedAt:    row.CreatedAt,
 	}
 	return &u, nil
 }
 
-// UpdateUnit updates the editable fields of a unit.
+// UpdateUnit updates the editable fields of a serialized unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
-	if err := r.equipmentItems.Update(ctx, genitems.UpdateParams{
+	if err := r.serializedItems.Update(ctx, genserialized.UpdateParams{
+		Code:               database.NullString(database.StringOrNil(u.Code)),
 		IsActive:           u.StatusID,
-		Quantity:           u.Quantity,
 		Remark:             database.NullString(database.StringOrNil(u.Notes)),
 		PurchasePrice:      database.NullInt64Ptr(u.PurchasePrice),
 		PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
@@ -574,9 +550,9 @@ func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	return nil
 }
 
-// DeleteUnit removes a unit by ID.
+// DeleteUnit removes a serialized unit by ID.
 func (r *Repository) DeleteUnit(ctx context.Context, id string) error {
-	if err := r.equipmentItems.Delete(ctx, id); err != nil {
+	if err := r.serializedItems.Delete(ctx, id); err != nil {
 		return fmt.Errorf("DeleteUnit: %w", database.NormalizeError(err))
 	}
 	return nil
@@ -644,16 +620,3 @@ func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID stri
 	return items, nil
 }
 
-// TotalDemandByMemberID returns the total units of memberID committed across all
-// combination assignments: sum of (containerTotalStock × perContainerQuantity).
-func (r *Repository) TotalDemandByMemberID(ctx context.Context, memberID string) (int64, error) {
-	v, err := r.content.TotalDemandByMemberID(ctx, memberID)
-	if err != nil {
-		return 0, fmt.Errorf("TotalDemandByMemberID: %w", err)
-	}
-	// sqlc maps COALESCE(SUM(...), 0) to interface{} for SQLite; the driver returns int64.
-	if n, ok := v.(int64); ok {
-		return n, nil
-	}
-	return 0, nil
-}

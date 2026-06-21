@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"html/template"
@@ -25,6 +24,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/internal/uid"
 	"github.com/segmentio/ksuid"
 )
 
@@ -95,69 +95,6 @@ func (app *application) loadPartOf(ctx context.Context, equipmentID string) ([]e
 		return nil, &httperr.Error{Error: err, Message: "Failed to load container memberships.", Code: http.StatusInternalServerError}
 	}
 	return partOf, nil
-}
-
-func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
-	orgID := r.PathValue("org_id")
-
-	items, err := app.services.equipment.ListAll(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
-	}
-
-	mfrs, err := app.services.equipment.ListManufacturers(ctx, orgID)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
-	}
-	mfrByID := make(map[string]string, len(mfrs))
-	for _, m := range mfrs {
-		mfrByID[m.ID] = m.Name
-	}
-
-	filename := "inventory-" + time.Now().UTC().Format("2006-01-02") + ".csv"
-	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	w.Header().Set("Cache-Control", "no-store")
-
-	// UTF-8 BOM for Excel compatibility.
-	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
-	}
-
-	cw := csv.NewWriter(w)
-	if err := cw.Write([]string{"Code", "Name", "Type", "Usage", "Category", "Manufacturer", "Total Stock", "Purchase Price", "Rental Price", "Notes", "Created At", "Updated At"}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
-	}
-	for _, item := range items {
-		if err := cw.Write([]string{
-			item.Name,
-			item.Type.Label(),
-			item.UsageType.Label(),
-			item.CategoryName,
-			mfrByID[item.ManufacturerID],
-			fmt.Sprintf("%d", item.TotalStock),
-			formatCents(item.PurchasePrice),
-			formatCents(item.RentalPrice),
-			item.Notes,
-			time.Unix(item.CreatedAt, 0).UTC().Format("2006-01-02"),
-			time.Unix(item.UpdatedAt, 0).UTC().Format("2006-01-02"),
-		}); err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
-		}
-	}
-	cw.Flush()
-	if err := cw.Error(); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
-	}
-	return nil
-}
-
-func formatCents(v *int64) string {
-	if v == nil {
-		return ""
-	}
-	return fmt.Sprintf("%.2f", float64(*v)/100)
 }
 
 func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -268,6 +205,9 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 	}
 
 	eqType := equipment.TypeFromString(form.TypeID)
+	if eqType == equipment.Bulk {
+		base.HasContent = false
+	}
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
 		Type:       eqType,
 		Base:       base,
@@ -544,29 +484,18 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 		return app.renderEquipmentUnits(w, r, orgID, itemID)
 	}
 
-	if _, err := app.services.equipment.AddUnit(ctx, orgID, equipment.AddUnit{
-		ID:          ksuid.New().String(),
-		EquipmentID: itemID,
+	serialNumber := form.ManufacturerSerialNumber
+	if serialNumber == "" {
+		serialNumber = uid.NewSerial()
+	}
+	if _, err := app.services.equipment.AddUnit(ctx, equipment.AddUnit{
+		ID:           ksuid.New().String(),
+		OrgID:        orgID,
+		EquipmentID:  itemID,
+		SerialNumber: serialNumber,
+		Code:         form.Code,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
-	}
-
-	// After add, update the unit's fields if provided.
-	// AddUnit creates an empty unit; we patch it immediately if serial/date were supplied.
-	// This avoids a separate "edit after add" round-trip for users who fill the form.
-	// We don't know the new unit ID here, so we list units and update the last one.
-	if form.ManufacturerSerialNumber != "" || form.Notes != "" || form.PurchasedAt != "" {
-		units, listErr := app.services.equipment.ListUnits(ctx, itemID)
-		if listErr == nil && len(units) > 0 {
-			last := units[len(units)-1]
-			_ = app.services.equipment.UpdateUnit(ctx, equipment.UpdateUnit{
-				ID:                       last.ID,
-				Quantity:                 last.Quantity,
-				ManufacturerSerialNumber: form.ManufacturerSerialNumber,
-				Notes:                    form.Notes,
-				PurchasedAt:              form.PurchasedAtUnix(),
-			})
-		}
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
@@ -592,8 +521,8 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 		ID:                       unitID,
 		StatusID:                 form.StatusIDInt64(),
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
+		Code:                     form.Code,
 		Notes:                    form.Notes,
-		Quantity:                 form.QuantityInt64(),
 		PurchasePrice:            form.PurchasePriceCents(),
 		PurchasedAt:              form.PurchasedAtUnix(),
 		NextInspectionAt:         form.NextInspectionAtUnix(),
@@ -684,7 +613,10 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
 	}
 
-	content := strconv.FormatInt(unit.InternalID, 10)
+	content := unit.Code
+	if content == "" {
+		content = unit.SerialNumber
+	}
 	png, err := barcodes.QR(content)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
