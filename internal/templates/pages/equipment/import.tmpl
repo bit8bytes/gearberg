@@ -4,7 +4,12 @@
 <div class="max-w-xl mx-auto px-4 py-12 flex flex-col gap-6">
   <h3>Import Equipment</h3>
 
-
+  <div class="text-sm text-base-content/60">
+    <p>Upload a CSV file to import equipment in bulk.</p>
+    <p class="mt-1">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/import/template" class="link link-primary">Download template CSV</a>, fill it in, and upload below.
+    </p>
+  </div>
 
   <form method="post" action="/orgs/{{ .Data.OrgID }}/equipment/import" enctype="multipart/form-data" class="flex flex-col gap-4">
     <fieldset class="fieldset">

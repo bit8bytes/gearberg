@@ -42,7 +42,6 @@ type Row struct {
 	VoltageV            string
 	CurrentMa           string
 	PowerMw             string
-	Code                string
 	Quantity            string
 	PurchasePrice       string
 	PurchasedAt         string
@@ -54,38 +53,29 @@ type Row struct {
 
 // RawRow holds a parsed CSV data row before validation.
 type RawRow struct {
-	Name               string
-	TypeLabel          string
-	TrackingLabel      string
-	UsageTypeLabel     string
-	CategoryName       string
-	ManufacturerName   string
-	LocationName       string
-	RentalPrice        string
-	ResalePrice        string
-	Notes              string
-	WeightG            string
-	WidthMm            string
-	HeightMm           string
-	DepthMm            string
-	VoltageV           string
-	CurrentMa          string
-	PowerMw            string
-	Code               string
-	Quantity           string
-	PurchasePrice      string
-	PurchasedAt        string
-	ManufacturerSerial string
-	NextInspectionAt   string
-	IsActive           string
-	Remark             string
+	Name             string
+	TypeLabel        string
+	UsageTypeLabel   string
+	CategoryName     string
+	ManufacturerName string
+	LocationName     string
+	RentalPrice      string
+	ResalePrice      string
+	Notes            string
+	WeightG          string
+	WidthMm          string
+	HeightMm         string
+	DepthMm          string
+	VoltageV         string
+	CurrentMa        string
+	PowerMw          string
+	Quantity         string
 }
 
 // ExpectedHeaders are the exact column headers the import CSV must have.
 var ExpectedHeaders = []string{
-	"Code", "Name", "Type", "Tracking", "Usage", "Category", "Manufacturer", "Location",
-	"Rental Price", "Resale Price", "Notes", "Weight (g)", "Width (mm)", "Height (mm)",
-	"Depth (mm)", "Voltage (V)", "Current (mA)", "Power (mW)",
-	"Quantity", "Purchase Price", "Purchased At", "Manufacturer Serial",
-	"Last Inspected At", "Active", "Remark",
+	"Name", "Type", "Usage", "Category", "Manufacturer", "Location",
+	"Rental Price", "Resale Price", "Notes",
+	"Weight (g)", "Width (mm)", "Height (mm)", "Depth (mm)", "Voltage (V)", "Current (mA)", "Power (mW)",
+	"Quantity",
 }

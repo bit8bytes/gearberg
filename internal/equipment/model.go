@@ -59,6 +59,9 @@ func (inv *Equipment) CurrentAmpsInput() string {
 	return fmt.Sprintf("%g", a)
 }
 
+// VoltageVInput returns voltage in volts as a string, or "" when nil.
+func (inv *Equipment) VoltageVInput() string { return optionalInt64Input(inv.VoltageV) }
+
 func optionalInt64Input(v *int64) string {
 	if v == nil {
 		return ""
@@ -94,6 +97,7 @@ type Equipment struct {
 	DepthMM                *int64
 	PowerMW                *int64
 	CurrentMA              *int64
+	VoltageV               *int64
 	InspectionIntervalDays *int64
 	CreatedAt              int64
 	UpdatedAt              int64
@@ -147,6 +151,7 @@ type Base struct {
 	DepthMM        *int64
 	PowerMW        *int64
 	CurrentMA      *int64
+	VoltageV       *int64
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
@@ -264,6 +269,7 @@ type UpdateEquipmentProperties struct {
 	WidthMM   *int64
 	HeightMM  *int64
 	DepthMM   *int64
+	VoltageV  *int64
 	PowerMW   *int64
 	CurrentMA *int64
 }

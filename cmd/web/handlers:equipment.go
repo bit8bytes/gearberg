@@ -22,9 +22,9 @@ import (
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/pagination"
+	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
-	"github.com/bit8bytes/gearberg/internal/uid"
 	"github.com/segmentio/ksuid"
 )
 
@@ -356,6 +356,7 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 		WidthMM:   form.WidthMMInt64(),
 		HeightMM:  form.HeightMMInt64(),
 		DepthMM:   form.DepthMMInt64(),
+		VoltageV:  form.VoltageVInt64(),
 		PowerMW:   form.PowerMW(),
 		CurrentMA: form.CurrentMA(),
 	}); err != nil {
@@ -486,7 +487,7 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 
 	serialNumber := form.ManufacturerSerialNumber
 	if serialNumber == "" {
-		serialNumber = uid.NewSerial()
+		serialNumber = serial.New()
 	}
 	if _, err := app.services.equipment.AddUnit(ctx, equipment.AddUnit{
 		ID:           ksuid.New().String(),

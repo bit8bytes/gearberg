@@ -9,9 +9,7 @@ import (
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	"github.com/bit8bytes/gearberg/internal/equipment/categories"
-	"github.com/bit8bytes/gearberg/internal/equipment/locations"
-	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
+	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/segmentio/ksuid"
 )
 
@@ -22,19 +20,19 @@ type EquipmentWriter interface {
 	CreateSerialized(ctx context.Context, tx *sql.Tx, c equipment.CreateSerializedEquipment) (*equipment.Equipment, error)
 }
 
-// CategoryLister returns all categories for an org.
-type CategoryLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error)
+// CategoryEnsurer resolves or creates categories by name.
+type CategoryEnsurer interface {
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
-// ManufacturerLister returns all manufacturers for an org.
-type ManufacturerLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error)
+// ManufacturerEnsurer resolves or creates manufacturers by name.
+type ManufacturerEnsurer interface {
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
-// LocationLister returns all locations for an org.
-type LocationLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]locations.Location, error)
+// LocationEnsurer resolves or creates locations by name.
+type LocationEnsurer interface {
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
 // Service handles CSV import staging and commit.
@@ -42,13 +40,13 @@ type Service struct {
 	repo          *Repository
 	db            *sql.DB
 	inventory     EquipmentWriter
-	categories    CategoryLister
-	manufacturers ManufacturerLister
-	locations     LocationLister
+	categories    CategoryEnsurer
+	manufacturers ManufacturerEnsurer
+	locations     LocationEnsurer
 }
 
 // NewService returns a new Service.
-func NewService(repo *Repository, db *sql.DB, inv EquipmentWriter, cats CategoryLister, mfrs ManufacturerLister, locs LocationLister) *Service {
+func NewService(repo *Repository, db *sql.DB, inv EquipmentWriter, cats CategoryEnsurer, mfrs ManufacturerEnsurer, locs LocationEnsurer) *Service {
 	return &Service{repo: repo, db: db, inventory: inv, categories: cats, manufacturers: mfrs, locations: locs}
 }
 
@@ -68,50 +66,33 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 		existingByName[strings.ToLower(item.Name)] = item.ID
 	}
 
-	cats, err := s.categories.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return "", fmt.Errorf("Stage: %w", err)
-	}
-	catsByName := make(map[string]bool, len(cats))
-	for _, c := range cats {
-		catsByName[strings.ToLower(c.Name)] = true
-	}
-
 	importID := ksuid.New().String()
 	for i, raw := range rawRows {
 		row := Row{
-			ID:                 ksuid.New().String(),
-			ImportID:           importID,
-			OrgID:              orgID,
-			RowNumber:          int64(i + 1),
-			Name:               raw.Name,
-			TypeLabel:          raw.TypeLabel,
-			TrackingLabel:      raw.TrackingLabel,
-			UsageTypeLabel:     raw.UsageTypeLabel,
-			CategoryName:       raw.CategoryName,
-			ManufacturerName:   raw.ManufacturerName,
-			LocationName:       raw.LocationName,
-			RentalPrice:        raw.RentalPrice,
-			ResalePrice:        raw.ResalePrice,
-			Notes:              raw.Notes,
-			WeightG:            raw.WeightG,
-			WidthMm:            raw.WidthMm,
-			HeightMm:           raw.HeightMm,
-			DepthMm:            raw.DepthMm,
-			VoltageV:           raw.VoltageV,
-			CurrentMa:          raw.CurrentMa,
-			PowerMw:            raw.PowerMw,
-			Code:               raw.Code,
-			Quantity:           raw.Quantity,
-			PurchasePrice:      raw.PurchasePrice,
-			PurchasedAt:        raw.PurchasedAt,
-			ManufacturerSerial: raw.ManufacturerSerial,
-			NextInspectionAt:   raw.NextInspectionAt,
-			IsActive:           raw.IsActive,
-			Remark:             raw.Remark,
+			ID:               ksuid.New().String(),
+			ImportID:         importID,
+			OrgID:            orgID,
+			RowNumber:        int64(i + 1),
+			Name:             raw.Name,
+			TypeLabel:        raw.TypeLabel,
+			UsageTypeLabel:   raw.UsageTypeLabel,
+			CategoryName:     raw.CategoryName,
+			ManufacturerName: raw.ManufacturerName,
+			LocationName:     raw.LocationName,
+			RentalPrice:      raw.RentalPrice,
+			ResalePrice:      raw.ResalePrice,
+			Notes:            raw.Notes,
+			WeightG:          raw.WeightG,
+			WidthMm:          raw.WidthMm,
+			HeightMm:         raw.HeightMm,
+			DepthMm:          raw.DepthMm,
+			VoltageV:         raw.VoltageV,
+			CurrentMa:        raw.CurrentMa,
+			PowerMw:          raw.PowerMw,
+			Quantity:         raw.Quantity,
 		}
 
-		if errMsg := validateRow(raw, catsByName); errMsg != "" {
+		if errMsg := validateRow(raw); errMsg != "" {
 			row.Status = StatusError
 			row.ErrorMessage = errMsg
 			row.Action = ActionSkip
@@ -148,32 +129,43 @@ type commitLookups struct {
 	locsByName map[string]string
 }
 
-func (s *Service) buildCommitLookups(ctx context.Context, orgID string) (commitLookups, error) {
-	cats, err := s.categories.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return commitLookups{}, fmt.Errorf("buildCommitLookups: %w", err)
-	}
-	mfrs, err := s.manufacturers.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return commitLookups{}, fmt.Errorf("buildCommitLookups: %w", err)
-	}
-	locs, err := s.locations.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return commitLookups{}, fmt.Errorf("buildCommitLookups: %w", err)
-	}
+// ensureCommitLookups calls EnsureByName for every unique category, manufacturer,
+// and location name in the batch, creating them if they don't exist yet.
+func (s *Service) ensureCommitLookups(ctx context.Context, orgID string, rows []Row) (commitLookups, error) {
 	lk := commitLookups{
-		catsByName: make(map[string]string, len(cats)),
-		mfrsByName: make(map[string]string, len(mfrs)),
-		locsByName: make(map[string]string, len(locs)),
+		catsByName: make(map[string]string),
+		mfrsByName: make(map[string]string),
+		locsByName: make(map[string]string),
 	}
-	for _, c := range cats {
-		lk.catsByName[strings.ToLower(c.Name)] = c.ID
-	}
-	for _, m := range mfrs {
-		lk.mfrsByName[strings.ToLower(m.Name)] = m.ID
-	}
-	for _, l := range locs {
-		lk.locsByName[strings.ToLower(l.Name)] = l.ID
+	for _, row := range rows {
+		if row.Status == StatusError || row.Action == ActionSkip {
+			continue
+		}
+		if _, ok := lk.catsByName[strings.ToLower(row.CategoryName)]; !ok {
+			id, err := s.categories.EnsureByName(ctx, orgID, row.CategoryName)
+			if err != nil {
+				return commitLookups{}, fmt.Errorf("ensureCommitLookups: category %q: %w", row.CategoryName, err)
+			}
+			lk.catsByName[strings.ToLower(row.CategoryName)] = id
+		}
+		if name := strings.TrimSpace(row.ManufacturerName); name != "" {
+			if _, ok := lk.mfrsByName[strings.ToLower(name)]; !ok {
+				id, err := s.manufacturers.EnsureByName(ctx, orgID, name)
+				if err != nil {
+					return commitLookups{}, fmt.Errorf("ensureCommitLookups: manufacturer %q: %w", name, err)
+				}
+				lk.mfrsByName[strings.ToLower(name)] = id
+			}
+		}
+		if name := strings.TrimSpace(row.LocationName); name != "" {
+			if _, ok := lk.locsByName[strings.ToLower(name)]; !ok {
+				id, err := s.locations.EnsureByName(ctx, orgID, name)
+				if err != nil {
+					return commitLookups{}, fmt.Errorf("ensureCommitLookups: location %q: %w", name, err)
+				}
+				lk.locsByName[strings.ToLower(name)] = id
+			}
+		}
 	}
 	return lk, nil
 }
@@ -187,7 +179,7 @@ func (s *Service) Commit(ctx context.Context, importID string, orgID string) err
 		return fmt.Errorf("Commit: %w", err)
 	}
 
-	lk, err := s.buildCommitLookups(ctx, orgID)
+	lk, err := s.ensureCommitLookups(ctx, orgID, rows)
 	if err != nil {
 		return fmt.Errorf("Commit: %w", err)
 	}
@@ -253,6 +245,7 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 		DepthMM:        parseOptionalInt64(row.DepthMm),
 		PowerMW:        parseOptionalInt64(row.PowerMw),
 		CurrentMA:      parseOptionalInt64(row.CurrentMa),
+		VoltageV:       parseOptionalInt64(row.VoltageV),
 	}
 
 	if !strings.EqualFold(row.TypeLabel, "serialized") {
@@ -271,7 +264,7 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 		units[i] = equipment.CreateUnit{
 			ID:           ksuid.New().String(),
 			EquipmentID:  itemID,
-			SerialNumber: row.ManufacturerSerial,
+			SerialNumber: serial.New(),
 		}
 	}
 	if _, err := s.inventory.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
@@ -283,7 +276,7 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 	return nil
 }
 
-func validateRow(raw RawRow, catsByName map[string]bool) string {
+func validateRow(raw RawRow) string {
 	if strings.TrimSpace(raw.Name) == "" {
 		return "Name is required"
 	}
@@ -297,9 +290,6 @@ func validateRow(raw RawRow, catsByName map[string]bool) string {
 	}
 	if strings.TrimSpace(raw.CategoryName) == "" {
 		return "Category is required"
-	}
-	if !catsByName[strings.ToLower(strings.TrimSpace(raw.CategoryName))] {
-		return fmt.Sprintf("Category %q not found", raw.CategoryName)
 	}
 	return ""
 }

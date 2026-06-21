@@ -29,7 +29,6 @@ CREATE TABLE equipment_imports (
   voltage_v TEXT NOT NULL DEFAULT '',
   current_ma TEXT NOT NULL DEFAULT '',
   power_mw TEXT NOT NULL DEFAULT '',
-  code TEXT NOT NULL DEFAULT '',
   quantity TEXT NOT NULL DEFAULT '1',
   purchase_price TEXT NOT NULL DEFAULT '',
   purchased_at TEXT NOT NULL DEFAULT '',

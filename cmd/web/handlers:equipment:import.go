@@ -125,6 +125,18 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 	return nil
 }
 
+const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (g),Width (mm),Height (mm),Depth (mm),Voltage (V),Current (mA),Power (mW),Quantity\n" +
+	"Sony FX3,Bulk,Rental,Cameras,Sony,Main Warehouse,150.00,3500.00,Cinema camera with full-frame sensor,1200,180,120,80,7,2000,12000,1\n" +
+	"Canon EF 50mm f/1.4,Serialized,Rental,Lenses,Canon,Main Warehouse,25.00,450.00,Standard prime lens,290,80,80,75,,,,2\n"
+
+// getEquipmentImportTemplate serves a ready-to-fill CSV template for download.
+func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
+	_, _ = w.Write([]byte(importTemplateCSV))
+	return nil
+}
+
 // parseImportCSV reads a CSV file and returns RawRows. Returns an error message on failure.
 func parseImportCSV(r io.Reader) ([]imports.RawRow, string) {
 	br := bufio.NewReader(r)
@@ -173,31 +185,23 @@ func readImportRows(cr *csv.Reader) ([]imports.RawRow, string) {
 			continue
 		}
 		rows = append(rows, imports.RawRow{
-			Code:               strings.TrimSpace(record[0]),
-			Name:               strings.TrimSpace(record[1]),
-			TypeLabel:          strings.TrimSpace(record[2]),
-			TrackingLabel:      strings.TrimSpace(record[3]),
-			UsageTypeLabel:     strings.TrimSpace(record[4]),
-			CategoryName:       strings.TrimSpace(record[5]),
-			ManufacturerName:   strings.TrimSpace(record[6]),
-			LocationName:       strings.TrimSpace(record[7]),
-			RentalPrice:        strings.TrimSpace(record[8]),
-			ResalePrice:        strings.TrimSpace(record[9]),
-			Notes:              strings.TrimSpace(record[10]),
-			WeightG:            strings.TrimSpace(record[11]),
-			WidthMm:            strings.TrimSpace(record[12]),
-			HeightMm:           strings.TrimSpace(record[13]),
-			DepthMm:            strings.TrimSpace(record[14]),
-			VoltageV:           strings.TrimSpace(record[15]),
-			CurrentMa:          strings.TrimSpace(record[16]),
-			PowerMw:            strings.TrimSpace(record[17]),
-			Quantity:           strings.TrimSpace(record[18]),
-			PurchasePrice:      strings.TrimSpace(record[19]),
-			PurchasedAt:        strings.TrimSpace(record[20]),
-			ManufacturerSerial: strings.TrimSpace(record[21]),
-			NextInspectionAt:   strings.TrimSpace(record[22]),
-			IsActive:           strings.TrimSpace(record[23]),
-			Remark:             strings.TrimSpace(record[24]),
+			Name:             strings.TrimSpace(record[0]),
+			TypeLabel:        strings.TrimSpace(record[1]),
+			UsageTypeLabel:   strings.TrimSpace(record[2]),
+			CategoryName:     strings.TrimSpace(record[3]),
+			ManufacturerName: strings.TrimSpace(record[4]),
+			LocationName:     strings.TrimSpace(record[5]),
+			RentalPrice:      strings.TrimSpace(record[6]),
+			ResalePrice:      strings.TrimSpace(record[7]),
+			Notes:            strings.TrimSpace(record[8]),
+			WeightG:          strings.TrimSpace(record[9]),
+			WidthMm:          strings.TrimSpace(record[10]),
+			HeightMm:         strings.TrimSpace(record[11]),
+			DepthMm:          strings.TrimSpace(record[12]),
+			VoltageV:         strings.TrimSpace(record[13]),
+			CurrentMa:        strings.TrimSpace(record[14]),
+			PowerMw:          strings.TrimSpace(record[15]),
+			Quantity:         strings.TrimSpace(record[16]),
 		})
 	}
 	if len(rows) == 0 {

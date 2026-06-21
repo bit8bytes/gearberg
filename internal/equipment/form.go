@@ -41,6 +41,7 @@ type PropertiesForm struct {
 	WidthMM  string
 	HeightMM string
 	DepthMM  string
+	VoltageV string // user enters volts; stored as volts (integer)
 	PowerW   string // user enters watts; stored as milliwatts
 	CurrentA string // user enters amps; stored as milliamps
 	validator.Validator
@@ -95,6 +96,7 @@ func ParseProperties(r *http.Request) (PropertiesForm, error) {
 		WidthMM:  strings.TrimSpace(r.PostForm.Get("width_mm")),
 		HeightMM: strings.TrimSpace(r.PostForm.Get("height_mm")),
 		DepthMM:  strings.TrimSpace(r.PostForm.Get("depth_mm")),
+		VoltageV: strings.TrimSpace(r.PostForm.Get("voltage_v")),
 		PowerW:   strings.TrimSpace(r.PostForm.Get("power_w")),
 		CurrentA: strings.TrimSpace(r.PostForm.Get("current_a")),
 	}, nil
@@ -193,6 +195,9 @@ func (f *PropertiesForm) HeightMMInt64() *int64 { return parseOptionalInt64(f.He
 
 // DepthMMInt64 returns depth_mm as *int64 (nil when blank).
 func (f *PropertiesForm) DepthMMInt64() *int64 { return parseOptionalInt64(f.DepthMM) }
+
+// VoltageVInt64 returns voltage_v as *int64 (nil when blank).
+func (f *PropertiesForm) VoltageVInt64() *int64 { return parseOptionalInt64(f.VoltageV) }
 
 // PowerMW converts the user-entered watts string to milliwatts, or nil when blank.
 func (f *PropertiesForm) PowerMW() *int64 { return parseOptionalWattsToMW(f.PowerW) }

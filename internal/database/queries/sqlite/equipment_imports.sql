@@ -26,7 +26,6 @@ INSERT INTO equipment_imports (
     voltage_v,
     current_ma,
     power_mw,
-    code,
     quantity,
     purchase_price,
     purchased_at,
@@ -38,7 +37,7 @@ INSERT INTO equipment_imports (
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
-    ?, ?, ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?
 ) RETURNING *;
 
 -- name: DeleteImportsByOrgID :exec

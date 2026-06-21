@@ -166,6 +166,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		DepthMM:         database.Int64Ptr(row.DepthMm),
 		PowerMW:         database.Int64Ptr(row.PowerMw),
 		CurrentMA:       database.Int64Ptr(row.CurrentMa),
+		VoltageV:        database.Int64Ptr(row.VoltageV),
 		CreatedAt:       row.CreatedAt,
 		UpdatedAt:       row.UpdatedAt,
 	}
@@ -201,6 +202,13 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
 		Notes:           database.NullString(database.StringOrNil(c.Notes)),
+		WeightG:         database.NullInt64Ptr(c.WeightG),
+		WidthMm:         database.NullInt64Ptr(c.WidthMM),
+		HeightMm:        database.NullInt64Ptr(c.HeightMM),
+		DepthMm:         database.NullInt64Ptr(c.DepthMM),
+		CurrentMa:       database.NullInt64Ptr(c.CurrentMA),
+		PowerMw:         database.NullInt64Ptr(c.PowerMW),
+		VoltageV:        database.NullInt64Ptr(c.VoltageV),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("createBulkWith: %w", database.NormalizeError(err))
@@ -284,6 +292,13 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		RentalPrice:     database.NullInt64Ptr(c.RentalPrice),
 		ResalePrice:     database.NullInt64Ptr(c.PurchasePrice),
 		Notes:           database.NullString(database.StringOrNil(c.Notes)),
+		WeightG:         database.NullInt64Ptr(c.WeightG),
+		WidthMm:         database.NullInt64Ptr(c.WidthMM),
+		HeightMm:        database.NullInt64Ptr(c.HeightMM),
+		DepthMm:         database.NullInt64Ptr(c.DepthMM),
+		CurrentMa:       database.NullInt64Ptr(c.CurrentMA),
+		PowerMw:         database.NullInt64Ptr(c.PowerMW),
+		VoltageV:        database.NullInt64Ptr(c.VoltageV),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
@@ -397,7 +412,7 @@ func (r *Repository) UpdateProperties(ctx context.Context, u UpdateEquipmentProp
 		WidthMm:   database.NullInt64Ptr(u.WidthMM),
 		HeightMm:  database.NullInt64Ptr(u.HeightMM),
 		DepthMm:   database.NullInt64Ptr(u.DepthMM),
-		VoltageV:  sql.NullInt64{},
+		VoltageV:  database.NullInt64Ptr(u.VoltageV),
 		CurrentMa: database.NullInt64Ptr(u.CurrentMA),
 		PowerMw:   database.NullInt64Ptr(u.PowerMW),
 	}); err != nil {

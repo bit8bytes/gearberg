@@ -46,6 +46,12 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
 
         <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="voltage_v" class="label">Voltage <span class="text-base-content/40 text-xs">V</span></label>
+          <input id="voltage_v" type="number" name="voltage_v" min="0" class="input w-full"
+            value="{{ if .Form.VoltageV }}{{ .Form.VoltageV }}{{ else if .Data.Item }}{{ .Data.Item.VoltageVInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
           <label for="power_w" class="label">Power <span class="text-base-content/40 text-xs">W</span></label>
           <input id="power_w" type="text" inputmode="decimal" name="power_w" class="input w-full"
             value="{{ if .Form.PowerW }}{{ .Form.PowerW }}{{ else if .Data.Item }}{{ .Data.Item.PowerWattsInput }}{{ end }}" />

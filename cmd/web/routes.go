@@ -31,6 +31,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("GET /orgs/{org_id}/equipment", app.html.Handle(app.getEquipment))
 	mux.HandleFunc("GET /orgs/{org_id}/equipment/print", app.html.Handle(app.getEquipmentPrint))
 	mux.HandleFunc("GET /orgs/{org_id}/equipment/import", app.html.Handle(app.getEquipmentImport))
+	mux.HandleFunc("GET /orgs/{org_id}/equipment/import/template", app.html.Handle(app.getEquipmentImportTemplate))
 	mux.HandleFunc("POST /orgs/{org_id}/equipment/import", app.html.Handle(app.postEquipmentImport))
 	mux.HandleFunc("POST /orgs/{org_id}/equipment/import/confirm", app.html.Handle(app.postEquipmentImportConfirm))
 	mux.HandleFunc("GET /orgs/{org_id}/equipment/new", app.html.Handle(app.getEquipmentNew))

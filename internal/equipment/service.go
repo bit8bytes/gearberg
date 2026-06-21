@@ -9,7 +9,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
-	"github.com/bit8bytes/gearberg/internal/uid"
+	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/segmentio/ksuid"
 )
 
@@ -50,7 +50,7 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	}
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
-		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: uid.NewSerial()}
+		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: serial.New()}
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
