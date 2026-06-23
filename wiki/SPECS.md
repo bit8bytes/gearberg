@@ -25,9 +25,7 @@ The first increment comes without login because the software will be self-hosted
 | M1.4 | A user can view equipment in a list | 100 % |
 | M1.5 | A user can see the total quantity of an equipment item | 100 % |
 | M1.6 | A user can view a single equipment item in detail | 100 % |
-| M1.7 | A user can sort equipment by name, category, stock, or price | 0 % |
 | M1.8 | A user can upload an image for an equipment item | 100 % |
-| M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
 | M1.10 | A user cannot delete an equipment item that has draft or active rental line items | 0 % |
 | M1.11 | Each equipment unit is automatically assigned a unique 8 character serial number (e.g. ´9NAZWPYR´) | 100 % |
 | M1.12 | A user can mark an equipment item as serialized, enabling individual unit tracking | 100 % |
@@ -41,7 +39,7 @@ The first increment comes without login because the software will be self-hosted
 | M1.20 | A user can set weight, dimensions, power consumption (Watts), Volatage (V), and current draw (Ampere) on an equipment item | 100 % |
 | M1.22 | A user can see the total weight of all items in a rental | 0 % |
 
-Defered ideas: bar codes (e.g. for trusses), periodic unit inspections, and additional documents (pdf, pictures).
+Deferred ideas: sorting by name, category, stock, or price (M1.7); bar codes (e.g. for trusses); periodic unit inspections; additional documents (pdf, pictures).
 
 ### Milestone 2: Import & Export
 
@@ -69,29 +67,30 @@ Defered ideas: bar codes (e.g. for trusses), periodic unit inspections, and addi
 
 | ID | Name |
 | - | - |
-| M4.1 | A user can create, update, and delete customers |
-| M4.2 | A user can view customers in a list |
-| M4.3 | A user can view a single customer in detail |
-| M4.4 | A user can view the rental history of a customer |
-| M4.5 | A user can start (create) a draft rental for an existing customer, with an optional name (e.g. "BMW Munich") |
-| M4.6 | A user can add or remove equipment items from a draft rental |
-| M4.7 | A user can increase or decrease the quantity of an item in a draft rental |
-| M4.8 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
-| M4.9 | A user can set a checkout date and expected return date on a draft rental |
-| M4.10 | A user can finalize a draft rental (transitions to active) |
-| M4.11 | A user can mark an active rental as returned (sets return date, transitions to returned) |
-| M4.12 | A user can update or delete a draft rental |
-| M4.13 | A user can view all rentals in a list |
-| M4.14 | A user can filter rentals by status (draft, active, returned) |
-| M4.15 | A user can view overdue rentals (active rentals past their expected return date) |
-| M4.16 | A user can view a single rental in detail |
-| M4.17 | A user can view the cost per equipment item in a rental (`quantity x rental_price x billing_units x (1 - discount_rate)`), where `billing_units` is derived from `pricing_unit` and duration |
-| M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from org settings) as a display-only line |
-| M4.19 | A user cannot delete a customer that has draft or active rentals |
-| M4.20 | A user can generate an invoice for an active rental |
-| M4.21 | A user can see previously generated invoices of customers on the customer detail page (see M4.3) |
-| M4.22 | A user can generate a quote for a draft rental |
-| M4.23 | A user can enter a discount (in %) when generating an invoice or quote |
+| M4.1 | A user can see how many units of an item are currently available (not rented out) |
+| M4.2 | A user can create, update, and delete customers |
+| M4.3 | A user can view customers in a list |
+| M4.4 | A user can view a single customer in detail |
+| M4.5 | A user can view the rental history of a customer |
+| M4.6 | A user can start (create) a draft rental for an existing customer, with an optional name (e.g. "BMW Munich") |
+| M4.7 | A user can add or remove equipment items from a draft rental |
+| M4.8 | A user can increase or decrease the quantity of an item in a draft rental |
+| M4.9 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
+| M4.10 | A user can set a checkout date and expected return date on a draft rental |
+| M4.11 | A user can finalize a draft rental (transitions to active) |
+| M4.12 | A user can mark an active rental as returned (sets return date, transitions to returned) |
+| M4.13 | A user can update or delete a draft rental |
+| M4.14 | A user can view all rentals in a list |
+| M4.15 | A user can filter rentals by status (draft, active, returned) |
+| M4.16 | A user can view overdue rentals (active rentals past their expected return date) |
+| M4.17 | A user can view a single rental in detail |
+| M4.18 | A user can view the cost per equipment item in a rental (`quantity x rental_price x billing_units x (1 - discount_rate)`), where `billing_units` is derived from `pricing_unit` and duration |
+| M4.19 | A user can view the total net cost of a rental and the total including VAT (rate from org settings) as a display-only line |
+| M4.20 | A user cannot delete a customer that has draft or active rentals |
+| M4.21 | A user can generate an invoice for an active rental |
+| M4.22 | A user can see previously generated invoices of customers on the customer detail page (see M4.4) |
+| M4.23 | A user can generate a quote for a draft rental |
+| M4.24 | A user can enter a discount (in %) when generating an invoice or quote |
 
 
 ## Product Data
