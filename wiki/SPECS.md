@@ -1,6 +1,6 @@
 # Specification
 
-[gearberg.org](./README.md) will be a free self-hostable inventory and rental management software. The development has three milestones: Equipment, Rentals, and Import & Export. Each Milestone ends with a deliverable increment.
+[gearberg.org](./README.md) will be a free self-hostable equipment and rental management software. The development has three milestones: Equipment, Rentals, and Import & Export. Each Milestone ends with a deliverable increment.
 
 The first increment comes without login because the software will be self-hosted and not exposed on the internet. Login functionality will be implemented if needed later. Settings for VAT and currency will be available.
 
@@ -11,48 +11,47 @@ The first increment comes without login because the software will be self-hosted
 | ID | Name | Done |
 | - | - | - |
 | M0.1 | A user can configure org name, currency, VAT rate, and timezone | 100 % |
-| M0.2 | A user can create, update, and delete inventory categories | 100 % |
-| M0.3 | A user cannot delete a category that is assigned to one or more inventory items | 100 % |
-| M0.4 | A user can assign a color to an equipment category using a HEX color code (e.g. `#FF5733`) | 100 % |
+| M0.2 | A user can create, update, and delete equipment categories | 100 % |
+| M0.3 | A user cannot delete a category that is assigned to one or more equipment items | 100 % |
+| M0.4 | A user can create, update, and delete equipment manufacturers | 100 % |
 
 ### Milestone 1: Equipment
 
 | ID | Name | Done |
 | - | - | - |
-| M1.1 | A user can create, update, and delete inventory items | 100 % |
-| M1.2 | A user can full text search inventory by name | 100 % |
-| M1.3 | A user can filter inventory by category | 100 % |
-| M1.4 | A user can view inventory in a list | 100 % |
-| M1.5 | A user can see the total quantity of an inventory item | 100 % |
-| M1.6 | A user can view a single inventory item in detail | 100 % |
-| M1.7 | A user can sort inventory by name, category, stock, or price | 0 % |
-| M1.8 | A user can upload an image for an inventory item | 100 % |
+| M1.1 | A user can create, update, and delete equipment items | 100 % |
+| M1.2 | A user can full text search equipment by name | 100 % |
+| M1.3 | A user can filter equipment by category | 100 % |
+| M1.4 | A user can view equipment in a list | 100 % |
+| M1.5 | A user can see the total quantity of an equipment item | 100 % |
+| M1.6 | A user can view a single equipment item in detail | 100 % |
+| M1.7 | A user can sort equipment by name, category, stock, or price | 0 % |
+| M1.8 | A user can upload an image for an equipment item | 100 % |
 | M1.9 | A user can see how many units of an item are currently available (not rented out) | 0 % |
-| M1.10 | A user cannot delete an inventory item that has draft or active rental line items | 0 % |
-| M1.11 | Each inventory item is automatically assigned a unique numeric code starting at `1000` (e.g. first item gets `1000`, second `1001`) | 100 % |
-| M1.12 | A user can mark an inventory item as serialized, enabling individual unit tracking | 100 % |
-| M1.13 | A user can add individual units to a serialized inventory item, each with a unit number and optional serial number | 100 % |
-| M1.14 | A user can view all units of a serialized inventory item on its detail page | 100 % |
+| M1.10 | A user cannot delete an equipment item that has draft or active rental line items | 0 % |
+| M1.11 | Each equipment unit is automatically assigned a unique 8 character serial number (e.g. ´9NAZWPYR´) | 100 % |
+| M1.12 | A user can mark an equipment item as serialized, enabling individual unit tracking | 100 % |
+| M1.13 | A user can add individual units to a serialized equipment item, each with a unique organization wide serial number | 100 % |
+| M1.14 | A user can view all units of a serialized equipment item on its detail page | 100 % |
 | M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
 | M1.16 | A user can set a next inspection date on an individual unit | 100 % |
 | M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
-| M1.18 | A user can set an operational status on an individual unit (available, inhouse, damaged, under repair, retired) | 100 % |
-| M1.19 | A user can download the QR code for a unit (serialized inventory item) as a PNG file | 100 % |
-| M1.20 | A user can set an operational status on an individual unit to "inhouse" (physically present but not available for rental) | 100 % |
-| M1.21 | A user can set weight, dimensions, power consumption (Watts), and current draw (Ampere) on an inventory item | 100 % |
-| M1.22 | A user can see the total weight of all items in a rental | 100 % |
+| M1.18 | A user can set an operational status to active or inactive | 100 % |
+| M1.19 | A user can download the QR code for a unit (serialized equipment item) as a PNG file | 100 % |
+| M1.20 | A user can set weight, dimensions, power consumption (Watts), Volatage (V), and current draw (Ampere) on an equipment item | 100 % |
+| M1.22 | A user can see the total weight of all items in a rental | 0 % |
 
-Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases & groupings, and additional documents (pdf, pictures).
+Defered ideas: bar codes (e.g. for trusses), periodic unit inspections, and additional documents (pdf, pictures).
 
 ### Milestone 2: Import & Export
 
 | ID | Name | Done |
 | - | - | - |
-| M2.1 | A user can import new inventory items using CSV | 100 % |
-| M2.2 | A user can export all inventory items using CSV | 100 % |
+| M2.1 | A user can import new equipment items using CSV | 100 % |
+| M2.2 | A user can export all equipment items using CSV | 0 % |
 | M2.3 | A user can export all rentals using CSV | 0 % |
 | M2.4 | A user can export all customers using CSV | 0 % |
-| M2.5 | A user can open a print view of all inventory items including images and print or export it as PDF via the browser | 100 % |
+| M2.5 | A user can open a print view of all equipment items including images and print or export it as PDF via the browser | 100 % |
 | M2.6 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.5) to send to customers; pricing details are shown by default | 100 % |
 
 ### Milestone 3: Login
@@ -76,7 +75,7 @@ Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases &
 | M4.3 | A user can view a single customer in detail |
 | M4.4 | A user can view the rental history of a customer |
 | M4.5 | A user can start (create) a draft rental for an existing customer, with an optional name (e.g. "BMW Munich") |
-| M4.6 | A user can add or remove inventory items from a draft rental |
+| M4.6 | A user can add or remove equipment items from a draft rental |
 | M4.7 | A user can increase or decrease the quantity of an item in a draft rental |
 | M4.8 | A user can only add an item to a rental if enough units are available -- draft rentals reserve stock |
 | M4.9 | A user can set a checkout date and expected return date on a draft rental |
@@ -87,7 +86,7 @@ Defered ideas: bar codes (e.g. for trusses), inventory locations, flight cases &
 | M4.14 | A user can filter rentals by status (draft, active, returned) |
 | M4.15 | A user can view overdue rentals (active rentals past their expected return date) |
 | M4.16 | A user can view a single rental in detail |
-| M4.17 | A user can view the cost per inventory item in a rental (`quantity x rental_price x billing_units x (1 - discount_rate)`), where `billing_units` is derived from `pricing_unit` and duration |
+| M4.17 | A user can view the cost per equipment item in a rental (`quantity x rental_price x billing_units x (1 - discount_rate)`), where `billing_units` is derived from `pricing_unit` and duration |
 | M4.18 | A user can view the total net cost of a rental and the total including VAT (rate from org settings) as a display-only line |
 | M4.19 | A user cannot delete a customer that has draft or active rentals |
 | M4.20 | A user can generate an invoice for an active rental |
@@ -161,7 +160,7 @@ One row per org, seeded at install time.
 
 ### Bulk Stock
 
-Quantity record for non-serialized inventory items. Only exists when `inventory.serialized = false`. One row per inventory item.
+Quantity record for non-serialized equipment items. Only exists when `equipment.serialized = false`. One row per equipment item.
 
 `total_stock`: total units owned.
 `warehouse_stock`: **Computed** — `total_stock` minus units reserved in all draft and active rentals.
@@ -169,16 +168,16 @@ Quantity record for non-serialized inventory items. Only exists when `inventory.
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | inventory_id | Reference to parent inventory item (unique) |
+| 2 | equipment_id | Reference to parent equipment item (unique) |
 | 3 | quantity | Total units owned |
 | 4 | created_at | |
 | 5 | updated_at | |
 
 ### Equipment Units
 
-Individual tracked units belonging to a serialized inventory item. Only exists when `inventory.serialized = true`.
+Individual tracked units belonging to a serialized equipment item. Only exists when `equipment.serialized = true`.
 
-For serialized items, `total_stock = COUNT(inventory_units)` and `warehouse_stock = COUNT(inventory_units WHERE status = 'available')`.
+For serialized items, `total_stock = COUNT(equipment_units)` and `warehouse_stock = COUNT(equipment_units WHERE status = 'available')`.
 
 `status`: one of `available`, `inhouse`, `damaged`, `under_repair`, `retired`.
 - `available` — ready to be rented out
@@ -190,7 +189,7 @@ For serialized items, `total_stock = COUNT(inventory_units)` and `warehouse_stoc
 | ID | Name | Description |
 | - | - | - |
 | 1 | id | Internal identifier |
-| 2 | inventory_id | Reference to parent inventory item |
+| 2 | equipment_id | Reference to parent equipment item |
 | 3 | unit_number | User-visible unit label (e.g. `1`, `2`) |
 | 4 | serial_number | Manufacturer serial number (optional) |
 | 5 | status | Operational status (see above). Defaults to `available`. |
@@ -230,7 +229,7 @@ For serialized items, `total_stock = COUNT(inventory_units)` and `warehouse_stoc
 
 ### Rental Items
 
-Line items linking an inventory item to a rental. Scoped implicitly through `rental_id` — no separate `org_id` needed.
+Line items linking an equipment item to a rental. Scoped implicitly through `rental_id` — no separate `org_id` needed.
 
 `duration_minutes`: for returned rentals, derived from `checkout_date` to `return_date`. For draft and active rentals, derived from `checkout_date` to `expected_return_date`. 1 day = 1440 minutes.
 
@@ -240,7 +239,7 @@ Line items linking an inventory item to a rental. Scoped implicitly through `ren
 | - | - | - |
 | 1 | id | Internal identifier |
 | 2 | rental_id | Reference to a rental |
-| 3 | inventory_id | Reference to an inventory item |
+| 3 | equipment_id | Reference to an equipment item |
 | 4 | quantity | Number of units in this rental |
 | 5 | rental_price | Snapshot of `rental_price` at the time the item was added (net) |
 | 6 | pricing_unit | Snapshot of `pricing_unit` at the time the item was added |
