@@ -26,18 +26,16 @@ The first increment comes without login because the software will be self-hosted
 | M1.5 | A user can see the total quantity of an equipment item | 100 % |
 | M1.6 | A user can view a single equipment item in detail | 100 % |
 | M1.8 | A user can upload an image for an equipment item | 100 % |
-| M1.10 | A user cannot delete an equipment item that has draft or active rental line items | 0 % |
-| M1.11 | Each equipment unit is automatically assigned a unique 8 character serial number (e.g. ´9NAZWPYR´) | 100 % |
-| M1.12 | A user can mark an equipment item as serialized, enabling individual unit tracking | 100 % |
-| M1.13 | A user can add individual units to a serialized equipment item, each with a unique organization wide serial number | 100 % |
-| M1.14 | A user can view all units of a serialized equipment item on its detail page | 100 % |
-| M1.15 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
-| M1.16 | A user can set a next inspection date on an individual unit | 100 % |
-| M1.17 | A user can view all units with an upcoming or overdue inspection date | 100 % |
-| M1.18 | A user can set an operational status to active or inactive | 100 % |
-| M1.19 | A user can download the QR code for a unit (serialized equipment item) as a PNG file | 100 % |
-| M1.20 | A user can set weight, dimensions, power consumption (Watts), Volatage (V), and current draw (Ampere) on an equipment item | 100 % |
-| M1.22 | A user can see the total weight of all items in a rental | 0 % |
+| M1.9 | Each equipment unit is automatically assigned a unique 8 character serial number (e.g. ´9NAZWPYR´) | 100 % |
+| M1.10 | A user can mark an equipment item as serialized, enabling individual unit tracking | 100 % |
+| M1.11 | A user can add individual units to a serialized equipment item, each with a unique organization wide serial number | 100 % |
+| M1.12 | A user can view all units of a serialized equipment item on its detail page | 100 % |
+| M1.13 | A user can add notes to an individual unit (e.g. "broken fader") | 100 % |
+| M1.14 | A user can set a next inspection date on an individual unit | 100 % |
+| M1.15 | A user can view all units with an upcoming or overdue inspection date | 100 % |
+| M1.16 | A user can set an operational status to active or inactive | 100 % |
+| M1.17 | A user can download the QR code for a unit (serialized equipment item) as a PNG file | 100 % |
+| M1.18 | A user can set weight, dimensions, power consumption (Watts), Volatage (V), and current draw (Ampere) on an equipment item | 100 % |
 
 Deferred ideas: sorting by name, category, stock, or price (M1.7); bar codes (e.g. for trusses); periodic unit inspections; additional documents (pdf, pictures).
 
@@ -46,11 +44,8 @@ Deferred ideas: sorting by name, category, stock, or price (M1.7); bar codes (e.
 | ID | Name | Done |
 | - | - | - |
 | M2.1 | A user can import new equipment items using CSV | 100 % |
-| M2.2 | A user can export all equipment items using CSV | 0 % |
-| M2.3 | A user can export all rentals using CSV | 0 % |
-| M2.4 | A user can export all customers using CSV | 0 % |
-| M2.5 | A user can open a print view of all equipment items including images and print or export it as PDF via the browser | 100 % |
-| M2.6 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.5) to send to customers; pricing details are shown by default | 100 % |
+| M2.2 | A user can open a print view of all equipment items including images and print or export it as PDF via the browser | 100 % |
+| M2.3 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.2) to send to customers; pricing details are shown by default | 100 % |
 
 ### Milestone 3: Login
 
@@ -91,6 +86,7 @@ Deferred ideas: sorting by name, category, stock, or price (M1.7); bar codes (e.
 | M4.22 | A user can see previously generated invoices of customers on the customer detail page (see M4.4) |
 | M4.23 | A user can generate a quote for a draft rental |
 | M4.24 | A user can enter a discount (in %) when generating an invoice or quote |
+| M4.25 | A user cannot delete an equipment item that has draft or active rental line items | 0 % |
 
 
 ## Product Data
