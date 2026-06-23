@@ -1,0 +1,88 @@
+{{ define "title" }}{{ .Data.Item.Name }} — Content{{ end }}
+
+{{ define "page" }}
+{{ template "equipment-header" . }}
+
+{{ template "equipment-tab-nav" . }}
+
+<div class="max-w-5xl w-full mx-auto px-4 my-6 flex flex-col gap-6">
+
+  {{/* Assign form */}}
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" class="flex flex-col gap-3" novalidate>
+    <h4>Add Content Item</h4>
+    <div class="flex gap-2 items-start">
+      <div class="flex flex-col gap-1 flex-1">
+        <input
+          list="members-datalist"
+          name="member_name"
+          value="{{ .Form.MemberName }}"
+          placeholder="Search equipment…"
+          autocomplete="off"
+          class="input w-full"
+        />
+        <datalist id="members-datalist">
+          {{ range .Data.AllEquipment }}
+            {{ if and (ne .ID $.Data.ID) (not .HasContent) (ne .Kind.String "virtual") }}
+            <option value="{{ .Name }}"></option>
+            {{ end }}
+          {{ end }}
+        </datalist>
+        {{ with index .Form.Errors "member_name" }}
+          <p class="text-error text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+      <div class="flex flex-col gap-1 w-24">
+        <input
+          type="number"
+          name="quantity"
+          value="{{ if .Form.Quantity }}{{ .Form.Quantity }}{{ else }}1{{ end }}"
+          min="1"
+          placeholder="Qty"
+          class="input w-full"
+        />
+        {{ with index .Form.Errors "quantity" }}
+          <p class="text-error text-sm">{{ . }}</p>
+        {{ end }}
+      </div>
+      <button type="submit" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Add
+      </button>
+    </div>
+    {{ with index .Form.Errors "assign" }}
+      <p class="text-error text-sm">{{ . }}</p>
+    {{ end }}
+  </form>
+
+  {{/* Content list */}}
+  {{ if .Data.Content }}
+  <div class="overflow-x-auto">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th>ITEM</th>
+          <th>QTY</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Content }}
+        <tr>
+          <td class="text-sm">{{ .MemberName }}</td>
+          <td class="text-sm">{{ .Quantity }}</td>
+          <td class="text-right">
+            <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/content/{{ .ID }}/delete">
+              <button type="submit" class="btn btn-ghost btn-sm text-error">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+  {{ else }}
+  <p class="text-base-content/50 text-sm">No content assigned yet.</p>
+  {{ end }}
+
+</div>
+{{ end }}

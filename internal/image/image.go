@@ -1,6 +1,7 @@
-// Package image decodes JPEG and PNG uploads, resizes them to a safe maximum
-// dimension, and re-encodes them. Re-encoding strips any malicious payloads
-// that could be embedded in the original file (polyglots, embedded scripts, etc.).
+// Package image decodes JPEG, PNG, and WebP uploads, resizes them to a safe
+// maximum dimension, and re-encodes them as JPEG or PNG. Re-encoding strips any
+// malicious payloads that could be embedded in the original file (polyglots,
+// embedded scripts, etc.).
 package image
 
 import (
@@ -11,6 +12,8 @@ import (
 	"image/png"
 	"io"
 	"net/http"
+
+	_ "golang.org/x/image/webp" // register WebP decoder
 )
 
 const maxDimension = 1920
@@ -21,9 +24,10 @@ type ProcessResult struct {
 	ContentType string
 }
 
-// Process reads an image from r, detects whether it is JPEG or PNG,
-// resizes it so neither dimension exceeds maxDimension, and re-encodes
-// it in the original format. It returns an error for unsupported types.
+// Process reads an image from r, detects whether it is JPEG, PNG, or WebP,
+// resizes it so neither dimension exceeds maxDimension, and re-encodes it.
+// JPEG and PNG are preserved in their original format; WebP is converted to PNG.
+// It returns an error for unsupported types.
 func Process(r io.Reader) (*ProcessResult, error) {
 	raw, err := io.ReadAll(r)
 	if err != nil {
@@ -31,10 +35,9 @@ func Process(r io.Reader) (*ProcessResult, error) {
 	}
 
 	ct := http.DetectContentType(raw)
-	switch ct {
-	case "image/jpeg", "image/png":
-	default:
-		return nil, fmt.Errorf("image.Process: unsupported content type %q (only JPEG and PNG accepted)", ct)
+	outCT, err := outputContentType(ct)
+	if err != nil {
+		return nil, err
 	}
 
 	img, _, err := image.Decode(bytes.NewReader(raw))
@@ -44,8 +47,30 @@ func Process(r io.Reader) (*ProcessResult, error) {
 
 	img = resize(img, maxDimension)
 
-	var buf bytes.Buffer
+	data, err := encode(img, outCT)
+	if err != nil {
+		return nil, err
+	}
+	return &ProcessResult{Data: data, ContentType: outCT}, nil
+}
+
+func outputContentType(ct string) (string, error) {
 	switch ct {
+	case "image/jpeg":
+		return "image/jpeg", nil
+	case "image/png":
+		return "image/png", nil
+	case "image/webp":
+		// WebP is decoded and re-encoded as PNG (the registered decoder handles it).
+		return "image/png", nil
+	default:
+		return "", fmt.Errorf("image.Process: unsupported content type %q (only JPEG, PNG, and WebP accepted)", ct)
+	}
+}
+
+func encode(img image.Image, contentType string) ([]byte, error) {
+	var buf bytes.Buffer
+	switch contentType {
 	case "image/jpeg":
 		if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85}); err != nil {
 			return nil, fmt.Errorf("image.Process: jpeg encode: %w", err)
@@ -55,8 +80,7 @@ func Process(r io.Reader) (*ProcessResult, error) {
 			return nil, fmt.Errorf("image.Process: png encode: %w", err)
 		}
 	}
-
-	return &ProcessResult{Data: buf.Bytes(), ContentType: ct}, nil
+	return buf.Bytes(), nil
 }
 
 // resize returns img scaled down so neither side exceeds max, preserving

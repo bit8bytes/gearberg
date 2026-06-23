@@ -1,6 +1,6 @@
 # Specification
 
-[gearberg.org](./README.md) will be a free self-hostable inventory and rental management software. The development has three milestones: Inventory, Rentals, and Import & Export. Each Milestone ends with a deliverable increment.
+[gearberg.org](./README.md) will be a free self-hostable inventory and rental management software. The development has three milestones: Equipment, Rentals, and Import & Export. Each Milestone ends with a deliverable increment.
 
 The first increment comes without login because the software will be self-hosted and not exposed on the internet. Login functionality will be implemented if needed later. Settings for VAT and currency will be available.
 
@@ -15,7 +15,7 @@ The first increment comes without login because the software will be self-hosted
 | M0.3 | A user cannot delete a category that is assigned to one or more inventory items | 100 % |
 | M0.4 | A user can assign a color to an equipment category using a HEX color code (e.g. `#FF5733`) | 100 % |
 
-### Milestone 1: Inventory
+### Milestone 1: Equipment
 
 | ID | Name | Done |
 | - | - | - |
@@ -134,7 +134,7 @@ One row per org, seeded at install time.
 | 5 | created_at | |
 | 6 | updated_at | |
 
-### Inventory
+### Equipment
 
 | ID | Name | Description |
 | - | - | - |
@@ -145,7 +145,7 @@ One row per org, seeded at install time.
 | 5 | category_id | Reference to a category |
 | 6 | manufacturer | |
 | 7 | image_key | Path to stored image |
-| 8 | serialized | Whether individual unit tracking is enabled. Determines which stock source is used (see Bulk Stock vs Inventory Units). |
+| 8 | serialized | Whether individual unit tracking is enabled. Determines which stock source is used (see Bulk Stock vs Equipment Units). |
 | 9 | purchase_price | Purchase price of this item (net) |
 | 10 | rental_price | Rental price per unit per billing unit (net) |
 | 11 | pricing_unit | Billing unit: one of `per_day`, `per_hour`, `per_week`, `flat`. Defaults to `per_day`. |
@@ -174,7 +174,7 @@ Quantity record for non-serialized inventory items. Only exists when `inventory.
 | 4 | created_at | |
 | 5 | updated_at | |
 
-### Inventory Units
+### Equipment Units
 
 Individual tracked units belonging to a serialized inventory item. Only exists when `inventory.serialized = true`.
 

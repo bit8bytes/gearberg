@@ -7,5 +7,5 @@ type OperationName = string
 
 const (
 	GetHealthzOperation    OperationName = "GetHealthz"
-	ListInventoryOperation OperationName = "ListInventory"
+	ListEquipmentOperation OperationName = "ListEquipment"
 )

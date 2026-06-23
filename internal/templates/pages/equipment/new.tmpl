@@ -1,0 +1,148 @@
+{{ define "title" }}Add Item{{ end }}
+
+{{ define "page" }}
+<div class="flex-1 max-w-3xl mx-auto my-8">
+  <h1 class="mb-6">Add Item</h1>
+
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/new" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="usage_type_id" value="rental" />
+
+    <div class="flex flex-col gap-4">
+
+      <fieldset class="border border-base-300 rounded-lg p-4">
+        <legend class="px-1 text-sm font-medium text-base-content/60">General</legend>
+
+        <div class="flex flex-col gap-4">
+
+          {{ template "photo-picker" . }}
+
+          <div class="flex-1 flex flex-col">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="name" class="label">Name</label>
+                <input id="name" type="text" name="equipment_name" value="{{ .Form.Name }}" maxlength="200" class="input w-full" autofocus />
+                {{ with index .Form.Errors "name" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="count" class="label">Quantity</label>
+                <input
+                  id="count"
+                  type="number"
+                  name="count"
+                  value="{{ if .Form.Count }}{{ .Form.Count }}{{ else }}1{{ end }}"
+                  min="1"
+                  class="input w-full"
+                />
+                {{ with index .Form.Errors "count" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="rental_price" class="label">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <label class="input w-full">
+                  {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+                  <input id="rental_price" type="text" inputmode="decimal" name="rental_price" value="{{ .Form.RentalPrice }}" />
+                </label>
+                {{ with index .Form.Errors "rental_price" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="category_input" class="label">Category <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <combo-box
+                  class="block w-full"
+                  input-id="category_input"
+                  name="category_id"
+                  name-new="category_name"
+                  placeholder="Search or add…"
+                  {{ if and (eq .Form.CategoryID "") .Form.CategoryName }}selected-name="{{ .Form.CategoryName }}"{{ end }}
+                >
+                  <template>
+                    {{ range .Data.Categories }}
+                      <option value="{{ .ID }}"{{ if eq .ID $.Form.CategoryID }} selected{{ end }}>
+                        {{ .Name }}
+                      </option>
+                    {{ end }}
+                  </template>
+                </combo-box>
+                {{ with index .Form.Errors "category_id" }}
+                  <p class="text-red-500 text-sm">{{ . }}</p>
+                {{ end }}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </fieldset>
+
+      <fieldset class="flex flex-col gap-4 border border-base-300 rounded-lg p-4">
+        <legend class="px-1 text-sm font-medium text-base-content/60">Tracking Type</legend>
+
+        <div class="flex flex-col gap-1">
+          <div class="grid grid-cols-2 gap-3" data-type-selector>
+            <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+              <input
+                type="radio"
+                name="type_id"
+                value="bulk"
+                class="sr-only"
+                tabindex="0"
+                {{ if or (eq .Form.TypeID "") (eq .Form.TypeID "bulk") }}checked{{ end }}
+              />
+              <div class="w-5 h-5">{{ template "bulk-icon" . }}</div>
+              <span class="font-medium text-sm">Bulk</span>
+              <span class="text-xs text-base-content/50">Track a total quantity</span>
+            </label>
+            <label data-type-option class="cursor-pointer flex flex-col gap-1 rounded-lg border-2 p-3 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 {{ if eq .Form.TypeID "serialized" }}border-primary bg-primary/10{{ else }}border-base-300 bg-base-200{{ end }}">
+              <input
+                type="radio"
+                name="type_id"
+                value="serialized"
+                class="sr-only"
+                {{ if eq .Form.TypeID "serialized" }}checked{{ end }}
+              />
+              <div class="w-5 h-5">{{ template "serialized-icon" . }}</div>
+              <span class="font-medium text-sm">Serialized</span>
+              <span class="text-xs text-base-content/50">Track individual units with serial numbers</span>
+            </label>
+          </div>
+          {{ with index .Form.Errors "type_id" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
+        </div>
+
+        <div data-has-content-row{{ if ne .Form.TypeID "serialized" }} class="hidden"{{ end }}>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" name="has_content" value="1" class="toggle toggle-primary toggle-sm"
+              data-has-content-toggle
+              {{ if .Form.HasContentBool }}checked{{ end }} />
+            <div class="flex flex-col gap-0.5">
+              <span class="text-sm font-medium">Can contain other items</span>
+              <span class="text-xs text-base-content/50">Enables the Content tab to define what goes inside this container.</span>
+            </div>
+          </label>
+        </div>
+
+      </fieldset>
+
+      <div class="flex gap-2">
+        <button type="submit" tabindex="0" class="btn btn-primary" data-loading-trigger>
+          {{ template "loading-spinner" . }}
+          Add Item
+        </button>
+        <a tabindex="0" href="/orgs/{{ .Data.OrgID }}/equipment" class="btn">Cancel</a>
+      </div>
+
+    </div>
+  </form>
+  {{ template "photo-picker-dialog" . }}
+  {{ template "photo-viewer-dialog" . }}
+</div>
+{{ end }}

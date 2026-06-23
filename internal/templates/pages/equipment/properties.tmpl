@@ -1,0 +1,79 @@
+{{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }} — Properties{{ end }}{{ end }}
+
+{{ define "page" }}
+{{ template "equipment-header" . }}
+
+{{ template "equipment-tab-nav" . }}
+
+<div class="max-w-5xl w-full mx-auto px-4 my-8">
+  <form method="POST" class="flex flex-col gap-4" novalidate>
+
+    <fieldset class="border border-base-300 rounded-lg p-4">
+      <legend class="px-1 text-sm font-medium text-base-content/60">Physical</legend>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="weight_g" class="label">Weight <span class="text-base-content/40 text-xs">g</span></label>
+          <input id="weight_g" type="number" name="weight_g" min="0" class="input w-full"
+            value="{{ if .Form.WeightG }}{{ .Form.WeightG }}{{ else if .Data.Item }}{{ .Data.Item.WeightGInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="width_mm" class="label">Width <span class="text-base-content/40 text-xs">mm</span></label>
+          <input id="width_mm" type="number" name="width_mm" min="0" class="input w-full"
+            value="{{ if .Form.WidthMM }}{{ .Form.WidthMM }}{{ else if .Data.Item }}{{ .Data.Item.WidthMMInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="height_mm" class="label">Height <span class="text-base-content/40 text-xs">mm</span></label>
+          <input id="height_mm" type="number" name="height_mm" min="0" class="input w-full"
+            value="{{ if .Form.HeightMM }}{{ .Form.HeightMM }}{{ else if .Data.Item }}{{ .Data.Item.HeightMMInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="depth_mm" class="label">Depth <span class="text-base-content/40 text-xs">mm</span></label>
+          <input id="depth_mm" type="number" name="depth_mm" min="0" class="input w-full"
+            value="{{ if .Form.DepthMM }}{{ .Form.DepthMM }}{{ else if .Data.Item }}{{ .Data.Item.DepthMMInput }}{{ end }}" />
+        </div>
+
+      </div>
+    </fieldset>
+
+    <fieldset class="border border-base-300 rounded-lg p-4">
+      <legend class="px-1 text-sm font-medium text-base-content/60">Electrical</legend>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="voltage_v" class="label">Voltage <span class="text-base-content/40 text-xs">V</span></label>
+          <input id="voltage_v" type="number" name="voltage_v" min="0" class="input w-full"
+            value="{{ if .Form.VoltageV }}{{ .Form.VoltageV }}{{ else if .Data.Item }}{{ .Data.Item.VoltageVInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="power_w" class="label">Power <span class="text-base-content/40 text-xs">W</span></label>
+          <input id="power_w" type="text" inputmode="decimal" name="power_w" class="input w-full"
+            value="{{ if .Form.PowerW }}{{ .Form.PowerW }}{{ else if .Data.Item }}{{ .Data.Item.PowerWattsInput }}{{ end }}" />
+        </div>
+
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="current_a" class="label">Current <span class="text-base-content/40 text-xs">A</span></label>
+          <input id="current_a" type="text" inputmode="decimal" name="current_a" class="input w-full"
+            value="{{ if .Form.CurrentA }}{{ .Form.CurrentA }}{{ else if .Data.Item }}{{ .Data.Item.CurrentAmpsInput }}{{ end }}" />
+        </div>
+
+      </div>
+    </fieldset>
+
+    <div class="flex gap-2">
+      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Save
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{{ end }}

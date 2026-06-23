@@ -9,7 +9,7 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func (s *InventoryItem) Validate() error {
+func (s *EquipmentItem) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
@@ -43,7 +43,7 @@ func (s *InventoryItem) Validate() error {
 	return nil
 }
 
-func (s InventoryItemType) Validate() error {
+func (s EquipmentItemType) Validate() error {
 	switch s {
 	case "bulk":
 		return nil
@@ -54,7 +54,7 @@ func (s InventoryItemType) Validate() error {
 	}
 }
 
-func (s InventoryItemUsageType) Validate() error {
+func (s EquipmentItemUsageType) Validate() error {
 	switch s {
 	case "rental":
 		return nil
@@ -65,7 +65,7 @@ func (s InventoryItemUsageType) Validate() error {
 	}
 }
 
-func (s *InventoryListResponse) Validate() error {
+func (s *EquipmentListResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}

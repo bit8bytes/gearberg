@@ -15,10 +15,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthzResponse"
 
-  /orgs/{org_id}/inventory:
+  /orgs/{org_id}/equipment:
     get:
-      operationId: listInventory
-      summary: List inventory items for an org
+      operationId: listEquipment
+      summary: List equipment items for an org
       parameters:
         - name: org_id
           in: path
@@ -36,11 +36,11 @@ paths:
             default: 1
       responses:
         "200":
-          description: Paginated list of inventory items
+          description: Paginated list of equipment items
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InventoryListResponse"
+                $ref: "#/components/schemas/EquipmentListResponse"
 
 components:
   schemas:
@@ -62,7 +62,7 @@ components:
           type: string
           format: date-time
 
-    InventoryListResponse:
+    EquipmentListResponse:
       type: object
       required:
         - items
@@ -73,7 +73,7 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/InventoryItem"
+            $ref: "#/components/schemas/EquipmentItem"
         current_page:
           type: integer
         last_page:
@@ -81,7 +81,7 @@ components:
         total_records:
           type: integer
 
-    InventoryItem:
+    EquipmentItem:
       type: object
       required:
         - id

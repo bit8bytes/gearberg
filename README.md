@@ -1,6 +1,6 @@
 # Gearberg
 
-Self-hostable inventory and rental management. Free as in freedom.
+Self-hostable AV equipment and rental software. Free as in freedom.
 
 ![mockup](/mockup/gearberg.png)
 
@@ -8,7 +8,7 @@ Mockup generated with [Claude Design](https://www.anthropic.com/news/claude-desi
 
 ## Features
 
-**Inventory** — Organize equipment by category with descriptions, pictures, and quantities.
+**Equipment** — Organize equipment by category with descriptions, pictures, and quantities.
 
 **Rentals** — Check items out to people, set due dates, and track partial checkouts.
 

@@ -1,0 +1,50 @@
+{{ define "equipment-header" }}
+<div class="w-full bg-base-200 border-b border-base-300">
+  <div class="max-w-5xl mx-auto px-4 min-h-24 py-4 flex flex-col justify-center gap-1">
+    <div class="flex justify-between items-center-safe">
+      <div>
+        <div class="breadcrumbs text-sm py-0">
+          <ul>
+            <li><a href="/orgs/{{ .Data.OrgID }}/equipment">Equipment</a></li>
+            <li>{{ .Data.Item.Name }}</li>
+          </ul>
+        </div>
+        {{ if and (eq .Data.Item.Kind 1) .Data.PartOf }}
+        <div class="flex items-center gap-1 text-xs text-base-content/50">
+          <span>Part of:</span>
+          {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}/content" class="link">{{ $p.Name }}</a>{{ end }}
+        </div>
+        {{ end }}
+      </div>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-sm border border-base-200 w-40 p-1 z-10">
+          <li>
+            <button
+              data-modal-target="delete_equipment_modal"
+              class="flex items-center gap-1 w-full text-error">
+              <span class="w-4 h-4">{{ template "delete-icon" }}</span>
+              Delete
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<dialog id="delete_equipment_modal" class="modal">
+  <div class="modal-box">
+    <h3>Delete Equipment</h3>
+    <p class="py-4">Are you sure you want to permanently delete <strong>{{ .Data.Item.Name }}</strong>? This action cannot be undone.</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Cancel</button>
+      </form>
+      <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/delete">
+        <button type="submit" class="btn btn-error">Delete</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+{{ end }}

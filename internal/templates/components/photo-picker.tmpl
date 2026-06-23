@@ -1,0 +1,68 @@
+{{ define "photo-picker" }}
+<div class="shrink-0 w-28 flex flex-col gap-1">
+  <label class="label">Photo</label>
+  <div class="relative w-full aspect-square" data-image-preview>
+    <button type="button" class="cursor-pointer w-full h-full rounded-lg border-2 border-dashed border-base-300 bg-base-200 flex items-center justify-center overflow-hidden" data-modal-target="photo-picker-dialog">
+      {{ if and .Data.Item .Data.Item.ImageURL }}
+      <img class="w-full h-full object-cover" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
+      {{ else }}
+      <span data-image-placeholder>{{ template "camera-icon" . }}</span>
+      <img class="hidden w-full h-full object-cover" data-image-preview-img alt="Preview" />
+      {{ end }}
+    </button>
+    <button type="button" class="absolute top-1 right-1 btn btn-xs btn-ghost bg-base-100/70 hidden" data-modal-target="photo-viewer-dialog" data-photo-expand>
+      <span class="w-3 h-3">{{ template "expand-icon" . }}</span>
+    </button>
+  </div>
+  <input id="image" type="file" name="image" accept="image/jpeg,image/png" class="hidden" data-image-input />
+  <input type="file" accept="image/*" capture="environment" class="hidden" data-camera-input />
+</div>
+{{ end }}
+
+{{ define "photo-picker-dialog" }}
+<dialog id="photo-picker-dialog" class="modal">
+  <div class="modal-box w-80">
+    <h3 class="font-bold text-lg mb-4">Add Photo</h3>
+    <div class="flex flex-col gap-2">
+      <button type="button" class="btn btn-outline justify-start gap-3" data-photo-option="camera">
+        <span class="w-6 h-6">{{ template "camera-icon" . }}</span>
+        <span>Take Photo</span>
+      </button>
+      <button type="button" class="btn btn-outline justify-start gap-3" data-photo-option="upload">
+        <span class="w-6 h-6">{{ template "upload-icon" . }}</span>
+        <span>Upload Photo</span>
+      </button>
+      <button type="button" class="btn btn-outline justify-start gap-3" data-photo-option="url">
+        <span class="w-6 h-6">{{ template "link-icon" . }}</span>
+        <span>Download from URL</span>
+      </button>
+    </div>
+    <div class="hidden mt-4 flex-col gap-2" data-url-input-section>
+      <div class="flex gap-2">
+        <input type="url" placeholder="https://example.com/image.jpg" class="input flex-1" data-photo-url-input />
+        <button type="button" class="btn btn-primary" data-photo-url-submit>Get</button>
+      </div>
+      <p class="text-error text-sm hidden" data-photo-url-error></p>
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-ghost">Cancel</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+{{ end }}
+
+{{ define "photo-viewer-dialog" }}
+<dialog id="photo-viewer-dialog" class="modal">
+  <div class="modal-box max-w-3xl p-2 bg-base-300">
+    <img class="w-full h-auto rounded" data-photo-viewer-img alt="Full size photo" />
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+{{ end }}

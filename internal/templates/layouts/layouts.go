@@ -15,8 +15,8 @@ var (
 	// Center renders the full HTML shell with a simple centered body.
 	Center = Layout{File: "layouts/center.tmpl"}
 
-	// Inventory renders the full HTML shell with the inventory sidebar.
-	Inventory = Layout{File: "layouts/inventory.tmpl", Partials: "partials/*.tmpl"}
+	// Equipment renders the full HTML shell with the inventory sidebar.
+	Equipment = Layout{File: "layouts/equipment.tmpl", Partials: "partials/*.tmpl"}
 
 	// Settings renders the full HTML shell with a GitHub-style settings sidebar.
 	Settings = Layout{File: "layouts/settings.tmpl", Partials: "partials/*.tmpl"}

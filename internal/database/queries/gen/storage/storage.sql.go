@@ -135,8 +135,8 @@ func (q *Queries) GetByID(ctx context.Context, id string) (StorageObject, error)
 const getStorageUsedByOrg = `-- name: GetStorageUsedByOrg :one
 SELECT CAST(COALESCE(SUM(so.size), 0) AS INTEGER) AS bytes_used
 FROM storage_objects so
-INNER JOIN inventory i ON i.storage_object_id = so.id
-WHERE i.org_id = ?1
+INNER JOIN equipment e ON e.storage_object_id = so.id
+WHERE e.org_id = ?1
 `
 
 func (q *Queries) GetStorageUsedByOrg(ctx context.Context, orgID string) (int64, error) {

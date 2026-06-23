@@ -3,11 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/pagination"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
+
+func (app *application) getNotFound(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	return app.html.Render(w, r, http.StatusOK, pages.NotFound, app.html.TemplateData(r))
+}
 
 func (app *application) GetHealthz(_ context.Context) (*gen.HealthzResponse, error) {
 	return &gen.HealthzResponse{
@@ -18,31 +25,30 @@ func (app *application) GetHealthz(_ context.Context) (*gen.HealthzResponse, err
 	}, nil
 }
 
-func (app *application) ListInventory(ctx context.Context, params gen.ListInventoryParams) (*gen.InventoryListResponse, error) {
+func (app *application) ListEquipment(ctx context.Context, params gen.ListEquipmentParams) (*gen.EquipmentListResponse, error) {
 	page := params.Page.Or(1)
 	f := pagination.Filters{Page: page, PageSize: 25}
 
-	items, meta, err := app.services.inventory.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", "", false, f)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch inventory: %w", err)
+		return nil, fmt.Errorf("failed to fetch equipment: %w", err)
 	}
 
-	out := make([]gen.InventoryItem, len(items))
+	out := make([]gen.EquipmentItem, len(items))
 	for i, item := range items {
-		out[i] = gen.InventoryItem{
+		out[i] = gen.EquipmentItem{
 			ID:         item.ID,
 			Name:       item.Name,
-			Code:       item.Code,
 			TotalStock: item.TotalStock,
-			Type:       gen.InventoryItemType(item.Type.String()),
-			UsageType:  gen.InventoryItemUsageType(item.UsageType.String()),
+			Type:       gen.EquipmentItemType(item.Type.String()),
+			UsageType:  gen.EquipmentItemUsageType(item.UsageType.String()),
 		}
 		if item.CategoryName != "" {
 			out[i].CategoryName = gen.NewOptString(item.CategoryName)
 		}
 	}
 
-	return &gen.InventoryListResponse{
+	return &gen.EquipmentListResponse{
 		Items:        out,
 		CurrentPage:  meta.CurrentPage,
 		LastPage:     meta.LastPage,

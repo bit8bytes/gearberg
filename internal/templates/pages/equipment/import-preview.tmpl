@@ -1,0 +1,67 @@
+{{ define "title" }}Import Preview{{ end }}
+
+{{ define "page" }}
+<div class="max-w-5xl mx-auto px-4 my-8 flex flex-col gap-6">
+  <div>
+    <h1 class="mb-1">Import Preview</h1>
+    <p class="text-sm text-base-content/60">Review the rows below before confirming. Rows with errors are always excluded.</p>
+  </div>
+
+  <div class="flex gap-4 text-sm">
+    <span class="badge badge-success badge-outline">{{ .Data.CountNew }} new</span>
+    <span class="badge badge-error badge-outline">{{ .Data.CountError }} error</span>
+  </div>
+
+  <form method="post" action="/orgs/{{ .Data.OrgID }}/equipment/import/confirm">
+    <input type="hidden" name="import_id" value="{{ .Data.ImportID }}" />
+    <table class="table w-full mb-4">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>NAME</th>
+          <th>CATEGORY</th>
+          <th>STOCK</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Rows }}
+        <tr class="{{ if eq .Status "error" }}opacity-40{{ end }}">
+          <td class="text-base-content/50">{{ .RowNumber }}</td>
+          <td class="w-1/2">
+            <span class="font-bold">{{ .Name }}</span>
+            <br />
+            <span class="text-xs text-secondary">{{ .TypeLabel }}</span>
+            {{ if eq .Status "error" }}
+            <br />
+            <span class="text-xs text-error">{{ .ErrorMessage }}</span>
+            {{ end }}
+          </td>
+          <td>{{ .CategoryName }}</td>
+          <td>{{ .Quantity }}</td>
+          <td>
+            {{ if eq .Status "new" }}
+              <span class="badge badge-success badge-sm">New</span>
+            {{ else }}
+              <span class="badge badge-error badge-sm">Error</span>
+            {{ end }}
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+
+    {{ if gt .Data.CountNew 0 }}
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary">Confirm Import</button>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment" class="btn">Cancel</a>
+    </div>
+    {{ else }}
+    <div class="flex gap-2 items-center">
+      <p class="text-sm text-base-content/60">Nothing to import — all rows have errors.</p>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="btn">Try again</a>
+    </div>
+    {{ end }}
+  </form>
+</div>
+{{ end }}

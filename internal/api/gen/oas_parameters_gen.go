@@ -14,14 +14,14 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// ListInventoryParams is parameters of listInventory operation.
-type ListInventoryParams struct {
+// ListEquipmentParams is parameters of listEquipment operation.
+type ListEquipmentParams struct {
 	OrgID string
 	Q     OptString `json:",omitempty,omitzero"`
 	Page  OptInt    `json:",omitempty,omitzero"`
 }
 
-func unpackListInventoryParams(packed middleware.Parameters) (params ListInventoryParams) {
+func unpackListEquipmentParams(packed middleware.Parameters) (params ListEquipmentParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "org_id",
@@ -50,7 +50,7 @@ func unpackListInventoryParams(packed middleware.Parameters) (params ListInvento
 	return params
 }
 
-func decodeListInventoryParams(args [1]string, argsEscaped bool, r *http.Request) (params ListInventoryParams, _ error) {
+func decodeListEquipmentParams(args [1]string, argsEscaped bool, r *http.Request) (params ListEquipmentParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: org_id.
 	if err := func() error {

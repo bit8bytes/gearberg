@@ -6,16 +6,17 @@ package equipmentcategories
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
-	CountByOrgID(ctx context.Context, orgID string) (int64, error)
+	CountByOrgID(ctx context.Context, orgID sql.NullString) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]EquipmentCategory, error)
 	GetByID(ctx context.Context, id string) (EquipmentCategory, error)
 	GetByName(ctx context.Context, arg GetByNameParams) (EquipmentCategory, error)
-	GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error)
+	GetByOrgID(ctx context.Context, orgID sql.NullString) ([]EquipmentCategory, error)
 	Update(ctx context.Context, arg UpdateParams) (EquipmentCategory, error)
 }
 
