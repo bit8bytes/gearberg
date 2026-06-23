@@ -44,6 +44,7 @@ Deferred ideas: sorting by name, category, stock, or price (M1.7); bar codes (e.
 | ID | Name | Done |
 | - | - | - |
 | M2.1 | A user can import new equipment items using CSV | 100 % |
+| M2.1 | A user can export equipment (serialized incl. units, bulk) items using CSV | 0 % |
 | M2.2 | A user can open a print view of all equipment items including images and print or export it as PDF via the browser | 100 % |
 | M2.3 | A user can open a print view of a rental and share or export it as PDF (Ref. M2.2) to send to customers; pricing details are shown by default | 100 % |
 
