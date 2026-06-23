@@ -58,13 +58,12 @@ Defered ideas: bar codes (e.g. for trusses), periodic unit inspections, and addi
 
 | ID | Name |
 | - | - |
-| M3.1 | A server operator can create a user with `gearberg admin create-user --email=<email> --password=<password>` |
-| M3.2 | A server operator can reset any user's password with `gearberg admin reset-password --email=<email> --password=<password>` |
-| M3.3 | A user can log in with email and password |
-| M3.4 | A user can log out |
-| M3.5 | A user can change their own password |
-| M3.6 | An unauthenticated user is redirected to the login page |
-| M3.7 | When started with `gearberg serve --no-auth`, the server skips authentication and all routes are accessible without login |
+| M3.1 | A user can sign up with email and password |
+| M3.2 | A user can sign in with email and password |
+| M3.3 | A user can sign out |
+| M3.4 | An unauthenticated user is redirected to the sign in page |
+| M3.5 | A user can request a password reset by entering their email; if SMTP is configured a reset link is sent, otherwise the reset token is printed to the server log |
+| M3.6 | A user can reset their password by following the reset link (or entering the token from the server log) |
 
 ### Milestone 4: Rentals
 
