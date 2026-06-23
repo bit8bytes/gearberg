@@ -126,8 +126,8 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 }
 
 const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (g),Width (mm),Height (mm),Depth (mm),Voltage (V),Current (mA),Power (mW),Quantity\n" +
-	"Sony FX3,Bulk,Rental,Cameras,Sony,Main Warehouse,150.00,3500.00,Cinema camera with full-frame sensor,1200,180,120,80,7,2000,12000,1\n" +
-	"Canon EF 50mm f/1.4,Serialized,Rental,Lenses,Canon,Main Warehouse,25.00,450.00,Standard prime lens,290,80,80,75,,,,2\n"
+	"Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,298,47,47,162,,,,7\n" +
+	"Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,900,220,220,95,5,2400,12000,4\n"
 
 // getEquipmentImportTemplate serves a ready-to-fill CSV template for download.
 func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
