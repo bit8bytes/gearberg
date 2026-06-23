@@ -3,11 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/pagination"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
+
+func (app *application) getNotFound(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	return app.html.Render(w, r, http.StatusOK, pages.NotFound, app.html.TemplateData(r))
+}
 
 func (app *application) GetHealthz(_ context.Context) (*gen.HealthzResponse, error) {
 	return &gen.HealthzResponse{

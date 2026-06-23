@@ -7,6 +7,9 @@
   <p>{{ if .Data.Message }}{{ .Data.Message }}{{ else }}Something went wrong. Please try again later.{{ end }}</p>
   {{ if .Data.TraceID }}<p class="text-muted"><small>Trace ID: {{ .Data.TraceID }}</small></p>{{ end }}
   <br>
-  <a href="/" class="btn btn-primary">Go to Home</a>
+  <div class="flex gap-2 justify-center">
+    <button data-history-back class="btn">Back</button>
+    <a href="/" class="btn btn-primary">Go to Home</a>
+  </div>
 </div>
 {{ end }}

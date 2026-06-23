@@ -11,6 +11,8 @@ import (
 func (app *application) routes() (http.Handler, error) {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/", app.html.Handle(app.getNotFound))
+
 	mux.Handle("GET /{$}", http.RedirectHandler("/orgs", http.StatusSeeOther))
 	apiServer, err := gen.NewServer(app, gen.WithPathPrefix("/api/v1"))
 	if err != nil {
