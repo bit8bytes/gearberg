@@ -122,7 +122,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PageSize: 25,
 	}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, sort, showArchived, f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, showArchived, f)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}

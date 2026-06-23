@@ -540,7 +540,7 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 	return items, nil
 }
 
-const listByCode = `-- name: ListByCode :many
+const listBySerialNumber = `-- name: ListBySerialNumber :many
 SELECT
     e.id,
     e.org_id,
@@ -581,7 +581,7 @@ ORDER BY (SELECT MIN(esi.code) FROM equipment_serialized_items esi WHERE esi.equ
 LIMIT ?6 OFFSET ?5
 `
 
-type ListByCodeParams struct {
+type ListBySerialNumberParams struct {
 	OrgID      string
 	NameQuery  interface{}
 	Category   interface{}
@@ -590,7 +590,7 @@ type ListByCodeParams struct {
 	PageLimit  int64
 }
 
-type ListByCodeRow struct {
+type ListBySerialNumberRow struct {
 	ID                string
 	OrgID             string
 	Name              string
@@ -615,8 +615,8 @@ type ListByCodeRow struct {
 	TotalRecords      int64
 }
 
-func (q *Queries) ListByCode(ctx context.Context, arg ListByCodeParams) ([]ListByCodeRow, error) {
-	rows, err := q.db.QueryContext(ctx, listByCode,
+func (q *Queries) ListBySerialNumber(ctx context.Context, arg ListBySerialNumberParams) ([]ListBySerialNumberRow, error) {
+	rows, err := q.db.QueryContext(ctx, listBySerialNumber,
 		arg.OrgID,
 		arg.NameQuery,
 		arg.Category,
@@ -628,9 +628,9 @@ func (q *Queries) ListByCode(ctx context.Context, arg ListByCodeParams) ([]ListB
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListByCodeRow
+	var items []ListBySerialNumberRow
 	for rows.Next() {
-		var i ListByCodeRow
+		var i ListBySerialNumberRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.OrgID,

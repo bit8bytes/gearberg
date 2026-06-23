@@ -50,48 +50,7 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 // only archived items are returned; otherwise only active items are returned.
 // sortBy may be "code" to order by minimum unit code; otherwise orders by name.
 // Returns total matching count.
-func (r *Repository) List(ctx context.Context, orgID, query, category, sortBy string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
-	if sortBy == "code" {
-		rows, err := r.equipment.ListByCode(ctx, genequip.ListByCodeParams{
-			OrgID:      orgID,
-			NameQuery:  query,
-			Category:   category,
-			IsArchived: database.Bool(showArchived),
-			PageOffset: int64(f.Offset()),
-			PageLimit:  int64(f.Limit()),
-		})
-		if err != nil {
-			return nil, 0, fmt.Errorf("List: %w", err)
-		}
-		var totalRecords int64
-		items := make([]Equipment, 0, len(rows))
-		for _, row := range rows {
-			totalRecords = row.TotalRecords
-			items = append(items, Equipment{
-				ID:              row.ID,
-				OrgID:           row.OrgID,
-				Kind:            KindFromString(row.EquipmentTypeName),
-				Type:            Type(row.TrackingTypeID.Int64),
-				UsageType:       UsageType(row.UsageTypeID),
-				Name:            row.Name,
-				CategoryID:      database.String(row.CategoryID),
-				CategoryName:    row.CategoryName,
-				ManufacturerID:  database.String(row.ManufacturerID),
-				LocationID:      database.String(row.LocationID),
-				LocationName:    row.LocationName,
-				StorageObjectID: database.StringPtr(row.StorageObjectID),
-				TotalStock:      row.TotalStock,
-				IsArchived:      row.IsArchived == 1,
-				PurchasePrice:   database.Int64Ptr(row.ResalePrice),
-				RentalPrice:     database.Int64Ptr(row.RentalPrice),
-				Notes:           database.String(row.Notes),
-				UpdatedAt:       row.UpdatedAt,
-				CreatedAt:       row.CreatedAt,
-			})
-		}
-		return items, int(totalRecords), nil
-	}
-
+func (r *Repository) List(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
 	rows, err := r.equipment.List(ctx, genequip.ListParams{
 		OrgID:      orgID,
 		NameQuery:  query,

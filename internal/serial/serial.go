@@ -1,4 +1,4 @@
-// Package uid provides utilities for generating unique identifiers.
+// Package serial provides utilities for generating unique identifiers.
 package serial
 
 import (

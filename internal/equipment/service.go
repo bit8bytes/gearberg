@@ -70,8 +70,8 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 // GetFiltered returns a page of inventory items for orgID, filtered by query,
 // category, and archive status, sorted and paginated according to f.
 // sortBy may be "code" to order by unit code; otherwise orders by name.
-func (s *Service) GetFiltered(ctx context.Context, orgID, query, category, sortBy string, showArchived bool, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
-	items, total, err := s.repo.List(ctx, orgID, query, category, sortBy, showArchived, f)
+func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
+	items, total, err := s.repo.List(ctx, orgID, query, category, showArchived, f)
 	if err != nil {
 		return nil, pagination.Metadata{}, fmt.Errorf("GetFiltered: %w", err)
 	}

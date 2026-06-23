@@ -38,7 +38,7 @@ WHERE e.org_id = sqlc.arg(org_id)
 ORDER BY e.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
--- name: ListByCode :many
+-- name: ListBySerialNumber :many
 SELECT
     e.id,
     e.org_id,

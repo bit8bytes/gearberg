@@ -141,33 +141,60 @@ func (s *Service) ensureCommitLookups(ctx context.Context, orgID string, rows []
 		if row.Status == StatusError || row.Action == ActionSkip {
 			continue
 		}
-		if _, ok := lk.catsByName[strings.ToLower(row.CategoryName)]; !ok {
-			id, err := s.categories.EnsureByName(ctx, orgID, row.CategoryName)
-			if err != nil {
-				return commitLookups{}, fmt.Errorf("ensureCommitLookups: category %q: %w", row.CategoryName, err)
-			}
-			lk.catsByName[strings.ToLower(row.CategoryName)] = id
+		if err := s.ensureCategory(ctx, &lk, orgID, row.CategoryName); err != nil {
+			return commitLookups{}, fmt.Errorf("ensureCommitLookups: %w", err)
 		}
 		if name := strings.TrimSpace(row.ManufacturerName); name != "" {
-			if _, ok := lk.mfrsByName[strings.ToLower(name)]; !ok {
-				id, err := s.manufacturers.EnsureByName(ctx, orgID, name)
-				if err != nil {
-					return commitLookups{}, fmt.Errorf("ensureCommitLookups: manufacturer %q: %w", name, err)
-				}
-				lk.mfrsByName[strings.ToLower(name)] = id
+			if err := s.ensureManufacturer(ctx, &lk, orgID, name); err != nil {
+				return commitLookups{}, fmt.Errorf("ensureCommitLookups: %w", err)
 			}
 		}
 		if name := strings.TrimSpace(row.LocationName); name != "" {
-			if _, ok := lk.locsByName[strings.ToLower(name)]; !ok {
-				id, err := s.locations.EnsureByName(ctx, orgID, name)
-				if err != nil {
-					return commitLookups{}, fmt.Errorf("ensureCommitLookups: location %q: %w", name, err)
-				}
-				lk.locsByName[strings.ToLower(name)] = id
+			if err := s.ensureLocation(ctx, &lk, orgID, name); err != nil {
+				return commitLookups{}, fmt.Errorf("ensureCommitLookups: %w", err)
 			}
 		}
 	}
 	return lk, nil
+}
+
+func (s *Service) ensureCategory(ctx context.Context, lk *commitLookups, orgID, name string) error {
+	key := strings.ToLower(name)
+	if _, ok := lk.catsByName[key]; ok {
+		return nil
+	}
+	id, err := s.categories.EnsureByName(ctx, orgID, name)
+	if err != nil {
+		return fmt.Errorf("category %q: %w", name, err)
+	}
+	lk.catsByName[key] = id
+	return nil
+}
+
+func (s *Service) ensureManufacturer(ctx context.Context, lk *commitLookups, orgID, name string) error {
+	key := strings.ToLower(name)
+	if _, ok := lk.mfrsByName[key]; ok {
+		return nil
+	}
+	id, err := s.manufacturers.EnsureByName(ctx, orgID, name)
+	if err != nil {
+		return fmt.Errorf("manufacturer %q: %w", name, err)
+	}
+	lk.mfrsByName[key] = id
+	return nil
+}
+
+func (s *Service) ensureLocation(ctx context.Context, lk *commitLookups, orgID, name string) error {
+	key := strings.ToLower(name)
+	if _, ok := lk.locsByName[key]; ok {
+		return nil
+	}
+	id, err := s.locations.EnsureByName(ctx, orgID, name)
+	if err != nil {
+		return fmt.Errorf("location %q: %w", name, err)
+	}
+	lk.locsByName[key] = id
+	return nil
 }
 
 // Commit processes all staged rows for the import atomically: creates new items,

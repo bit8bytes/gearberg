@@ -205,49 +205,6 @@ func (f *PropertiesForm) PowerMW() *int64 { return parseOptionalWattsToMW(f.Powe
 // CurrentMA converts the user-entered amps string to milliamps, or nil when blank.
 func (f *PropertiesForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) }
 
-// InspectionEntryForm holds parsed input for logging a single inspection event.
-type InspectionEntryForm struct {
-	InspectedAt string // YYYY-MM-DD
-	Passed      string // "on" when the checkbox is checked; absence means failed
-	Notes       string
-	validator.Validator
-}
-
-// ParseInspectionEntry reads inspection log fields from r.
-func ParseInspectionEntry(r *http.Request) (InspectionEntryForm, error) {
-	if err := r.ParseForm(); err != nil {
-		return InspectionEntryForm{}, fmt.Errorf("parse form: %w", err)
-	}
-	return InspectionEntryForm{
-		InspectedAt: strings.TrimSpace(r.PostForm.Get("inspected_at")),
-		Passed:      r.PostForm.Get("passed"),
-		Notes:       strings.TrimSpace(r.PostForm.Get("notes")),
-	}, nil
-}
-
-// Validate checks InspectionEntryForm fields and returns true when all pass.
-func (f *InspectionEntryForm) Validate() bool {
-	if validator.NotBlank(f.InspectedAt) {
-		t, err := time.Parse("2006-01-02", f.InspectedAt)
-		if t.After(time.Now()) {
-			f.AddError("inspected_at", "Date cannot be in the future")
-		}
-		f.Check(err == nil, "inspected_at", "Must be a valid date (YYYY-MM-DD)")
-	} else {
-		f.AddError("inspected_at", "This field cannot be blank")
-	}
-	return f.Valid()
-}
-
-// InspectedAtUnix parses the YYYY-MM-DD date and returns a Unix timestamp.
-func (f *InspectionEntryForm) InspectedAtUnix() int64 {
-	t, _ := time.Parse("2006-01-02", f.InspectedAt)
-	return t.UTC().Unix()
-}
-
-// PassedBool returns true when the passed select value is "1".
-func (f *InspectionEntryForm) PassedBool() bool { return f.Passed == "1" }
-
 // UnitForm holds parsed input and validation state for adding or updating a serialized unit.
 type UnitForm struct {
 	Code                     string

@@ -130,7 +130,7 @@ const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental
 	"Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,900,220,220,95,5,2400,12000,4\n"
 
 // getEquipmentImportTemplate serves a ready-to-fill CSV template for download.
-func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
+func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, _ *http.Request) *httperr.Error {
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
 	_, _ = w.Write([]byte(importTemplateCSV))
