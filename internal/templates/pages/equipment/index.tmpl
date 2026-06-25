@@ -49,16 +49,16 @@
     </form>
   </div>
 </div>
-<div class="max-w-5xl w-full mx-auto">
+<div class="max-w-5xl w-full mx-auto px-4 my-[42px]">
   {{ if .Data.Inventories }}
   <div class="overflow-x-auto">
-    <table class="table w-full overflow-x-scroll">
-      <thead>
+    <table class="table w-full overflow-x-scroll border border-base-300 rounded-lg">
+      <thead class="bg-base-200">
         <tr>
           <th></th>
           <th>NAME</th>
-          <th>CATEGORY</th>
-          <th>STOCK</th>
+          <th class="text-right">CATEGORY</th>
+          <th class="text-right">STOCK</th>
         </tr>
       </thead>
       <tbody>
@@ -71,7 +71,7 @@
               {{ end }}
             </div>
           </td>
-          <td class="w-1/2">
+          <td class="w-full">
             <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}"
               class="font-bold link link-hover">
               {{ .Name }}
@@ -87,7 +87,7 @@
               <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a>
             </span>
           </td>
-          <td>{{ .TotalStock }}</td>
+          <td class="w-4 text-right">{{ .TotalStock }}</td>
         </tr>
         {{ end }}
       </tbody>
