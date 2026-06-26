@@ -14,7 +14,7 @@
     <div class="flex gap-2">
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-36 p-2 shadow border border-base-300">
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-48 p-2 shadow border border-base-300">
           <li>
             <a href="{{ .Data.PrintURL }}" target="_blank">
               <span class="w-4 h-4">{{ template "print-icon" . }}</span>
@@ -25,6 +25,12 @@
             <a href="/orgs/{{ .Data.OrgID }}/equipment/import">
               <span class="w-4 h-4">{{ template "import-icon" . }}</span>
               Import
+            </a>
+          </li>
+          <li>
+            <a href="/orgs/{{ .Data.OrgID }}/equipment/export">
+              <span class="w-4 h-4">{{ template "export-icon" . }}</span>
+              Export CSV
             </a>
           </li>
         </ul>
