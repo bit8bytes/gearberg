@@ -46,6 +46,7 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --tracking-wider: 0.05em;
+    --radius-md: 0.375rem;
     --radius-lg: 0.5rem;
     --radius-2xl: 1rem;
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -5460,9 +5461,6 @@
       }
     }
   }
-  .my-1 {
-    margin-block: calc(var(--spacing) * 1);
-  }
   .my-6 {
     margin-block: calc(var(--spacing) * 6);
   }
@@ -6760,9 +6758,6 @@
   .w-28 {
     width: calc(var(--spacing) * 28);
   }
-  .w-36 {
-    width: calc(var(--spacing) * 36);
-  }
   .w-40 {
     width: calc(var(--spacing) * 40);
   }
@@ -7235,6 +7230,9 @@
   .rounded-lg {
     border-radius: var(--radius-lg);
   }
+  .rounded-md {
+    border-radius: var(--radius-md);
+  }
   .rounded-selector {
     border-radius: var(--radius-selector);
   }
@@ -7556,30 +7554,6 @@
   }
   .border-primary {
     border-color: var(--color-primary);
-  }
-  .border-secondary {
-    border-color: var(--color-secondary);
-  }
-  .border-secondary-content {
-    border-color: var(--color-secondary-content);
-  }
-  .border-secondary\/5 {
-    border-color: var(--color-secondary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-secondary) 5%, transparent);
-    }
-  }
-  .border-secondary\/10 {
-    border-color: var(--color-secondary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-secondary) 10%, transparent);
-    }
-  }
-  .border-secondary\/20 {
-    border-color: var(--color-secondary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-secondary) 20%, transparent);
-    }
   }
   .border-t-transparent {
     border-top-color: transparent;
@@ -7989,6 +7963,9 @@
   .mask-repeat {
     mask-repeat: repeat;
   }
+  .object-contain {
+    object-fit: contain;
+  }
   .object-cover {
     object-fit: cover;
   }
@@ -8217,9 +8194,6 @@
   }
   .py-0 {
     padding-block: calc(var(--spacing) * 0);
-  }
-  .py-1 {
-    padding-block: calc(var(--spacing) * 1);
   }
   .py-1\.5 {
     padding-block: calc(var(--spacing) * 1.5);
@@ -9953,90 +9927,6 @@
         grid-auto-flow: column;
         &.footer-center {
           grid-auto-flow: row dense;
-        }
-      }
-    }
-  }
-  .md\:tooltip {
-    @media (width >= 48rem) {
-      @layer daisyui.l1.l2.l3 {
-        position: relative;
-        display: inline-block;
-        --tt-bg: var(--color-neutral);
-        --tt-off: calc(100% + 0.5rem);
-        --tt-tail: calc(100% + 1px + 0.25rem);
-        & > .tooltip-content, &[data-tip]:before {
-          position: absolute;
-          max-width: 20rem;
-          border-radius: var(--radius-field);
-          padding-inline: calc(0.25rem * 2);
-          padding-block: calc(0.25rem * 1);
-          text-align: center;
-          white-space: normal;
-          color: var(--color-neutral-content);
-          opacity: 0%;
-          font-size: 0.875rem;
-          line-height: 1.25;
-          background-color: var(--tt-bg);
-          width: max-content;
-          pointer-events: none;
-          z-index: 2;
-          --tw-content: attr(data-tip);
-          content: var(--tw-content);
-        }
-        &:after {
-          opacity: 0%;
-          background-color: var(--tt-bg);
-          content: "";
-          pointer-events: none;
-          width: 0.625rem;
-          height: 0.25rem;
-          display: block;
-          position: absolute;
-          mask-repeat: no-repeat;
-          mask-position: -1px 0;
-          --mask-tooltip: url("data:image/svg+xml,%3Csvg width='10' height='4' viewBox='0 0 8 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0.500009 1C3.5 1 3.00001 4 5.00001 4C7 4 6.5 1 9.5 1C10 1 10 0.499897 10 0H0C-1.99338e-08 0.5 0 1 0.500009 1Z' fill='black'/%3E%3C/svg%3E%0A");
-          mask-image: var(--mask-tooltip);
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          & > .tooltip-content, &[data-tip]:before, &:after {
-            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 75ms, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) 75ms;
-          }
-        }
-        &:is([data-tip]:not([data-tip=""]), :has(.tooltip-content:not(:empty))) {
-          &.tooltip-open, &:hover, &:has(:focus-visible) {
-            & > .tooltip-content, &[data-tip]:before, &:after {
-              opacity: 100%;
-              --tt-pos: 0rem;
-              @media (prefers-reduced-motion: no-preference) {
-                transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0s;
-              }
-            }
-          }
-        }
-      }
-      @layer daisyui.l1.l2 {
-        > .tooltip-content, &[data-tip]:before {
-          transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
-          inset: auto auto var(--tt-off) 50%;
-        }
-        &:after {
-          transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
-          inset: auto auto var(--tt-tail) 50%;
-        }
-      }
-    }
-  }
-  .md\:tooltip-left {
-    @media (width >= 48rem) {
-      @layer daisyui.l1.l2 {
-        > .tooltip-content, &[data-tip]:before {
-          transform: translateX(calc(var(--tt-pos, 0.25rem) - 0.25rem)) translateY(-50%);
-          inset: 50% var(--tt-off) auto auto;
-        }
-        &:after {
-          transform: translateX(var(--tt-pos, 0.25rem)) translateY(-50%) rotate(-90deg);
-          inset: 50% calc(var(--tt-tail) + 1px) auto auto;
         }
       }
     }

@@ -71,9 +71,9 @@
         {{ range .Data.Inventories }}
         <tr>
           <td class="w-16 items-center">
-            <div class="w-12 h-12 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
+            <div class="w-12 h-12 rounded-md border-2 border-base-200 overflow-hidden flex items-center justify-center">
               {{ if .ImageURL }}
-              <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-cover" />
+              <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
               {{ end }}
             </div>
           </td>
