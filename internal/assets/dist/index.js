@@ -58,6 +58,8 @@ document.addEventListener("change", (e) => {
     img.src = ev.target.result;
     img.classList.remove("hidden");
     if (placeholder) placeholder.classList.add("hidden");
+    const hint = input.closest("form").querySelector("[data-image-preview-hint]");
+    if (hint) hint.classList.remove("hidden");
   };
   reader.readAsDataURL(input.files[0]);
 });
