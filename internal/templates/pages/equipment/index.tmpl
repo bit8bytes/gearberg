@@ -73,7 +73,9 @@
           <td class="w-16 items-center">
             <div class="w-12 h-12 rounded-md border-2 border-base-200 overflow-hidden flex items-center justify-center">
               {{ if .ImageURL }}
-              <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
+              <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
+                <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
+              </button>
               {{ end }}
             </div>
           </td>
@@ -130,4 +132,5 @@
   </div>
   {{ end }}
 </div>
+{{ template "photo-viewer-dialog" . }}
 {{ end }}

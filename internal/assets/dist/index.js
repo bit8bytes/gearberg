@@ -62,29 +62,19 @@ document.addEventListener("change", (e) => {
   reader.readAsDataURL(input.files[0]);
 });
 
-// Photo expand button visibility
-// Show the expand button whenever [data-image-preview-img] has a non-empty src.
-function syncExpandButton() {
-  const img = document.querySelector("[data-image-preview-img]");
-  const btn = document.querySelector("[data-photo-expand]");
-  if (!btn) return;
-  const hasSrc = img && img.src && !img.src.endsWith(window.location.href);
-  btn.classList.toggle("hidden", !hasSrc);
-}
-document.addEventListener("DOMContentLoaded", syncExpandButton);
-document.addEventListener("change", (e) => {
-  if (e.target.closest("[data-image-input]") || e.target.closest("[data-camera-input]")) {
-    // Preview update happens asynchronously via FileReader; check after it settles.
-    setTimeout(syncExpandButton, 50);
-  }
-});
 
-// Photo viewer – copy current preview src into the viewer dialog before it opens.
+// Photo viewer – set src from data-photo-src attribute or fall back to the preview image.
 document.addEventListener("click", (e) => {
-  if (!e.target.closest('[data-modal-target="photo-viewer-dialog"]')) return;
-  const previewImg = document.querySelector("[data-image-preview-img]");
+  const trigger = e.target.closest('[data-modal-target="photo-viewer-dialog"]');
+  if (!trigger) return;
   const viewerImg = document.querySelector("[data-photo-viewer-img]");
-  if (previewImg && viewerImg) viewerImg.src = previewImg.src;
+  if (!viewerImg) return;
+  if (trigger.dataset.photoSrc) {
+    viewerImg.src = trigger.dataset.photoSrc;
+  } else {
+    const previewImg = document.querySelector("[data-image-preview-img]");
+    if (previewImg) viewerImg.src = previewImg.src;
+  }
 });
 
 // Photo picker dialog
