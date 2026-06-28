@@ -7,16 +7,19 @@
 
 <div class="max-w-5xl w-full mx-auto mb-16">
 
-  {{/* Delete forms live outside the table to avoid nesting. */}}
+  {{/* All forms live outside the table to avoid nesting. */}}
   {{ range .Data.Units }}
   <form id="unit-{{ .ID }}-delete" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/delete"></form>
   {{ end }}
+  <form id="add-unit-form" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units"></form>
+  <form id="bulk-inspect-form" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units/bulk-inspect"></form>
 
   {{ if .Data.Units }}
   <div class="overflow-x-auto my-[42px] pb-4">
-    <table class="table w-full border border-base-300 rounded-lg">
+    <table class="table w-full border border-base-300 rounded-lg mb-16">
       <thead class="bg-base-200">
         <tr>
+          <th></th>
           <th>SERIAL</th>
           <th>STATUS</th>
           <th>MFR SERIAL</th>
@@ -30,6 +33,9 @@
       <tbody>
         {{ range .Data.Units }}
         <tr>
+          <td>
+            <input type="checkbox" name="unit_ids" value="{{ .ID }}" form="bulk-inspect-form" class="checkbox checkbox-sm" />
+          </td>
           <td class="whitespace-nowrap">
             <span class="badge badge-ghost font-mono text-xs">{{ .SerialNumber }}</span>
           </td>
@@ -45,46 +51,49 @@
             {{ $next := .NextInspectionAtInput }}
             {{ $label := .NextInspectionLabel }}
             {{ if $next }}
-            <div class="flex flex-col gap-0.5">
-              <span class="font-mono text-xs">{{ $next }}</span>
               {{ if $label }}
-                {{ if .IsInspectionOverdue }}
-                  <span class="text-xs text-error font-medium">{{ $label }}</span>
-                {{ else }}
-                  <span class="text-xs text-base-content/40">{{ $label }}</span>
-                {{ end }}
+                <div class="tooltip" data-tip="{{ $next }}">
+                  {{ if .IsInspectionOverdue }}
+                    <span class="text-error font-medium">{{ $label }}</span>
+                  {{ else }}
+                    <span class="text-base-content/40">{{ $label }}</span>
+                  {{ end }}
+                </div>
+              {{ else }}
+                <span class="font-mono">{{ $next }}</span>
               {{ end }}
-            </div>
             {{ else }}<span class="text-base-content/30">—</span>{{ end }}
           </td>
           <td class="text-sm text-right">{{ if .PurchasePriceInput }}{{ .PurchasePriceInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-          <td class="font-mono text-xs">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+          <td class="text-sm font-mono">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
           <td class="text-sm max-w-xs">
             {{ if .Notes }}<span class="truncate block" title="{{ .Notes }}">{{ .Notes }}</span>{{ else }}<span class="text-base-content/30">—</span>{{ end }}
           </td>
           <td class="text-right">
             <div class="flex gap-1 justify-end">
-              <button data-modal-target="unit-modal-{{ .ID }}" class="btn btn-sm btn-ghost">Edit</button>
+              <button type="button" data-modal-target="unit-modal-{{ .ID }}" class="btn btn-sm btn-ghost">Edit</button>
               <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-sm btn-ghost btn-square">
                   <span class="w-4 h-4">{{ template "dot-menu-icon" . }}</span>
                 </div>
                 <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-1 shadow border border-base-300">
                   <li>
-                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/qr" title="Download QR">
+                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/qr">
                       <span class="w-4 h-4">{{ template "qr-icon" . }}</span>
-                      QR Code
+                      Download QR
                     </a>
                   </li>
                   <li>
-                    <button
-                      form="unit-{{ .ID }}-delete"
-                      type="submit"
-                      class="text-error"
-                      data-confirm="Delete unit {{ .SerialNumber }}?"
-                    >
-                    <span class="w-4 h-4">{{ template "delete-icon" . }}</span>
-                    Delete</button>
+                    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}/barcode">
+                      <span class="w-4 h-4">{{ template "barcode-icon" . }}</span>
+                      Download Barcode
+                    </a>
+                  </li>
+                  <li>
+                    <button type="button" class="text-error" data-modal-target="unit-delete-modal-{{ .ID }}">
+                      <span class="w-4 h-4">{{ template "delete-icon" . }}</span>
+                      Delete
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -95,10 +104,14 @@
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="10" class="text-right pt-2 px-4">
-            <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units">
-              <button type="submit" class="btn btn-sm btn-primary">Add unit</button>
-            </form>
+          <td colspan="9" class="pt-2 px-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <input type="date" name="next_inspection_at" form="bulk-inspect-form" class="input input-sm" />
+                <button type="submit" form="bulk-inspect-form" class="btn btn-sm btn-outline">Set Inspection Date</button>
+              </div>
+              <button type="submit" form="add-unit-form" class="btn btn-sm btn-primary">Add unit</button>
+            </div>
           </td>
         </tr>
       </tfoot>
@@ -112,6 +125,23 @@
       </form>
     </p>
   </div>
+  {{ end }}
+
+  {{/* Unit delete modals — one per unit */}}
+  {{ range .Data.Units }}
+  <dialog id="unit-delete-modal-{{ .ID }}" class="modal">
+    <div class="modal-box">
+      <h3>Delete Unit</h3>
+      <p class="py-4">Are you sure you want to permanently delete unit <strong>{{ .SerialNumber }}</strong>? This action cannot be undone.</p>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Cancel</button>
+        </form>
+        <button type="submit" form="unit-{{ .ID }}-delete" class="btn btn-error">Delete</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
   {{ end }}
 
   {{/* Unit edit modals — one per unit */}}
@@ -130,29 +160,33 @@
           <p class="text-base-content/50 text-xs">Inactive units are not available for rental.</p>
         </div>
 
-        <div class="flex flex-col gap-1">
-          <label>Manufacturer Serial Number <span class="text-base-content/40 text-xs">(optional)</span></label>
-          <input type="text" name="serial_number" value="{{ .ManufacturerSerialNumber }}" maxlength="200" class="input w-full" placeholder="—" />
-        </div>
+        <div class="grid grid-cols-2 gap-3">
 
-        <div class="flex flex-col gap-1">
-          <label>Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
-          <input type="text" name="purchase_price" value="{{ .PurchasePriceInput }}" class="input w-full" placeholder="—" />
-        </div>
+          <div class="flex flex-col gap-1 col-span-2">
+            <label for="serial_number-{{ .ID }}">Manufacturer Serial Number</label>
+            <input id="serial_number-{{ .ID }}" type="text" name="serial_number" value="{{ .ManufacturerSerialNumber }}" maxlength="200" class="input w-full" placeholder="—" />
+          </div>
 
-        <div class="flex flex-col gap-1">
-          <label>Purchased <span class="text-base-content/40 text-xs">(optional)</span></label>
-          <input type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
-        </div>
+          <div class="flex flex-col gap-1">
+            <label for="purchase_price-{{ .ID }}">Purchase Price</label>
+            <input id="purchase_price-{{ .ID }}" type="text" name="purchase_price" value="{{ .PurchasePriceInput }}" class="input w-full" placeholder="—" />
+          </div>
 
-        <div class="flex flex-col gap-1">
-          <label>Next Inspection <span class="text-base-content/40 text-xs">(optional)</span></label>
-          <input type="date" name="next_inspection_at" value="{{ .NextInspectionAtInput }}" class="input w-full" />
-        </div>
+          <div class="flex flex-col gap-1">
+            <label for="purchased_at-{{ .ID }}">Purchased</label>
+            <input id="purchased_at-{{ .ID }}" type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
+          </div>
 
-        <div class="flex flex-col gap-1">
-          <label>Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
-          <textarea name="notes" maxlength="1000" class="textarea w-full" placeholder="—">{{ .Notes }}</textarea>
+          <div class="flex flex-col gap-1 col-span-2">
+            <label for="next_inspection_at-{{ .ID }}">Next Inspection</label>
+            <input id="next_inspection_at-{{ .ID }}" type="date" name="next_inspection_at" value="{{ .NextInspectionAtInput }}" class="input w-full" />
+          </div>
+
+          <div class="flex flex-col gap-1 col-span-2">
+            <label for="notes-{{ .ID }}">Notes</label>
+            <textarea id="notes-{{ .ID }}" name="notes" maxlength="1000" class="textarea w-full" placeholder="—">{{ .Notes }}</textarea>
+          </div>
+
         </div>
 
       </form>
@@ -172,5 +206,4 @@
   {{ end }}
 
 </div>
-
 {{ end }}

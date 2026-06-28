@@ -197,7 +197,7 @@ SELECT
     created_at
 FROM equipment_serialized_items
 WHERE equipment_id = ?
-ORDER BY serial_number ASC
+ORDER BY created_at ASC
 `
 
 type ListByEquipmentIDRow struct {
@@ -289,5 +289,23 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
 		arg.ManufacturerSerial,
 		arg.ID,
 	)
+	return err
+}
+
+const updateNextInspectionAt = `-- name: UpdateNextInspectionAt :exec
+UPDATE equipment_serialized_items
+SET
+    next_inspection_at = ?1,
+    updated_at = unixepoch()
+WHERE id = ?2
+`
+
+type UpdateNextInspectionAtParams struct {
+	NextInspectionAt sql.NullInt64
+	ID               string
+}
+
+func (q *Queries) UpdateNextInspectionAt(ctx context.Context, arg UpdateNextInspectionAtParams) error {
+	_, err := q.db.ExecContext(ctx, updateNextInspectionAt, arg.NextInspectionAt, arg.ID)
 	return err
 }

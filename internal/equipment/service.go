@@ -241,6 +241,14 @@ func (s *Service) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	return nil
 }
 
+// BulkUpdateNextInspection sets the next inspection date for multiple units.
+func (s *Service) BulkUpdateNextInspection(ctx context.Context, unitIDs []string, nextInspectionAt *int64) error {
+	if err := s.repo.BulkUpdateNextInspection(ctx, unitIDs, nextInspectionAt); err != nil {
+		return fmt.Errorf("BulkUpdateNextInspection: %w", err)
+	}
+	return nil
+}
+
 // DeleteUnit removes a unit from the serialized inventory item.
 func (s *Service) DeleteUnit(ctx context.Context, unitID string) error {
 	if err := s.repo.DeleteUnit(ctx, unitID); err != nil {

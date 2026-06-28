@@ -95,7 +95,13 @@
               <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a>
             </span>
           </td>
-          <td class="w-4 text-right">{{ .TotalStock }}</td>
+          <td class="w-4 text-right">
+            {{ if eq .Type.Label "Serialized" }}
+              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="link link-hover">{{ .TotalStock }}</a>
+            {{ else }}
+              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}#total_stock" class="link link-hover">{{ .TotalStock }}</a>
+            {{ end }}
+          </td>
         </tr>
         {{ end }}
       </tbody>

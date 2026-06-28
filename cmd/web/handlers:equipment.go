@@ -336,7 +336,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"#save", http.StatusSeeOther)
 	return nil
 }
 
@@ -363,7 +363,7 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/properties", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/properties#save", http.StatusSeeOther)
 	return nil
 }
 
@@ -436,7 +436,7 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/pricing", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/pricing#save", http.StatusSeeOther)
 	return nil
 }
 
@@ -535,6 +535,37 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 	return nil
 }
 
+func (app *application) postEquipmentBulkUpdateInspection(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	if err := r.ParseForm(); err != nil {
+		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	unitIDs := r.PostForm["unit_ids"]
+	if len(unitIDs) == 0 {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+		return nil
+	}
+
+	var nextInspectionAt *int64
+	if s := strings.TrimSpace(r.PostForm.Get("next_inspection_at")); s != "" {
+		if t, err := time.Parse("2006-01-02", s); err == nil {
+			v := t.UTC().Unix()
+			nextInspectionAt = &v
+		}
+	}
+
+	if err := app.services.equipment.BulkUpdateNextInspection(ctx, unitIDs, nextInspectionAt); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to update units.", Code: http.StatusInternalServerError}
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+	return nil
+}
+
 func (app *application) postDeleteEquipmentUnit(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
@@ -621,6 +652,46 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 	png, err := barcodes.QR(content)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
+	}
+
+	filename := unitQRFilename(item.Name, content)
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Cache-Control", "no-store")
+	if _, err := w.Write(png); err != nil { //nolint:gosec // png bytes are generated internally, not from user input
+		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+	}
+	return nil
+}
+
+func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	itemID := r.PathValue("id")
+	unitID := r.PathValue("unit_id")
+
+	item, err := app.services.equipment.GetByID(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+	}
+
+	unit, err := app.services.equipment.GetUnit(ctx, unitID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
+	}
+
+	content := unit.Code
+	if content == "" {
+		content = unit.SerialNumber
+	}
+	png, err := barcodes.Code128(content)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to generate barcode.", Code: http.StatusInternalServerError}
 	}
 
 	filename := unitQRFilename(item.Name, content)

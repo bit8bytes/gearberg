@@ -73,7 +73,7 @@ SELECT
     created_at
 FROM equipment_serialized_items
 WHERE equipment_id = ?
-ORDER BY serial_number ASC;
+ORDER BY created_at ASC;
 
 -- name: Update :exec
 UPDATE equipment_serialized_items
@@ -85,6 +85,13 @@ SET
     purchased_at = sqlc.arg(purchased_at),
     next_inspection_at = sqlc.arg(next_inspection_at),
     manufacturer_serial = sqlc.arg(manufacturer_serial),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);
+
+-- name: UpdateNextInspectionAt :exec
+UPDATE equipment_serialized_items
+SET
+    next_inspection_at = sqlc.arg(next_inspection_at),
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);
 

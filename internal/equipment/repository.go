@@ -525,6 +525,19 @@ func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	return nil
 }
 
+// BulkUpdateNextInspection sets next_inspection_at for each of the given unit IDs.
+func (r *Repository) BulkUpdateNextInspection(ctx context.Context, ids []string, nextInspectionAt *int64) error {
+	for _, id := range ids {
+		if err := r.serializedItems.UpdateNextInspectionAt(ctx, genserialized.UpdateNextInspectionAtParams{
+			NextInspectionAt: database.NullInt64Ptr(nextInspectionAt),
+			ID:               id,
+		}); err != nil {
+			return fmt.Errorf("BulkUpdateNextInspection: %w", database.NormalizeError(err))
+		}
+	}
+	return nil
+}
+
 // DeleteUnit removes a serialized unit by ID.
 func (r *Repository) DeleteUnit(ctx context.Context, id string) error {
 	if err := r.serializedItems.Delete(ctx, id); err != nil {

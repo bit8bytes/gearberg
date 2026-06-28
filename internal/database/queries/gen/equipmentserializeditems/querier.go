@@ -14,6 +14,7 @@ type Querier interface {
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)
 	ListByEquipmentID(ctx context.Context, equipmentID string) ([]ListByEquipmentIDRow, error)
 	Update(ctx context.Context, arg UpdateParams) error
+	UpdateNextInspectionAt(ctx context.Context, arg UpdateNextInspectionAtParams) error
 }
 
 var _ Querier = (*Queries)(nil)

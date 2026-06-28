@@ -50,7 +50,7 @@
       </div>
     </fieldset>
 
-    <div class="flex gap-2">
+    <div id="save" class="flex gap-2">
       <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" class="btn btn-primary" data-loading-trigger>
         {{ template "loading-spinner" . }}
         Save
