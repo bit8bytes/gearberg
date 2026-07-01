@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'wiki/**'
+
+jobs:
+  # Runs on PRs only to validate the build.
+  # nixos/web.nix uses buildGoModule which compiles the Go binary (no separate build job needed)
+  # and runs `go test -short` via doCheck = true (no separate test job needed).
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix', '**/*.go') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5368709120  # 5 GB
+
+      - name: Build NixOS configuration
+        run: nix build
