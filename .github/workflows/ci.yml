@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - 'README.md'
       - 'wiki/**'
+  workflow_dispatch:
 
 jobs:
   # Runs on PRs only to validate the build.
