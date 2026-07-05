@@ -23,6 +23,7 @@ CREATE TABLE equipment (
   voltage_v INTEGER,
   current_ma INTEGER,
   power_mw INTEGER,
+  wire_gauge_mm2_x100 INTEGER,
   updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 ) STRICT;

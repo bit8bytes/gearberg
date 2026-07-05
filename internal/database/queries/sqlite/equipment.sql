@@ -104,7 +104,8 @@ INSERT INTO equipment (
     depth_mm,
     voltage_v,
     current_ma,
-    power_mw
+    power_mw,
+    wire_gauge_mm2_x100
 ) VALUES (
     sqlc.arg(id),
     sqlc.arg(org_id),
@@ -126,7 +127,8 @@ INSERT INTO equipment (
     sqlc.arg(depth_mm),
     sqlc.arg(voltage_v),
     sqlc.arg(current_ma),
-    sqlc.arg(power_mw)
+    sqlc.arg(power_mw),
+    sqlc.arg(wire_gauge_mm2_x100)
 ) RETURNING
     id,
     org_id,
@@ -150,6 +152,7 @@ INSERT INTO equipment (
     voltage_v,
     current_ma,
     power_mw,
+    wire_gauge_mm2_x100,
     created_at;
 
 -- name: GetByID :one
@@ -184,6 +187,7 @@ SELECT
     e.voltage_v,
     e.current_ma,
     e.power_mw,
+    e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at
 FROM equipment e
@@ -221,6 +225,7 @@ SET
     voltage_v = sqlc.arg(voltage_v),
     current_ma = sqlc.arg(current_ma),
     power_mw = sqlc.arg(power_mw),
+    wire_gauge_mm2_x100 = sqlc.arg(wire_gauge_mm2_x100),
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);
 
@@ -241,6 +246,8 @@ SELECT
     e.category_id,
     COALESCE(ec.name, '') AS category_name,
     e.manufacturer_id,
+    e.location_id,
+    COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.equipment_type_id,
     COALESCE(et.name, '') AS equipment_type_name,
@@ -256,10 +263,19 @@ SELECT
     e.rental_price,
     e.resale_price,
     e.notes,
+    e.weight_g,
+    e.width_mm,
+    e.height_mm,
+    e.depth_mm,
+    e.voltage_v,
+    e.current_ma,
+    e.power_mw,
+    e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
+LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?

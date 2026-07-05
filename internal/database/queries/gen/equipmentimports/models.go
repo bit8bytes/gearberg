@@ -36,6 +36,7 @@ type EquipmentImport struct {
 	VoltageV            string
 	CurrentMa           string
 	PowerMw             string
+	WireGaugeMm2X100    string
 	Quantity            string
 	PurchasePrice       string
 	PurchasedAt         string

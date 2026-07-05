@@ -89,6 +89,7 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 			VoltageV:         raw.VoltageV,
 			CurrentMa:        raw.CurrentMa,
 			PowerMw:          raw.PowerMw,
+			WireGaugeMM2X100: raw.WireGaugeMM2X100,
 			Quantity:         raw.Quantity,
 		}
 
@@ -256,23 +257,24 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 
 	itemID := ksuid.New().String()
 	base := equipment.Base{
-		ID:             itemID,
-		OrgID:          row.OrgID,
-		UsageTypeID:    usageType.ID(),
-		Name:           row.Name,
-		CategoryID:     catID,
-		ManufacturerID: mfrID,
-		LocationID:     locID,
-		PurchasePrice:  parseCents(row.ResalePrice),
-		RentalPrice:    parseCents(row.RentalPrice),
-		Notes:          row.Notes,
-		WeightG:        parseOptionalInt64(row.WeightG),
-		WidthMM:        parseOptionalInt64(row.WidthMm),
-		HeightMM:       parseOptionalInt64(row.HeightMm),
-		DepthMM:        parseOptionalInt64(row.DepthMm),
-		PowerMW:        parseOptionalInt64(row.PowerMw),
-		CurrentMA:      parseOptionalInt64(row.CurrentMa),
-		VoltageV:       parseOptionalInt64(row.VoltageV),
+		ID:               itemID,
+		OrgID:            row.OrgID,
+		UsageTypeID:      usageType.ID(),
+		Name:             row.Name,
+		CategoryID:       catID,
+		ManufacturerID:   mfrID,
+		LocationID:       locID,
+		PurchasePrice:    parseCents(row.ResalePrice),
+		RentalPrice:      parseCents(row.RentalPrice),
+		Notes:            row.Notes,
+		WeightG:          parseOptionalInt64(row.WeightG),
+		WidthMM:          parseOptionalInt64(row.WidthMm),
+		HeightMM:         parseOptionalInt64(row.HeightMm),
+		DepthMM:          parseOptionalInt64(row.DepthMm),
+		PowerMW:          parseOptionalInt64(row.PowerMw),
+		CurrentMA:        parseOptionalInt64(row.CurrentMa),
+		VoltageV:         parseOptionalInt64(row.VoltageV),
+		WireGaugeMM2X100: parseOptionalInt64(row.WireGaugeMM2X100),
 	}
 
 	if !strings.EqualFold(row.TypeLabel, "serialized") {

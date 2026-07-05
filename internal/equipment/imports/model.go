@@ -42,6 +42,7 @@ type Row struct {
 	VoltageV            string
 	CurrentMa           string
 	PowerMw             string
+	WireGaugeMM2X100    string
 	Quantity            string
 	PurchasePrice       string
 	PurchasedAt         string
@@ -69,6 +70,7 @@ type RawRow struct {
 	VoltageV         string
 	CurrentMa        string
 	PowerMw          string
+	WireGaugeMM2X100 string
 	Quantity         string
 }
 
@@ -77,5 +79,6 @@ var ExpectedHeaders = []string{
 	"Name", "Type", "Usage", "Category", "Manufacturer", "Location",
 	"Rental Price", "Resale Price", "Notes",
 	"Weight (g)", "Width (mm)", "Height (mm)", "Depth (mm)", "Voltage (V)", "Current (mA)", "Power (mW)",
+	"Wire Gauge (mm² ×100)",
 	"Quantity",
 }

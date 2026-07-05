@@ -37,13 +37,14 @@ type PricingForm struct {
 
 // PropertiesForm holds parsed input and validation state for the properties tab.
 type PropertiesForm struct {
-	WeightG  string
-	WidthMM  string
-	HeightMM string
-	DepthMM  string
-	VoltageV string // user enters volts; stored as volts (integer)
-	PowerW   string // user enters watts; stored as milliwatts
-	CurrentA string // user enters amps; stored as milliamps
+	WeightG          string
+	WidthMM          string
+	HeightMM         string
+	DepthMM          string
+	VoltageV         string // user enters volts; stored as volts (integer)
+	PowerW           string // user enters watts; stored as milliwatts
+	CurrentA         string // user enters amps; stored as milliamps
+	WireGaugeMM2X100 string // user enters mm²×100 e.g. 150 = 1.5 mm²
 	validator.Validator
 }
 
@@ -92,13 +93,14 @@ func ParseProperties(r *http.Request) (PropertiesForm, error) {
 		return PropertiesForm{}, fmt.Errorf("parse form: %w", err)
 	}
 	return PropertiesForm{
-		WeightG:  strings.TrimSpace(r.PostForm.Get("weight_g")),
-		WidthMM:  strings.TrimSpace(r.PostForm.Get("width_mm")),
-		HeightMM: strings.TrimSpace(r.PostForm.Get("height_mm")),
-		DepthMM:  strings.TrimSpace(r.PostForm.Get("depth_mm")),
-		VoltageV: strings.TrimSpace(r.PostForm.Get("voltage_v")),
-		PowerW:   strings.TrimSpace(r.PostForm.Get("power_w")),
-		CurrentA: strings.TrimSpace(r.PostForm.Get("current_a")),
+		WeightG:          strings.TrimSpace(r.PostForm.Get("weight_g")),
+		WidthMM:          strings.TrimSpace(r.PostForm.Get("width_mm")),
+		HeightMM:         strings.TrimSpace(r.PostForm.Get("height_mm")),
+		DepthMM:          strings.TrimSpace(r.PostForm.Get("depth_mm")),
+		VoltageV:         strings.TrimSpace(r.PostForm.Get("voltage_v")),
+		PowerW:           strings.TrimSpace(r.PostForm.Get("power_w")),
+		CurrentA:         strings.TrimSpace(r.PostForm.Get("current_a")),
+		WireGaugeMM2X100: strings.TrimSpace(r.PostForm.Get("wire_gauge_mm2_x100")),
 	}, nil
 }
 
@@ -204,6 +206,11 @@ func (f *PropertiesForm) PowerMW() *int64 { return parseOptionalWattsToMW(f.Powe
 
 // CurrentMA converts the user-entered amps string to milliamps, or nil when blank.
 func (f *PropertiesForm) CurrentMA() *int64 { return parseOptionalAmpsToMA(f.CurrentA) }
+
+// WireGaugeMM2X100Int64 returns wire_gauge_mm2_x100 as *int64 (nil when blank).
+func (f *PropertiesForm) WireGaugeMM2X100Int64() *int64 {
+	return parseOptionalInt64(f.WireGaugeMM2X100)
+}
 
 // UnitForm holds parsed input and validation state for adding or updating a serialized unit.
 type UnitForm struct {

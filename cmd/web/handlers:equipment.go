@@ -351,14 +351,15 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 	}
 
 	if err := app.services.equipment.UpdateProperties(ctx, equipment.UpdateEquipmentProperties{
-		ID:        itemID,
-		WeightG:   form.WeightGInt64(),
-		WidthMM:   form.WidthMMInt64(),
-		HeightMM:  form.HeightMMInt64(),
-		DepthMM:   form.DepthMMInt64(),
-		VoltageV:  form.VoltageVInt64(),
-		PowerMW:   form.PowerMW(),
-		CurrentMA: form.CurrentMA(),
+		ID:               itemID,
+		WeightG:          form.WeightGInt64(),
+		WidthMM:          form.WidthMMInt64(),
+		HeightMM:         form.HeightMMInt64(),
+		DepthMM:          form.DepthMMInt64(),
+		VoltageV:         form.VoltageVInt64(),
+		PowerMW:          form.PowerMW(),
+		CurrentMA:        form.CurrentMA(),
+		WireGaugeMM2X100: form.WireGaugeMM2X100Int64(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}

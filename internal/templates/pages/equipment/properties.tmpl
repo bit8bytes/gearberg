@@ -63,6 +63,12 @@
             value="{{ if .Form.CurrentA }}{{ .Form.CurrentA }}{{ else if .Data.Item }}{{ .Data.Item.CurrentAmpsInput }}{{ end }}" />
         </div>
 
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <label for="wire_gauge_mm2_x100" class="label">Wire gauge <span class="text-base-content/40 text-xs">mm² ×100</span></label>
+          <input id="wire_gauge_mm2_x100" type="number" name="wire_gauge_mm2_x100" min="0" class="input w-full"
+            value="{{ if .Form.WireGaugeMM2X100 }}{{ .Form.WireGaugeMM2X100 }}{{ else if .Data.Item }}{{ .Data.Item.WireGaugeMM2X100Input }}{{ end }}" />
+        </div>
+
       </div>
     </fieldset>
 

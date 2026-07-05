@@ -29,7 +29,7 @@ func (q *Queries) DeleteImportsByOrgID(ctx context.Context, orgID string) error 
 }
 
 const getImportRow = `-- name: GetImportRow :one
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE id = ?
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE id = ?
 `
 
 func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport, error) {
@@ -63,6 +63,7 @@ func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport,
 		&i.VoltageV,
 		&i.CurrentMa,
 		&i.PowerMw,
+		&i.WireGaugeMm2X100,
 		&i.Quantity,
 		&i.PurchasePrice,
 		&i.PurchasedAt,
@@ -102,6 +103,7 @@ INSERT INTO equipment_imports (
     voltage_v,
     current_ma,
     power_mw,
+    wire_gauge_mm2_x100,
     quantity,
     purchase_price,
     purchased_at,
@@ -113,8 +115,8 @@ INSERT INTO equipment_imports (
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
-    ?, ?, ?, ?, ?, ?
-) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark
+    ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark
 `
 
 type InsertImportRowParams struct {
@@ -144,6 +146,7 @@ type InsertImportRowParams struct {
 	VoltageV            string
 	CurrentMa           string
 	PowerMw             string
+	WireGaugeMm2X100    string
 	Quantity            string
 	PurchasePrice       string
 	PurchasedAt         string
@@ -181,6 +184,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		arg.VoltageV,
 		arg.CurrentMa,
 		arg.PowerMw,
+		arg.WireGaugeMm2X100,
 		arg.Quantity,
 		arg.PurchasePrice,
 		arg.PurchasedAt,
@@ -218,6 +222,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		&i.VoltageV,
 		&i.CurrentMa,
 		&i.PowerMw,
+		&i.WireGaugeMm2X100,
 		&i.Quantity,
 		&i.PurchasePrice,
 		&i.PurchasedAt,
@@ -230,7 +235,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 }
 
 const listImportRowsByImportID = `-- name: ListImportRowsByImportID :many
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
 `
 
 func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string) ([]EquipmentImport, error) {
@@ -270,6 +275,7 @@ func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string)
 			&i.VoltageV,
 			&i.CurrentMa,
 			&i.PowerMw,
+			&i.WireGaugeMm2X100,
 			&i.Quantity,
 			&i.PurchasePrice,
 			&i.PurchasedAt,

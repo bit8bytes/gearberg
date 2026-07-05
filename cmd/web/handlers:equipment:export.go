@@ -57,6 +57,7 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 			exportOptInt(item.VoltageV),
 			exportOptInt(item.CurrentMA),
 			exportOptInt(item.PowerMW),
+			exportOptInt(item.WireGaugeMM2X100),
 			strconv.FormatInt(item.TotalStock, 10),
 		})
 	}

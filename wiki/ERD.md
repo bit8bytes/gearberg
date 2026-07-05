@@ -164,6 +164,7 @@ erDiagram
     integer voltage_v
     integer current_ma
     integer power_mw
+    integer wire_gauge_mm2_x100
     integer created_at "NOT NULL DEFAULT unixepoch"
     integer updated_at "NOT NULL DEFAULT unixepoch"
   }

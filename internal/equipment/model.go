@@ -62,6 +62,11 @@ func (inv *Equipment) CurrentAmpsInput() string {
 // VoltageVInput returns voltage in volts as a string, or "" when nil.
 func (inv *Equipment) VoltageVInput() string { return optionalInt64Input(inv.VoltageV) }
 
+// WireGaugeMM2X100Input returns wire_gauge_mm2_x100 as a string, or "" when nil.
+func (inv *Equipment) WireGaugeMM2X100Input() string {
+	return optionalInt64Input(inv.WireGaugeMM2X100)
+}
+
 func optionalInt64Input(v *int64) string {
 	if v == nil {
 		return ""
@@ -98,6 +103,7 @@ type Equipment struct {
 	PowerMW                *int64
 	CurrentMA              *int64
 	VoltageV               *int64
+	WireGaugeMM2X100       *int64
 	InspectionIntervalDays *int64
 	CreatedAt              int64
 	UpdatedAt              int64
@@ -134,24 +140,25 @@ type PartOf struct {
 
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
-	ID             string
-	OrgID          string
-	UsageTypeID    int64
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	LocationID     *string
-	HasContent     bool
-	PurchasePrice  *int64
-	RentalPrice    *int64
-	Notes          string
-	WeightG        *int64
-	WidthMM        *int64
-	HeightMM       *int64
-	DepthMM        *int64
-	PowerMW        *int64
-	CurrentMA      *int64
-	VoltageV       *int64
+	ID               string
+	OrgID            string
+	UsageTypeID      int64
+	Name             string
+	CategoryID       string
+	ManufacturerID   string
+	LocationID       *string
+	HasContent       bool
+	PurchasePrice    *int64
+	RentalPrice      *int64
+	Notes            string
+	WeightG          *int64
+	WidthMM          *int64
+	HeightMM         *int64
+	DepthMM          *int64
+	PowerMW          *int64
+	CurrentMA        *int64
+	VoltageV         *int64
+	WireGaugeMM2X100 *int64
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
@@ -264,14 +271,15 @@ type UpdateEquipmentPricing struct {
 
 // UpdateEquipmentProperties holds the data required to update the properties tab fields.
 type UpdateEquipmentProperties struct {
-	ID        string
-	WeightG   *int64
-	WidthMM   *int64
-	HeightMM  *int64
-	DepthMM   *int64
-	VoltageV  *int64
-	PowerMW   *int64
-	CurrentMA *int64
+	ID               string
+	WeightG          *int64
+	WidthMM          *int64
+	HeightMM         *int64
+	DepthMM          *int64
+	VoltageV         *int64
+	PowerMW          *int64
+	CurrentMA        *int64
+	WireGaugeMM2X100 *int64
 }
 
 // ArchiveEquipment holds the data required to archive or unarchive an equipment item.
