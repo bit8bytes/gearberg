@@ -1,0 +1,8 @@
+{{ define "equipment-part-of" }}
+{{ if .Data.PartOf }}
+<div class="flex items-center gap-1 text-xs text-base-content/50">
+  <span>Part of:</span>
+  {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}/content" class="link">{{ $p.Name }}</a>{{ end }}
+</div>
+{{ end }}
+{{ end }}

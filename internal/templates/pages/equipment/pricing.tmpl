@@ -16,13 +16,15 @@
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="purchase_price" class="label">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
           <label class="input w-full">
-            {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+            <span hx-get="/orgs/{{ .Data.OrgID }}/currency" hx-trigger="load" hx-swap="outerHTML">{{ template "org-currency-skeleton" . }}</span>
             <input
               id="purchase_price"
-              type="text"
+              type="number"
               inputmode="decimal"
+              step="1"
+              min="0"
               name="purchase_price"
-              value="{{ if .Form.PurchasePrice }}{{ .Form.PurchasePrice }}{{ else if .Data.Item }}{{ .Data.Item.PurchasePriceInput }}{{ end }}"
+              value="{{ .Form.PurchasePrice.ToDecimal }}"
             />
           </label>
           {{ with index .Form.Errors "purchase_price" }}
@@ -33,13 +35,15 @@
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="rental_price" class="label">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
           <label class="input w-full">
-            {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
+            <span hx-get="/orgs/{{ .Data.OrgID }}/currency" hx-trigger="load" hx-swap="outerHTML">{{ template "org-currency-skeleton" . }}</span>
             <input
               id="rental_price"
-              type="text"
+              type="number"
               inputmode="decimal"
+              step="0.01"
+              min="0"
               name="rental_price"
-              value="{{ if .Form.RentalPrice }}{{ .Form.RentalPrice }}{{ else if .Data.Item }}{{ .Data.Item.RentalPriceInput }}{{ end }}"
+              value="{{ .Form.RentalPrice.ToDecimal }}"
             />
           </label>
           {{ with index .Form.Errors "rental_price" }}

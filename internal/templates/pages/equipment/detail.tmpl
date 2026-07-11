@@ -39,54 +39,36 @@
           </div>
           
           <div class="flex flex-col gap-1 md:col-span-2">
-            <label for="category_id" class="label">Category</label>
-            <select id="category_id" name="category_id" class="select w-full" {{ if not .Data.Categories }}disabled{{ end }}>
-              <option value="">Select a category</option>
-              {{ range .Data.Categories }}
-                <option value="{{ .ID }}"
-                  {{ if $.Form.CategoryID }}
-                    {{ if eq $.Form.CategoryID .ID }}selected{{ end }}
-                  {{ else if $.Data.Item }}
-                    {{ if eq $.Data.Item.CategoryID .ID }}selected{{ end }}
-                  {{ end }}
-                >{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label for="category_input" class="label">Category</label>
+            <div
+              hx-get="/orgs/{{ .Data.OrgID }}/equipment-categories{{ if .Form.CategoryID }}?selected={{ .Form.CategoryID }}{{ else if .Form.CategoryName }}?selected_name={{ .Form.CategoryName | urlquery }}{{ else if .Data.Item.CategoryID }}?selected={{ .Data.Item.CategoryID }}{{ end }}"
+              hx-trigger="load"
+              hx-swap="outerHTML">
+              {{ template "equipment-categories-skeleton" . }}
+            </div>
             {{ with index .Form.Errors "category_id" }}
               <p class="text-error text-sm">{{ . }}</p>
             {{ end }}
           </div>
 
           <div class="flex flex-col gap-1 md:col-span-2">
-            <label for="manufacturer_id" class="label">Manufacturer</label>
-            <select id="manufacturer_id" name="manufacturer_id" class="select w-full" {{ if not .Data.Manufacturers }}disabled{{ end }}>
-              <option value="">None</option>
-              {{ range .Data.Manufacturers }}
-                <option value="{{ .ID }}"
-                  {{ if $.Form.ManufacturerID }}
-                    {{ if eq $.Form.ManufacturerID .ID }}selected{{ end }}
-                  {{ else if $.Data.Item }}
-                    {{ if eq $.Data.Item.ManufacturerID .ID }}selected{{ end }}
-                  {{ end }}
-                >{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label for="manufacturer_input" class="label">Manufacturer</label>
+            <div
+              hx-get="/orgs/{{ .Data.OrgID }}/equipment-manufacturers{{ if .Form.ManufacturerID }}?selected={{ .Form.ManufacturerID }}{{ else if .Form.ManufacturerName }}?selected_name={{ .Form.ManufacturerName | urlquery }}{{ else if .Data.Item.ManufacturerID }}?selected={{ .Data.Item.ManufacturerID }}{{ end }}"
+              hx-trigger="load"
+              hx-swap="outerHTML">
+              {{ template "equipment-manufacturers-skeleton" . }}
+            </div>
           </div>
 
           <div class="flex flex-col gap-1 md:col-span-2">
-            <label for="location_id" class="label">Stock Location</label>
-            <select id="location_id" name="location_id" class="select w-full" {{ if not .Data.Locations }}disabled{{ end }}>
-              <option value="">None</option>
-              {{ range .Data.Locations }}
-                <option value="{{ .ID }}"
-                  {{ if $.Form.LocationID }}
-                    {{ if eq $.Form.LocationID .ID }}selected{{ end }}
-                  {{ else if $.Data.Item }}
-                    {{ if eq $.Data.Item.LocationID .ID }}selected{{ end }}
-                  {{ end }}
-                >{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label for="location_input" class="label">Stock Location</label>
+            <div
+              hx-get="/orgs/{{ .Data.OrgID }}/warehouse-locations{{ if .Form.LocationID }}?selected={{ .Form.LocationID }}{{ else if .Form.LocationName }}?selected_name={{ .Form.LocationName | urlquery }}{{ else if .Data.Item.LocationID }}?selected={{ .Data.Item.LocationID }}{{ end }}"
+              hx-trigger="load"
+              hx-swap="outerHTML">
+              {{ template "warehouse-locations-skeleton" . }}
+            </div>
           </div>
 
           {{ if .Data.Item }}{{ if eq .Data.Item.Type 1 }}

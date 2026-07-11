@@ -129,6 +129,23 @@ func NullInt64Ptr(v *int64) sql.NullInt64 {
 	return sql.NullInt64{Int64: *v, Valid: true}
 }
 
+// NullOf converts a pointer to any int64-backed type to sql.NullInt64.
+func NullOf[T ~int64](v *T) sql.NullInt64 {
+	if v == nil {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{Int64: int64(*v), Valid: true}
+}
+
+// NullAs converts a sql.NullInt64 to a pointer of any int64-backed type.
+func NullAs[T ~int64](n sql.NullInt64) *T {
+	if !n.Valid {
+		return nil
+	}
+	v := T(n.Int64)
+	return &v
+}
+
 // NullFloat64 converts a float64 to sql.NullFloat64, treating 0 as NULL.
 func NullFloat64(v float64) sql.NullFloat64 {
 	return sql.NullFloat64{Float64: v, Valid: v != 0}

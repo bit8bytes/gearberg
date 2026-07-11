@@ -55,10 +55,10 @@ func templateFuncs() template.FuncMap {
 	}
 }
 
-func parseTemplates() (map[string]*template.Template, error) {
+func parseTemplates() (*template.Template, map[string]*template.Template, error) {
 	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/landing.tmpl", "components/*.tmpl")
 	if err != nil {
-		return nil, fmt.Errorf("base template: %w", err)
+		return nil, nil, fmt.Errorf("base template: %w", err)
 	}
 
 	allPages := pages.All
@@ -66,11 +66,11 @@ func parseTemplates() (map[string]*template.Template, error) {
 	for _, page := range allPages {
 		t, err := pageTemplate(templates.EmbedFS, base, page)
 		if err != nil {
-			return nil, fmt.Errorf("page template %s: %w", page.File, err)
+			return nil, nil, fmt.Errorf("page template %s: %w", page.File, err)
 		}
 		tmpls[page.File] = t
 	}
-	return tmpls, nil
+	return base, tmpls, nil
 }
 
 func pageTemplate(fsys fs.FS, base *template.Template, page pages.Page) (*template.Template, error) {

@@ -1,0 +1,20 @@
+{{ define "equipment-manufacturers" }}
+<combo-box
+  class="block w-full"
+  input-id="manufacturer_input"
+  name="manufacturer_id"
+  name-new="manufacturer_name"
+  placeholder="Select or add…"
+  {{ if and (not .Data.SelectedID) .Data.SelectedName }}selected-name="{{ .Data.SelectedName }}"{{ end }}
+>
+  <template>
+    {{ range .Data.Manufacturers }}
+    <option value="{{ .ID }}"{{ if eq .ID $.Data.SelectedID }} selected{{ end }}>{{ .Name }}</option>
+    {{ end }}
+  </template>
+</combo-box>
+{{ end }}
+
+{{ define "equipment-manufacturers-skeleton" }}
+<div class="skeleton h-10 w-full rounded-md"></div>
+{{ end }}

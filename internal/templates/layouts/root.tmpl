@@ -12,6 +12,7 @@
       name="description"
       content="{{ block "description" . }}Equipment and Rental.{{ end }}"
       />
+    <meta name="htmx-config" content='{"inlineStyleNonce":"{{ .Nonce }}"}'>
     <link rel="icon" type="image/x-icon" href="/dist/images/favicon.ico" />
     {{ template "scripts" . }}
     {{ template "styles" . }}

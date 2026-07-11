@@ -17,14 +17,14 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment"
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
-	"github.com/bit8bytes/gearberg/internal/equipment/locations"
-	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/bit8bytes/gearberg/internal/storage"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/pkg/htmx"
 	"github.com/segmentio/ksuid"
 )
 
@@ -56,27 +56,20 @@ type equipmentPrintData struct {
 }
 
 type equipmentItemData struct {
-	OrgID         string
-	Item          *equipment.Equipment
-	ID            string
-	Categories    []categories.EquipmentCategory
-	Manufacturers []manufacturers.Manufacturer
-	Locations     []locations.Location
-	Currency      string
-	PartOf        []equipment.PartOf
-	ActiveTab     string
+	OrgID     string
+	Item      *equipment.Equipment
+	ID        string
+	ActiveTab string
 }
 
 type equipmentUnitsData struct {
-	OrgID      string
-	ID         string
-	ItemName   string
-	ItemCode   int64
-	Units      []equipment.Unit
-	Item       *equipment.Equipment
-	Categories []categories.EquipmentCategory
-	PartOf     []equipment.PartOf
-	ActiveTab  string
+	OrgID     string
+	ID        string
+	ItemName  string
+	ItemCode  int64
+	Units     []equipment.Unit
+	Item      *equipment.Equipment
+	ActiveTab string
 }
 
 type equipmentContentData struct {
@@ -85,16 +78,36 @@ type equipmentContentData struct {
 	Item         *equipment.Equipment
 	Content      []equipment.ContentItem
 	AllEquipment []equipment.Equipment
-	PartOf       []equipment.PartOf
 	ActiveTab    string
 }
 
-func (app *application) loadPartOf(ctx context.Context, equipmentID string) ([]equipment.PartOf, *httperr.Error) {
-	partOf, err := app.services.equipment.ListContainers(ctx, equipmentID)
-	if err != nil {
-		return nil, &httperr.Error{Error: err, Message: "Failed to load container memberships.", Code: http.StatusInternalServerError}
+type equipmentPartOfData struct {
+	OrgID  string
+	PartOf []equipment.PartOf
+}
+
+func (app *application) getEquipmentPartOfFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	itemID := r.PathValue("id")
+
+	if !htmx.IsRequest(r) {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
+		return nil
 	}
-	return partOf, nil
+
+	partOf, err := app.services.equipment.ListContainers(ctx, itemID)
+	if err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("getEquipmentPartOfFragment: %w", err),
+			Message: "Failed to load container memberships.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = equipmentPartOfData{OrgID: orgID, PartOf: partOf}
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentPartOf, tmplData)
 }
 
 func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -149,15 +162,9 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 
 func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
-
-	deps, appErr := app.loadEquipmentFormDeps(r, id)
-	if appErr != nil {
-		return appErr
-	}
-
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.NewForm{}
-	data.Data = equipmentItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+	data.Data = equipmentItemData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentNew, data)
 }
 
@@ -171,13 +178,9 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 	}
 
 	reRender := func(f *equipment.NewForm) *httperr.Error {
-		deps, appErr := app.loadEquipmentFormDeps(r, id)
-		if appErr != nil {
-			return appErr
-		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentItemData{OrgID: id, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency}
+		data.Data = equipmentItemData{OrgID: id}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentNew, data)
 	}
 
@@ -199,9 +202,9 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		ManufacturerID: form.ManufacturerID,
 		LocationID:     database.StringOrNil(form.LocationID),
 		HasContent:     form.HasContentBool(),
-		PurchasePrice:  form.PurchasePriceCents(),
-		RentalPrice:    form.RentalPriceCents(),
 		Notes:          form.Notes,
+		Pricing:        form.ToPricing(),
+		Properties:     form.ToProperties(),
 	}
 
 	eqType := equipment.TypeFromString(form.TypeID)
@@ -211,8 +214,8 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
 		Type:       eqType,
 		Base:       base,
-		TotalStock: form.CountInt64(),
-		UnitCount:  form.CountInt64(),
+		TotalStock: form.Count,
+		UnitCount:  form.Count,
 	})
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to create inventory item.", Code: http.StatusInternalServerError}
@@ -226,6 +229,32 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment", http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
+	}
+	return nil
+}
+
+func (app *application) resolveDetailsFormRefs(r *http.Request, orgID string, form *equipment.DetailsForm) *httperr.Error {
+	ctx := r.Context()
+	if form.CategoryID == "" && form.CategoryName != "" {
+		catID, err := app.services.equipmentcategories.EnsureByName(ctx, orgID, form.CategoryName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve category.", Code: http.StatusInternalServerError}
+		}
+		form.CategoryID = catID
+	}
+	if form.ManufacturerID == "" && form.ManufacturerName != "" {
+		mfrID, err := app.services.manufacturers.EnsureByName(ctx, orgID, form.ManufacturerName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
+		}
+		form.ManufacturerID = mfrID
+	}
+	if form.LocationID == "" && form.LocationName != "" {
+		locID, err := app.services.locations.EnsureByName(ctx, orgID, form.LocationName)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to resolve location.", Code: http.StatusInternalServerError}
+		}
+		form.LocationID = locID
 	}
 	return nil
 }
@@ -271,20 +300,9 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 
 	app.resolveItemURLs(item)
 
-	deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-
-	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-	if loadPartOfErr != nil {
-		return loadPartOfErr
-	}
-
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.DetailsForm{}
-	itemData := equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "details"}
-	data.Data = itemData
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "details"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
 
@@ -307,19 +325,14 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		if err != nil {
 			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 		}
-		app.resolveItemURLs(item)
-		deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-		if appErr != nil {
-			return appErr
-		}
-		partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-		if loadPartOfErr != nil {
-			return loadPartOfErr
-		}
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "details"}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "details"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
+	}
+
+	if appErr := app.resolveDetailsFormRefs(r, orgID, &form); appErr != nil {
+		return appErr
 	}
 
 	itemType := equipment.TypeFromString(form.TypeID)
@@ -331,7 +344,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		ManufacturerID: form.ManufacturerID,
 		LocationID:     form.LocationID,
 		Notes:          form.Notes,
-		TotalStock:     form.TotalStockInt64(),
+		TotalStock:     form.TotalStock,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -351,15 +364,8 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 	}
 
 	if err := app.services.equipment.UpdateProperties(ctx, equipment.UpdateEquipmentProperties{
-		ID:               itemID,
-		WeightG:          form.WeightGInt64(),
-		WidthMM:          form.WidthMMInt64(),
-		HeightMM:         form.HeightMMInt64(),
-		DepthMM:          form.DepthMMInt64(),
-		VoltageV:         form.VoltageVInt64(),
-		PowerMW:          form.PowerMW(),
-		CurrentMA:        form.CurrentMA(),
-		WireGaugeMM2X100: form.WireGaugeMM2X100Int64(),
+		ID:         itemID,
+		Properties: form.ToProperties(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -383,19 +389,10 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 
 	app.resolveItemURLs(item)
 
-	deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-
-	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-	if loadPartOfErr != nil {
-		return loadPartOfErr
-	}
-
 	data := app.html.TemplateData(r)
-	data.Form = &equipment.PricingForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "pricing"}
+	f := equipment.PricingFormFromEquipment(item)
+	data.Form = &f
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "pricing"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPricing, data)
 }
 
@@ -414,25 +411,16 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 		if err != nil {
 			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 		}
-		app.resolveItemURLs(item)
-		deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-		if appErr != nil {
-			return appErr
-		}
-		partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-		if loadPartOfErr != nil {
-			return loadPartOfErr
-		}
+
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "pricing"}
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "pricing"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentPricing, data)
 	}
 
 	if err := app.services.equipment.UpdatePricing(ctx, equipment.UpdateEquipmentPricing{
-		ID:            itemID,
-		PurchasePrice: form.PurchasePriceCents(),
-		RentalPrice:   form.RentalPriceCents(),
+		ID:      itemID,
+		Pricing: form.ToPricing(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -456,19 +444,10 @@ func (app *application) getEquipmentItemProperties(w http.ResponseWriter, r *htt
 
 	app.resolveItemURLs(item)
 
-	deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-
-	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-	if loadPartOfErr != nil {
-		return loadPartOfErr
-	}
-
 	data := app.html.TemplateData(r)
-	data.Form = &equipment.PropertiesForm{}
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, Categories: deps.Categories, Manufacturers: deps.Manufacturers, Locations: deps.Locations, Currency: deps.Currency, PartOf: partOf, ActiveTab: "properties"}
+	f := equipment.PropertiesFormFromEquipment(item)
+	data.Form = &f
+	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "properties"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentProperties, data)
 }
 
@@ -521,13 +500,13 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 
 	if err := app.services.equipment.UpdateUnit(ctx, equipment.UpdateUnit{
 		ID:                       unitID,
-		StatusID:                 form.StatusIDInt64(),
+		StatusID:                 form.StatusID,
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
 		Code:                     form.Code,
 		Notes:                    form.Notes,
-		PurchasePrice:            form.PurchasePriceCents(),
-		PurchasedAt:              form.PurchasedAtUnix(),
-		NextInspectionAt:         form.NextInspectionAtUnix(),
+		PurchasePrice:            form.PurchasePrice,
+		PurchasedAt:              form.PurchasedAt,
+		NextInspectionAt:         form.NextInspectionAt,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
 	}
@@ -601,26 +580,14 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
 	}
 
-	deps, appErr := app.loadEquipmentFormDeps(r, orgID)
-	if appErr != nil {
-		return appErr
-	}
-
-	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-	if loadPartOfErr != nil {
-		return loadPartOfErr
-	}
-
 	data := app.html.TemplateData(r)
 	data.Data = equipmentUnitsData{
-		OrgID:      orgID,
-		ID:         itemID,
-		ItemName:   item.Name,
-		Units:      units,
-		Item:       item,
-		Categories: deps.Categories,
-		PartOf:     partOf,
-		ActiveTab:  "units",
+		OrgID:     orgID,
+		ID:        itemID,
+		ItemName:  item.Name,
+		Units:     units,
+		Item:      item,
+		ActiveTab: "units",
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentUnits, data)
 }
@@ -810,35 +777,6 @@ func (app *application) resolveEquipmentURLs(items []equipment.Equipment) {
 	}
 }
 
-type equipmentFormDeps struct {
-	Categories    []categories.EquipmentCategory
-	Manufacturers []manufacturers.Manufacturer
-	Locations     []locations.Location
-	Currency      string
-}
-
-func (app *application) loadEquipmentFormDeps(r *http.Request, orgID string) (equipmentFormDeps, *httperr.Error) {
-	ctx := r.Context()
-	cats, err := app.services.equipment.ListCategories(ctx, orgID)
-	if err != nil {
-		return equipmentFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
-	}
-	mfrs, err := app.services.equipment.ListManufacturers(ctx, orgID)
-	if err != nil {
-		return equipmentFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
-	}
-	locs, err := app.services.equipment.ListLocations(ctx, orgID)
-	if err != nil {
-		return equipmentFormDeps{}, &httperr.Error{Error: err, Message: "Failed to retrieve locations.", Code: http.StatusInternalServerError}
-	}
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	currency := ""
-	if orgSettings != nil {
-		currency = orgSettings.Currency
-	}
-	return equipmentFormDeps{Categories: cats, Manufacturers: mfrs, Locations: locs, Currency: currency}, nil
-}
-
 // linkEquipmentImage associates a storage object with an inventory item.
 func (app *application) linkEquipmentImage(r *http.Request, itemID, storageObjectID string) *httperr.Error {
 	if err := app.services.equipment.SetImage(r.Context(), equipment.SetImage{
@@ -931,14 +869,9 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	}
 	app.resolveItemURLs(item)
 
-	partOf, loadPartOfErr := app.loadPartOf(ctx, itemID)
-	if loadPartOfErr != nil {
-		return loadPartOfErr
-	}
-
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.ContentForm{}
-	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf, ActiveTab: "content"}
+	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }
 
@@ -984,13 +917,12 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 			return appErr
 		}
 		app.resolveItemURLs(item)
-		partOf, _ := app.loadPartOf(ctx, itemID)
 		if extraErr != "" {
 			f.AddError("assign", extraErr)
 		}
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, PartOf: partOf, ActiveTab: "content"}
+		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
 	}
 
@@ -1011,7 +943,7 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 		ID:          ksuid.New().String(),
 		EquipmentID: itemID,
 		MemberID:    memberID,
-		Quantity:    form.QuantityInt64(),
+		Quantity:    form.Quantity,
 	})
 	if err != nil {
 		if errors.Is(err, database.ErrUniqueConstraint) {

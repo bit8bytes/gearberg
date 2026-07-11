@@ -9,12 +9,11 @@
             <li>{{ .Data.Item.Name }}</li>
           </ul>
         </div>
-        {{ if and (eq .Data.Item.Kind 1) .Data.PartOf }}
-        <div class="flex items-center gap-1 text-xs text-base-content/50">
-          <span>Part of:</span>
-          {{ range $i, $p := .Data.PartOf }}{{ if $i }}, {{ end }}<a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ $p.ID }}/content" class="link">{{ $p.Name }}</a>{{ end }}
+        <div
+          hx-get="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/part-of"
+          hx-trigger="load"
+          hx-swap="outerHTML">
         </div>
-        {{ end }}
       </div>
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>

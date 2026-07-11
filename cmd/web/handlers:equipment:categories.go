@@ -9,7 +9,9 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/pkg/htmx"
 	"github.com/segmentio/ksuid"
 )
 
@@ -17,6 +19,8 @@ type equipmentCategoriesData struct {
 	OrgID         string
 	Categories    []categories.EquipmentCategory
 	MaxCategories int
+	SelectedID    string
+	SelectedName  string
 }
 
 type equipmentCategoryData struct {
@@ -204,4 +208,30 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories", http.StatusSeeOther)
 	return nil
+}
+
+func (app *application) getEquipmentCategoriesFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	if !htmx.IsRequest(r) {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories", http.StatusSeeOther)
+		return nil
+	}
+
+	selected := r.URL.Query().Get("selected")
+	selectedName := r.URL.Query().Get("selected_name")
+
+	cats, err := app.services.equipmentcategories.GetByOrgID(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("getEquipmentCategoriesFragment: %w", err),
+			Message: "Failed to retrieve categories.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = equipmentCategoriesData{OrgID: orgID, Categories: cats, SelectedID: selected, SelectedName: selectedName}
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentCategories, tmplData)
 }

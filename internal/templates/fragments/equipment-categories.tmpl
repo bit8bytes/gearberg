@@ -1,0 +1,20 @@
+{{ define "equipment-categories" }}
+<combo-box
+  class="block w-full"
+  input-id="category_input"
+  name="category_id"
+  name-new="category_name"
+  placeholder="Select or add…"
+  {{ if and (not .Data.SelectedID) .Data.SelectedName }}selected-name="{{ .Data.SelectedName }}"{{ end }}
+>
+  <template>
+    {{ range .Data.Categories }}
+    <option value="{{ .ID }}"{{ if eq .ID $.Data.SelectedID }} selected{{ end }}>{{ .Name }}</option>
+    {{ end }}
+  </template>
+</combo-box>
+{{ end }}
+
+{{ define "equipment-categories-skeleton" }}
+<div class="skeleton h-10 w-full rounded-md"></div>
+{{ end }}

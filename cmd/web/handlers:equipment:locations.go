@@ -9,7 +9,9 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/pkg/htmx"
 	"github.com/segmentio/ksuid"
 )
 
@@ -17,6 +19,8 @@ type locationsData struct {
 	OrgID        string
 	Locations    []locations.Location
 	MaxLocations int
+	SelectedID   string
+	SelectedName string
 }
 
 type locationData struct {
@@ -191,4 +195,30 @@ func (app *application) postDeleteLocation(w http.ResponseWriter, r *http.Reques
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/locations"
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec // dest is a hard-coded path with org_id from path value.
 	return nil
+}
+
+func (app *application) getEquipmentLocationsFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	if !htmx.IsRequest(r) {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/locations", http.StatusSeeOther)
+		return nil
+	}
+
+	selected := r.URL.Query().Get("selected")
+	selectedName := r.URL.Query().Get("selected_name")
+
+	locs, err := app.services.locations.GetByOrgID(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("getEquipmentLocationsFragment: %w", err),
+			Message: "Failed to retrieve locations.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = locationsData{OrgID: orgID, Locations: locs, SelectedID: selected, SelectedName: selectedName}
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.WarehouseLocations, tmplData)
 }

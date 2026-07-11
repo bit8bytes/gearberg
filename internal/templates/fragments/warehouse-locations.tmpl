@@ -1,0 +1,20 @@
+{{ define "warehouse-locations" }}
+<combo-box
+  class="block w-full"
+  input-id="location_input"
+  name="location_id"
+  name-new="location_name"
+  placeholder="Select or add…"
+  {{ if and (not .Data.SelectedID) .Data.SelectedName }}selected-name="{{ .Data.SelectedName }}"{{ end }}
+>
+  <template>
+    {{ range .Data.Locations }}
+    <option value="{{ .ID }}"{{ if eq .ID $.Data.SelectedID }} selected{{ end }}>{{ .Name }}</option>
+    {{ end }}
+  </template>
+</combo-box>
+{{ end }}
+
+{{ define "warehouse-locations-skeleton" }}
+<div class="skeleton h-10 w-full rounded-md"></div>
+{{ end }}

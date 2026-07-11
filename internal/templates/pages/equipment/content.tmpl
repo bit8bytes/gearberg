@@ -68,7 +68,7 @@
       <tbody>
         {{ range .Data.Content }}
         <tr>
-          <td class="text-sm">{{ .MemberName }}</td>
+          <td class="text-sm hover:link"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .MemberID }}">{{ .MemberName }}</a></td>
           <td class="text-sm">{{ .Quantity }}</td>
           <td class="text-right">
             <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/content/{{ .ID }}/delete">

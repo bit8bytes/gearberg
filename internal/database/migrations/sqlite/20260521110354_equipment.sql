@@ -20,7 +20,7 @@ CREATE TABLE equipment (
   width_mm INTEGER,
   height_mm INTEGER,
   depth_mm INTEGER,
-  voltage_v INTEGER,
+  voltage_mv INTEGER,
   current_ma INTEGER,
   power_mw INTEGER,
   wire_gauge_mm2_x100 INTEGER,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -47,34 +46,20 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 			item.CategoryName,
 			mfrByID[item.ManufacturerID],
 			item.LocationName,
-			exportPrice(item.RentalPrice),
-			exportPrice(item.PurchasePrice),
+			item.Pricing.RentalPrice.ToDecimal(),
+			item.Pricing.PurchasePrice.ToDecimal(),
 			item.Notes,
-			exportOptInt(item.WeightG),
-			exportOptInt(item.WidthMM),
-			exportOptInt(item.HeightMM),
-			exportOptInt(item.DepthMM),
-			exportOptInt(item.VoltageV),
-			exportOptInt(item.CurrentMA),
-			exportOptInt(item.PowerMW),
-			exportOptInt(item.WireGaugeMM2X100),
+			item.Properties.Weight.ToKG(),
+			item.Properties.Width.ToCM(),
+			item.Properties.Height.ToCM(),
+			item.Properties.Depth.ToCM(),
+			item.Properties.Voltage.ToV(),
+			item.Properties.Current.ToA(),
+			item.Properties.Power.ToW(),
+			item.Properties.WireGauge.String(),
 			strconv.FormatInt(item.TotalStock, 10),
 		})
 	}
 	cw.Flush()
 	return nil
-}
-
-func exportPrice(v *int64) string {
-	if v == nil {
-		return ""
-	}
-	return fmt.Sprintf("%.2f", float64(*v)/100)
-}
-
-func exportOptInt(v *int64) string {
-	if v == nil {
-		return ""
-	}
-	return strconv.FormatInt(*v, 10)
 }
