@@ -10,18 +10,15 @@ import (
 
 func (app *application) routes() (http.Handler, error) {
 	mux := http.NewServeMux()
+	apiServer, err := gen.NewServer(app, gen.WithPathPrefix("/api/v1"))
+	if err != nil {
+		return nil, fmt.Errorf("routes: new api server: %w", err)
+	}
 
 	mux.HandleFunc("/", app.html.Handle(app.getNotFound))
 	mux.Handle("GET /forbidden", app.html.Handle(app.getForbidden))
 
 	mux.Handle("GET /{$}", http.RedirectHandler("/orgs", http.StatusSeeOther))
-	apiServer, err := gen.NewServer(app, gen.WithPathPrefix("/api/v1"))
-	if err != nil {
-		return nil, fmt.Errorf("routes: new api server: %w", err)
-	}
-	mux.Handle("/api/v1/", apiServer)
-	mux.Handle("GET /media/{id}", app.withLogin(app.html.Handle(app.getMedia)))
-	mux.Handle("GET /image-proxy", app.withLogin(http.HandlerFunc(app.getImageProxy)))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
@@ -36,8 +33,14 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /reset-password", app.withGuest(app.html.Handle(app.getResetPassword)))
 	mux.Handle("POST /reset-password", app.withGuest(app.html.Handle(app.postResetPassword)))
 
+	// TODO: withLogin needs to be replaced with api specific bearer tokens.
+	mux.Handle("/api/v1/", app.withLogin(apiServer))
+
 	// Signout must only be possible for logged in users.
 	mux.Handle("POST /signout", app.withLogin(app.html.Handle(app.postSignOut)))
+
+	mux.Handle("GET /media/{id}", app.withLogin(app.html.Handle(app.getMedia)))
+	mux.Handle("GET /image-proxy", app.withLogin(http.HandlerFunc(app.getImageProxy)))
 
 	// Org related actions. The account only needs to be logged in via [app.withLogin].
 	mux.Handle("GET /orgs", app.withLogin(app.html.Handle(app.getOrgs)))
