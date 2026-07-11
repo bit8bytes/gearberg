@@ -44,7 +44,7 @@ func (app *application) routes() (http.Handler, error) {
 
 	// Org related actions. The account only needs to be logged in via [app.withLogin].
 	mux.Handle("GET /orgs", app.withLogin(app.html.Handle(app.getOrgs)))
-	mux.Handle("GET /orgs/new", app.withLogin(app.withPermission(app.html.Handle(app.getOrgsNew))))
+	mux.Handle("GET /orgs/new", app.withLogin(app.html.Handle(app.getOrgsNew)))
 	mux.Handle("POST /orgs/new", app.withLogin(app.html.Handle(app.postOrgsNew)))
 
 	// For any route that includes org_id, the permissions of the account must be checked via [app.withPermission]
