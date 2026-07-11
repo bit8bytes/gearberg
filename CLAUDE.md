@@ -14,11 +14,6 @@ Run the full verification suite:
 make verify
 ```
 
-Individual checks (all must pass):
-```
-make lint
-```
-
 ## Go Code Standards
 
 1. **Error handling**: Always wrap errors with context: `fmt.Errorf("funcName: %w", err)`
@@ -28,12 +23,6 @@ make lint
 5. **Concurrency**: Use channels for communication, mutexes for state. Always run tests with `-race`.
 6. **Dependencies**: Use `internal/` for code that shouldn't be imported. Minimize third-party dependencies.
 7. **Testing**: Table-driven tests. Property-based tests for pure functions. Test app for integration tests.
-
-## Dependency Policy
-
-- All dependencies pinned to exact versions in `go.sum`
-- No deprecated packages
-- `govulncheck` must pass clean
 
 ## AI-Specific Rules
 
