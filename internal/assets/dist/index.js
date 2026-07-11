@@ -287,3 +287,17 @@ document.addEventListener("click", (e) => {
     if (tbody.querySelectorAll("tr").length === 0) addRow(tbody);
   });
 })();
+
+// Password show/hide toggle
+// Trigger: <button data-pw-toggle="<input-id>">
+document.querySelectorAll("[data-pw-toggle]").forEach((btn) => {
+  const input = document.getElementById(btn.dataset.pwToggle);
+  if (!input) return;
+  btn.addEventListener("click", function () {
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    this.textContent = isPassword ? "Hide" : "Show";
+    this.setAttribute("aria-pressed", isPassword ? "true" : "false");
+    this.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+  });
+});
