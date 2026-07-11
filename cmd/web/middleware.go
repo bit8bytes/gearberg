@@ -203,7 +203,7 @@ func (app *application) withPermission(next http.Handler) http.Handler {
 		orgID := r.PathValue("org_id")
 		session := sessions.MustFromRequest(r)
 		if err := app.services.orgs.GetMember(r.Context(), orgID, session.AccountID); err != nil {
-			http.Error(w, "Forbidden.", http.StatusForbidden)
+			http.Redirect(w, r, "/forbidden", http.StatusSeeOther)
 			return
 		}
 		next.ServeHTTP(w, r)
