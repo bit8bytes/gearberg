@@ -81,8 +81,7 @@ class ComboBox extends LitElement {
   }
 
   get _filtered() {
-    const q = this._inputValue.trim().toLowerCase();
-    return this._options.filter((o) => !q || o.label.toLowerCase().includes(q));
+    return this._options;
   }
 
   get _showCreate() {
@@ -140,6 +139,7 @@ class ComboBox extends LitElement {
           .value=${this._inputValue}
           @input=${this._onInput}
           @focus=${this._onFocus}
+          @click=${this._onClick}
           @keydown=${this._onKeydown}
           @blur=${this._onBlur}
         >
@@ -184,13 +184,17 @@ class ComboBox extends LitElement {
 
   _onInput(e) {
     this._inputValue = e.target.value;
-    this._isOpen = this._inputValue.trim().length > 0;
+    this._isOpen = this._options.length > 0 || this._inputValue.trim().length > 0;
     this._activeIndex = -1;
   }
 
   _onFocus() {
-    if (this._inputValue.trim()) {
-      this._isOpen = true;
+    this._isOpen = this._options.length > 0 || this._inputValue.trim().length > 0;
+  }
+
+  _onClick() {
+    if (!this._isOpen) {
+      this._isOpen = this._options.length > 0 || this._inputValue.trim().length > 0;
     }
   }
 
@@ -239,6 +243,11 @@ class ComboBox extends LitElement {
     if (!typed) {
       this._currentId = '';
       this._currentNewName = '';
+      return;
+    }
+    const exactMatch = this._options.find((o) => o.label.toLowerCase() === typed.toLowerCase());
+    if (exactMatch) {
+      this._selectExisting(exactMatch.value, exactMatch.label);
       return;
     }
     const matched = this._options.find((o) => o.value === this._currentId);

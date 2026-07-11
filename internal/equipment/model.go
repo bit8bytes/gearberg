@@ -7,71 +7,102 @@ import (
 	"time"
 )
 
-// PurchasePriceInput formats the purchase price as a plain decimal string for use in
-// form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
-func (inv *Equipment) PurchasePriceInput() string { return priceInput(inv.PurchasePrice) }
+// Cents is a monetary amount in the smallest currency unit (e.g. 1999 = €19.99).
+type Cents int64
 
-// RentalPriceInput formats the rental price as a plain decimal string for use in
-// form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
-func (inv *Equipment) RentalPriceInput() string { return priceInput(inv.RentalPrice) }
+// ToDecimal formats the amount as a decimal string for form inputs (e.g. 1999 → "19.99").
+// Returns "" when nil.
+func (c *Cents) ToDecimal() string {
+	if c == nil {
+		return ""
+	}
+	return fmt.Sprintf("%.2f", float64(*c)/100)
+}
 
-// priceInput formats cents as "%.2f" using dot separator. Form parsers accept both
-// dot and comma, so dot is always safe as a display format for editable inputs.
-func priceInput(v *int64) string {
+// Grams is a weight stored in grams; users enter and see kilograms.
+type Grams int64
+
+// ToKG returns the weight in kg as a string for form inputs (e.g. 1500 → "1.5"). Returns "" when nil.
+func (g *Grams) ToKG() string {
+	if g == nil {
+		return ""
+	}
+	return fmt.Sprintf("%g", float64(*g)/1000)
+}
+
+// Millimeters is a length stored in millimetres; users enter and see centimetres.
+type Millimeters int64
+
+// ToCM returns the length in cm as a string for form inputs (e.g. 100 → "10"). Returns "" when nil.
+func (m *Millimeters) ToCM() string {
+	if m == nil {
+		return ""
+	}
+	return fmt.Sprintf("%g", float64(*m)/10)
+}
+
+// Milliwatts is power stored in milliwatts; users enter and see watts.
+type Milliwatts int64
+
+// ToW returns the power in W as a string for form inputs (e.g. 1500 → "1.5"). Returns "" when nil.
+func (m *Milliwatts) ToW() string {
+	if m == nil {
+		return ""
+	}
+	return fmt.Sprintf("%g", float64(*m)/1000)
+}
+
+// Milliamps is current stored in milliamps; users enter and see amps.
+type Milliamps int64
+
+// ToA returns the current in A as a string for form inputs (e.g. 500 → "0.5"). Returns "" when nil.
+func (m *Milliamps) ToA() string {
+	if m == nil {
+		return ""
+	}
+	return fmt.Sprintf("%g", float64(*m)/1000)
+}
+
+// Millivolts is voltage stored and displayed as whole volts.
+type Millivolts int64
+
+// ToV returns the voltage as a string for form inputs. Returns "" when nil.
+func (v *Millivolts) ToV() string {
 	if v == nil {
 		return ""
 	}
-	return fmt.Sprintf("%.2f", float64(*v)/100)
+	return fmt.Sprintf("%g", float64(*v)/1000)
 }
 
-// InspectionIntervalDaysInput returns inspection interval in days as a string, or "" when nil.
-func (inv *Equipment) InspectionIntervalDaysInput() string {
-	return optionalInt64Input(inv.InspectionIntervalDays)
-}
+// WireGauge stores wire cross-section area as mm²×100 (e.g. 150 = 1.5 mm²); displayed as-is.
+type WireGauge int64
 
-// WeightGInput returns weight in grams as a string, or "" when nil.
-func (inv *Equipment) WeightGInput() string { return optionalInt64Input(inv.WeightG) }
-
-// WidthMMInput returns width in mm as a string, or "" when nil.
-func (inv *Equipment) WidthMMInput() string { return optionalInt64Input(inv.WidthMM) }
-
-// HeightMMInput returns height in mm as a string, or "" when nil.
-func (inv *Equipment) HeightMMInput() string { return optionalInt64Input(inv.HeightMM) }
-
-// DepthMMInput returns depth in mm as a string, or "" when nil.
-func (inv *Equipment) DepthMMInput() string { return optionalInt64Input(inv.DepthMM) }
-
-// PowerWattsInput converts milliwatts to watts for display (e.g. 500000 → "500"). Returns "" when nil.
-func (inv *Equipment) PowerWattsInput() string {
-	if inv.PowerMW == nil {
+// String returns the raw mm²×100 value as a string for form inputs. Returns "" when nil.
+func (w *WireGauge) String() string {
+	if w == nil {
 		return ""
 	}
-	w := float64(*inv.PowerMW) / 1000
-	return fmt.Sprintf("%g", w)
+	return fmt.Sprintf("%d", *w)
 }
 
-// CurrentAmpsInput converts milliamps to amps for display (e.g. 1500 → "1.5"). Returns "" when nil.
-func (inv *Equipment) CurrentAmpsInput() string {
-	if inv.CurrentMA == nil {
-		return ""
-	}
-	a := float64(*inv.CurrentMA) / 1000
-	return fmt.Sprintf("%g", a)
+// Properties holds the physical specification fields shown on the Properties tab.
+// Adding a new physical property field only requires updating this struct,
+// the mapper functions in mapping.go, and PropertiesForm in form.go.
+type Properties struct {
+	Weight    *Grams
+	Width     *Millimeters
+	Height    *Millimeters
+	Depth     *Millimeters
+	Power     *Milliwatts
+	Current   *Milliamps
+	Voltage   *Millivolts
+	WireGauge *WireGauge
 }
 
-// VoltageVInput returns voltage in volts as a string, or "" when nil.
-func (inv *Equipment) VoltageVInput() string { return optionalInt64Input(inv.VoltageV) }
-
-// WireGaugeMM2X100Input returns wire_gauge_mm2_x100 as a string, or "" when nil.
-func (inv *Equipment) WireGaugeMM2X100Input() string {
-	return optionalInt64Input(inv.WireGaugeMM2X100)
-}
-
-func optionalInt64Input(v *int64) string {
-	if v == nil {
-		return ""
-	}
-	return fmt.Sprintf("%d", *v)
+// Pricing holds the price fields shown on the Pricing tab.
+type Pricing struct {
+	PurchasePrice *Cents
+	RentalPrice   *Cents
 }
 
 // Equipment represents a single inventory item.
@@ -93,18 +124,10 @@ type Equipment struct {
 	ContentCount           int64
 	HasContent             bool
 	IsArchived             bool
-	PurchasePrice          *int64
-	RentalPrice            *int64
 	Notes                  string
-	WeightG                *int64
-	WidthMM                *int64
-	HeightMM               *int64
-	DepthMM                *int64
-	PowerMW                *int64
-	CurrentMA              *int64
-	VoltageV               *int64
-	WireGaugeMM2X100       *int64
 	InspectionIntervalDays *int64
+	Pricing                Pricing
+	Properties             Properties
 	CreatedAt              int64
 	UpdatedAt              int64
 }
@@ -140,25 +163,17 @@ type PartOf struct {
 
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
-	ID               string
-	OrgID            string
-	UsageTypeID      int64
-	Name             string
-	CategoryID       string
-	ManufacturerID   string
-	LocationID       *string
-	HasContent       bool
-	PurchasePrice    *int64
-	RentalPrice      *int64
-	Notes            string
-	WeightG          *int64
-	WidthMM          *int64
-	HeightMM         *int64
-	DepthMM          *int64
-	PowerMW          *int64
-	CurrentMA        *int64
-	VoltageV         *int64
-	WireGaugeMM2X100 *int64
+	ID             string
+	OrgID          string
+	UsageTypeID    int64
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	LocationID     *string
+	HasContent     bool
+	Notes          string
+	Pricing        Pricing
+	Properties     Properties
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
@@ -201,16 +216,12 @@ type Unit struct {
 	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
-	PurchasePrice            *int64
+	PurchasePrice            *Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
 	CreatedAt                int64
 	UpdatedAt                int64
 }
-
-// PurchasePriceInput formats the purchase price as a plain decimal string for use in
-// form inputs (e.g. 1999 → "19.99"). Returns "" when nil.
-func (u *Unit) PurchasePriceInput() string { return priceInput(u.PurchasePrice) }
 
 // PurchasedAtInput formats the purchased_at timestamp as "YYYY-MM-DD" for use in
 // a date input. Returns "" when nil.
@@ -264,22 +275,14 @@ type UpdateEquipmentDetails struct {
 
 // UpdateEquipmentPricing holds the data required to update the pricing tab fields.
 type UpdateEquipmentPricing struct {
-	ID            string
-	PurchasePrice *int64
-	RentalPrice   *int64
+	ID      string
+	Pricing Pricing
 }
 
 // UpdateEquipmentProperties holds the data required to update the properties tab fields.
 type UpdateEquipmentProperties struct {
-	ID               string
-	WeightG          *int64
-	WidthMM          *int64
-	HeightMM         *int64
-	DepthMM          *int64
-	VoltageV         *int64
-	PowerMW          *int64
-	CurrentMA        *int64
-	WireGaugeMM2X100 *int64
+	ID         string
+	Properties Properties
 }
 
 // ArchiveEquipment holds the data required to archive or unarchive an equipment item.
@@ -327,7 +330,7 @@ type UpdateUnit struct {
 	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
-	PurchasePrice            *int64
+	PurchasePrice            *Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
 }

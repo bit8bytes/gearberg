@@ -49,11 +49,14 @@
         <span class="opacity-50">%</span>
         <input
           id="vat_rate"
-          type="text"
+          type="number"
           inputmode="decimal"
+          min="0"
+          max="100"
+          step="1"
           name="vat_rate"
           value="{{ if .Data.Settings }}{{ .Data.Settings.VatRatePercent }}{{ else }}{{ .Form.VatRate }}{{ end }}"
-          placeholder="e.g. 19"
+          placeholder="19"
         />
       </label>
       {{ with index .Form.Errors "vat_rate" }}

@@ -63,7 +63,7 @@ func (app *application) postEquipmentImport(w http.ResponseWriter, r *http.Reque
 
 	rawRows, parseErr := parseImportCSV(f)
 	if parseErr != "" {
-		return reRender("Failed to parse CSV.")
+		return reRender(parseErr)
 	}
 
 	importID, err := app.services.equipmentImports.Stage(ctx, orgID, rawRows)
@@ -125,9 +125,9 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 	return nil
 }
 
-const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (g),Width (mm),Height (mm),Depth (mm),Voltage (V),Current (mA),Power (mW),Wire Gauge (mm² ×100),Quantity\n" +
-	"Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,298,47,47,162,,,,,7\n" +
-	"Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,900,220,220,95,5,2400,12000,,4\n"
+const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (kg),Width (cm),Height (cm),Depth (cm),Voltage (V),Current (A),Power (W),Wire Gauge (mm² ×100),Quantity\n" +
+	"Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,0.298,4.7,4.7,16.2,,,,,7\n" +
+	"Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,0.9,22,22,9.5,5,2.4,12,,4\n"
 
 // getEquipmentImportTemplate serves a ready-to-fill CSV template for download.
 func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, _ *http.Request) *httperr.Error {
@@ -199,8 +199,8 @@ func readImportRows(cr *csv.Reader) ([]imports.RawRow, string) {
 			HeightMm:         strings.TrimSpace(record[11]),
 			DepthMm:          strings.TrimSpace(record[12]),
 			VoltageV:         strings.TrimSpace(record[13]),
-			CurrentMa:        strings.TrimSpace(record[14]),
-			PowerMw:          strings.TrimSpace(record[15]),
+			CurrentA:         strings.TrimSpace(record[14]),
+			PowerW:           strings.TrimSpace(record[15]),
 			WireGaugeMM2X100: strings.TrimSpace(record[16]),
 			Quantity:         strings.TrimSpace(record[17]),
 		})

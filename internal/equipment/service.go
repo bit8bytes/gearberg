@@ -45,9 +45,6 @@ func NewService(repo *Repository, db *sql.DB, cats CategoryLister, mfrs Manufact
 // Create creates a new inventory item, dispatching to the correct path based on type.
 // Serialized creation runs inside a transaction managed by the service.
 func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, error) {
-	if c.Type == Bulk {
-		return s.CreateBulk(ctx, CreateBulkEquipment{Base: c.Base, TotalStock: c.TotalStock})
-	}
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
 		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: serial.New()}
@@ -57,7 +54,18 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 		return nil, fmt.Errorf("Create: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	item, err := s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{Base: c.Base, Units: units})
+
+	// Both types go through the same tx path; Bulk doesn't need atomicity but a
+	// single code path is easier to maintain than two separate non-tx branches.
+	var item *Equipment
+	switch c.Type {
+	case Bulk:
+		item, err = s.repo.CreateBulk(ctx, tx, CreateBulkEquipment{Base: c.Base, TotalStock: c.TotalStock})
+	case Serialized:
+		item, err = s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{Base: c.Base, Units: units})
+	default:
+		return nil, fmt.Errorf("Create: unknown equipment type %q", c.Type)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("Create: %w", err)
 	}
@@ -97,18 +105,9 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Equipment, error) {
 	return item, nil
 }
 
-// CreateBulk creates a new bulk inventory item with an auto-assigned code.
-func (s *Service) CreateBulk(ctx context.Context, c CreateBulkEquipment) (*Equipment, error) {
-	item, err := s.repo.CreateBulk(ctx, c)
-	if err != nil {
-		return nil, fmt.Errorf("CreateBulk: %w", err)
-	}
-	return item, nil
-}
-
 // CreateBulkTx creates a new bulk inventory item within an existing transaction.
 func (s *Service) CreateBulkTx(ctx context.Context, tx *sql.Tx, c CreateBulkEquipment) (*Equipment, error) {
-	item, err := s.repo.CreateBulkTx(ctx, tx, c)
+	item, err := s.repo.CreateBulk(ctx, tx, c)
 	if err != nil {
 		return nil, fmt.Errorf("CreateBulkTx: %w", err)
 	}

@@ -36,13 +36,14 @@ type TemplateData struct {
 // HTML renders HTML responses and adapts httperr.HandlerFunc into standard http.HandlerFunc.
 type HTML struct {
 	logger   *slog.Logger
+	base     *template.Template
 	cache    map[string]*template.Template
 	revision string
 }
 
 // New returns a Renderer backed by the given logger, template cache, and revision string.
-func New(logger *slog.Logger, cache map[string]*template.Template, revision string) *HTML {
-	return &HTML{logger: logger, cache: cache, revision: revision}
+func New(logger *slog.Logger, base *template.Template, cache map[string]*template.Template, revision string) *HTML {
+	return &HTML{logger: logger, base: base, cache: cache, revision: revision}
 }
 
 // Handle adapts an httperr.HandlerFunc into a standard http.HandlerFunc. When the handler
@@ -84,6 +85,31 @@ func (rnd *HTML) Render(w http.ResponseWriter, _ *http.Request, status int, page
 		return &httperr.Error{
 			Error:   fmt.Errorf("render: %w", err),
 			Message: "Failed to render page.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+
+	if _, err := buffer.WriteTo(w); err != nil {
+		return &httperr.Error{
+			Error:   err,
+			Message: "Failed to write response.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+	return nil
+}
+
+// RenderFragment executes a named fragment block directly from the base template,
+// returning only the fragment HTML with no surrounding page shell.
+func (rnd *HTML) RenderFragment(w http.ResponseWriter, _ *http.Request, status int, name string, data any) *httperr.Error {
+	buffer := new(bytes.Buffer)
+	if err := rnd.base.ExecuteTemplate(buffer, name, data); err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("render fragment %q: %w", name, err),
+			Message: "Failed to render fragment.",
 			Code:    http.StatusInternalServerError,
 		}
 	}

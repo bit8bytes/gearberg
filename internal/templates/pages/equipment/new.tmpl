@@ -45,8 +45,8 @@
               <div class="flex flex-col gap-1 md:col-span-2">
                 <label for="rental_price" class="label">Rental Price <span class="text-base-content/40 text-xs">(optional)</span></label>
                 <label class="input w-full">
-                  {{ if .Data.Currency }}<span class="opacity-50">{{ .Data.Currency }}</span>{{ end }}
-                  <input id="rental_price" type="text" inputmode="decimal" name="rental_price" value="{{ .Form.RentalPrice }}" />
+                  <span hx-get="/orgs/{{ .Data.OrgID }}/currency" hx-trigger="load" hx-swap="outerHTML">{{ template "org-currency-skeleton" . }}</span>
+                  <input id="rental_price" type="number" inputmode="decimal" step="0.01" min="0" name="rental_price" value="{{ .Form.RentalPrice.ToDecimal }}" />
                 </label>
                 {{ with index .Form.Errors "rental_price" }}
                   <p class="text-red-500 text-sm">{{ . }}</p>
@@ -55,25 +55,35 @@
 
               <div class="flex flex-col gap-1 md:col-span-2">
                 <label for="category_input" class="label">Category <span class="text-base-content/40 text-xs">(optional)</span></label>
-                <combo-box
-                  class="block w-full"
-                  input-id="category_input"
-                  name="category_id"
-                  name-new="category_name"
-                  placeholder="Search or add…"
-                  {{ if and (eq .Form.CategoryID "") .Form.CategoryName }}selected-name="{{ .Form.CategoryName }}"{{ end }}
-                >
-                  <template>
-                    {{ range .Data.Categories }}
-                      <option value="{{ .ID }}"{{ if eq .ID $.Form.CategoryID }} selected{{ end }}>
-                        {{ .Name }}
-                      </option>
-                    {{ end }}
-                  </template>
-                </combo-box>
+                <div
+                  hx-get="/orgs/{{ .Data.OrgID }}/equipment-categories{{ if .Form.CategoryID }}?selected={{ .Form.CategoryID }}{{ else if .Form.CategoryName }}?selected_name={{ .Form.CategoryName | urlquery }}{{ end }}"
+                  hx-trigger="load"
+                  hx-swap="outerHTML">
+                  {{ template "equipment-categories-skeleton" . }}
+                </div>
                 {{ with index .Form.Errors "category_id" }}
                   <p class="text-red-500 text-sm">{{ . }}</p>
                 {{ end }}
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="manufacturer_input" class="label">Manufacturer <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <div
+                  hx-get="/orgs/{{ .Data.OrgID }}/equipment-manufacturers{{ if .Form.ManufacturerID }}?selected={{ .Form.ManufacturerID }}{{ else if .Form.ManufacturerName }}?selected_name={{ .Form.ManufacturerName | urlquery }}{{ end }}"
+                  hx-trigger="load"
+                  hx-swap="outerHTML">
+                  {{ template "equipment-manufacturers-skeleton" . }}
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label for="location_input" class="label">Location <span class="text-base-content/40 text-xs">(optional)</span></label>
+                <div
+                  hx-get="/orgs/{{ .Data.OrgID }}/warehouse-locations{{ if .Form.LocationID }}?selected={{ .Form.LocationID }}{{ else if .Form.LocationName }}?selected_name={{ .Form.LocationName | urlquery }}{{ end }}"
+                  hx-trigger="load"
+                  hx-swap="outerHTML">
+                  {{ template "warehouse-locations-skeleton" . }}
+                </div>
               </div>
             </div>
 

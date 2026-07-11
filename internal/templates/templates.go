@@ -7,5 +7,5 @@ import "embed"
 
 // EmbedFS contains all template directories embedded at compile time.
 //
-//go:embed components layouts pages partials
+//go:embed components layouts pages partials fragments
 var EmbedFS embed.FS

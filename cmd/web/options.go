@@ -4,8 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"slices"
+
+	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 )
 
 type options struct {
@@ -20,6 +23,9 @@ type options struct {
 	MaxOrgManufacturers int
 	MaxOrgLocations     int
 	MaxStorageBytes     int64
+	DefaultCurrency string
+	DefaultVatRate  float64 // percentage e.g. 19.0
+	DefaultTimezone string
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
@@ -41,6 +47,9 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
+	fs.StringVar(&cfg.DefaultCurrency, "default-currency", "EUR", "default currency for new org settings (ISO-4217)")
+	fs.Float64Var(&cfg.DefaultVatRate, "default-vat-rate", 19.0, "default VAT rate for new org settings (percentage)")
+	fs.StringVar(&cfg.DefaultTimezone, "default-timezone", "Europe/Berlin", "default timezone for new org settings (IANA)")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
@@ -82,7 +91,21 @@ func (cfg *options) validate() error {
 	if cfg.MaxOrgLocations <= 0 {
 		return fmt.Errorf("max locations must be greater than 0")
 	}
+	if !slices.Contains(settings.PermittedCurrencies, cfg.DefaultCurrency) {
+		return fmt.Errorf("default-currency %q is not a permitted ISO-4217 code", cfg.DefaultCurrency)
+	}
+	if cfg.DefaultVatRate < 0 || cfg.DefaultVatRate > 100 {
+		return fmt.Errorf("default-vat-rate must be between 0 and 100")
+	}
+	if !slices.Contains(settings.PermittedTimezones, cfg.DefaultTimezone) {
+		return fmt.Errorf("default-timezone %q is not a permitted IANA timezone", cfg.DefaultTimezone)
+	}
 	return nil
+}
+
+// DefaultVatRateBasisPoints converts DefaultVatRate from a percentage to basis points (e.g. 19.0 → 1900).
+func (cfg *options) DefaultVatRateBasisPoints() int64 {
+	return int64(math.Round(cfg.DefaultVatRate * 100))
 }
 
 func parseVerifyOptions(args []string) (*options, error) {

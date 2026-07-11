@@ -42,7 +42,7 @@
         </td>
         <td>{{ .CategoryName }}</td>
         <td>{{ .TotalStock }}</td>
-        <td>{{ .RentalPriceInput }}</td>
+        <td>{{ .Pricing.RentalPrice.ToDecimal }}</td>
       </tr>
       {{ end }}
     </tbody>

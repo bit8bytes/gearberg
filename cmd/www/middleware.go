@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/nonce"
-	"github.com/bit8bytes/gearberg/internal/tokens"
 	"github.com/bit8bytes/gearberg/internal/trace"
+	"github.com/bit8bytes/gearberg/pkg/tokens"
 )
 
 func withTrace(next http.Handler) http.Handler {

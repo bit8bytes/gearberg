@@ -8,6 +8,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/orgs"
+	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/segmentio/ksuid"
@@ -80,6 +81,21 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 		return &httperr.Error{
 			Error:   err,
 			Message: "Failed to create org.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	_, err = app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{
+		ID:       ksuid.New().String(),
+		OrgID:    org.ID,
+		Currency: app.options.DefaultCurrency,
+		VatRate:  app.options.DefaultVatRateBasisPoints(),
+		Timezone: app.options.DefaultTimezone,
+	})
+	if err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("postOrgsNew: seed default settings: %w", err),
+			Message: "Failed to initialise org settings.",
 			Code:    http.StatusInternalServerError,
 		}
 	}

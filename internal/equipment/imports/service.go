@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math"
-	"strconv"
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
@@ -87,8 +85,8 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 			HeightMm:         raw.HeightMm,
 			DepthMm:          raw.DepthMm,
 			VoltageV:         raw.VoltageV,
-			CurrentMa:        raw.CurrentMa,
-			PowerMw:          raw.PowerMw,
+			CurrentMa:        raw.CurrentA,
+			PowerMw:          raw.PowerW,
 			WireGaugeMM2X100: raw.WireGaugeMM2X100,
 			Quantity:         raw.Quantity,
 		}
@@ -257,37 +255,41 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 
 	itemID := ksuid.New().String()
 	base := equipment.Base{
-		ID:               itemID,
-		OrgID:            row.OrgID,
-		UsageTypeID:      usageType.ID(),
-		Name:             row.Name,
-		CategoryID:       catID,
-		ManufacturerID:   mfrID,
-		LocationID:       locID,
-		PurchasePrice:    parseCents(row.ResalePrice),
-		RentalPrice:      parseCents(row.RentalPrice),
-		Notes:            row.Notes,
-		WeightG:          parseOptionalInt64(row.WeightG),
-		WidthMM:          parseOptionalInt64(row.WidthMm),
-		HeightMM:         parseOptionalInt64(row.HeightMm),
-		DepthMM:          parseOptionalInt64(row.DepthMm),
-		PowerMW:          parseOptionalInt64(row.PowerMw),
-		CurrentMA:        parseOptionalInt64(row.CurrentMa),
-		VoltageV:         parseOptionalInt64(row.VoltageV),
-		WireGaugeMM2X100: parseOptionalInt64(row.WireGaugeMM2X100),
+		ID:             itemID,
+		OrgID:          row.OrgID,
+		UsageTypeID:    usageType.ID(),
+		Name:           row.Name,
+		CategoryID:     catID,
+		ManufacturerID: mfrID,
+		LocationID:     locID,
+		Notes:          row.Notes,
+		Pricing: equipment.Pricing{
+			PurchasePrice: equipment.ParseCents(row.ResalePrice),
+			RentalPrice:   equipment.ParseCents(row.RentalPrice),
+		},
+		Properties: equipment.Properties{
+			Weight:    equipment.ParseGrams(row.WeightG),
+			Width:     equipment.ParseMillimeters(row.WidthMm),
+			Height:    equipment.ParseMillimeters(row.HeightMm),
+			Depth:     equipment.ParseMillimeters(row.DepthMm),
+			Power:     equipment.ParseMilliwatts(row.PowerMw),
+			Current:   equipment.ParseMilliamps(row.CurrentMa),
+			Voltage:   equipment.ParseVolts(row.VoltageV),
+			WireGauge: equipment.ParseWireGauge(row.WireGaugeMM2X100),
+		},
 	}
 
 	if !strings.EqualFold(row.TypeLabel, "serialized") {
 		if _, err := s.inventory.CreateBulkTx(ctx, tx, equipment.CreateBulkEquipment{
 			Base:       base,
-			TotalStock: parseQuantity(row.Quantity),
+			TotalStock: equipment.ParseQuantity(row.Quantity),
 		}); err != nil {
 			return fmt.Errorf("createRow: bulk: %w", err)
 		}
 		return nil
 	}
 
-	qty := parseQuantity(row.Quantity)
+	qty := equipment.ParseQuantity(row.Quantity)
 	units := make([]equipment.CreateUnit, qty)
 	for i := range units {
 		units[i] = equipment.CreateUnit{
@@ -321,42 +323,4 @@ func validateRow(raw RawRow) string {
 		return "Category is required"
 	}
 	return ""
-}
-
-func parseQuantity(s string) int64 {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return 1
-	}
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil || n < 1 {
-		return 1
-	}
-	return n
-}
-
-func parseOptionalInt64(s string) *int64 {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return nil
-	}
-	return &n
-}
-
-func parseCents(s string) *int64 {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	s = strings.ReplaceAll(s, ",", ".")
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return nil
-	}
-	v := int64(math.Round(f * 100))
-	return &v
 }

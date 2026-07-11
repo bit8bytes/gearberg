@@ -19,10 +19,19 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
+    e.weight_g,
+    e.width_mm,
+    e.height_mm,
+    e.depth_mm,
+    e.voltage_mv,
+    e.current_ma,
+    e.power_mw,
+    e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at,
     COUNT(*) OVER() AS total_records
@@ -34,7 +43,7 @@ LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || sqlc.arg(name_query) || '%' OR esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%')))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
-  AND e.is_archived = sqlc.arg(is_archived)
+  AND (sqlc.arg(is_archived) = -1 OR e.is_archived = sqlc.arg(is_archived))
 ORDER BY e.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
@@ -102,7 +111,7 @@ INSERT INTO equipment (
     width_mm,
     height_mm,
     depth_mm,
-    voltage_v,
+    voltage_mv,
     current_ma,
     power_mw,
     wire_gauge_mm2_x100
@@ -125,7 +134,7 @@ INSERT INTO equipment (
     sqlc.arg(width_mm),
     sqlc.arg(height_mm),
     sqlc.arg(depth_mm),
-    sqlc.arg(voltage_v),
+    sqlc.arg(voltage_mv),
     sqlc.arg(current_ma),
     sqlc.arg(power_mw),
     sqlc.arg(wire_gauge_mm2_x100)
@@ -149,7 +158,7 @@ INSERT INTO equipment (
     width_mm,
     height_mm,
     depth_mm,
-    voltage_v,
+    voltage_mv,
     current_ma,
     power_mw,
     wire_gauge_mm2_x100,
@@ -184,7 +193,7 @@ SELECT
     e.width_mm,
     e.height_mm,
     e.depth_mm,
-    e.voltage_v,
+    e.voltage_mv,
     e.current_ma,
     e.power_mw,
     e.wire_gauge_mm2_x100,
@@ -222,7 +231,7 @@ SET
     width_mm = sqlc.arg(width_mm),
     height_mm = sqlc.arg(height_mm),
     depth_mm = sqlc.arg(depth_mm),
-    voltage_v = sqlc.arg(voltage_v),
+    voltage_mv = sqlc.arg(voltage_mv),
     current_ma = sqlc.arg(current_ma),
     power_mw = sqlc.arg(power_mw),
     wire_gauge_mm2_x100 = sqlc.arg(wire_gauge_mm2_x100),
@@ -237,49 +246,6 @@ WHERE id = sqlc.arg(id);
 -- name: Delete :exec
 DELETE FROM equipment
 WHERE id = ?;
-
--- name: ListAllByOrgID :many
-SELECT
-    e.id,
-    e.org_id,
-    e.name,
-    e.category_id,
-    COALESCE(ec.name, '') AS category_name,
-    e.manufacturer_id,
-    e.location_id,
-    COALESCE(wl.name, '') AS location_name,
-    e.storage_object_id,
-    e.equipment_type_id,
-    COALESCE(et.name, '') AS equipment_type_name,
-    e.tracking_type_id,
-    e.usage_type_id,
-    CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
-        ELSE 0
-    END AS total_stock,
-    e.has_content,
-    e.is_archived,
-    e.rental_price,
-    e.resale_price,
-    e.notes,
-    e.weight_g,
-    e.width_mm,
-    e.height_mm,
-    e.depth_mm,
-    e.voltage_v,
-    e.current_ma,
-    e.power_mw,
-    e.wire_gauge_mm2_x100,
-    e.updated_at,
-    e.created_at
-FROM equipment e
-LEFT JOIN equipment_categories ec ON ec.id = e.category_id
-LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
-LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
-LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
-WHERE e.org_id = ?
-ORDER BY e.name ASC;
 
 -- name: UpdateArchived :exec
 UPDATE equipment

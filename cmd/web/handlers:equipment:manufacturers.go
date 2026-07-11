@@ -9,7 +9,9 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/pkg/htmx"
 	"github.com/segmentio/ksuid"
 )
 
@@ -17,6 +19,8 @@ type manufacturersData struct {
 	OrgID            string
 	Manufacturers    []manufacturers.Manufacturer
 	MaxManufacturers int
+	SelectedID       string
+	SelectedName     string
 }
 
 type manufacturerData struct {
@@ -206,4 +210,30 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/manufacturers"
 	http.Redirect(w, r, dest, http.StatusSeeOther) //nolint:gosec
 	return nil
+}
+
+func (app *application) getEquipmentManufacturersFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+
+	if !htmx.IsRequest(r) {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/manufacturers", http.StatusSeeOther)
+		return nil
+	}
+
+	selected := r.URL.Query().Get("selected")
+	selectedName := r.URL.Query().Get("selected_name")
+
+	mfrs, err := app.services.manufacturers.GetByOrgID(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{
+			Error:   fmt.Errorf("getEquipmentManufacturersFragment: %w", err),
+			Message: "Failed to retrieve manufacturers.",
+			Code:    http.StatusInternalServerError,
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = manufacturersData{OrgID: orgID, Manufacturers: mfrs, SelectedID: selected, SelectedName: selectedName}
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentManufacturers, tmplData)
 }

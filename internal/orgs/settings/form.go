@@ -11,15 +11,15 @@ import (
 	"github.com/bit8bytes/toolbox/validator"
 )
 
-// permittedCurrencies lists the ISO-4217 codes exposed in the UI.
-var permittedCurrencies = []string{
+// PermittedCurrencies lists the ISO-4217 codes exposed in the UI.
+var PermittedCurrencies = []string{
 	"USD", "EUR", "GBP", "CHF", "CAD", "AUD", "JPY", "CNY", "INR", "BRL",
 	"MXN", "SEK", "NOK", "DKK", "PLN", "CZK", "HUF", "RON", "SGD", "HKD",
 	"NZD", "ZAR", "TRY", "AED", "SAR",
 }
 
-// permittedTimezones lists the IANA timezone identifiers exposed in the UI.
-var permittedTimezones = []string{
+// PermittedTimezones lists the IANA timezone identifiers exposed in the UI.
+var PermittedTimezones = []string{
 	"Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos", "Africa/Nairobi",
 	"America/Anchorage", "America/Argentina/Buenos_Aires", "America/Bogota",
 	"America/Chicago", "America/Denver", "America/Los_Angeles", "America/Mexico_City",
@@ -62,7 +62,7 @@ func Parse(r *http.Request) (Form, error) {
 
 // Validate checks form fields and returns true when all checks pass.
 func (f *Form) Validate() bool {
-	f.Check(validator.PermittedValue(f.Currency, permittedCurrencies...), "currency", "Must be a valid ISO-4217 currency code")
+	f.Check(validator.PermittedValue(f.Currency, PermittedCurrencies...), "currency", "Must be a valid ISO-4217 currency code")
 	if validator.NotBlank(f.VatRate) {
 		v, err := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
 		f.Check(err == nil, "vat_rate", "Must be a valid number")
@@ -70,7 +70,7 @@ func (f *Form) Validate() bool {
 	} else {
 		f.AddError("vat_rate", "This field cannot be blank")
 	}
-	f.Check(validator.PermittedValue(f.Timezone, permittedTimezones...), "timezone", "Must be a valid IANA timezone")
+	f.Check(validator.PermittedValue(f.Timezone, PermittedTimezones...), "timezone", "Must be a valid IANA timezone")
 	return f.Valid()
 }
 

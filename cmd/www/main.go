@@ -79,7 +79,7 @@ func runServe(args []string) error {
 
 	log := setupLogger(options.LogLevel.Level())
 
-	cache, err := parseTemplates()
+	base, cache, err := parseTemplates()
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}
@@ -87,7 +87,7 @@ func runServe(args []string) error {
 	app := &application{
 		logger:  log,
 		options: options,
-		html:    htmlpkg.New(log, cache, revision),
+		html:    htmlpkg.New(log, base, cache, revision),
 	}
 
 	return app.serve(ctx)

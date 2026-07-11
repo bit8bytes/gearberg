@@ -42,7 +42,7 @@ INSERT INTO equipment (
     width_mm,
     height_mm,
     depth_mm,
-    voltage_v,
+    voltage_mv,
     current_ma,
     power_mw,
     wire_gauge_mm2_x100
@@ -89,7 +89,7 @@ INSERT INTO equipment (
     width_mm,
     height_mm,
     depth_mm,
-    voltage_v,
+    voltage_mv,
     current_ma,
     power_mw,
     wire_gauge_mm2_x100,
@@ -115,7 +115,7 @@ type CreateParams struct {
 	WidthMm          sql.NullInt64
 	HeightMm         sql.NullInt64
 	DepthMm          sql.NullInt64
-	VoltageV         sql.NullInt64
+	VoltageMv        sql.NullInt64
 	CurrentMa        sql.NullInt64
 	PowerMw          sql.NullInt64
 	WireGaugeMm2X100 sql.NullInt64
@@ -141,7 +141,7 @@ type CreateRow struct {
 	WidthMm          sql.NullInt64
 	HeightMm         sql.NullInt64
 	DepthMm          sql.NullInt64
-	VoltageV         sql.NullInt64
+	VoltageMv        sql.NullInt64
 	CurrentMa        sql.NullInt64
 	PowerMw          sql.NullInt64
 	WireGaugeMm2X100 sql.NullInt64
@@ -168,7 +168,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.WidthMm,
 		arg.HeightMm,
 		arg.DepthMm,
-		arg.VoltageV,
+		arg.VoltageMv,
 		arg.CurrentMa,
 		arg.PowerMw,
 		arg.WireGaugeMm2X100,
@@ -194,7 +194,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.WidthMm,
 		&i.HeightMm,
 		&i.DepthMm,
-		&i.VoltageV,
+		&i.VoltageMv,
 		&i.CurrentMa,
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
@@ -242,7 +242,7 @@ SELECT
     e.width_mm,
     e.height_mm,
     e.depth_mm,
-    e.voltage_v,
+    e.voltage_mv,
     e.current_ma,
     e.power_mw,
     e.wire_gauge_mm2_x100,
@@ -279,7 +279,7 @@ type GetByIDRow struct {
 	WidthMm           sql.NullInt64
 	HeightMm          sql.NullInt64
 	DepthMm           sql.NullInt64
-	VoltageV          sql.NullInt64
+	VoltageMv         sql.NullInt64
 	CurrentMa         sql.NullInt64
 	PowerMw           sql.NullInt64
 	WireGaugeMm2X100  sql.NullInt64
@@ -314,7 +314,7 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.WidthMm,
 		&i.HeightMm,
 		&i.DepthMm,
-		&i.VoltageV,
+		&i.VoltageMv,
 		&i.CurrentMa,
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
@@ -345,10 +345,19 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
+    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,
     e.notes,
+    e.weight_g,
+    e.width_mm,
+    e.height_mm,
+    e.depth_mm,
+    e.voltage_mv,
+    e.current_ma,
+    e.power_mw,
+    e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at,
     COUNT(*) OVER() AS total_records
@@ -360,7 +369,7 @@ LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
   AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || ?2 || '%' OR esi.serial_number LIKE '%' || ?2 || '%')))
   AND (?3 = '' OR ec.name = ?3)
-  AND e.is_archived = ?4
+  AND (?4 = -1 OR e.is_archived = ?4)
 ORDER BY e.name ASC
 LIMIT ?6 OFFSET ?5
 `
@@ -369,7 +378,7 @@ type ListParams struct {
 	OrgID      string
 	NameQuery  interface{}
 	Category   interface{}
-	IsArchived int64
+	IsArchived interface{}
 	PageOffset int64
 	PageLimit  int64
 }
@@ -390,10 +399,19 @@ type ListRow struct {
 	TrackingTypeName  string
 	UsageTypeID       int64
 	TotalStock        int64
+	HasContent        int64
 	IsArchived        int64
 	RentalPrice       sql.NullInt64
 	ResalePrice       sql.NullInt64
 	Notes             sql.NullString
+	WeightG           sql.NullInt64
+	WidthMm           sql.NullInt64
+	HeightMm          sql.NullInt64
+	DepthMm           sql.NullInt64
+	VoltageMv         sql.NullInt64
+	CurrentMa         sql.NullInt64
+	PowerMw           sql.NullInt64
+	WireGaugeMm2X100  sql.NullInt64
 	UpdatedAt         int64
 	CreatedAt         int64
 	TotalRecords      int64
@@ -431,127 +449,6 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.TrackingTypeName,
 			&i.UsageTypeID,
 			&i.TotalStock,
-			&i.IsArchived,
-			&i.RentalPrice,
-			&i.ResalePrice,
-			&i.Notes,
-			&i.UpdatedAt,
-			&i.CreatedAt,
-			&i.TotalRecords,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listAllByOrgID = `-- name: ListAllByOrgID :many
-SELECT
-    e.id,
-    e.org_id,
-    e.name,
-    e.category_id,
-    COALESCE(ec.name, '') AS category_name,
-    e.manufacturer_id,
-    e.location_id,
-    COALESCE(wl.name, '') AS location_name,
-    e.storage_object_id,
-    e.equipment_type_id,
-    COALESCE(et.name, '') AS equipment_type_name,
-    e.tracking_type_id,
-    e.usage_type_id,
-    CASE
-        WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
-        WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
-        ELSE 0
-    END AS total_stock,
-    e.has_content,
-    e.is_archived,
-    e.rental_price,
-    e.resale_price,
-    e.notes,
-    e.weight_g,
-    e.width_mm,
-    e.height_mm,
-    e.depth_mm,
-    e.voltage_v,
-    e.current_ma,
-    e.power_mw,
-    e.wire_gauge_mm2_x100,
-    e.updated_at,
-    e.created_at
-FROM equipment e
-LEFT JOIN equipment_categories ec ON ec.id = e.category_id
-LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
-LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
-LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
-WHERE e.org_id = ?
-ORDER BY e.name ASC
-`
-
-type ListAllByOrgIDRow struct {
-	ID                string
-	OrgID             string
-	Name              string
-	CategoryID        sql.NullString
-	CategoryName      string
-	ManufacturerID    sql.NullString
-	LocationID        sql.NullString
-	LocationName      string
-	StorageObjectID   sql.NullString
-	EquipmentTypeID   int64
-	EquipmentTypeName string
-	TrackingTypeID    sql.NullInt64
-	UsageTypeID       int64
-	TotalStock        int64
-	HasContent        int64
-	IsArchived        int64
-	RentalPrice       sql.NullInt64
-	ResalePrice       sql.NullInt64
-	Notes             sql.NullString
-	WeightG           sql.NullInt64
-	WidthMm           sql.NullInt64
-	HeightMm          sql.NullInt64
-	DepthMm           sql.NullInt64
-	VoltageV          sql.NullInt64
-	CurrentMa         sql.NullInt64
-	PowerMw           sql.NullInt64
-	WireGaugeMm2X100  sql.NullInt64
-	UpdatedAt         int64
-	CreatedAt         int64
-}
-
-func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllByOrgIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAllByOrgID, orgID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListAllByOrgIDRow
-	for rows.Next() {
-		var i ListAllByOrgIDRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.OrgID,
-			&i.Name,
-			&i.CategoryID,
-			&i.CategoryName,
-			&i.ManufacturerID,
-			&i.LocationID,
-			&i.LocationName,
-			&i.StorageObjectID,
-			&i.EquipmentTypeID,
-			&i.EquipmentTypeName,
-			&i.TrackingTypeID,
-			&i.UsageTypeID,
-			&i.TotalStock,
 			&i.HasContent,
 			&i.IsArchived,
 			&i.RentalPrice,
@@ -561,12 +458,13 @@ func (q *Queries) ListAllByOrgID(ctx context.Context, orgID string) ([]ListAllBy
 			&i.WidthMm,
 			&i.HeightMm,
 			&i.DepthMm,
-			&i.VoltageV,
+			&i.VoltageMv,
 			&i.CurrentMa,
 			&i.PowerMw,
 			&i.WireGaugeMm2X100,
 			&i.UpdatedAt,
 			&i.CreatedAt,
+			&i.TotalRecords,
 		); err != nil {
 			return nil, err
 		}
@@ -787,7 +685,7 @@ SET
     width_mm = ?2,
     height_mm = ?3,
     depth_mm = ?4,
-    voltage_v = ?5,
+    voltage_mv = ?5,
     current_ma = ?6,
     power_mw = ?7,
     wire_gauge_mm2_x100 = ?8,
@@ -800,7 +698,7 @@ type UpdatePropertiesParams struct {
 	WidthMm          sql.NullInt64
 	HeightMm         sql.NullInt64
 	DepthMm          sql.NullInt64
-	VoltageV         sql.NullInt64
+	VoltageMv        sql.NullInt64
 	CurrentMa        sql.NullInt64
 	PowerMw          sql.NullInt64
 	WireGaugeMm2X100 sql.NullInt64
@@ -813,7 +711,7 @@ func (q *Queries) UpdateProperties(ctx context.Context, arg UpdatePropertiesPara
 		arg.WidthMm,
 		arg.HeightMm,
 		arg.DepthMm,
-		arg.VoltageV,
+		arg.VoltageMv,
 		arg.CurrentMa,
 		arg.PowerMw,
 		arg.WireGaugeMm2X100,
