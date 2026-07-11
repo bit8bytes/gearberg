@@ -12,7 +12,7 @@ buildpkgs.buildGoModule {
   # one folder up.
   src = ./..;
 
-  vendorHash = "sha256-Yk6TyLwCuMOws0cOLY56hAhYVp5SsvNYYPgEbuzZDtg=";
+  vendorHash = "sha256-oBulZriVyCLm1De6fWmVjtUkCS7URf/U7nsepaJlOk8=";
 
   subPackages = ["cmd/web"];
 

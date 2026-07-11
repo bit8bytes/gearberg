@@ -1,5 +1,4 @@
 {{ define "title" }}General{{ end }}
-{{ define "sidebar-general" }}bg-base-300 font-semibold{{ end }}
 
 {{ define "page" }}
 <div class="max-w-xl">
@@ -13,7 +12,7 @@
         id="name"
         type="text"
         name="name"
-        value="{{ if .Data.Org }}{{ .Data.Org.Name }}{{ else }}{{ .Form.Name }}{{ end }}"
+        value="{{ .Form.DisplayName }}"
         maxlength="100"
         class="input"
       />
@@ -48,9 +47,9 @@
       <form method="dialog">
         <button class="btn">Cancel</button>
       </form>
-      <form method="POST" action="/orgs/{{ .Data.OrgID }}/delete">
-        <button type="submit" class="btn btn-error">Delete</button>
-      </form>
+      <button class="btn btn-error"
+              hx-delete="/orgs/{{ .Data.OrgID }}"
+              hx-push-url="true">Delete</button>
     </div>
   </div>
 </dialog>

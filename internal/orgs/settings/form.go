@@ -74,6 +74,18 @@ func (f *Form) Validate() bool {
 	return f.Valid()
 }
 
+// FormFromOrgSettings pre-populates a Form from stored OrgSettings.
+func FormFromOrgSettings(s *OrgSettings) Form {
+	if s == nil {
+		return Form{}
+	}
+	return Form{
+		Currency: s.Currency,
+		VatRate:  s.VatRatePercent(),
+		Timezone: s.Timezone,
+	}
+}
+
 // VatRateBasisPoints returns the VAT rate as basis points (e.g. "19" → 1900).
 // Call only after Validate() returns true.
 func (f *Form) VatRateBasisPoints() int64 {

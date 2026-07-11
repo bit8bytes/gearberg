@@ -9,69 +9,228 @@ import (
 	"context"
 )
 
-const countOrgs = `-- name: CountOrgs :one
-SELECT COUNT(*) FROM orgs
-`
-
-func (q *Queries) CountOrgs(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countOrgs)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const create = `-- name: Create :one
 INSERT INTO orgs (
     id,
-    name
-) VALUES (
-    ?,
-    ?
-) RETURNING 
+    display_name
+)
+SELECT ?, ?
+WHERE (SELECT COUNT(*) FROM orgs) < CAST(?3 AS INTEGER)
+RETURNING
     id,
-    name,
+    display_name,
     created_at
 `
 
 type CreateParams struct {
-	ID   string
-	Name string
+	ID          string
+	DisplayName string
+	MaxOrgs     int64
 }
 
 type CreateRow struct {
-	ID        string
-	Name      string
-	CreatedAt int64
+	ID          string
+	DisplayName string
+	CreatedAt   int64
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.Name)
+	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.DisplayName, arg.MaxOrgs)
 	var i CreateRow
-	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
+	err := row.Scan(&i.ID, &i.DisplayName, &i.CreatedAt)
 	return i, err
 }
 
-const deleteByID = `-- name: DeleteByID :exec
-DELETE FROM orgs
-WHERE id = ?
+const createMember = `-- name: CreateMember :exec
+INSERT INTO org_members (
+    account_id,
+    org_id,
+    role_id
+) VALUES (
+    ?, ?, ?
+)
 `
 
-func (q *Queries) DeleteByID(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteByID, id)
+type CreateMemberParams struct {
+	AccountID string
+	OrgID     string
+	RoleID    int64
+}
+
+func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) error {
+	_, err := q.db.ExecContext(ctx, createMember, arg.AccountID, arg.OrgID, arg.RoleID)
 	return err
 }
 
-const getAll = `-- name: GetAll :many
+const delete = `-- name: Delete :exec
+DELETE FROM orgs
+WHERE orgs.id = ?1
+  AND (SELECT COUNT(*) FROM org_members WHERE org_members.org_id = ?1 AND org_members.role_id = 1) = 1
+  AND EXISTS (
+      SELECT 1 FROM org_members om
+      WHERE om.org_id = ?1 AND om.account_id = ?2 AND om.role_id = 1
+  )
+`
+
+type DeleteParams struct {
+	OrgID     string
+	AccountID string
+}
+
+// Deletes a single org only if the given account is its sole owner.
+func (q *Queries) Delete(ctx context.Context, arg DeleteParams) error {
+	_, err := q.db.ExecContext(ctx, delete, arg.OrgID, arg.AccountID)
+	return err
+}
+
+const deleteMember = `-- name: DeleteMember :exec
+DELETE FROM org_members
+WHERE account_id = ?
+AND org_id = ?
+`
+
+type DeleteMemberParams struct {
+	AccountID string
+	OrgID     string
+}
+
+func (q *Queries) DeleteMember(ctx context.Context, arg DeleteMemberParams) error {
+	_, err := q.db.ExecContext(ctx, deleteMember, arg.AccountID, arg.OrgID)
+	return err
+}
+
+const deleteOwnedByAccountID = `-- name: DeleteOwnedByAccountID :exec
+DELETE FROM orgs
+WHERE id IN (
+    SELECT om.org_id
+    FROM org_members om
+    WHERE om.account_id = ?
+      AND om.role_id = 1
+      AND (
+          SELECT COUNT(*)
+          FROM org_members om2
+          WHERE om2.org_id = om.org_id
+            AND om2.role_id = 1
+      ) = 1
+)
+`
+
+// Deletes orgs where the given account is the sole owner.
+func (q *Queries) DeleteOwnedByAccountID(ctx context.Context, accountID string) error {
+	_, err := q.db.ExecContext(ctx, deleteOwnedByAccountID, accountID)
+	return err
+}
+
+const get = `-- name: Get :one
 SELECT
     id,
-    name,
+    display_name,
     updated_at,
     created_at
 FROM orgs
+WHERE id = ?
+LIMIT 1
 `
 
-func (q *Queries) GetAll(ctx context.Context) ([]Org, error) {
-	rows, err := q.db.QueryContext(ctx, getAll)
+func (q *Queries) Get(ctx context.Context, id string) (Org, error) {
+	row := q.db.QueryRowContext(ctx, get, id)
+	var i Org
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getFirstByAccountID = `-- name: GetFirstByAccountID :one
+SELECT o.id
+FROM orgs o
+JOIN org_members om ON om.org_id = o.id
+WHERE om.account_id = ?
+ORDER BY o.created_at
+LIMIT 1
+`
+
+func (q *Queries) GetFirstByAccountID(ctx context.Context, accountID string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getFirstByAccountID, accountID)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getMemberByAccountIDAndOrgID = `-- name: GetMemberByAccountIDAndOrgID :one
+SELECT
+    id,
+    account_id,
+    org_id,
+    role_id,
+    updated_at,
+    created_at
+FROM org_members
+WHERE account_id = ?
+AND org_id = ?
+LIMIT 1
+`
+
+type GetMemberByAccountIDAndOrgIDParams struct {
+	AccountID string
+	OrgID     string
+}
+
+type GetMemberByAccountIDAndOrgIDRow struct {
+	ID        int64
+	AccountID string
+	OrgID     string
+	RoleID    int64
+	UpdatedAt int64
+	CreatedAt int64
+}
+
+func (q *Queries) GetMemberByAccountIDAndOrgID(ctx context.Context, arg GetMemberByAccountIDAndOrgIDParams) (GetMemberByAccountIDAndOrgIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getMemberByAccountIDAndOrgID, arg.AccountID, arg.OrgID)
+	var i GetMemberByAccountIDAndOrgIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.OrgID,
+		&i.RoleID,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getRoleByName = `-- name: GetRoleByName :one
+SELECT
+    id,
+    name,
+    rank
+FROM org_roles
+WHERE name = ?
+LIMIT 1
+`
+
+func (q *Queries) GetRoleByName(ctx context.Context, name string) (OrgRole, error) {
+	row := q.db.QueryRowContext(ctx, getRoleByName, name)
+	var i OrgRole
+	err := row.Scan(&i.ID, &i.Name, &i.Rank)
+	return i, err
+}
+
+const list = `-- name: List :many
+SELECT
+    id,
+    display_name,
+    updated_at,
+    created_at
+FROM orgs
+ORDER BY created_at
+`
+
+func (q *Queries) List(ctx context.Context) ([]Org, error) {
+	rows, err := q.db.QueryContext(ctx, list)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +240,7 @@ func (q *Queries) GetAll(ctx context.Context) ([]Org, error) {
 		var i Org
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
+			&i.DisplayName,
 			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
@@ -98,54 +257,91 @@ func (q *Queries) GetAll(ctx context.Context) ([]Org, error) {
 	return items, nil
 }
 
-const getByID = `-- name: GetByID :one
+const listMembersByOrgID = `-- name: ListMembersByOrgID :many
 SELECT
     id,
-    name,
+    account_id,
+    org_id,
+    role_id,
     updated_at,
     created_at
-FROM orgs
-WHERE id = ?
+FROM org_members
+WHERE org_id = ?
 `
 
-func (q *Queries) GetByID(ctx context.Context, id string) (Org, error) {
-	row := q.db.QueryRowContext(ctx, getByID, id)
-	var i Org
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
+type ListMembersByOrgIDRow struct {
+	ID        int64
+	AccountID string
+	OrgID     string
+	RoleID    int64
+	UpdatedAt int64
+	CreatedAt int64
 }
 
-const updateByID = `-- name: UpdateByID :one
+func (q *Queries) ListMembersByOrgID(ctx context.Context, orgID string) ([]ListMembersByOrgIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listMembersByOrgID, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMembersByOrgIDRow
+	for rows.Next() {
+		var i ListMembersByOrgIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.OrgID,
+			&i.RoleID,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const update = `-- name: Update :exec
 UPDATE orgs
 SET
-    name = ?,
+    display_name = ?,
     updated_at = unixepoch()
 WHERE id = ?
-RETURNING
-    id,
-    name,
-    updated_at,
-    created_at
 `
 
-type UpdateByIDParams struct {
-	Name string
-	ID   string
+type UpdateParams struct {
+	DisplayName string
+	ID          string
 }
 
-func (q *Queries) UpdateByID(ctx context.Context, arg UpdateByIDParams) (Org, error) {
-	row := q.db.QueryRowContext(ctx, updateByID, arg.Name, arg.ID)
-	var i Org
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
+	_, err := q.db.ExecContext(ctx, update, arg.DisplayName, arg.ID)
+	return err
+}
+
+const updateMemberRole = `-- name: UpdateMemberRole :exec
+UPDATE org_members
+SET
+    role_id = ?,
+    updated_at = unixepoch()
+WHERE account_id = ?
+AND org_id = ?
+`
+
+type UpdateMemberRoleParams struct {
+	RoleID    int64
+	AccountID string
+	OrgID     string
+}
+
+func (q *Queries) UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error {
+	_, err := q.db.ExecContext(ctx, updateMemberRole, arg.RoleID, arg.AccountID, arg.OrgID)
+	return err
 }

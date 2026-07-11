@@ -15,17 +15,19 @@ type options struct {
 	Version             bool
 	LogLevel            logLevel
 	Port                int
+	BaseURL             string
 	TLSMode             string
 	DbDsn               string // SECRET
 	StorageDSN          string
+	SMTP                SMTP
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
 	MaxOrgLocations     int
 	MaxStorageBytes     int64
-	DefaultCurrency string
-	DefaultVatRate  float64 // percentage e.g. 19.0
-	DefaultTimezone string
+	DefaultCurrency     string
+	DefaultVatRate      float64 // percentage e.g. 19.0
+	DefaultTimezone     string
 }
 
 func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
@@ -40,6 +42,7 @@ func parseServeOptions(args []string) (*options, error) {
 	registerCommonFlags(fs, cfg)
 	fs.BoolVar(&cfg.Version, "version", false, "print version and exit")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
+	fs.StringVar(&cfg.BaseURL, "base-url", envOr("BASE_URL", ""), "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
@@ -66,6 +69,10 @@ func parseServeOptions(args []string) (*options, error) {
 		if err := validatePort(cfg.Port); err != nil {
 			return nil, fmt.Errorf("invalid port: %w", err)
 		}
+	}
+
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = fmt.Sprintf("http://localhost:%d", cfg.Port)
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -177,4 +184,30 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+type SMTP struct {
+	Host     string
+	Port     int
+	Username string
+	Password string // SECRET
+	From     string
+}
+
+// Valid returns nil when SMTP is not configured (host empty), allowing log-only mode.
+// When host is set, all required fields must be present.
+func (s *SMTP) Valid() error {
+	if s.Host == "" {
+		return nil
+	}
+	if s.Port <= 0 || s.Port > 65535 {
+		return fmt.Errorf("smtp port is not in valid range of 1-65535")
+	}
+	if s.Username == "" && s.Password != "" {
+		return fmt.Errorf("smtp password requires a username")
+	}
+	if s.From == "" {
+		return fmt.Errorf("smtp from email address cannot be empty")
+	}
+	return nil
 }

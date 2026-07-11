@@ -45,7 +45,7 @@ type equipmentData struct {
 
 type equipmentPrintData struct {
 	OrgID          string
-	OrgName        string
+	OrgDisplayName string
 	Inventories    []equipment.Equipment
 	Query          string
 	Category       string
@@ -301,7 +301,8 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 	app.resolveItemURLs(item)
 
 	data := app.html.TemplateData(r)
-	data.Form = &equipment.DetailsForm{}
+	f := equipment.DetailsFormFromEquipment(item)
+	data.Form = &f
 	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "details"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
@@ -361,6 +362,20 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 	form, err := equipment.ParseProperties(r)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+	}
+
+	if !form.Validate() {
+		item, err := app.services.equipment.GetByID(ctx, itemID)
+		if err != nil {
+			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		}
+
+		app.resolveItemURLs(item)
+
+		data := app.html.TemplateData(r)
+		data.Form = &form
+		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "properties"}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentProperties, data)
 	}
 
 	if err := app.services.equipment.UpdateProperties(ctx, equipment.UpdateEquipmentProperties{
@@ -974,7 +989,7 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 
-	org, err := app.services.orgs.GetByID(ctx, orgID)
+	org, err := app.services.orgs.Get(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve organization.", Code: http.StatusInternalServerError}
 	}
@@ -1006,7 +1021,7 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	data := app.html.TemplateData(r)
 	data.Data = equipmentPrintData{
 		OrgID:          orgID,
-		OrgName:        org.Name,
+		OrgDisplayName: org.DisplayName,
 		Inventories:    filtered,
 		Query:          query,
 		Category:       category,

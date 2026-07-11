@@ -1,4 +1,4 @@
-{{ define "title" }}{{ if .Data.Category }}{{ .Data.Category.Name }}{{ end }}{{ end }}
+{{ define "title" }}{{ .Form.Name }}{{ end }}
 
 {{ define "page" }}
 {{ $back := printf "/orgs/%s/settings/equipment-categories" .Data.OrgID }}
@@ -15,7 +15,7 @@
         id="name"
         type="text"
         name="name"
-        value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Category }}{{ .Data.Category.Name }}{{ end }}"
+        value="{{ .Form.Name }}"
         maxlength="100"
         class="input"
       />

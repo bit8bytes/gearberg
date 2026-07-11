@@ -26,4 +26,7 @@ var (
 
 	// Print renders a bare HTML shell for print-only pages (no nav, no chrome).
 	Print = Layout{File: "layouts/print.tmpl"}
+
+	// Login renders the full HTML shell with a login-focused body.
+	Login = Layout{File: "layouts/login.tmpl"}
 )

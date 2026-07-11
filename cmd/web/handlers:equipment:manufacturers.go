@@ -24,9 +24,8 @@ type manufacturersData struct {
 }
 
 type manufacturerData struct {
-	OrgID        string
-	Manufacturer *manufacturers.Manufacturer
-	ID           string
+	OrgID string
+	ID    string
 }
 
 func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -125,8 +124,8 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &manufacturers.Form{}
-	data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID}
+	data.Form = &manufacturers.Form{Name: manufacturer.Name}
+	data.Data = manufacturerData{OrgID: orgID, ID: mfrID}
 	return app.html.Render(w, r, http.StatusOK, pages.ManufacturersDetail, data)
 }
 
@@ -150,7 +149,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 	reRender := func(f *manufacturers.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = manufacturerData{OrgID: mfr.OrgID, Manufacturer: mfr, ID: mfrID}
+		data.Data = manufacturerData{OrgID: mfr.OrgID, ID: mfrID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersDetail, data)
 	}
 
@@ -193,11 +192,11 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve manufacturer.", Code: http.StatusInternalServerError}
 			}
-			f := &manufacturers.Form{}
+			f := &manufacturers.Form{Name: manufacturer.Name}
 			f.AddError("delete", "Cannot delete: this manufacturer is assigned to one or more inventory items.")
 			data := app.html.TemplateData(r)
 			data.Form = f
-			data.Data = manufacturerData{OrgID: orgID, Manufacturer: manufacturer, ID: mfrID}
+			data.Data = manufacturerData{OrgID: orgID, ID: mfrID}
 			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ManufacturersDetail, data)
 		}
 		return &httperr.Error{

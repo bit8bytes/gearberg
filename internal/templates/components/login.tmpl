@@ -1,0 +1,31 @@
+{{ define "password-input" }}
+<div class="flex flex-col gap-1">
+  <div class="relative">
+    <label class="floating-label w-full">
+      <input
+        id="password"
+        name="password"
+        type="password"
+        class="input w-full {{ with .Form.Errors.password }}input-error{{ end }}"
+        placeholder="Password"
+        autocomplete="new-password"
+        aria-describedby="pw-strength-label{{ if .Form.Errors.password }} password-error{{ end }}"
+        {{ if .Form.Errors.password }}aria-invalid="true"{{ end }}
+      />
+      <span>Password</span>
+    </label>
+    <button
+      type="button"
+      data-pw-toggle="password"
+      class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-secondary-content"
+      aria-label="Show password"
+      aria-pressed="false"
+    >Show</button>
+  </div>
+  {{ with .Form.Errors.password }}
+  <div class="label">
+    <span id="password-error" class="label-text-alt text-error">{{ . }}</span>
+  </div>
+  {{ end }}
+</div>
+{{ end }}

@@ -2,6 +2,26 @@ version: "2"
 
 sql:
   - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/accounts.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "accounts"
+        out: "internal/database/queries/gen/accounts"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/credentials.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "credentials"
+        out: "internal/database/queries/gen/credentials"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
     queries: "internal/database/queries/sqlite/orgs.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
@@ -108,5 +128,15 @@ sql:
       go:
         package: "storage"
         out: "internal/database/queries/gen/storage"
+        emit_interface: true
+        omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/tokens.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "tokens"
+        out: "internal/database/queries/gen/tokens"
         emit_interface: true
         omit_unused_structs: true

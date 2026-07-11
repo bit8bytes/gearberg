@@ -28,6 +28,8 @@ linters:
     - sqlclosecheck
     - rowserrcheck
   settings:
+    cyclop:
+      max-complexity: 13
     gosec:
       excludes:
         - G104  # Unhandled errors (errcheck handles this better)

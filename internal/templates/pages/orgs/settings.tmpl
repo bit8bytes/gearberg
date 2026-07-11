@@ -1,5 +1,4 @@
 {{ define "title" }}Billing &amp; Tax{{ end }}
-{{ define "sidebar-billing" }}bg-base-300 font-semibold{{ end }}
 
 {{ define "page" }}
 <div class="max-w-xl">
@@ -9,34 +8,33 @@
   <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="currency">Currency</label>
-      {{ $currency := "" }}{{ if .Data.Settings }}{{ $currency = .Data.Settings.Currency }}{{ else }}{{ $currency = .Form.Currency }}{{ end }}
       <select id="currency" name="currency" class="select">
-        <option value="" disabled {{ if eq $currency "" }}selected{{ end }}>Select currency</option>
-        <option value="USD" {{ if eq $currency "USD" }}selected{{ end }}>USD – US Dollar</option>
-        <option value="EUR" {{ if eq $currency "EUR" }}selected{{ end }}>EUR – Euro</option>
-        <option value="GBP" {{ if eq $currency "GBP" }}selected{{ end }}>GBP – British Pound</option>
-        <option value="CHF" {{ if eq $currency "CHF" }}selected{{ end }}>CHF – Swiss Franc</option>
-        <option value="CAD" {{ if eq $currency "CAD" }}selected{{ end }}>CAD – Canadian Dollar</option>
-        <option value="AUD" {{ if eq $currency "AUD" }}selected{{ end }}>AUD – Australian Dollar</option>
-        <option value="JPY" {{ if eq $currency "JPY" }}selected{{ end }}>JPY – Japanese Yen</option>
-        <option value="CNY" {{ if eq $currency "CNY" }}selected{{ end }}>CNY – Chinese Yuan</option>
-        <option value="INR" {{ if eq $currency "INR" }}selected{{ end }}>INR – Indian Rupee</option>
-        <option value="BRL" {{ if eq $currency "BRL" }}selected{{ end }}>BRL – Brazilian Real</option>
-        <option value="MXN" {{ if eq $currency "MXN" }}selected{{ end }}>MXN – Mexican Peso</option>
-        <option value="SEK" {{ if eq $currency "SEK" }}selected{{ end }}>SEK – Swedish Krona</option>
-        <option value="NOK" {{ if eq $currency "NOK" }}selected{{ end }}>NOK – Norwegian Krone</option>
-        <option value="DKK" {{ if eq $currency "DKK" }}selected{{ end }}>DKK – Danish Krone</option>
-        <option value="PLN" {{ if eq $currency "PLN" }}selected{{ end }}>PLN – Polish Zloty</option>
-        <option value="CZK" {{ if eq $currency "CZK" }}selected{{ end }}>CZK – Czech Koruna</option>
-        <option value="HUF" {{ if eq $currency "HUF" }}selected{{ end }}>HUF – Hungarian Forint</option>
-        <option value="RON" {{ if eq $currency "RON" }}selected{{ end }}>RON – Romanian Leu</option>
-        <option value="SGD" {{ if eq $currency "SGD" }}selected{{ end }}>SGD – Singapore Dollar</option>
-        <option value="HKD" {{ if eq $currency "HKD" }}selected{{ end }}>HKD – Hong Kong Dollar</option>
-        <option value="NZD" {{ if eq $currency "NZD" }}selected{{ end }}>NZD – New Zealand Dollar</option>
-        <option value="ZAR" {{ if eq $currency "ZAR" }}selected{{ end }}>ZAR – South African Rand</option>
-        <option value="TRY" {{ if eq $currency "TRY" }}selected{{ end }}>TRY – Turkish Lira</option>
-        <option value="AED" {{ if eq $currency "AED" }}selected{{ end }}>AED – UAE Dirham</option>
-        <option value="SAR" {{ if eq $currency "SAR" }}selected{{ end }}>SAR – Saudi Riyal</option>
+        <option value="" disabled {{ if eq .Form.Currency "" }}selected{{ end }}>Select currency</option>
+        <option value="USD" {{ if eq .Form.Currency "USD" }}selected{{ end }}>USD – US Dollar</option>
+        <option value="EUR" {{ if eq .Form.Currency "EUR" }}selected{{ end }}>EUR – Euro</option>
+        <option value="GBP" {{ if eq .Form.Currency "GBP" }}selected{{ end }}>GBP – British Pound</option>
+        <option value="CHF" {{ if eq .Form.Currency "CHF" }}selected{{ end }}>CHF – Swiss Franc</option>
+        <option value="CAD" {{ if eq .Form.Currency "CAD" }}selected{{ end }}>CAD – Canadian Dollar</option>
+        <option value="AUD" {{ if eq .Form.Currency "AUD" }}selected{{ end }}>AUD – Australian Dollar</option>
+        <option value="JPY" {{ if eq .Form.Currency "JPY" }}selected{{ end }}>JPY – Japanese Yen</option>
+        <option value="CNY" {{ if eq .Form.Currency "CNY" }}selected{{ end }}>CNY – Chinese Yuan</option>
+        <option value="INR" {{ if eq .Form.Currency "INR" }}selected{{ end }}>INR – Indian Rupee</option>
+        <option value="BRL" {{ if eq .Form.Currency "BRL" }}selected{{ end }}>BRL – Brazilian Real</option>
+        <option value="MXN" {{ if eq .Form.Currency "MXN" }}selected{{ end }}>MXN – Mexican Peso</option>
+        <option value="SEK" {{ if eq .Form.Currency "SEK" }}selected{{ end }}>SEK – Swedish Krona</option>
+        <option value="NOK" {{ if eq .Form.Currency "NOK" }}selected{{ end }}>NOK – Norwegian Krone</option>
+        <option value="DKK" {{ if eq .Form.Currency "DKK" }}selected{{ end }}>DKK – Danish Krone</option>
+        <option value="PLN" {{ if eq .Form.Currency "PLN" }}selected{{ end }}>PLN – Polish Zloty</option>
+        <option value="CZK" {{ if eq .Form.Currency "CZK" }}selected{{ end }}>CZK – Czech Koruna</option>
+        <option value="HUF" {{ if eq .Form.Currency "HUF" }}selected{{ end }}>HUF – Hungarian Forint</option>
+        <option value="RON" {{ if eq .Form.Currency "RON" }}selected{{ end }}>RON – Romanian Leu</option>
+        <option value="SGD" {{ if eq .Form.Currency "SGD" }}selected{{ end }}>SGD – Singapore Dollar</option>
+        <option value="HKD" {{ if eq .Form.Currency "HKD" }}selected{{ end }}>HKD – Hong Kong Dollar</option>
+        <option value="NZD" {{ if eq .Form.Currency "NZD" }}selected{{ end }}>NZD – New Zealand Dollar</option>
+        <option value="ZAR" {{ if eq .Form.Currency "ZAR" }}selected{{ end }}>ZAR – South African Rand</option>
+        <option value="TRY" {{ if eq .Form.Currency "TRY" }}selected{{ end }}>TRY – Turkish Lira</option>
+        <option value="AED" {{ if eq .Form.Currency "AED" }}selected{{ end }}>AED – UAE Dirham</option>
+        <option value="SAR" {{ if eq .Form.Currency "SAR" }}selected{{ end }}>SAR – Saudi Riyal</option>
       </select>
       {{ with index .Form.Errors "currency" }}
         <p class="text-red-500 text-sm">{{ . }}</p>
@@ -55,7 +53,7 @@
           max="100"
           step="1"
           name="vat_rate"
-          value="{{ if .Data.Settings }}{{ .Data.Settings.VatRatePercent }}{{ else }}{{ .Form.VatRate }}{{ end }}"
+          value="{{ .Form.VatRate }}"
           placeholder="19"
         />
       </label>
@@ -66,81 +64,80 @@
 
     <div class="flex flex-col gap-1">
       <label for="timezone">Timezone</label>
-      {{ $timezone := "" }}{{ if .Data.Settings }}{{ $timezone = .Data.Settings.Timezone }}{{ else }}{{ $timezone = .Form.Timezone }}{{ end }}
       <select id="timezone" name="timezone" class="select">
-        <option value="" disabled {{ if eq $timezone "" }}selected{{ end }}>Select timezone</option>
+        <option value="" disabled {{ if eq .Form.Timezone "" }}selected{{ end }}>Select timezone</option>
         <optgroup label="Africa">
-          <option value="Africa/Cairo" {{ if eq $timezone "Africa/Cairo" }}selected{{ end }}>Africa/Cairo</option>
-          <option value="Africa/Johannesburg" {{ if eq $timezone "Africa/Johannesburg" }}selected{{ end }}>Africa/Johannesburg</option>
-          <option value="Africa/Lagos" {{ if eq $timezone "Africa/Lagos" }}selected{{ end }}>Africa/Lagos</option>
-          <option value="Africa/Nairobi" {{ if eq $timezone "Africa/Nairobi" }}selected{{ end }}>Africa/Nairobi</option>
+          <option value="Africa/Cairo" {{ if eq .Form.Timezone "Africa/Cairo" }}selected{{ end }}>Africa/Cairo</option>
+          <option value="Africa/Johannesburg" {{ if eq .Form.Timezone "Africa/Johannesburg" }}selected{{ end }}>Africa/Johannesburg</option>
+          <option value="Africa/Lagos" {{ if eq .Form.Timezone "Africa/Lagos" }}selected{{ end }}>Africa/Lagos</option>
+          <option value="Africa/Nairobi" {{ if eq .Form.Timezone "Africa/Nairobi" }}selected{{ end }}>Africa/Nairobi</option>
         </optgroup>
         <optgroup label="America">
-          <option value="America/Anchorage" {{ if eq $timezone "America/Anchorage" }}selected{{ end }}>America/Anchorage</option>
-          <option value="America/Argentina/Buenos_Aires" {{ if eq $timezone "America/Argentina/Buenos_Aires" }}selected{{ end }}>America/Argentina/Buenos_Aires</option>
-          <option value="America/Bogota" {{ if eq $timezone "America/Bogota" }}selected{{ end }}>America/Bogota</option>
-          <option value="America/Chicago" {{ if eq $timezone "America/Chicago" }}selected{{ end }}>America/Chicago</option>
-          <option value="America/Denver" {{ if eq $timezone "America/Denver" }}selected{{ end }}>America/Denver</option>
-          <option value="America/Los_Angeles" {{ if eq $timezone "America/Los_Angeles" }}selected{{ end }}>America/Los_Angeles</option>
-          <option value="America/Mexico_City" {{ if eq $timezone "America/Mexico_City" }}selected{{ end }}>America/Mexico_City</option>
-          <option value="America/New_York" {{ if eq $timezone "America/New_York" }}selected{{ end }}>America/New_York</option>
-          <option value="America/Phoenix" {{ if eq $timezone "America/Phoenix" }}selected{{ end }}>America/Phoenix</option>
-          <option value="America/Sao_Paulo" {{ if eq $timezone "America/Sao_Paulo" }}selected{{ end }}>America/Sao_Paulo</option>
-          <option value="America/Toronto" {{ if eq $timezone "America/Toronto" }}selected{{ end }}>America/Toronto</option>
-          <option value="America/Vancouver" {{ if eq $timezone "America/Vancouver" }}selected{{ end }}>America/Vancouver</option>
+          <option value="America/Anchorage" {{ if eq .Form.Timezone "America/Anchorage" }}selected{{ end }}>America/Anchorage</option>
+          <option value="America/Argentina/Buenos_Aires" {{ if eq .Form.Timezone "America/Argentina/Buenos_Aires" }}selected{{ end }}>America/Argentina/Buenos_Aires</option>
+          <option value="America/Bogota" {{ if eq .Form.Timezone "America/Bogota" }}selected{{ end }}>America/Bogota</option>
+          <option value="America/Chicago" {{ if eq .Form.Timezone "America/Chicago" }}selected{{ end }}>America/Chicago</option>
+          <option value="America/Denver" {{ if eq .Form.Timezone "America/Denver" }}selected{{ end }}>America/Denver</option>
+          <option value="America/Los_Angeles" {{ if eq .Form.Timezone "America/Los_Angeles" }}selected{{ end }}>America/Los_Angeles</option>
+          <option value="America/Mexico_City" {{ if eq .Form.Timezone "America/Mexico_City" }}selected{{ end }}>America/Mexico_City</option>
+          <option value="America/New_York" {{ if eq .Form.Timezone "America/New_York" }}selected{{ end }}>America/New_York</option>
+          <option value="America/Phoenix" {{ if eq .Form.Timezone "America/Phoenix" }}selected{{ end }}>America/Phoenix</option>
+          <option value="America/Sao_Paulo" {{ if eq .Form.Timezone "America/Sao_Paulo" }}selected{{ end }}>America/Sao_Paulo</option>
+          <option value="America/Toronto" {{ if eq .Form.Timezone "America/Toronto" }}selected{{ end }}>America/Toronto</option>
+          <option value="America/Vancouver" {{ if eq .Form.Timezone "America/Vancouver" }}selected{{ end }}>America/Vancouver</option>
         </optgroup>
         <optgroup label="Asia">
-          <option value="Asia/Bangkok" {{ if eq $timezone "Asia/Bangkok" }}selected{{ end }}>Asia/Bangkok</option>
-          <option value="Asia/Colombo" {{ if eq $timezone "Asia/Colombo" }}selected{{ end }}>Asia/Colombo</option>
-          <option value="Asia/Dubai" {{ if eq $timezone "Asia/Dubai" }}selected{{ end }}>Asia/Dubai</option>
-          <option value="Asia/Hong_Kong" {{ if eq $timezone "Asia/Hong_Kong" }}selected{{ end }}>Asia/Hong_Kong</option>
-          <option value="Asia/Jakarta" {{ if eq $timezone "Asia/Jakarta" }}selected{{ end }}>Asia/Jakarta</option>
-          <option value="Asia/Karachi" {{ if eq $timezone "Asia/Karachi" }}selected{{ end }}>Asia/Karachi</option>
-          <option value="Asia/Kolkata" {{ if eq $timezone "Asia/Kolkata" }}selected{{ end }}>Asia/Kolkata</option>
-          <option value="Asia/Riyadh" {{ if eq $timezone "Asia/Riyadh" }}selected{{ end }}>Asia/Riyadh</option>
-          <option value="Asia/Seoul" {{ if eq $timezone "Asia/Seoul" }}selected{{ end }}>Asia/Seoul</option>
-          <option value="Asia/Shanghai" {{ if eq $timezone "Asia/Shanghai" }}selected{{ end }}>Asia/Shanghai</option>
-          <option value="Asia/Singapore" {{ if eq $timezone "Asia/Singapore" }}selected{{ end }}>Asia/Singapore</option>
-          <option value="Asia/Tokyo" {{ if eq $timezone "Asia/Tokyo" }}selected{{ end }}>Asia/Tokyo</option>
+          <option value="Asia/Bangkok" {{ if eq .Form.Timezone "Asia/Bangkok" }}selected{{ end }}>Asia/Bangkok</option>
+          <option value="Asia/Colombo" {{ if eq .Form.Timezone "Asia/Colombo" }}selected{{ end }}>Asia/Colombo</option>
+          <option value="Asia/Dubai" {{ if eq .Form.Timezone "Asia/Dubai" }}selected{{ end }}>Asia/Dubai</option>
+          <option value="Asia/Hong_Kong" {{ if eq .Form.Timezone "Asia/Hong_Kong" }}selected{{ end }}>Asia/Hong_Kong</option>
+          <option value="Asia/Jakarta" {{ if eq .Form.Timezone "Asia/Jakarta" }}selected{{ end }}>Asia/Jakarta</option>
+          <option value="Asia/Karachi" {{ if eq .Form.Timezone "Asia/Karachi" }}selected{{ end }}>Asia/Karachi</option>
+          <option value="Asia/Kolkata" {{ if eq .Form.Timezone "Asia/Kolkata" }}selected{{ end }}>Asia/Kolkata</option>
+          <option value="Asia/Riyadh" {{ if eq .Form.Timezone "Asia/Riyadh" }}selected{{ end }}>Asia/Riyadh</option>
+          <option value="Asia/Seoul" {{ if eq .Form.Timezone "Asia/Seoul" }}selected{{ end }}>Asia/Seoul</option>
+          <option value="Asia/Shanghai" {{ if eq .Form.Timezone "Asia/Shanghai" }}selected{{ end }}>Asia/Shanghai</option>
+          <option value="Asia/Singapore" {{ if eq .Form.Timezone "Asia/Singapore" }}selected{{ end }}>Asia/Singapore</option>
+          <option value="Asia/Tokyo" {{ if eq .Form.Timezone "Asia/Tokyo" }}selected{{ end }}>Asia/Tokyo</option>
         </optgroup>
         <optgroup label="Atlantic">
-          <option value="Atlantic/Azores" {{ if eq $timezone "Atlantic/Azores" }}selected{{ end }}>Atlantic/Azores</option>
+          <option value="Atlantic/Azores" {{ if eq .Form.Timezone "Atlantic/Azores" }}selected{{ end }}>Atlantic/Azores</option>
         </optgroup>
         <optgroup label="Australia">
-          <option value="Australia/Adelaide" {{ if eq $timezone "Australia/Adelaide" }}selected{{ end }}>Australia/Adelaide</option>
-          <option value="Australia/Brisbane" {{ if eq $timezone "Australia/Brisbane" }}selected{{ end }}>Australia/Brisbane</option>
-          <option value="Australia/Melbourne" {{ if eq $timezone "Australia/Melbourne" }}selected{{ end }}>Australia/Melbourne</option>
-          <option value="Australia/Perth" {{ if eq $timezone "Australia/Perth" }}selected{{ end }}>Australia/Perth</option>
-          <option value="Australia/Sydney" {{ if eq $timezone "Australia/Sydney" }}selected{{ end }}>Australia/Sydney</option>
+          <option value="Australia/Adelaide" {{ if eq .Form.Timezone "Australia/Adelaide" }}selected{{ end }}>Australia/Adelaide</option>
+          <option value="Australia/Brisbane" {{ if eq .Form.Timezone "Australia/Brisbane" }}selected{{ end }}>Australia/Brisbane</option>
+          <option value="Australia/Melbourne" {{ if eq .Form.Timezone "Australia/Melbourne" }}selected{{ end }}>Australia/Melbourne</option>
+          <option value="Australia/Perth" {{ if eq .Form.Timezone "Australia/Perth" }}selected{{ end }}>Australia/Perth</option>
+          <option value="Australia/Sydney" {{ if eq .Form.Timezone "Australia/Sydney" }}selected{{ end }}>Australia/Sydney</option>
         </optgroup>
         <optgroup label="Europe">
-          <option value="Europe/Amsterdam" {{ if eq $timezone "Europe/Amsterdam" }}selected{{ end }}>Europe/Amsterdam</option>
-          <option value="Europe/Athens" {{ if eq $timezone "Europe/Athens" }}selected{{ end }}>Europe/Athens</option>
-          <option value="Europe/Berlin" {{ if eq $timezone "Europe/Berlin" }}selected{{ end }}>Europe/Berlin</option>
-          <option value="Europe/Brussels" {{ if eq $timezone "Europe/Brussels" }}selected{{ end }}>Europe/Brussels</option>
-          <option value="Europe/Budapest" {{ if eq $timezone "Europe/Budapest" }}selected{{ end }}>Europe/Budapest</option>
-          <option value="Europe/Dublin" {{ if eq $timezone "Europe/Dublin" }}selected{{ end }}>Europe/Dublin</option>
-          <option value="Europe/Helsinki" {{ if eq $timezone "Europe/Helsinki" }}selected{{ end }}>Europe/Helsinki</option>
-          <option value="Europe/Istanbul" {{ if eq $timezone "Europe/Istanbul" }}selected{{ end }}>Europe/Istanbul</option>
-          <option value="Europe/Lisbon" {{ if eq $timezone "Europe/Lisbon" }}selected{{ end }}>Europe/Lisbon</option>
-          <option value="Europe/London" {{ if eq $timezone "Europe/London" }}selected{{ end }}>Europe/London</option>
-          <option value="Europe/Madrid" {{ if eq $timezone "Europe/Madrid" }}selected{{ end }}>Europe/Madrid</option>
-          <option value="Europe/Moscow" {{ if eq $timezone "Europe/Moscow" }}selected{{ end }}>Europe/Moscow</option>
-          <option value="Europe/Oslo" {{ if eq $timezone "Europe/Oslo" }}selected{{ end }}>Europe/Oslo</option>
-          <option value="Europe/Paris" {{ if eq $timezone "Europe/Paris" }}selected{{ end }}>Europe/Paris</option>
-          <option value="Europe/Prague" {{ if eq $timezone "Europe/Prague" }}selected{{ end }}>Europe/Prague</option>
-          <option value="Europe/Rome" {{ if eq $timezone "Europe/Rome" }}selected{{ end }}>Europe/Rome</option>
-          <option value="Europe/Stockholm" {{ if eq $timezone "Europe/Stockholm" }}selected{{ end }}>Europe/Stockholm</option>
-          <option value="Europe/Vienna" {{ if eq $timezone "Europe/Vienna" }}selected{{ end }}>Europe/Vienna</option>
-          <option value="Europe/Warsaw" {{ if eq $timezone "Europe/Warsaw" }}selected{{ end }}>Europe/Warsaw</option>
-          <option value="Europe/Zurich" {{ if eq $timezone "Europe/Zurich" }}selected{{ end }}>Europe/Zurich</option>
+          <option value="Europe/Amsterdam" {{ if eq .Form.Timezone "Europe/Amsterdam" }}selected{{ end }}>Europe/Amsterdam</option>
+          <option value="Europe/Athens" {{ if eq .Form.Timezone "Europe/Athens" }}selected{{ end }}>Europe/Athens</option>
+          <option value="Europe/Berlin" {{ if eq .Form.Timezone "Europe/Berlin" }}selected{{ end }}>Europe/Berlin</option>
+          <option value="Europe/Brussels" {{ if eq .Form.Timezone "Europe/Brussels" }}selected{{ end }}>Europe/Brussels</option>
+          <option value="Europe/Budapest" {{ if eq .Form.Timezone "Europe/Budapest" }}selected{{ end }}>Europe/Budapest</option>
+          <option value="Europe/Dublin" {{ if eq .Form.Timezone "Europe/Dublin" }}selected{{ end }}>Europe/Dublin</option>
+          <option value="Europe/Helsinki" {{ if eq .Form.Timezone "Europe/Helsinki" }}selected{{ end }}>Europe/Helsinki</option>
+          <option value="Europe/Istanbul" {{ if eq .Form.Timezone "Europe/Istanbul" }}selected{{ end }}>Europe/Istanbul</option>
+          <option value="Europe/Lisbon" {{ if eq .Form.Timezone "Europe/Lisbon" }}selected{{ end }}>Europe/Lisbon</option>
+          <option value="Europe/London" {{ if eq .Form.Timezone "Europe/London" }}selected{{ end }}>Europe/London</option>
+          <option value="Europe/Madrid" {{ if eq .Form.Timezone "Europe/Madrid" }}selected{{ end }}>Europe/Madrid</option>
+          <option value="Europe/Moscow" {{ if eq .Form.Timezone "Europe/Moscow" }}selected{{ end }}>Europe/Moscow</option>
+          <option value="Europe/Oslo" {{ if eq .Form.Timezone "Europe/Oslo" }}selected{{ end }}>Europe/Oslo</option>
+          <option value="Europe/Paris" {{ if eq .Form.Timezone "Europe/Paris" }}selected{{ end }}>Europe/Paris</option>
+          <option value="Europe/Prague" {{ if eq .Form.Timezone "Europe/Prague" }}selected{{ end }}>Europe/Prague</option>
+          <option value="Europe/Rome" {{ if eq .Form.Timezone "Europe/Rome" }}selected{{ end }}>Europe/Rome</option>
+          <option value="Europe/Stockholm" {{ if eq .Form.Timezone "Europe/Stockholm" }}selected{{ end }}>Europe/Stockholm</option>
+          <option value="Europe/Vienna" {{ if eq .Form.Timezone "Europe/Vienna" }}selected{{ end }}>Europe/Vienna</option>
+          <option value="Europe/Warsaw" {{ if eq .Form.Timezone "Europe/Warsaw" }}selected{{ end }}>Europe/Warsaw</option>
+          <option value="Europe/Zurich" {{ if eq .Form.Timezone "Europe/Zurich" }}selected{{ end }}>Europe/Zurich</option>
         </optgroup>
         <optgroup label="Pacific">
-          <option value="Pacific/Auckland" {{ if eq $timezone "Pacific/Auckland" }}selected{{ end }}>Pacific/Auckland</option>
-          <option value="Pacific/Honolulu" {{ if eq $timezone "Pacific/Honolulu" }}selected{{ end }}>Pacific/Honolulu</option>
+          <option value="Pacific/Auckland" {{ if eq .Form.Timezone "Pacific/Auckland" }}selected{{ end }}>Pacific/Auckland</option>
+          <option value="Pacific/Honolulu" {{ if eq .Form.Timezone "Pacific/Honolulu" }}selected{{ end }}>Pacific/Honolulu</option>
         </optgroup>
         <optgroup label="UTC">
-          <option value="UTC" {{ if eq $timezone "UTC" }}selected{{ end }}>UTC</option>
+          <option value="UTC" {{ if eq .Form.Timezone "UTC" }}selected{{ end }}>UTC</option>
         </optgroup>
       </select>
       {{ with index .Form.Errors "timezone" }}

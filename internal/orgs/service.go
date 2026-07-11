@@ -2,80 +2,120 @@ package orgs
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-
-	"github.com/bit8bytes/gearberg/internal/database"
 )
 
-// Options holds configuration for the org service.
-type Options struct {
-	MaxOrgs int
+type orgsRepository interface {
+	Create(ctx context.Context, tx *sql.Tx, id, displayName string) (string, error)
+	List(ctx context.Context) ([]Org, error)
+	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
+	Get(ctx context.Context, id string) (Org, error)
+	Update(ctx context.Context, p UpdateParams) error
+	Max() int
+	CreateMember(ctx context.Context, tx *sql.Tx, accountID, orgID string, roleID int64) error
+	Delete(ctx context.Context, orgID, accountID string) error
+	GetMember(ctx context.Context, orgID, accountID string) error
 }
 
-// Service implements business logic for orgs.
+// Service provides organization business logic.
 type Service struct {
-	repo *Repository
-	opts Options
+	db   *sql.DB
+	orgs orgsRepository
 }
 
-// NewService returns a new Service backed by repo with the given options.
-func NewService(repo *Repository, opts Options) *Service {
-	return &Service{repo: repo, opts: opts}
+// NewService creates a new organization service.
+func NewService(db *sql.DB, orgs orgsRepository) *Service {
+	return &Service{db: db, orgs: orgs}
 }
 
-// MaxOrgs returns the configured maximum number of allowed orgs.
-func (s *Service) MaxOrgs() int {
-	return s.opts.MaxOrgs
-}
-
-// GetAll returns all orgs.
+// GetAll returns all organizations.
 func (s *Service) GetAll(ctx context.Context) ([]Org, error) {
-	orgs, err := s.repo.GetAll(ctx)
+	records, err := s.orgs.List(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get all orgs: %w", err)
+		return nil, fmt.Errorf("orgs.Service.GetAll: %w", err)
 	}
-	return orgs, nil
+	return records, nil
 }
 
-// GetByID returns the org with the given ID.
-func (s *Service) GetByID(ctx context.Context, id string) (*Org, error) {
-	org, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get org by id: %w", err)
-	}
-	return org, nil
+// Max returns the maximum number of organizations allowed.
+func (s *Service) Max() int {
+	return s.orgs.Max()
 }
 
-// Update updates the name of the org with the given ID.
-func (s *Service) Update(ctx context.Context, u UpdateOrg) (*Org, error) {
-	org, err := s.repo.Update(ctx, u)
+// GetFirstByAccountID returns the ID of the first organization the account belongs to.
+func (s *Service) GetFirstByAccountID(ctx context.Context, accountID string) (string, error) {
+	id, err := s.orgs.GetFirstByAccountID(ctx, accountID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update org: %w", err)
+		return "", fmt.Errorf("orgs.Service.GetFirstByAccountID: %w", err)
 	}
-	return org, nil
+	return id, nil
 }
 
-// Delete removes the org with the given ID.
-func (s *Service) Delete(ctx context.Context, id string) error {
-	if err := s.repo.Delete(ctx, id); err != nil {
-		return fmt.Errorf("failed to delete org: %w", err)
+// Get retrieves an organization by ID.
+func (s *Service) Get(ctx context.Context, id string) (*Org, error) {
+	record, err := s.orgs.Get(ctx, id)
+	if err != nil {
+		return &Org{}, fmt.Errorf("orgs.Service.Get: %w", err)
+	}
+	return &record, nil
+}
+
+// Update saves the organization fields.
+func (s *Service) Update(ctx context.Context, p UpdateParams) error {
+	if err := s.orgs.Update(ctx, p); err != nil {
+		return fmt.Errorf("orgs.Service.Update: %w", err)
 	}
 	return nil
 }
 
-// Create creates a new org, enforcing the configured MaxOrgs limit.
-func (s *Service) Create(ctx context.Context, createOrg CreateOrg) (*Org, error) {
-	count, err := s.repo.Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create org: %w", err)
+// Delete removes an org if accountID is its sole owner.
+func (s *Service) Delete(ctx context.Context, orgID, accountID string) error {
+	if err := s.orgs.Delete(ctx, orgID, accountID); err != nil {
+		return fmt.Errorf("orgs.Service.Delete: %w", err)
 	}
-	if count >= int64(s.opts.MaxOrgs) {
-		return nil, fmt.Errorf("failed to create org: %w", database.ErrLimitExceeded)
+	return nil
+}
+
+// GetMember returns an error if accountID is not a member of orgID.
+func (s *Service) GetMember(ctx context.Context, orgID, accountID string) error {
+	if err := s.orgs.GetMember(ctx, orgID, accountID); err != nil {
+		return fmt.Errorf("orgs.Service.GetMember: %w", err)
+	}
+	return nil
+}
+
+// CreateOrg holds the data required to create a new org.
+type CreateOrg struct {
+	ID          string
+	DisplayName string
+	AccountID   string
+}
+
+// Create creates a new org and adds the given account as owner, enforcing the configured MaxOrgs limit.
+func (s *Service) Create(ctx context.Context, createOrg CreateOrg) (string, error) {
+	fail := func(err error) (string, error) {
+		return "", fmt.Errorf("orgs.Create: %w", err)
 	}
 
-	org, err := s.repo.Create(ctx, createOrg)
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create org: %w", err)
+		return fail(err)
 	}
+	defer func() { _ = tx.Rollback() }()
+
+	org, err := s.orgs.Create(ctx, tx, createOrg.ID, createOrg.DisplayName)
+	if err != nil {
+		return "", fmt.Errorf("failed to create org: %w", err)
+	}
+
+	if err := s.orgs.CreateMember(ctx, tx, createOrg.AccountID, org, int64(OwnerRole)); err != nil {
+		return fail(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fail(err)
+	}
+
 	return org, nil
 }

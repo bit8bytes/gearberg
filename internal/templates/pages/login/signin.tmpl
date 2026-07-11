@@ -1,0 +1,81 @@
+{{ define "title"}}Signin{{ end }}
+{{ define "notes" }}Signin to filmlet{{end }}
+
+{{ define "page" }}
+<div class="flex flex-col items-center justify-center p-8 h-screen overflow-y-auto">
+  <form action="/signin" method="post">
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-6">
+      <div class="flex justify-center mb-2">{{ template "logo" . }}</div>
+      <h1 class="text-xl font-bold text-center">Welcome Back</h1>
+      <p class="text-secondary-content text-center text-sm mt-1 mb-4">Enter your email and password to access your account.</p>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="floating-label w-full">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              class="input w-full {{ with .Form.Errors.email }}input-error{{ end }}"
+              placeholder="Email"
+              value="{{ .Form.Email }}"
+              autocomplete="email"
+              {{ if .Form.Errors.email }}aria-describedby="email-error" aria-invalid="true"{{ end }}
+            />
+            <span>Email</span>
+          </label>
+          {{ with .Form.Errors.email }}
+          <div class="label">
+            <span id="email-error" class="label-text-alt text-error">{{ . }}</span>
+          </div>
+          {{ end }}
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="relative">
+            <label class="floating-label w-full">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                class="input w-full {{ with .Form.Errors.password }}input-error{{ end }}"
+                placeholder="Password"
+                autocomplete="current-password"
+                {{ if .Form.Errors.password }}aria-describedby="password-error" aria-invalid="true"{{ end }}
+              />
+              <span>Password</span>
+            </label>
+            <button
+              type="button"
+              data-pw-toggle="password"
+              class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs text-secondary-content"
+              aria-label="Show password"
+              aria-pressed="false"
+            >Show</button>
+          </div>
+          {{ with .Form.Errors.password }}
+          <div class="label">
+            <span id="password-error" class="label-text-alt text-error">{{ . }}</span>
+          </div>
+          {{ end }}
+          <div class="flex justify-end">
+            <a href="/forgot-password" class="label label-text-alt link link-hover">Forgot password?</a>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="website" />
+
+      <button type="submit" class="btn btn-primary btn-block mt-4" data-loading-btn>
+        <span class="size-4 rounded-full border-2 border-current border-t-transparent animate-spin hidden" data-loading-spinner></span>
+        Login
+      </button>
+
+      <p class="label justify-center">
+        Don't have an account?
+        <a href="/signup" class="link link-hover">Sign up.</a>
+      </p>
+    </fieldset>
+  </form>
+</div>
+{{ end }}

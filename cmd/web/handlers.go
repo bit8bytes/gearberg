@@ -16,6 +16,10 @@ func (app *application) getNotFound(w http.ResponseWriter, r *http.Request) *htt
 	return app.html.Render(w, r, http.StatusOK, pages.NotFound, app.html.TemplateData(r))
 }
 
+func (app *application) getForbidden(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	return app.html.Render(w, r, http.StatusOK, pages.Forbidden, app.html.TemplateData(r))
+}
+
 func (app *application) GetHealthz(_ context.Context) (*gen.HealthzResponse, error) {
 	return &gen.HealthzResponse{
 		Status:          "ok",

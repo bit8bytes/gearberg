@@ -9,12 +9,21 @@ import (
 )
 
 type Querier interface {
-	CountOrgs(ctx context.Context) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
-	DeleteByID(ctx context.Context, id string) error
-	GetAll(ctx context.Context) ([]Org, error)
-	GetByID(ctx context.Context, id string) (Org, error)
-	UpdateByID(ctx context.Context, arg UpdateByIDParams) (Org, error)
+	CreateMember(ctx context.Context, arg CreateMemberParams) error
+	// Deletes a single org only if the given account is its sole owner.
+	Delete(ctx context.Context, arg DeleteParams) error
+	DeleteMember(ctx context.Context, arg DeleteMemberParams) error
+	// Deletes orgs where the given account is the sole owner.
+	DeleteOwnedByAccountID(ctx context.Context, accountID string) error
+	Get(ctx context.Context, id string) (Org, error)
+	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
+	GetMemberByAccountIDAndOrgID(ctx context.Context, arg GetMemberByAccountIDAndOrgIDParams) (GetMemberByAccountIDAndOrgIDRow, error)
+	GetRoleByName(ctx context.Context, name string) (OrgRole, error)
+	List(ctx context.Context) ([]Org, error)
+	ListMembersByOrgID(ctx context.Context, orgID string) ([]ListMembersByOrgIDRow, error)
+	Update(ctx context.Context, arg UpdateParams) error
+	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
 }
 
 var _ Querier = (*Queries)(nil)
