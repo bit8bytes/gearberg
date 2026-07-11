@@ -17,30 +17,45 @@
           <label for="weight_kg" class="label">Weight <span class="text-base-content/40 text-xs">kg</span></label>
           <input id="weight_kg" type="number" inputmode="decimal" step="any" min="0" name="weight_kg" class="input w-full"
             value="{{ .Form.Weight.ToKG }}" />
+          {{ with index .Form.Errors "weight_kg" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="width_cm" class="label">Width <span class="text-base-content/40 text-xs">cm</span></label>
           <input id="width_cm" type="number" inputmode="decimal" step="any" min="0" name="width_cm" class="input w-full"
             value="{{ .Form.Width.ToCM }}" />
+          {{ with index .Form.Errors "width_cm" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="height_cm" class="label">Height <span class="text-base-content/40 text-xs">cm</span></label>
           <input id="height_cm" type="number" inputmode="decimal" step="any" min="0" name="height_cm" class="input w-full"
             value="{{ .Form.Height.ToCM }}" />
+          {{ with index .Form.Errors "height_cm" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="depth_cm" class="label">Depth <span class="text-base-content/40 text-xs">cm</span></label>
           <input id="depth_cm" type="number" inputmode="decimal" step="any" min="0" name="depth_cm" class="input w-full"
             value="{{ .Form.Depth.ToCM }}" />
+          {{ with index .Form.Errors "depth_cm" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="wire_gauge_mm2_x100" class="label">Wire gauge <span class="text-base-content/40 text-xs">mm² ×100</span></label>
           <input id="wire_gauge_mm2_x100" type="number" name="wire_gauge_mm2_x100" min="0" class="input w-full"
             value="{{ .Form.WireGauge.String }}" />
+          {{ with index .Form.Errors "wire_gauge_mm2_x100" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
       </div>
@@ -55,18 +70,27 @@
           <label for="voltage_v" class="label">Voltage <span class="text-base-content/40 text-xs">V</span></label>
           <input id="voltage_v" type="number" name="voltage_v" min="0" class="input w-full"
             value="{{ .Form.Voltage.ToV }}" />
+          {{ with index .Form.Errors "voltage_v" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="power_w" class="label">Power <span class="text-base-content/40 text-xs">W</span></label>
           <input id="power_w" type="number" inputmode="decimal" step="any" min="0" name="power_w" class="input w-full"
             value="{{ .Form.Power.ToW }}" />
+          {{ with index .Form.Errors "power_w" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
         <div class="flex flex-col gap-1 md:col-span-2">
           <label for="current_a" class="label">Current <span class="text-base-content/40 text-xs">A</span></label>
           <input id="current_a" type="number" inputmode="decimal" step="any" min="0" name="current_a" class="input w-full"
             value="{{ .Form.Current.ToA }}" />
+          {{ with index .Form.Errors "current_a" }}
+            <p class="text-red-500 text-sm">{{ . }}</p>
+          {{ end }}
         </div>
 
       </div>

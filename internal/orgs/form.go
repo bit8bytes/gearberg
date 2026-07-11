@@ -11,7 +11,7 @@ import (
 
 // Form holds the parsed form input and validation state for org create/update requests.
 type Form struct {
-	Name string
+	DisplayName string
 	validator.Validator
 }
 
@@ -21,12 +21,12 @@ func Parse(r *http.Request) (Form, error) {
 		return Form{}, fmt.Errorf("parse form: %w", err)
 	}
 	return Form{
-		Name: strings.TrimSpace(r.PostForm.Get("name")),
+		DisplayName: strings.TrimSpace(r.PostForm.Get("name")),
 	}, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.
 func (f *Form) Validate() bool {
-	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
+	f.Check(validator.NotBlank(f.DisplayName), "name", "This field cannot be blank")
 	return f.Valid()
 }

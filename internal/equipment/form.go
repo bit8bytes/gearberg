@@ -114,10 +114,47 @@ func (f *DetailsForm) Validate() bool {
 }
 
 // Validate checks PricingForm fields and returns true when all pass.
-func (f *PricingForm) Validate() bool { return f.Valid() }
+func (f *PricingForm) Validate() bool {
+	f.Check(validator.NotNil(f.PurchasePrice), "purchase_price", "This field cannot be blank")
+	if validator.NotNil(f.PurchasePrice) {
+		f.Check(*f.PurchasePrice > 0, "purchase_price", "Must be greater than 0")
+	}
+	f.Check(validator.NotNil(f.RentalPrice), "rental_price", "This field cannot be blank")
+	if validator.NotNil(f.RentalPrice) {
+		f.Check(*f.RentalPrice > 0, "rental_price", "Must be greater than 0")
+	}
+	return f.Valid()
+}
 
 // Validate checks PropertiesForm fields and returns true when all pass.
-func (f *PropertiesForm) Validate() bool { return f.Valid() }
+// All fields are optional; when provided they must be greater than 0.
+func (f *PropertiesForm) Validate() bool {
+	if validator.NotNil(f.Weight) {
+		f.Check(*f.Weight > 0, "weight_kg", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Width) {
+		f.Check(*f.Width > 0, "width_cm", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Height) {
+		f.Check(*f.Height > 0, "height_cm", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Depth) {
+		f.Check(*f.Depth > 0, "depth_cm", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Power) {
+		f.Check(*f.Power > 0, "power_w", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Current) {
+		f.Check(*f.Current > 0, "current_a", "Must be greater than 0")
+	}
+	if validator.NotNil(f.Voltage) {
+		f.Check(*f.Voltage > 0, "voltage_v", "Must be greater than 0")
+	}
+	if validator.NotNil(f.WireGauge) {
+		f.Check(*f.WireGauge > 0, "wire_gauge_mm2_x100", "Must be greater than 0")
+	}
+	return f.Valid()
+}
 
 // ToProperties converts the form's parsed values into a Properties sub-struct.
 func (f *PropertiesForm) ToProperties() Properties {
@@ -138,6 +175,19 @@ func (f *PricingForm) ToPricing() Pricing {
 	return Pricing{
 		PurchasePrice: f.PurchasePrice,
 		RentalPrice:   f.RentalPrice,
+	}
+}
+
+// DetailsFormFromEquipment pre-populates a DetailsForm from an existing Equipment's stored values.
+func DetailsFormFromEquipment(e *Equipment) DetailsForm {
+	return DetailsForm{
+		TypeID:         e.Type.String(),
+		Name:           e.Name,
+		CategoryID:     e.CategoryID,
+		ManufacturerID: e.ManufacturerID,
+		LocationID:     e.LocationID,
+		TotalStock:     e.TotalStock,
+		Notes:          e.Notes,
 	}
 }
 

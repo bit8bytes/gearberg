@@ -24,9 +24,8 @@ type locationsData struct {
 }
 
 type locationData struct {
-	OrgID    string
-	Location *locations.Location
-	ID       string
+	OrgID string
+	ID    string
 }
 
 func (app *application) getLocations(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -125,8 +124,8 @@ func (app *application) getLocation(w http.ResponseWriter, r *http.Request) *htt
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &locations.Form{}
-	data.Data = locationData{OrgID: orgID, Location: loc, ID: locID}
+	data.Form = &locations.Form{Name: loc.Name}
+	data.Data = locationData{OrgID: orgID, ID: locID}
 	return app.html.Render(w, r, http.StatusOK, pages.LocationsDetail, data)
 }
 
@@ -150,7 +149,7 @@ func (app *application) postLocation(w http.ResponseWriter, r *http.Request) *ht
 	reRender := func(f *locations.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = locationData{OrgID: loc.OrgID, Location: loc, ID: locID}
+		data.Data = locationData{OrgID: loc.OrgID, ID: locID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.LocationsDetail, data)
 	}
 

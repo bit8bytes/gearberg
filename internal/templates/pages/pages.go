@@ -111,4 +111,18 @@ var (
 
 	// Error is the generic error page.
 	Error = newPage("pages/error.tmpl", layouts.Center)
+
+	// SignIn is the sign-in page.
+	SignIn = newPage("pages/login/signin.tmpl", layouts.Login)
+	// SignUp is the account registration page.
+	SignUp = newPage("pages/login/signup.tmpl", layouts.Login)
+	// ForgotPassword is the forgot-password request page.
+	ForgotPassword = newPage("pages/login/forgot-password.tmpl", layouts.Login)
+	// ForgotPasswordSuccess is shown after a reset email has been sent.
+	ForgotPasswordSuccess = newPage("pages/login/forgot-password-success.tmpl", layouts.Login)
+	// ResetPassword is the page where users submit their new password.
+	ResetPassword = newPage("pages/login/reset-password.tmpl", layouts.Login)
+
+	// SettingsAccount is the account settings page.
+	SettingsAccount = newPage("pages/settings/account.tmpl", layouts.Center)
 )

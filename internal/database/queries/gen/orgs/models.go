@@ -5,8 +5,14 @@
 package orgs
 
 type Org struct {
-	ID        string
-	Name      string
-	UpdatedAt int64
-	CreatedAt int64
+	ID          string
+	DisplayName string
+	UpdatedAt   int64
+	CreatedAt   int64
+}
+
+type OrgRole struct {
+	ID   int64
+	Name string
+	Rank int64
 }

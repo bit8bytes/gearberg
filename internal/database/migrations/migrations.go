@@ -1,4 +1,4 @@
-// Copyright 2026 filmlet. All rights reserved.
+// Copyright 2026 gearberg. All rights reserved.
 
 // Package migrations provides access to files embedded in the running Go program.
 // It embeds all sql migration files for single binary deployments.

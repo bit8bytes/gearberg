@@ -14,8 +14,7 @@ import (
 )
 
 type orgSettingsData struct {
-	Settings *settings.OrgSettings
-	OrgID    string
+	OrgID string
 }
 
 type orgCurrencyData struct {
@@ -64,8 +63,9 @@ func (app *application) getOrgSettings(w http.ResponseWriter, r *http.Request) *
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &settings.Form{}
-	data.Data = orgSettingsData{Settings: s, OrgID: id}
+	f := settings.FormFromOrgSettings(s)
+	data.Form = &f
+	data.Data = orgSettingsData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.OrgSettings, data)
 }
 
@@ -105,7 +105,8 @@ func (app *application) postOrgSettings(w http.ResponseWriter, r *http.Request) 
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &settings.Form{}
-	data.Data = orgSettingsData{Settings: s, OrgID: id}
+	f := settings.FormFromOrgSettings(s)
+	data.Form = &f
+	data.Data = orgSettingsData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.OrgSettings, data)
 }

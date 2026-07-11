@@ -1,0 +1,26 @@
+{{ define "org-settings-sidebar" }}
+<aside class="w-56 shrink-0 border-r border-base-300 pt-8 px-3 flex flex-col gap-0.5 bg-base-100 min-h-full">
+  <p class="px-3 pb-2 pt-4 text-xs font-medium text-neutral uppercase tracking-wider">Org</p>
+  <a href="/orgs/{{ .Data.OrgID }}"
+     class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    General
+  </a>
+  <a href="/orgs/{{ .Data.OrgID }}/settings"
+     class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    Billing &amp; Tax
+  </a>
+  <p class="px-3 pb-2 pt-4 text-xs font-medium text-neutral uppercase tracking-wider">Equipment</p>
+  <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories"
+     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/equipment-categories" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    Categories
+  </a>
+  <a href="/orgs/{{ .Data.OrgID }}/settings/manufacturers"
+     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/manufacturers" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    Manufacturers
+  </a>
+  <a href="/orgs/{{ .Data.OrgID }}/settings/locations"
+     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/locations" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    Locations
+  </a>
+</aside>
+{{ end }}

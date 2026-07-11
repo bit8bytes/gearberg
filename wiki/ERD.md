@@ -3,50 +3,56 @@
 ```mermaid
 erDiagram
   sessions {
-      text token "PRIMARY KEY"
-      blob data "NOT NULL"
-      real expiry "NOT NULL"
-      text constraint "sessions_expiry_idx ON sessions(expiry)"
+    text token "PRIMARY KEY"
+    blob data "NOT NULL"
+    real expiry "NOT NULL"
+    text constraint "sessions_expiry_idx ON sessions(expiry)"
   }
 
   accounts {
-      integer id PK
-      text email "UNIQUE NOT NULL"
-      integer email_verified "NOT NULL DEFAULT 0"
-      integer created_at "NOT NULL DEFAULT unixepoch()"
-      integer updated_at "NOT NULL DEFAULT unixepoch()"
-      text constraint "INDEX on (email)"
+    text id PK
+    text email "UNIQUE NOT NULL"
+    integer email_verified "NULLABLE; unixepoch() when verified"
+    integer enabled "NOT NULL DEFAULT 1"
+    
+    integer created_at "NOT NULL DEFAULT unixepoch()"
+    integer updated_at "NOT NULL DEFAULT unixepoch()"
   }
+  %% PII: email
 
-  users {
-      integer id PK "REFERENCES accounts(id) ON DELETE CASCADE"
-      text given_name
-      text family_name
-      text phone
-      integer created_at "NOT NULL DEFAULT unixepoch()"
-      integer updated_at "NOT NULL DEFAULT unixepoch()"
+  credential_types {
+    integer id PK
+    text name "UNIQUE NOT NULL"
   }
+  %% password, totp, webauthn
 
-  identity_providers {
-      integer id PK
-      text name "UNIQUE NOT NULL"
-  }
-  %% seeded with: password, google, apple; extend by inserting new rows
+  credentials {
+    text id PK
+    text account_id "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
+    integer type_id "NOT NULL REFERENCES credential_types(id) ON DELETE RESTRICT"
+    text secret_data "NOT NULL"
 
-  identities {
-      text id PK
-      integer account_id FK "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
-      integer provider_id FK "NOT NULL REFERENCES identity_providers(id) ON DELETE RESTRICT"
-      text provider_subject "NOT NULL"
-      text provider_email
-      text credential
-      integer created_at "NOT NULL DEFAULT unixepoch()"
-      integer updated_at "NOT NULL DEFAULT unixepoch()"
-      text constraint "UNIQUE(provider_id, provider_subject)"
+    integer created_at "NOT NULL DEFAULT unixepoch()"
+    integer updated_at "NOT NULL DEFAULT unixepoch()"
   }
-  %% provider_subject: OIDC sub claim; email for the password provider
-  %% credential: argon2 hash for password provider; NULL for OIDC providers
-  %% one account can have multiple identities (one per provider)
+  %% secret_data: argon2id hash for password. one password per account enforced by partial unique index in migration
+
+  token_scopes {
+    integer id PK
+    text name "UNIQUE NOT NULL"
+  }
+  %% password-reset, email-verification
+
+  tokens {
+    text id PK
+    text account_id "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
+    integer token_scope_id "NOT NULL REFERENCES token_scopes(id) ON DELETE RESTRICT"
+    blob hash "NOT NULL UNIQUE; CHECK(length(hash) = 32)"
+    integer expires_at "NOT NULL"
+    integer attempts "NOT NULL DEFAULT 0; CHECK (attempts >= 0 AND attempts <= 5)"
+    
+    integer created_at "NOT NULL DEFAULT unixepoch()"
+  }
 
   orgs {
     text id PK
@@ -66,21 +72,33 @@ erDiagram
   }
 
   org_roles {
-      integer id PK
-      text name "UNIQUE NOT NULL"
+    integer id PK
+    text name "UNIQUE NOT NULL"
+    rank integer "DEFAULT 0"
   }
-  %% seeded: owner, billing, equipment_manager, viewer
-  %% roles are additive; each grants specific capabilities, not a rank
+  %% admin, editor, viewer
 
   org_member_roles {
-      integer account_id FK "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
-      integer org_id FK "NOT NULL REFERENCES orgs(id) ON DELETE CASCADE"
-      integer role_id FK "NOT NULL REFERENCES org_roles(id) ON DELETE RESTRICT"
-      integer created_at "NOT NULL DEFAULT unixepoch()"
-      text constraint "PRIMARY KEY (account_id, org_id, role_id)"
+    text account_id "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
+    text org_id "NOT NULL REFERENCES orgs(id) ON DELETE CASCADE"
+    integer role_id "NOT NULL REFERENCES org_roles(id) ON DELETE RESTRICT"
+    integer created_at "NOT NULL DEFAULT unixepoch()"
+    integer updated_at "NOT NULL DEFAULT unixepoch()"
+    text constraint "PRIMARY KEY (account_id, org_id, role_id)"
   }
-  %% membership = having at least one row here
-  %% a user may hold multiple roles within the same org
+
+  accounts ||--|| profiles : "has"
+  accounts ||--o{ credentials : "authenticates with"
+  accounts ||--o{ tokens : "requests"
+  accounts ||--o{ org_member_roles : "belongs to"
+  accounts ||--o{ federated_identities : "signs in via"
+
+  credential_types ||--o{ credentials : "types"
+  token_scopes ||--o{ tokens : "scopes"
+  provider_types ||--o{ federated_identities : "provided by"
+
+  orgs ||--o{ org_member_roles : "has members"
+  org_roles ||--o{ org_member_roles : "grants"
 
   equipment_categories {
     text id PK

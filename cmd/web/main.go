@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,11 +31,20 @@ import (
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
+// sessionManager abstracts the SCS session store for testing and dependency inversion.
+type sessionManager interface {
+	AccountID(ctx context.Context) string
+	SetAccountID(ctx context.Context, id string)
+	Destroy(ctx context.Context) error
+	LoadAndSave(next http.Handler) http.Handler
+}
+
 type application struct {
 	logger   *slog.Logger
 	options  *options
 	html     *htmlpkg.HTML
 	db       *sql.DB
+	session  sessionManager
 	services *services
 }
 
@@ -106,7 +116,15 @@ func runServe(args []string) error {
 		return fmt.Errorf("seed reference data: %w", err)
 	}
 
-	services, err := setupServices(db, options, log)
+	scsMgr, err := setupSCS(db)
+	if err != nil {
+		return fmt.Errorf("setup session manager: %w", err)
+	}
+	sessionManager := setupSessionManager(scsMgr)
+
+	mailer := setupMailer(options, log)
+
+	services, err := setupServices(db, options, log, mailer)
 	if err != nil {
 		return fmt.Errorf("setup services: %w", err)
 	}
@@ -116,6 +134,7 @@ func runServe(args []string) error {
 		options:  options,
 		html:     html,
 		db:       db,
+		session:  sessionManager,
 		services: services,
 	}
 

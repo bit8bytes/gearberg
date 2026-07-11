@@ -1,4 +1,4 @@
-{{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }}{{ end }}{{ end }}
+{{ define "title" }}{{ .Form.Name }}{{ end }}
 
 {{ define "page" }}
 {{ template "equipment-header" . }}
@@ -7,7 +7,7 @@
 
 <div class="max-w-5xl w-full mx-auto px-4 my-8">
   <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
-    <input type="hidden" name="type_id" value="{{ .Data.Item.Type }}">
+    <input type="hidden" name="type_id" value="{{ .Form.TypeID }}">
 
     <fieldset class="border border-base-300 rounded-lg p-4">
       <legend class="px-1 text-sm font-medium text-base-content/60">General</legend>
@@ -24,7 +24,7 @@
             id="name"
             type="text"
             name="name"
-            value="{{ if .Form.Name }}{{ .Form.Name }}{{ else if .Data.Item }}{{ .Data.Item.Name }}{{ end }}"
+            value="{{ .Form.Name }}"
             maxlength="200"
             class="input w-full"
             />
@@ -35,13 +35,13 @@
 
           <div class="flex flex-col gap-1 md:col-span-2">
             <label class="label">Tracking Type</label>
-            <input type="text" value="{{ .Data.Item.Type.Label }}" class="input w-full" disabled />
+            <input type="text" value="{{ if eq .Form.TypeID "bulk" }}Bulk{{ else }}Serialized{{ end }}" class="input w-full" disabled />
           </div>
           
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="category_input" class="label">Category</label>
             <div
-              hx-get="/orgs/{{ .Data.OrgID }}/equipment-categories{{ if .Form.CategoryID }}?selected={{ .Form.CategoryID }}{{ else if .Form.CategoryName }}?selected_name={{ .Form.CategoryName | urlquery }}{{ else if .Data.Item.CategoryID }}?selected={{ .Data.Item.CategoryID }}{{ end }}"
+              hx-get="/orgs/{{ .Data.OrgID }}/equipment-categories{{ if .Form.CategoryID }}?selected={{ .Form.CategoryID }}{{ else if .Form.CategoryName }}?selected_name={{ .Form.CategoryName | urlquery }}{{ end }}"
               hx-trigger="load"
               hx-swap="outerHTML">
               {{ template "equipment-categories-skeleton" . }}
@@ -54,7 +54,7 @@
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="manufacturer_input" class="label">Manufacturer</label>
             <div
-              hx-get="/orgs/{{ .Data.OrgID }}/equipment-manufacturers{{ if .Form.ManufacturerID }}?selected={{ .Form.ManufacturerID }}{{ else if .Form.ManufacturerName }}?selected_name={{ .Form.ManufacturerName | urlquery }}{{ else if .Data.Item.ManufacturerID }}?selected={{ .Data.Item.ManufacturerID }}{{ end }}"
+              hx-get="/orgs/{{ .Data.OrgID }}/equipment-manufacturers{{ if .Form.ManufacturerID }}?selected={{ .Form.ManufacturerID }}{{ else if .Form.ManufacturerName }}?selected_name={{ .Form.ManufacturerName | urlquery }}{{ end }}"
               hx-trigger="load"
               hx-swap="outerHTML">
               {{ template "equipment-manufacturers-skeleton" . }}
@@ -64,21 +64,21 @@
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="location_input" class="label">Stock Location</label>
             <div
-              hx-get="/orgs/{{ .Data.OrgID }}/warehouse-locations{{ if .Form.LocationID }}?selected={{ .Form.LocationID }}{{ else if .Form.LocationName }}?selected_name={{ .Form.LocationName | urlquery }}{{ else if .Data.Item.LocationID }}?selected={{ .Data.Item.LocationID }}{{ end }}"
+              hx-get="/orgs/{{ .Data.OrgID }}/warehouse-locations{{ if .Form.LocationID }}?selected={{ .Form.LocationID }}{{ else if .Form.LocationName }}?selected_name={{ .Form.LocationName | urlquery }}{{ end }}"
               hx-trigger="load"
               hx-swap="outerHTML">
               {{ template "warehouse-locations-skeleton" . }}
             </div>
           </div>
 
-          {{ if .Data.Item }}{{ if eq .Data.Item.Type 1 }}
+          {{ if eq .Form.TypeID "bulk" }}
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="total_stock" class="label">Total Stock</label>
             <input
               id="total_stock"
               type="number"
               name="total_stock"
-              value="{{ if .Form.TotalStock }}{{ .Form.TotalStock }}{{ else if .Data.Item }}{{ .Data.Item.TotalStock }}{{ end }}"
+              value="{{ .Form.TotalStock }}"
               min="1"
               class="input w-full"
             />
@@ -86,11 +86,11 @@
               <p class="text-error text-sm">{{ . }}</p>
             {{ end }}
           </div>
-          {{ end }}{{ end }}
+          {{ end }}
 
           <div class="flex flex-col gap-1 md:col-span-4">
             <label for="notes" class="label">Notes <span class="text-base-content/40 text-xs">(optional)</span></label>
-            <textarea id="notes" name="notes" class="textarea w-full" rows="3">{{ if .Form.Notes }}{{ .Form.Notes }}{{ else if .Data.Item }}{{ .Data.Item.Notes }}{{ end }}</textarea>
+            <textarea id="notes" name="notes" class="textarea w-full" rows="3">{{ .Form.Notes }}</textarea>
           </div>
 
         </div>

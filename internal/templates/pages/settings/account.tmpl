@@ -1,0 +1,80 @@
+{{ define "title" }}Account Settings{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2>Account</h2>
+    <a href="/orgs" class="btn">Back</a>
+  </div>
+  <p class="text-sm text-neutral mb-6">Your email address and account information.</p>
+
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <label for="email">Email</label>
+      <div class="input flex items-center gap-2">
+        <input
+          id="email"
+          name="email"
+          type="email"
+          class="grow"
+          value="{{ .Form.Email }}"
+          autocomplete="email"
+          readonly
+        />
+        {{ if .Data.EmailVerified }}
+        <span class="tooltip cursor-help tooltip-left tooltip-success" data-tip="Email verified on {{ .Data.EmailVerified.Format "Jan 2, 2006" }}">
+          <span class="text-success">{{ template "success-icon" . }}</span>
+        </span>
+        {{ else }}
+        <span class="tooltip cursor-help tooltip-left tooltip-warning" data-tip="Email not verified">
+          <span class="text-warning">{{ template "error-icon" . }}</span>
+        </span>
+        {{ end }}
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="account-id">Account ID</label>
+      <input
+        id="account-id"
+        type="text"
+        class="input"
+        value="{{ .Data.ID }}"
+        readonly
+      />
+    </div>
+  </div>
+
+  <div class="mt-10 border-t border-error pt-6">
+    <h3 class="mb-1 text-error">Danger Zone</h3>
+    <p class="text-sm text-neutral mb-4">Permanently delete your account and all associated data.</p>
+    <button class="btn btn-error" data-modal-target="delete_account_modal">Delete Account</button>
+  </div>
+</div>
+
+<dialog id="delete_account_modal" class="modal">
+  <div class="modal-box">
+    <h3>Delete Account</h3>
+    <div class="flex flex-col gap-2 text-sm py-4">
+      <p>This will permanently delete your account, including:</p>
+      <ul class="list-disc list-inside text-base-content/60 flex flex-col gap-1">
+        <li>All organizations you are the sole owner of</li>
+        <li>Your profile and all personal data</li>
+        <li>Your login credentials</li>
+      </ul>
+      <p class="font-semibold mt-1">This action cannot be undone.</p>
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn" autofocus>Cancel</button>
+      </form>
+      <button class="btn btn-error" hx-delete="/settings/account">
+        Yes, permanently delete my account
+      </button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+{{ end }}

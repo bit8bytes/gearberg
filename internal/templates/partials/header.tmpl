@@ -27,16 +27,9 @@
           </div>
           <div class="border border-base-200"></div>
           <li>
-            <a href="/orgs/{{ .Data.OrgID }}/equipment" class="{{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .Data.OrgID) }}text-primary{{ end }}">
-              {{ template "inventory-icon" . }}
-              Equipment
-            </a>
-          </li>
-          <div class="border border-base-200"></div>
-          <li>
-            <a href="/" class="{{ if eq $.URL.Path "/orgs" }}text-primary{{ end }}">
-              {{ template "orgs-icon" . }}
-              All Orgs
+            <a href="/settings/account" class="{{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}text-primary{{ end }}">
+              {{ template "account-icon" . }}
+              Account
             </a>
           </li>
           <li>
@@ -44,6 +37,26 @@
               {{ template "settings-icon" . }}
               Settings
             </a>
+          </li>
+          <div class="border border-base-200"></div>
+          <li>
+            <a href="/orgs/{{ .Data.OrgID }}/equipment" class="{{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .Data.OrgID) }}text-primary{{ end }}">
+              {{ template "inventory-icon" . }}
+              Equipment
+            </a>
+          </li>
+          <li>
+            <a href="/" class="{{ if eq $.URL.Path "/orgs" }}text-primary{{ end }}">
+              {{ template "orgs-icon" . }}
+              Organizations
+            </a>
+          </li>
+          <div class="border border-base-200"></div>
+          <li>
+            <button class="w-full" hx-post="/signout">
+              {{ template "logout-icon" . }}
+              Logout
+            </button>
           </li>
         </ul>
       </div>

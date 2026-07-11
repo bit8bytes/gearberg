@@ -24,9 +24,8 @@ type equipmentCategoriesData struct {
 }
 
 type equipmentCategoryData struct {
-	OrgID    string
-	Category *categories.EquipmentCategory
-	ID       string
+	OrgID string
+	ID    string
 }
 
 func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -124,8 +123,8 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &categories.Form{}
-	data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
+	data.Form = &categories.Form{Name: category.Name}
+	data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
 }
 
@@ -139,18 +138,10 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment category not found.", Code: http.StatusNotFound}
-		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
-	}
-
 	reRender := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
+		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
@@ -192,11 +183,11 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
 			}
-			f := &categories.Form{}
+			f := &categories.Form{Name: category.Name}
 			f.AddError("delete", "Cannot delete: this category is assigned to one or more equipment items.")
 			data := app.html.TemplateData(r)
 			data.Form = f
-			data.Data = equipmentCategoryData{OrgID: orgID, Category: category, ID: catID}
+			data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
 			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 		}
 		return &httperr.Error{

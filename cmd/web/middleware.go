@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/nonce"
+	"github.com/bit8bytes/gearberg/internal/sessions"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/trace"
 	"github.com/bit8bytes/gearberg/pkg/tokens"
@@ -173,5 +174,52 @@ func withSecurityHeaders(next http.Handler) http.Handler {
 		))
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+// withLogin ensures that the user is authenticated before allowing access to the next handler.
+// If the user is not authenticated, they are redirected to the signin page.
+func (app *application) withLogin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// accountID is added to the session after successful login.
+		accountID := app.session.AccountID(r.Context())
+		if accountID == "" {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+
+		ctx := sessions.NewContext(r.Context(), sessions.Session{
+			AccountID: accountID,
+		})
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// withPermission verifies the authenticated user is a member of the org in the URL path.
+// Must be used after withLogin. Returns 403 if the user is not a member.
+func (app *application) withPermission(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		orgID := r.PathValue("org_id")
+		session := sessions.MustFromRequest(r)
+		if err := app.services.orgs.GetMember(r.Context(), orgID, session.AccountID); err != nil {
+			http.Error(w, "Forbidden.", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// withGuest ensures that only unauthenticated users can access the next handler.
+// If the user is already signed in, they are redirected to the home page.
+func (app *application) withGuest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		accountID := app.session.AccountID(r.Context())
+		if accountID == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
 }
