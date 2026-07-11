@@ -3,16 +3,16 @@ package main
 import (
 	"encoding/csv"
 	"net/http"
-	"strconv"
 
+	"github.com/bit8bytes/gearberg/internal/equipment"
 	"github.com/bit8bytes/gearberg/internal/equipment/imports"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 )
 
 // exportColumnCount must equal len(imports.ExpectedHeaders). This line fails to
-// compile if the export cw.Write call is updated without updating ExpectedHeaders
-// (or vice versa), catching column-count drift at build time.
-const exportColumnCount = 18
+// compile if RowsForItem is updated without updating ExpectedHeaders (or vice
+// versa), catching column-count drift at build time.
+const exportColumnCount = 26
 
 var _ = [1]struct{}{}[exportColumnCount-len(imports.ExpectedHeaders)]
 
@@ -46,26 +46,18 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 		if item.IsArchived || item.TotalStock == 0 {
 			continue
 		}
-		_ = cw.Write([]string{
-			item.Name,
-			item.Type.Label(),
-			item.UsageType.Label(),
-			item.CategoryName,
-			mfrByID[item.ManufacturerID],
-			item.LocationName,
-			item.Pricing.RentalPrice.ToDecimal(),
-			item.Pricing.PurchasePrice.ToDecimal(),
-			item.Notes,
-			item.Properties.Weight.ToKG(),
-			item.Properties.Width.ToCM(),
-			item.Properties.Height.ToCM(),
-			item.Properties.Depth.ToCM(),
-			item.Properties.Voltage.ToV(),
-			item.Properties.Current.ToA(),
-			item.Properties.Power.ToW(),
-			item.Properties.WireGauge.String(),
-			strconv.FormatInt(item.TotalStock, 10),
-		})
+
+		var units []equipment.Unit
+		if item.Type == equipment.Serialized {
+			units, err = app.services.equipment.ListUnits(ctx, item.ID)
+			if err != nil {
+				return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
+			}
+		}
+
+		for _, row := range imports.RowsForItem(item, mfrByID[item.ManufacturerID], units) {
+			_ = cw.Write(row)
+		}
 	}
 	cw.Flush()
 	return nil

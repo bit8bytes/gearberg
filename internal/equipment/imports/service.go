@@ -67,28 +67,36 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 	importID := ksuid.New().String()
 	for i, raw := range rawRows {
 		row := Row{
-			ID:               ksuid.New().String(),
-			ImportID:         importID,
-			OrgID:            orgID,
-			RowNumber:        int64(i + 1),
-			Name:             raw.Name,
-			TypeLabel:        raw.TypeLabel,
-			UsageTypeLabel:   raw.UsageTypeLabel,
-			CategoryName:     raw.CategoryName,
-			ManufacturerName: raw.ManufacturerName,
-			LocationName:     raw.LocationName,
-			RentalPrice:      raw.RentalPrice,
-			ResalePrice:      raw.ResalePrice,
-			Notes:            raw.Notes,
-			WeightG:          raw.WeightG,
-			WidthMm:          raw.WidthMm,
-			HeightMm:         raw.HeightMm,
-			DepthMm:          raw.DepthMm,
-			VoltageV:         raw.VoltageV,
-			CurrentMa:        raw.CurrentA,
-			PowerMw:          raw.PowerW,
-			WireGaugeMM2X100: raw.WireGaugeMM2X100,
-			Quantity:         raw.Quantity,
+			ID:                     ksuid.New().String(),
+			ImportID:               importID,
+			OrgID:                  orgID,
+			RowNumber:              int64(i + 1),
+			Name:                   raw.Name,
+			TypeLabel:              raw.TypeLabel,
+			UsageTypeLabel:         raw.UsageTypeLabel,
+			CategoryName:           raw.CategoryName,
+			ManufacturerName:       raw.ManufacturerName,
+			LocationName:           raw.LocationName,
+			RentalPrice:            raw.RentalPrice,
+			ResalePrice:            raw.ResalePrice,
+			Notes:                  raw.Notes,
+			WeightG:                raw.WeightG,
+			WidthMm:                raw.WidthMm,
+			HeightMm:               raw.HeightMm,
+			DepthMm:                raw.DepthMm,
+			VoltageMv:              raw.VoltageV,
+			CurrentMa:              raw.CurrentA,
+			PowerMw:                raw.PowerW,
+			WireGaugeMM2X100:       raw.WireGaugeMM2X100,
+			Quantity:               raw.Quantity,
+			HasContent:             raw.HasContent,
+			UnitSerialNumber:       raw.UnitSerialNumber,
+			UnitManufacturerSerial: raw.UnitManufacturerSerial,
+			UnitPurchasePrice:      raw.UnitPurchasePrice,
+			UnitPurchasedAt:        raw.UnitPurchasedAt,
+			NextInspectionAt:       raw.NextInspectionAt,
+			UnitIsActive:           raw.UnitIsActive,
+			UnitRemark:             raw.UnitRemark,
 		}
 
 		if errMsg := validateRow(raw); errMsg != "" {
@@ -216,13 +224,8 @@ func (s *Service) Commit(ctx context.Context, importID string, orgID string) err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	for _, row := range rows {
-		if row.Status == StatusError || row.Action == ActionSkip {
-			continue
-		}
-		if err := s.commitRow(ctx, tx, row, lk); err != nil {
-			return fmt.Errorf("Commit: row %d: %w", row.RowNumber, err)
-		}
+	if err := s.commitRows(ctx, tx, rows, lk); err != nil {
+		return fmt.Errorf("Commit: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -237,25 +240,57 @@ func (s *Service) Commit(ctx context.Context, importID string, orgID string) err
 	return nil
 }
 
-func (s *Service) commitRow(ctx context.Context, tx *sql.Tx, row Row, lk commitLookups) error {
-	catID := lk.catsByName[strings.ToLower(row.CategoryName)]
-	mfrID := lk.mfrsByName[strings.ToLower(row.ManufacturerName)]
-	var locID *string
+type serializedGroup struct {
+	first Row
+	rows  []Row
+}
+
+// commitRows groups serialized rows by name and commits all bulk and serialized items.
+func (s *Service) commitRows(ctx context.Context, tx *sql.Tx, rows []Row, lk commitLookups) error {
+	byName := make(map[string]*serializedGroup)
+	var order []string
+	for _, row := range rows {
+		if row.Status == StatusError || row.Action == ActionSkip {
+			continue
+		}
+		if !strings.EqualFold(row.TypeLabel, "serialized") {
+			if err := s.commitBulkRow(ctx, tx, row, lk); err != nil {
+				return fmt.Errorf("row %d: %w", row.RowNumber, err)
+			}
+			continue
+		}
+		key := strings.ToLower(row.Name)
+		if _, ok := byName[key]; !ok {
+			byName[key] = &serializedGroup{first: row}
+			order = append(order, key)
+		}
+		byName[key].rows = append(byName[key].rows, row)
+	}
+	for _, key := range order {
+		g := byName[key]
+		if err := s.commitSerializedGroup(ctx, tx, g.first, g.rows, lk); err != nil {
+			return fmt.Errorf("serialized %q: %w", g.first.Name, err)
+		}
+	}
+	return nil
+}
+
+func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID string, locID *string) {
+	catID = lk.catsByName[strings.ToLower(row.CategoryName)]
+	mfrID = lk.mfrsByName[strings.ToLower(row.ManufacturerName)]
 	if id, ok := lk.locsByName[strings.ToLower(row.LocationName)]; ok {
 		locID = &id
 	}
-	return s.createRow(ctx, tx, row, catID, mfrID, locID)
+	return
 }
 
-func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfrID string, locID *string) error {
+func buildBase(row Row, catID, mfrID string, locID *string) equipment.Base {
 	usageType := equipment.Rental
 	if strings.EqualFold(row.UsageTypeLabel, "sale") {
 		usageType = equipment.Sale
 	}
-
-	itemID := ksuid.New().String()
-	base := equipment.Base{
-		ID:             itemID,
+	return equipment.Base{
+		ID:             ksuid.New().String(),
 		OrgID:          row.OrgID,
 		UsageTypeID:    usageType.ID(),
 		Name:           row.Name,
@@ -267,6 +302,7 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 			PurchasePrice: equipment.ParseCents(row.ResalePrice),
 			RentalPrice:   equipment.ParseCents(row.RentalPrice),
 		},
+		HasContent: row.HasContent == "true" || row.HasContent == "1",
 		Properties: equipment.Properties{
 			Weight:    equipment.ParseGrams(row.WeightG),
 			Width:     equipment.ParseMillimeters(row.WidthMm),
@@ -274,35 +310,59 @@ func (s *Service) createRow(ctx context.Context, tx *sql.Tx, row Row, catID, mfr
 			Depth:     equipment.ParseMillimeters(row.DepthMm),
 			Power:     equipment.ParseMilliwatts(row.PowerMw),
 			Current:   equipment.ParseMilliamps(row.CurrentMa),
-			Voltage:   equipment.ParseVolts(row.VoltageV),
+			Voltage:   equipment.ParseVolts(row.VoltageMv),
 			WireGauge: equipment.ParseWireGauge(row.WireGaugeMM2X100),
 		},
 	}
+}
 
-	if !strings.EqualFold(row.TypeLabel, "serialized") {
-		if _, err := s.inventory.CreateBulkTx(ctx, tx, equipment.CreateBulkEquipment{
-			Base:       base,
-			TotalStock: equipment.ParseQuantity(row.Quantity),
-		}); err != nil {
-			return fmt.Errorf("createRow: bulk: %w", err)
-		}
-		return nil
+func (s *Service) commitBulkRow(ctx context.Context, tx *sql.Tx, row Row, lk commitLookups) error {
+	catID, mfrID, locID := s.resolveLookups(row, lk)
+	base := buildBase(row, catID, mfrID, locID)
+	if _, err := s.inventory.CreateBulkTx(ctx, tx, equipment.CreateBulkEquipment{
+		Base:       base,
+		TotalStock: equipment.ParseQuantity(row.Quantity),
+	}); err != nil {
+		return fmt.Errorf("commitBulkRow: %w", err)
 	}
+	return nil
+}
 
-	qty := equipment.ParseQuantity(row.Quantity)
-	units := make([]equipment.CreateUnit, qty)
-	for i := range units {
-		units[i] = equipment.CreateUnit{
-			ID:           ksuid.New().String(),
-			EquipmentID:  itemID,
-			SerialNumber: serial.New(),
-		}
+func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
+	sn := strings.TrimSpace(row.UnitSerialNumber)
+	if sn == "" {
+		sn = serial.New()
+	}
+	isActive := int64(1)
+	if row.UnitIsActive == "0" {
+		isActive = 0
+	}
+	return equipment.CreateUnit{
+		ID:                       ksuid.New().String(),
+		EquipmentID:              equipmentID,
+		SerialNumber:             sn,
+		ManufacturerSerialNumber: row.UnitManufacturerSerial,
+		Remark:                   row.UnitRemark,
+		PurchasePrice:            equipment.ParseCents(row.UnitPurchasePrice),
+		PurchasedAt:              equipment.ParseDate(row.UnitPurchasedAt),
+		NextInspectionAt:         equipment.ParseDate(row.NextInspectionAt),
+		IsActive:                 isActive,
+	}
+}
+
+// commitSerializedGroup creates one equipment item with one unit per row in the group.
+func (s *Service) commitSerializedGroup(ctx context.Context, tx *sql.Tx, first Row, rows []Row, lk commitLookups) error {
+	catID, mfrID, locID := s.resolveLookups(first, lk)
+	base := buildBase(first, catID, mfrID, locID)
+	units := make([]equipment.CreateUnit, 0, len(rows))
+	for _, row := range rows {
+		units = append(units, buildUnit(row, base.ID))
 	}
 	if _, err := s.inventory.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
 		Base:  base,
 		Units: units,
 	}); err != nil {
-		return fmt.Errorf("createRow: serialized: %w", err)
+		return fmt.Errorf("commitSerializedGroup: %w", err)
 	}
 	return nil
 }
@@ -321,6 +381,9 @@ func validateRow(raw RawRow) string {
 	}
 	if strings.TrimSpace(raw.CategoryName) == "" {
 		return "Category is required"
+	}
+	if (raw.HasContent == "true" || raw.HasContent == "1") && !strings.EqualFold(tl, "serialized") {
+		return "Has Content is only supported for Serialized items"
 	}
 	return ""
 }

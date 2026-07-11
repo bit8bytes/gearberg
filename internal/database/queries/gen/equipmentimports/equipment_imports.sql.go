@@ -29,7 +29,7 @@ func (q *Queries) DeleteImportsByOrgID(ctx context.Context, orgID string) error 
 }
 
 const getImportRow = `-- name: GetImportRow :one
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE id = ?
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE id = ?
 `
 
 func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport, error) {
@@ -53,6 +53,7 @@ func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport,
 		&i.CategoryName,
 		&i.ManufacturerName,
 		&i.LocationName,
+		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.ResalePrice,
 		&i.Notes,
@@ -60,17 +61,19 @@ func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport,
 		&i.WidthMm,
 		&i.HeightMm,
 		&i.DepthMm,
-		&i.VoltageV,
+		&i.VoltageMv,
 		&i.CurrentMa,
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
 		&i.Quantity,
-		&i.PurchasePrice,
-		&i.PurchasedAt,
-		&i.ManufacturerSerial,
+		&i.HasContent,
+		&i.UnitSerialNumber,
+		&i.UnitManufacturerSerial,
+		&i.UnitPurchasePrice,
+		&i.UnitPurchasedAt,
 		&i.NextInspectionAt,
-		&i.IsActive,
-		&i.Remark,
+		&i.UnitIsActive,
+		&i.UnitRemark,
 	)
 	return i, err
 }
@@ -93,6 +96,7 @@ INSERT INTO equipment_imports (
     category_name,
     manufacturer_name,
     location_name,
+    purchase_price,
     rental_price,
     resale_price,
     notes,
@@ -100,60 +104,65 @@ INSERT INTO equipment_imports (
     width_mm,
     height_mm,
     depth_mm,
-    voltage_v,
+    voltage_mv,
     current_ma,
     power_mw,
     wire_gauge_mm2_x100,
     quantity,
-    purchase_price,
-    purchased_at,
-    manufacturer_serial,
+    has_content,
+    unit_serial_number,
+    unit_manufacturer_serial,
+    unit_purchase_price,
+    unit_purchased_at,
     next_inspection_at,
-    is_active,
-    remark
+    unit_is_active,
+    unit_remark
 ) VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
-    ?, ?, ?, ?, ?, ?, ?
-) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark
+    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark
 `
 
 type InsertImportRowParams struct {
-	ID                  string
-	ImportID            string
-	OrgID               string
-	RowNumber           int64
-	Status              string
-	ErrorMessage        string
-	Action              string
-	ExistingEquipmentID sql.NullString
-	ExistingItemID      sql.NullString
-	Name                string
-	TypeLabel           string
-	TrackingLabel       string
-	UsageTypeLabel      string
-	CategoryName        string
-	ManufacturerName    string
-	LocationName        string
-	RentalPrice         string
-	ResalePrice         string
-	Notes               string
-	WeightG             string
-	WidthMm             string
-	HeightMm            string
-	DepthMm             string
-	VoltageV            string
-	CurrentMa           string
-	PowerMw             string
-	WireGaugeMm2X100    string
-	Quantity            string
-	PurchasePrice       string
-	PurchasedAt         string
-	ManufacturerSerial  string
-	NextInspectionAt    string
-	IsActive            string
-	Remark              string
+	ID                     string
+	ImportID               string
+	OrgID                  string
+	RowNumber              int64
+	Status                 string
+	ErrorMessage           string
+	Action                 string
+	ExistingEquipmentID    sql.NullString
+	ExistingItemID         sql.NullString
+	Name                   string
+	TypeLabel              string
+	TrackingLabel          string
+	UsageTypeLabel         string
+	CategoryName           string
+	ManufacturerName       string
+	LocationName           string
+	PurchasePrice          string
+	RentalPrice            string
+	ResalePrice            string
+	Notes                  string
+	WeightG                string
+	WidthMm                string
+	HeightMm               string
+	DepthMm                string
+	VoltageMv              string
+	CurrentMa              string
+	PowerMw                string
+	WireGaugeMm2X100       string
+	Quantity               string
+	HasContent             string
+	UnitSerialNumber       string
+	UnitManufacturerSerial string
+	UnitPurchasePrice      string
+	UnitPurchasedAt        string
+	NextInspectionAt       string
+	UnitIsActive           string
+	UnitRemark             string
 }
 
 func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams) (EquipmentImport, error) {
@@ -174,6 +183,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		arg.CategoryName,
 		arg.ManufacturerName,
 		arg.LocationName,
+		arg.PurchasePrice,
 		arg.RentalPrice,
 		arg.ResalePrice,
 		arg.Notes,
@@ -181,17 +191,19 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		arg.WidthMm,
 		arg.HeightMm,
 		arg.DepthMm,
-		arg.VoltageV,
+		arg.VoltageMv,
 		arg.CurrentMa,
 		arg.PowerMw,
 		arg.WireGaugeMm2X100,
 		arg.Quantity,
-		arg.PurchasePrice,
-		arg.PurchasedAt,
-		arg.ManufacturerSerial,
+		arg.HasContent,
+		arg.UnitSerialNumber,
+		arg.UnitManufacturerSerial,
+		arg.UnitPurchasePrice,
+		arg.UnitPurchasedAt,
 		arg.NextInspectionAt,
-		arg.IsActive,
-		arg.Remark,
+		arg.UnitIsActive,
+		arg.UnitRemark,
 	)
 	var i EquipmentImport
 	err := row.Scan(
@@ -212,6 +224,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		&i.CategoryName,
 		&i.ManufacturerName,
 		&i.LocationName,
+		&i.PurchasePrice,
 		&i.RentalPrice,
 		&i.ResalePrice,
 		&i.Notes,
@@ -219,23 +232,25 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		&i.WidthMm,
 		&i.HeightMm,
 		&i.DepthMm,
-		&i.VoltageV,
+		&i.VoltageMv,
 		&i.CurrentMa,
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
 		&i.Quantity,
-		&i.PurchasePrice,
-		&i.PurchasedAt,
-		&i.ManufacturerSerial,
+		&i.HasContent,
+		&i.UnitSerialNumber,
+		&i.UnitManufacturerSerial,
+		&i.UnitPurchasePrice,
+		&i.UnitPurchasedAt,
 		&i.NextInspectionAt,
-		&i.IsActive,
-		&i.Remark,
+		&i.UnitIsActive,
+		&i.UnitRemark,
 	)
 	return i, err
 }
 
 const listImportRowsByImportID = `-- name: ListImportRowsByImportID :many
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_v, current_ma, power_mw, wire_gauge_mm2_x100, quantity, purchase_price, purchased_at, manufacturer_serial, next_inspection_at, is_active, remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
 `
 
 func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string) ([]EquipmentImport, error) {
@@ -265,6 +280,7 @@ func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string)
 			&i.CategoryName,
 			&i.ManufacturerName,
 			&i.LocationName,
+			&i.PurchasePrice,
 			&i.RentalPrice,
 			&i.ResalePrice,
 			&i.Notes,
@@ -272,17 +288,19 @@ func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string)
 			&i.WidthMm,
 			&i.HeightMm,
 			&i.DepthMm,
-			&i.VoltageV,
+			&i.VoltageMv,
 			&i.CurrentMa,
 			&i.PowerMw,
 			&i.WireGaugeMm2X100,
 			&i.Quantity,
-			&i.PurchasePrice,
-			&i.PurchasedAt,
-			&i.ManufacturerSerial,
+			&i.HasContent,
+			&i.UnitSerialNumber,
+			&i.UnitManufacturerSerial,
+			&i.UnitPurchasePrice,
+			&i.UnitPurchasedAt,
 			&i.NextInspectionAt,
-			&i.IsActive,
-			&i.Remark,
+			&i.UnitIsActive,
+			&i.UnitRemark,
 		); err != nil {
 			return nil, err
 		}
@@ -308,5 +326,19 @@ type UpdateImportRowActionParams struct {
 
 func (q *Queries) UpdateImportRowAction(ctx context.Context, arg UpdateImportRowActionParams) error {
 	_, err := q.db.ExecContext(ctx, updateImportRowAction, arg.Action, arg.ID)
+	return err
+}
+
+const updateImportRowSerialNumber = `-- name: UpdateImportRowSerialNumber :exec
+UPDATE equipment_imports SET unit_serial_number = ? WHERE id = ?
+`
+
+type UpdateImportRowSerialNumberParams struct {
+	UnitSerialNumber string
+	ID               string
+}
+
+func (q *Queries) UpdateImportRowSerialNumber(ctx context.Context, arg UpdateImportRowSerialNumberParams) error {
+	_, err := q.db.ExecContext(ctx, updateImportRowSerialNumber, arg.UnitSerialNumber, arg.ID)
 	return err
 }

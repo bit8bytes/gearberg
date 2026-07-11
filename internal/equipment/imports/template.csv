@@ -1,3 +1,5 @@
-Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (kg),Width (cm),Height (cm),Depth (cm),Voltage (V),Current (A),Power (W),Wire Gauge (mm² ×100),Quantity
-Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,0.298,4.7,4.7,16.2,,,,,7
-Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,0.9,22,22,9.5,5,2.4,12,,4
+Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (kg),Width (cm),Height (cm),Depth (cm),Voltage (V),Current (A),Power (W),Wire Gauge (mm² ×100),Quantity,Has Content,Unit Serial Number,Unit Manufacturer Serial,Unit Purchase Price,Unit Purchased At,Next Inspection At,Unit Active,Unit Remark
+Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,0.298,4.7,4.7,16.2,,,,,7,,,,,,,,
+Sony A7 IV,Serialized,Rental,Camera,Sony,Main Warehouse,80.00,2800.00,Full-frame mirrorless camera,0.659,13.1,9.6,8.0,,,,,,,SN-A7IV-001,7-000001,2800.00,2024-03-15,2025-03-15,1,
+Sony A7 IV,Serialized,Rental,Camera,Sony,Main Warehouse,80.00,2800.00,Full-frame mirrorless camera,0.659,13.1,9.6,8.0,,,,,,,SN-A7IV-002,7-000002,2800.00,2024-03-15,2025-03-15,1,Minor scratch on top plate
+Pelican 1510 Case,Serialized,Rental,Case,Pelican,Main Warehouse,10.00,120.00,Carry-on approved hard case,2.8,56.3,35.5,22.9,,,,,,true,PC-1510-001,,120.00,2024-01-10,,1,

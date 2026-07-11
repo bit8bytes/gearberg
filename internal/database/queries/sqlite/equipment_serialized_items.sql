@@ -73,6 +73,7 @@ ORDER BY created_at ASC;
 -- name: Update :exec
 UPDATE equipment_serialized_items
 SET
+    serial_number = sqlc.arg(serial_number),
     is_active = sqlc.arg(is_active),
     remark = sqlc.arg(remark),
     purchase_price = sqlc.arg(purchase_price),

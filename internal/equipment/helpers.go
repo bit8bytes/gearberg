@@ -126,8 +126,8 @@ func ParseWireGauge(s string) *WireGauge {
 	return &v
 }
 
-// parseUnixDate parses a YYYY-MM-DD date string and returns a Unix timestamp pointer. Returns nil when blank.
-func parseUnixDate(s string) *int64 {
+// ParseDate parses a YYYY-MM-DD date string and returns a Unix timestamp pointer. Returns nil when blank.
+func ParseDate(s string) *int64 {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return nil

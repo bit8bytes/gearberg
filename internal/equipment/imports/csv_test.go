@@ -13,24 +13,32 @@ import (
 // updated in step, this test breaks before any real data is affected.
 func TestParseCSV_roundtrip(t *testing.T) {
 	want := imports.RawRow{
-		Name:             "Shure SM58",
-		TypeLabel:        "Bulk",
-		UsageTypeLabel:   "Rental",
-		CategoryName:     "Audio",
-		ManufacturerName: "Shure",
-		LocationName:     "Main Warehouse",
-		RentalPrice:      "15.00",
-		ResalePrice:      "99.00",
-		Notes:            "Cardioid dynamic mic",
-		WeightG:          "0.298",
-		WidthMm:          "4.7",
-		HeightMm:         "4.8",
-		DepthMm:          "16.2",
-		VoltageV:         "5",
-		CurrentA:         "2.4",
-		PowerW:           "12",
-		WireGaugeMM2X100: "150",
-		Quantity:         "7",
+		Name:                   "Shure SM58",
+		TypeLabel:              "Bulk",
+		UsageTypeLabel:         "Rental",
+		CategoryName:           "Audio",
+		ManufacturerName:       "Shure",
+		LocationName:           "Main Warehouse",
+		RentalPrice:            "15.00",
+		ResalePrice:            "99.00",
+		Notes:                  "Cardioid dynamic mic",
+		WeightG:                "0.298",
+		WidthMm:                "4.7",
+		HeightMm:               "4.8",
+		DepthMm:                "16.2",
+		VoltageV:               "5",
+		CurrentA:               "2.4",
+		PowerW:                 "12",
+		WireGaugeMM2X100:       "150",
+		Quantity:               "7",
+		HasContent:             "",
+		UnitSerialNumber:       "",
+		UnitManufacturerSerial: "",
+		UnitPurchasePrice:      "",
+		UnitPurchasedAt:        "",
+		NextInspectionAt:       "",
+		UnitIsActive:           "",
+		UnitRemark:             "",
 	}
 
 	header := strings.Join(imports.ExpectedHeaders, ",")
@@ -53,6 +61,14 @@ func TestParseCSV_roundtrip(t *testing.T) {
 		want.PowerW,
 		want.WireGaugeMM2X100,
 		want.Quantity,
+		want.HasContent,
+		want.UnitSerialNumber,
+		want.UnitManufacturerSerial,
+		want.UnitPurchasePrice,
+		want.UnitPurchasedAt,
+		want.NextInspectionAt,
+		want.UnitIsActive,
+		want.UnitRemark,
 	}, ",")
 	csv := header + "\n" + dataRow + "\n"
 
@@ -89,6 +105,14 @@ func TestParseCSV_roundtrip(t *testing.T) {
 	check("PowerW", want.PowerW, got.PowerW)
 	check("WireGaugeMM2X100", want.WireGaugeMM2X100, got.WireGaugeMM2X100)
 	check("Quantity", want.Quantity, got.Quantity)
+	check("HasContent", want.HasContent, got.HasContent)
+	check("UnitSerialNumber", want.UnitSerialNumber, got.UnitSerialNumber)
+	check("UnitManufacturerSerial", want.UnitManufacturerSerial, got.UnitManufacturerSerial)
+	check("UnitPurchasePrice", want.UnitPurchasePrice, got.UnitPurchasePrice)
+	check("UnitPurchasedAt", want.UnitPurchasedAt, got.UnitPurchasedAt)
+	check("NextInspectionAt", want.NextInspectionAt, got.NextInspectionAt)
+	check("UnitIsActive", want.UnitIsActive, got.UnitIsActive)
+	check("UnitRemark", want.UnitRemark, got.UnitRemark)
 }
 
 func TestParseCSV_wrongColumnCount(t *testing.T) {
@@ -134,7 +158,7 @@ func TestParseCSV_templateValid(t *testing.T) {
 
 func TestParseCSV_stripsUTF8BOM(t *testing.T) {
 	header := strings.Join(imports.ExpectedHeaders, ",")
-	csv := "\xEF\xBB\xBF" + header + "\nShure SM58,Bulk,Rental,Audio,Shure,WH,15,99,,,,,,,,,,1\n"
+	csv := "\xEF\xBB\xBF" + header + "\nShure SM58,Bulk,Rental,Audio,Shure,WH,15,99,,,,,,,,,,1,,,,,,,,\n"
 	rows, err := imports.ParseCSV(strings.NewReader(csv))
 	if err != nil {
 		t.Fatalf("ParseCSV with BOM: %v", err)

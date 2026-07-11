@@ -184,10 +184,16 @@ type CreateBulkEquipment struct {
 
 // CreateUnit holds the data required to create a single serialized inventory unit.
 type CreateUnit struct {
-	ID           string
-	OrgID        string
-	EquipmentID  string
-	SerialNumber string
+	ID                       string
+	OrgID                    string
+	EquipmentID              string
+	SerialNumber             string
+	ManufacturerSerialNumber string
+	Remark                   string
+	PurchasePrice            *Cents
+	PurchasedAt              *int64
+	NextInspectionAt         *int64
+	IsActive                 int64 // 1 = active (default), 0 = inactive
 }
 
 // CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
@@ -213,7 +219,7 @@ type Unit struct {
 	StatusID                 int64
 	SerialNumber             string
 	ManufacturerSerialNumber string
-	Notes                    string
+	Remark                   string
 	PurchasePrice            *Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
@@ -323,9 +329,10 @@ func (u UnitStatusEntry) Label() string {
 // UpdateUnit holds the data required to update a single unit's editable fields.
 type UpdateUnit struct {
 	ID                       string
+	SerialNumber             string
 	StatusID                 int64
 	ManufacturerSerialNumber string
-	Notes                    string
+	Remark                   string
 	PurchasePrice            *Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64

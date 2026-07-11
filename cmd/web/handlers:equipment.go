@@ -514,13 +514,17 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 
 	if err := app.services.equipment.UpdateUnit(ctx, equipment.UpdateUnit{
 		ID:                       unitID,
+		SerialNumber:             form.SerialNumber,
 		StatusID:                 form.StatusID,
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
-		Notes:                    form.Notes,
+		Remark:                   form.Remark,
 		PurchasePrice:            form.PurchasePrice,
 		PurchasedAt:              form.PurchasedAt,
 		NextInspectionAt:         form.NextInspectionAt,
 	}); err != nil {
+		if errors.Is(err, database.ErrUniqueConstraint) {
+			return app.renderEquipmentUnits(w, r, orgID, itemID)
+		}
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
 	}
 

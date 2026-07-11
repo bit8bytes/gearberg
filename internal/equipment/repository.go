@@ -243,11 +243,16 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 
 	for _, u := range c.Units {
 		if _, err := itemQ.Create(ctx, genserialized.CreateParams{
-			ID:           u.ID,
-			OrgID:        c.OrgID,
-			EquipmentID:  row.ID,
-			SerialNumber: u.SerialNumber,
-			IsActive:     1,
+			ID:                 u.ID,
+			OrgID:              c.OrgID,
+			EquipmentID:        row.ID,
+			SerialNumber:       u.SerialNumber,
+			IsActive:           u.IsActive,
+			Remark:             database.NullString(database.StringOrNil(u.Remark)),
+			PurchasePrice:      database.NullOf(u.PurchasePrice),
+			PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
+			NextInspectionAt:   database.NullInt64Ptr(u.NextInspectionAt),
+			ManufacturerSerial: database.NullString(database.StringOrNil(u.ManufacturerSerialNumber)),
 		}); err != nil {
 			return nil, fmt.Errorf("CreateSerialized: create item: %w", database.NormalizeError(err))
 		}
@@ -366,7 +371,7 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 			StatusID:                 row.IsActive,
 			SerialNumber:             row.SerialNumber,
 			ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
-			Notes:                    database.String(row.Remark),
+			Remark:                   database.String(row.Remark),
 			PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
 			PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 			NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
@@ -430,7 +435,7 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		StatusID:                 row.IsActive,
 		SerialNumber:             row.SerialNumber,
 		ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
-		Notes:                    database.String(row.Remark),
+		Remark:                   database.String(row.Remark),
 		PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
 		PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 		NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
@@ -465,8 +470,9 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 // UpdateUnit updates the editable fields of a serialized unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.serializedItems.Update(ctx, genserialized.UpdateParams{
+		SerialNumber:       u.SerialNumber,
 		IsActive:           u.StatusID,
-		Remark:             database.NullString(database.StringOrNil(u.Notes)),
+		Remark:             database.NullString(database.StringOrNil(u.Remark)),
 		PurchasePrice:      database.NullOf(u.PurchasePrice),
 		PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
 		NextInspectionAt:   database.NullInt64Ptr(u.NextInspectionAt),

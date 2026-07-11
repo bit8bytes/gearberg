@@ -15,6 +15,7 @@ type Querier interface {
 	InsertImportRow(ctx context.Context, arg InsertImportRowParams) (EquipmentImport, error)
 	ListImportRowsByImportID(ctx context.Context, importID string) ([]EquipmentImport, error)
 	UpdateImportRowAction(ctx context.Context, arg UpdateImportRowActionParams) error
+	UpdateImportRowSerialNumber(ctx context.Context, arg UpdateImportRowSerialNumberParams) error
 }
 
 var _ Querier = (*Queries)(nil)

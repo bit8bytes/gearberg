@@ -243,17 +243,19 @@ func (q *Queries) ListByEquipmentID(ctx context.Context, equipmentID string) ([]
 const update = `-- name: Update :exec
 UPDATE equipment_serialized_items
 SET
-    is_active = ?1,
-    remark = ?2,
-    purchase_price = ?3,
-    purchased_at = ?4,
-    next_inspection_at = ?5,
-    manufacturer_serial = ?6,
+    serial_number = ?1,
+    is_active = ?2,
+    remark = ?3,
+    purchase_price = ?4,
+    purchased_at = ?5,
+    next_inspection_at = ?6,
+    manufacturer_serial = ?7,
     updated_at = unixepoch()
-WHERE id = ?7
+WHERE id = ?8
 `
 
 type UpdateParams struct {
+	SerialNumber       string
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -265,6 +267,7 @@ type UpdateParams struct {
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
 	_, err := q.db.ExecContext(ctx, update,
+		arg.SerialNumber,
 		arg.IsActive,
 		arg.Remark,
 		arg.PurchasePrice,

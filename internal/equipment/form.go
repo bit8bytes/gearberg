@@ -213,8 +213,9 @@ func PropertiesFormFromEquipment(e *Equipment) PropertiesForm {
 
 // UnitForm holds parsed input and validation state for adding or updating a serialized unit.
 type UnitForm struct {
+	SerialNumber             string
 	ManufacturerSerialNumber string
-	Notes                    string
+	Remark                   string
 	Quantity                 int64
 	PurchasePrice            *Cents
 	PurchasedAt              *int64 // Unix timestamp
@@ -233,18 +234,23 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 		qty = 1
 	}
 	return UnitForm{
+		SerialNumber:             strings.TrimSpace(r.PostForm.Get("unit_serial_number")),
 		ManufacturerSerialNumber: strings.TrimSpace(r.PostForm.Get("serial_number")),
-		Notes:                    strings.TrimSpace(r.PostForm.Get("notes")),
+		Remark:                   strings.TrimSpace(r.PostForm.Get("remark")),
 		Quantity:                 qty,
 		PurchasePrice:            ParseCents(r.PostForm.Get("purchase_price")),
-		PurchasedAt:              parseUnixDate(r.PostForm.Get("purchased_at")),
-		NextInspectionAt:         parseUnixDate(r.PostForm.Get("next_inspection_at")),
+		PurchasedAt:              ParseDate(r.PostForm.Get("purchased_at")),
+		NextInspectionAt:         ParseDate(r.PostForm.Get("next_inspection_at")),
 		StatusID:                 parseCheckbox(r.PostForm.Get("status_id")),
 	}, nil
 }
 
-// Validate checks UnitForm fields. All fields are optional.
-func (f *UnitForm) Validate() bool { return f.Valid() }
+// Validate checks UnitForm fields. SerialNumber is required; all other fields are optional.
+func (f *UnitForm) Validate() bool {
+	f.Check(validator.NotBlank(f.SerialNumber), "unit_serial_number", "Serial number is required")
+	f.Check(validator.MaxChars(f.SerialNumber, 200), "unit_serial_number", "Serial number cannot exceed 200 characters")
+	return f.Valid()
+}
 
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {

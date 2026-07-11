@@ -41,7 +41,7 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
-  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || sqlc.arg(name_query) || '%' OR esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%')))
+  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%'))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
   AND (sqlc.arg(is_archived) = -1 OR e.is_archived = sqlc.arg(is_archived))
 ORDER BY e.name ASC
@@ -81,10 +81,10 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = sqlc.arg(org_id)
-  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || sqlc.arg(name_query) || '%' OR esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%')))
+  AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%'))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
   AND e.is_archived = sqlc.arg(is_archived)
-ORDER BY (SELECT MIN(esi.code) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id) ASC
+ORDER BY (SELECT MIN(esi.serial_number) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id) ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CountByOrgID :one

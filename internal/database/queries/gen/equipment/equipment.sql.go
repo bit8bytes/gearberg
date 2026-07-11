@@ -367,7 +367,7 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
-  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || ?2 || '%' OR esi.serial_number LIKE '%' || ?2 || '%')))
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || ?2 || '%'))
   AND (?3 = '' OR ec.name = ?3)
   AND (?4 = -1 OR e.is_archived = ?4)
 ORDER BY e.name ASC
@@ -513,10 +513,10 @@ LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
 WHERE e.org_id = ?1
-  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND (esi.code LIKE '%' || ?2 || '%' OR esi.serial_number LIKE '%' || ?2 || '%')))
+  AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || ?2 || '%'))
   AND (?3 = '' OR ec.name = ?3)
   AND e.is_archived = ?4
-ORDER BY (SELECT MIN(esi.code) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id) ASC
+ORDER BY (SELECT MIN(esi.serial_number) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id) ASC
 LIMIT ?6 OFFSET ?5
 `
 

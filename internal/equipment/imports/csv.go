@@ -18,6 +18,7 @@ func ParseCSV(r io.Reader) ([]RawRow, error) {
 	}
 	cr := csv.NewReader(br)
 	cr.TrimLeadingSpace = true
+	cr.FieldsPerRecord = -1 // allow variable field counts; short rows are padded in readRows
 
 	header, err := cr.Read()
 	if err != nil {
@@ -54,27 +55,37 @@ func readRows(cr *csv.Reader) ([]RawRow, error) {
 			return nil, fmt.Errorf("readRows: %w", err)
 		}
 		if len(record) < len(ExpectedHeaders) {
-			continue
+			padded := make([]string, len(ExpectedHeaders))
+			copy(padded, record)
+			record = padded
 		}
 		rows = append(rows, RawRow{
-			Name:             strings.TrimSpace(record[0]),
-			TypeLabel:        strings.TrimSpace(record[1]),
-			UsageTypeLabel:   strings.TrimSpace(record[2]),
-			CategoryName:     strings.TrimSpace(record[3]),
-			ManufacturerName: strings.TrimSpace(record[4]),
-			LocationName:     strings.TrimSpace(record[5]),
-			RentalPrice:      strings.TrimSpace(record[6]),
-			ResalePrice:      strings.TrimSpace(record[7]),
-			Notes:            strings.TrimSpace(record[8]),
-			WeightG:          strings.TrimSpace(record[9]),
-			WidthMm:          strings.TrimSpace(record[10]),
-			HeightMm:         strings.TrimSpace(record[11]),
-			DepthMm:          strings.TrimSpace(record[12]),
-			VoltageV:         strings.TrimSpace(record[13]),
-			CurrentA:         strings.TrimSpace(record[14]),
-			PowerW:           strings.TrimSpace(record[15]),
-			WireGaugeMM2X100: strings.TrimSpace(record[16]),
-			Quantity:         strings.TrimSpace(record[17]),
+			Name:                   strings.TrimSpace(record[0]),
+			TypeLabel:              strings.TrimSpace(record[1]),
+			UsageTypeLabel:         strings.TrimSpace(record[2]),
+			CategoryName:           strings.TrimSpace(record[3]),
+			ManufacturerName:       strings.TrimSpace(record[4]),
+			LocationName:           strings.TrimSpace(record[5]),
+			RentalPrice:            strings.TrimSpace(record[6]),
+			ResalePrice:            strings.TrimSpace(record[7]),
+			Notes:                  strings.TrimSpace(record[8]),
+			WeightG:                strings.TrimSpace(record[9]),
+			WidthMm:                strings.TrimSpace(record[10]),
+			HeightMm:               strings.TrimSpace(record[11]),
+			DepthMm:                strings.TrimSpace(record[12]),
+			VoltageV:               strings.TrimSpace(record[13]),
+			CurrentA:               strings.TrimSpace(record[14]),
+			PowerW:                 strings.TrimSpace(record[15]),
+			WireGaugeMM2X100:       strings.TrimSpace(record[16]),
+			Quantity:               strings.TrimSpace(record[17]),
+			HasContent:             strings.TrimSpace(record[18]),
+			UnitSerialNumber:       strings.TrimSpace(record[19]),
+			UnitManufacturerSerial: strings.TrimSpace(record[20]),
+			UnitPurchasePrice:      strings.TrimSpace(record[21]),
+			UnitPurchasedAt:        strings.TrimSpace(record[22]),
+			NextInspectionAt:       strings.TrimSpace(record[23]),
+			UnitIsActive:           strings.TrimSpace(record[24]),
+			UnitRemark:             strings.TrimSpace(record[25]),
 		})
 	}
 	if len(rows) == 0 {
