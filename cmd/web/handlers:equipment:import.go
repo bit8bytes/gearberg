@@ -1,13 +1,8 @@
 package main
 
 import (
-	"bufio"
-	"encoding/csv"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipment/imports"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -61,9 +56,9 @@ func (app *application) postEquipmentImport(w http.ResponseWriter, r *http.Reque
 	}
 	defer func() { _ = f.Close() }()
 
-	rawRows, parseErr := parseImportCSV(f)
-	if parseErr != "" {
-		return reRender(parseErr)
+	rawRows, parseErr := imports.ParseCSV(f)
+	if parseErr != nil {
+		return reRender(parseErr.Error())
 	}
 
 	importID, err := app.services.equipmentImports.Stage(ctx, orgID, rawRows)
@@ -125,88 +120,10 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 	return nil
 }
 
-const importTemplateCSV = "Name,Type,Usage,Category,Manufacturer,Location,Rental Price,Resale Price,Notes,Weight (kg),Width (cm),Height (cm),Depth (cm),Voltage (V),Current (A),Power (W),Wire Gauge (mm² ×100),Quantity\n" +
-	"Shure SM58,Bulk,Rental,Audio,Shure,Main Warehouse,15.00,99.00,Cardioid dynamic vocal microphone,0.298,4.7,4.7,16.2,,,,,7\n" +
-	"Sony SRS-XB43,Serialized,Rental,Audio,Sony,Main Warehouse,25.00,180.00,Portable Bluetooth speaker with extra bass,0.9,22,22,9.5,5,2.4,12,,4\n"
-
 // getEquipmentImportTemplate serves a ready-to-fill CSV template for download.
 func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, _ *http.Request) *httperr.Error {
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
-	_, _ = w.Write([]byte(importTemplateCSV))
+	_, _ = w.Write(imports.TemplateCSV)
 	return nil
-}
-
-// parseImportCSV reads a CSV file and returns RawRows. Returns an error message on failure.
-func parseImportCSV(r io.Reader) ([]imports.RawRow, string) {
-	br := bufio.NewReader(r)
-	// Strip UTF-8 BOM produced by the export so round-tripped files parse cleanly.
-	if peek, err := br.Peek(3); err == nil && peek[0] == 0xEF && peek[1] == 0xBB && peek[2] == 0xBF {
-		_, _ = br.Discard(3)
-	}
-	cr := csv.NewReader(br)
-	cr.TrimLeadingSpace = true
-
-	header, err := cr.Read()
-	if err != nil {
-		return nil, "Could not read CSV file."
-	}
-	if msg := validateImportHeader(header); msg != "" {
-		return nil, msg
-	}
-	return readImportRows(cr)
-}
-
-func validateImportHeader(header []string) string {
-	if len(header) != len(imports.ExpectedHeaders) {
-		return fmt.Sprintf("Expected %d columns, got %d. Make sure the file matches the export format.", len(imports.ExpectedHeaders), len(header))
-	}
-	for i, h := range header {
-		if h != imports.ExpectedHeaders[i] {
-			return fmt.Sprintf("Column %d: expected %q, got %q.", i+1, imports.ExpectedHeaders[i], h)
-		}
-	}
-	return ""
-}
-
-// readImportRows reads data rows from a CSV reader after the header has been consumed.
-// Column order matches imports.ExpectedHeaders exactly.
-func readImportRows(cr *csv.Reader) ([]imports.RawRow, string) {
-	var rows []imports.RawRow
-	for {
-		record, err := cr.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, "Error reading CSV file."
-		}
-		if len(record) < len(imports.ExpectedHeaders) {
-			continue
-		}
-		rows = append(rows, imports.RawRow{
-			Name:             strings.TrimSpace(record[0]),
-			TypeLabel:        strings.TrimSpace(record[1]),
-			UsageTypeLabel:   strings.TrimSpace(record[2]),
-			CategoryName:     strings.TrimSpace(record[3]),
-			ManufacturerName: strings.TrimSpace(record[4]),
-			LocationName:     strings.TrimSpace(record[5]),
-			RentalPrice:      strings.TrimSpace(record[6]),
-			ResalePrice:      strings.TrimSpace(record[7]),
-			Notes:            strings.TrimSpace(record[8]),
-			WeightG:          strings.TrimSpace(record[9]),
-			WidthMm:          strings.TrimSpace(record[10]),
-			HeightMm:         strings.TrimSpace(record[11]),
-			DepthMm:          strings.TrimSpace(record[12]),
-			VoltageV:         strings.TrimSpace(record[13]),
-			CurrentA:         strings.TrimSpace(record[14]),
-			PowerW:           strings.TrimSpace(record[15]),
-			WireGaugeMM2X100: strings.TrimSpace(record[16]),
-			Quantity:         strings.TrimSpace(record[17]),
-		})
-	}
-	if len(rows) == 0 {
-		return nil, "The CSV file has no data rows."
-	}
-	return rows, ""
 }

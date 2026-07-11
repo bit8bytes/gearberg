@@ -188,7 +188,6 @@ type CreateUnit struct {
 	OrgID        string
 	EquipmentID  string
 	SerialNumber string
-	Code         string
 }
 
 // CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
@@ -213,7 +212,6 @@ type Unit struct {
 	EquipmentID              string
 	StatusID                 int64
 	SerialNumber             string
-	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
 	PurchasePrice            *Cents
@@ -303,7 +301,6 @@ type AddUnit struct {
 	OrgID        string
 	EquipmentID  string
 	SerialNumber string
-	Code         string
 }
 
 // UnitStatusEntry is a row from the unit_statuses lookup table.
@@ -327,7 +324,6 @@ func (u UnitStatusEntry) Label() string {
 type UpdateUnit struct {
 	ID                       string
 	StatusID                 int64
-	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
 	PurchasePrice            *Cents

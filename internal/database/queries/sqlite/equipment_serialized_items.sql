@@ -4,7 +4,6 @@ INSERT INTO equipment_serialized_items (
     org_id,
     equipment_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -16,7 +15,6 @@ INSERT INTO equipment_serialized_items (
     sqlc.arg(org_id),
     sqlc.arg(equipment_id),
     sqlc.arg(serial_number),
-    sqlc.arg(code),
     sqlc.arg(is_active),
     sqlc.arg(remark),
     sqlc.arg(purchase_price),
@@ -29,7 +27,6 @@ INSERT INTO equipment_serialized_items (
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -44,7 +41,6 @@ SELECT
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -62,7 +58,6 @@ SELECT
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -78,7 +73,6 @@ ORDER BY created_at ASC;
 -- name: Update :exec
 UPDATE equipment_serialized_items
 SET
-    code = sqlc.arg(code),
     is_active = sqlc.arg(is_active),
     remark = sqlc.arg(remark),
     purchase_price = sqlc.arg(purchase_price),

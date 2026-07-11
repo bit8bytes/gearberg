@@ -6,7 +6,6 @@ CREATE TABLE equipment_serialized_items (
   equipment_id TEXT NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,
   parent_item_id TEXT REFERENCES equipment_serialized_items(id) ON DELETE SET NULL,
   serial_number TEXT NOT NULL,
-  code TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
   remark TEXT,
   purchase_price INTEGER,

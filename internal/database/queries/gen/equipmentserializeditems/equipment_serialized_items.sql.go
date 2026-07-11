@@ -16,7 +16,6 @@ INSERT INTO equipment_serialized_items (
     org_id,
     equipment_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -33,15 +32,13 @@ INSERT INTO equipment_serialized_items (
     ?7,
     ?8,
     ?9,
-    ?10,
-    ?11
+    ?10
 ) RETURNING
     id,
     org_id,
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -56,7 +53,6 @@ type CreateParams struct {
 	OrgID              string
 	EquipmentID        string
 	SerialNumber       string
-	Code               sql.NullString
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -71,7 +67,6 @@ type CreateRow struct {
 	EquipmentID        string
 	ParentItemID       sql.NullString
 	SerialNumber       string
-	Code               sql.NullString
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -87,7 +82,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.OrgID,
 		arg.EquipmentID,
 		arg.SerialNumber,
-		arg.Code,
 		arg.IsActive,
 		arg.Remark,
 		arg.PurchasePrice,
@@ -102,7 +96,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.EquipmentID,
 		&i.ParentItemID,
 		&i.SerialNumber,
-		&i.Code,
 		&i.IsActive,
 		&i.Remark,
 		&i.PurchasePrice,
@@ -130,7 +123,6 @@ SELECT
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -148,7 +140,6 @@ type GetByIDRow struct {
 	EquipmentID        string
 	ParentItemID       sql.NullString
 	SerialNumber       string
-	Code               sql.NullString
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -167,7 +158,6 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.EquipmentID,
 		&i.ParentItemID,
 		&i.SerialNumber,
-		&i.Code,
 		&i.IsActive,
 		&i.Remark,
 		&i.PurchasePrice,
@@ -186,7 +176,6 @@ SELECT
     equipment_id,
     parent_item_id,
     serial_number,
-    code,
     is_active,
     remark,
     purchase_price,
@@ -205,7 +194,6 @@ type ListByEquipmentIDRow struct {
 	EquipmentID        string
 	ParentItemID       sql.NullString
 	SerialNumber       string
-	Code               sql.NullString
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -230,7 +218,6 @@ func (q *Queries) ListByEquipmentID(ctx context.Context, equipmentID string) ([]
 			&i.EquipmentID,
 			&i.ParentItemID,
 			&i.SerialNumber,
-			&i.Code,
 			&i.IsActive,
 			&i.Remark,
 			&i.PurchasePrice,
@@ -256,19 +243,17 @@ func (q *Queries) ListByEquipmentID(ctx context.Context, equipmentID string) ([]
 const update = `-- name: Update :exec
 UPDATE equipment_serialized_items
 SET
-    code = ?1,
-    is_active = ?2,
-    remark = ?3,
-    purchase_price = ?4,
-    purchased_at = ?5,
-    next_inspection_at = ?6,
-    manufacturer_serial = ?7,
+    is_active = ?1,
+    remark = ?2,
+    purchase_price = ?3,
+    purchased_at = ?4,
+    next_inspection_at = ?5,
+    manufacturer_serial = ?6,
     updated_at = unixepoch()
-WHERE id = ?8
+WHERE id = ?7
 `
 
 type UpdateParams struct {
-	Code               sql.NullString
 	IsActive           int64
 	Remark             sql.NullString
 	PurchasePrice      sql.NullInt64
@@ -280,7 +265,6 @@ type UpdateParams struct {
 
 func (q *Queries) Update(ctx context.Context, arg UpdateParams) error {
 	_, err := q.db.ExecContext(ctx, update,
-		arg.Code,
 		arg.IsActive,
 		arg.Remark,
 		arg.PurchasePrice,

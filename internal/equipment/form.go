@@ -213,7 +213,6 @@ func PropertiesFormFromEquipment(e *Equipment) PropertiesForm {
 
 // UnitForm holds parsed input and validation state for adding or updating a serialized unit.
 type UnitForm struct {
-	Code                     string
 	ManufacturerSerialNumber string
 	Notes                    string
 	Quantity                 int64
@@ -234,7 +233,6 @@ func ParseUnit(r *http.Request) (UnitForm, error) {
 		qty = 1
 	}
 	return UnitForm{
-		Code:                     strings.TrimSpace(r.PostForm.Get("code")),
 		ManufacturerSerialNumber: strings.TrimSpace(r.PostForm.Get("serial_number")),
 		Notes:                    strings.TrimSpace(r.PostForm.Get("notes")),
 		Quantity:                 qty,

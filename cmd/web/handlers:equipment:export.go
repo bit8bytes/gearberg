@@ -9,6 +9,13 @@ import (
 	"github.com/bit8bytes/gearberg/internal/httperr"
 )
 
+// exportColumnCount must equal len(imports.ExpectedHeaders). This line fails to
+// compile if the export cw.Write call is updated without updating ExpectedHeaders
+// (or vice versa), catching column-count drift at build time.
+const exportColumnCount = 18
+
+var _ = [1]struct{}{}[exportColumnCount-len(imports.ExpectedHeaders)]
+
 func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")

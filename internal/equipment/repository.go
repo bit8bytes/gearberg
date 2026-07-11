@@ -247,7 +247,6 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 			OrgID:        c.OrgID,
 			EquipmentID:  row.ID,
 			SerialNumber: u.SerialNumber,
-			Code:         database.NullString(database.StringOrNil(u.Code)),
 			IsActive:     1,
 		}); err != nil {
 			return nil, fmt.Errorf("CreateSerialized: create item: %w", database.NormalizeError(err))
@@ -366,7 +365,6 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 			EquipmentID:              row.EquipmentID,
 			StatusID:                 row.IsActive,
 			SerialNumber:             row.SerialNumber,
-			Code:                     database.String(row.Code),
 			ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 			Notes:                    database.String(row.Remark),
 			PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
@@ -431,7 +429,6 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		EquipmentID:              row.EquipmentID,
 		StatusID:                 row.IsActive,
 		SerialNumber:             row.SerialNumber,
-		Code:                     database.String(row.Code),
 		ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 		Notes:                    database.String(row.Remark),
 		PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
@@ -450,7 +447,6 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 		OrgID:        a.OrgID,
 		EquipmentID:  a.EquipmentID,
 		SerialNumber: a.SerialNumber,
-		Code:         database.NullString(database.StringOrNil(a.Code)),
 		IsActive:     1,
 	})
 	if err != nil {
@@ -461,7 +457,6 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 		EquipmentID:  row.EquipmentID,
 		StatusID:     row.IsActive,
 		SerialNumber: row.SerialNumber,
-		Code:         database.String(row.Code),
 		CreatedAt:    row.CreatedAt,
 	}
 	return &u, nil
@@ -470,7 +465,6 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 // UpdateUnit updates the editable fields of a serialized unit.
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.serializedItems.Update(ctx, genserialized.UpdateParams{
-		Code:               database.NullString(database.StringOrNil(u.Code)),
 		IsActive:           u.StatusID,
 		Remark:             database.NullString(database.StringOrNil(u.Notes)),
 		PurchasePrice:      database.NullOf(u.PurchasePrice),

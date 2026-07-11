@@ -489,7 +489,6 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 		OrgID:        orgID,
 		EquipmentID:  itemID,
 		SerialNumber: serialNumber,
-		Code:         form.Code,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
 	}
@@ -517,7 +516,6 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 		ID:                       unitID,
 		StatusID:                 form.StatusID,
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
-		Code:                     form.Code,
 		Notes:                    form.Notes,
 		PurchasePrice:            form.PurchasePrice,
 		PurchasedAt:              form.PurchasedAt,
@@ -628,16 +626,12 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
 	}
 
-	content := unit.Code
-	if content == "" {
-		content = unit.SerialNumber
-	}
-	png, err := barcodes.QR(content)
+	png, err := barcodes.QR(unit.SerialNumber)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
 	}
 
-	filename := unitQRFilename(item.Name, content)
+	filename := unitQRFilename(item.Name, unit.SerialNumber)
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.Header().Set("Cache-Control", "no-store")
@@ -668,16 +662,12 @@ func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.R
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
 	}
 
-	content := unit.Code
-	if content == "" {
-		content = unit.SerialNumber
-	}
-	png, err := barcodes.Code128(content)
+	png, err := barcodes.Code128(unit.SerialNumber)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to generate barcode.", Code: http.StatusInternalServerError}
 	}
 
-	filename := unitQRFilename(item.Name, content)
+	filename := unitQRFilename(item.Name, unit.SerialNumber)
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.Header().Set("Cache-Control", "no-store")

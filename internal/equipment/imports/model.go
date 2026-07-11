@@ -1,6 +1,8 @@
 // Package imports handles CSV import staging and commit for inventory items.
 package imports
 
+import _ "embed"
+
 // Status values for a staged import row.
 const (
 	StatusNew   = "new"
@@ -73,6 +75,11 @@ type RawRow struct {
 	WireGaugeMM2X100 string
 	Quantity         string
 }
+
+// TemplateCSV is the pre-filled example CSV file served to users as a download template.
+//
+//go:embed template.csv
+var TemplateCSV []byte
 
 // ExpectedHeaders are the exact column headers the import CSV must have.
 var ExpectedHeaders = []string{
