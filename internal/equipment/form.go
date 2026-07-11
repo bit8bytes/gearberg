@@ -115,11 +115,9 @@ func (f *DetailsForm) Validate() bool {
 
 // Validate checks PricingForm fields and returns true when all pass.
 func (f *PricingForm) Validate() bool {
-	f.Check(validator.NotNil(f.PurchasePrice), "purchase_price", "This field cannot be blank")
 	if validator.NotNil(f.PurchasePrice) {
 		f.Check(*f.PurchasePrice > 0, "purchase_price", "Must be greater than 0")
 	}
-	f.Check(validator.NotNil(f.RentalPrice), "rental_price", "This field cannot be blank")
 	if validator.NotNil(f.RentalPrice) {
 		f.Check(*f.RentalPrice > 0, "rental_price", "Must be greater than 0")
 	}
