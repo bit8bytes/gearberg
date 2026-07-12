@@ -36,7 +36,7 @@ func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
 }
 
 func parseServeOptions(args []string) (*options, error) {
-	cfg := &options{LogLevel: logLevel{level: slog.LevelError}}
+	cfg := &options{LogLevel: logLevel{level: slog.LevelInfo}}
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	registerCommonFlags(fs, cfg)
