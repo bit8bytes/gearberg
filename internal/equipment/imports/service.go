@@ -302,7 +302,7 @@ func buildBase(row Row, catID, mfrID string, locID *string) equipment.Base {
 			PurchasePrice: equipment.ParseCents(row.ResalePrice),
 			RentalPrice:   equipment.ParseCents(row.RentalPrice),
 		},
-		HasContent: row.HasContent == "true" || row.HasContent == "1",
+		HasContent: strings.EqualFold(row.HasContent, "true") || row.HasContent == "1",
 		Properties: equipment.Properties{
 			Weight:    equipment.ParseGrams(row.WeightG),
 			Width:     equipment.ParseMillimeters(row.WidthMm),
@@ -334,7 +334,7 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 		sn = serial.New()
 	}
 	isActive := int64(1)
-	if row.UnitIsActive == "0" {
+	if strings.EqualFold(row.UnitIsActive, "false") || row.UnitIsActive == "0" {
 		isActive = 0
 	}
 	return equipment.CreateUnit{
@@ -382,7 +382,7 @@ func validateRow(raw RawRow) string {
 	if strings.TrimSpace(raw.CategoryName) == "" {
 		return "Category is required"
 	}
-	if (raw.HasContent == "true" || raw.HasContent == "1") && !strings.EqualFold(tl, "serialized") {
+	if (strings.EqualFold(raw.HasContent, "true") || raw.HasContent == "1") && !strings.EqualFold(tl, "serialized") {
 		return "Has Content is only supported for Serialized items"
 	}
 	return ""

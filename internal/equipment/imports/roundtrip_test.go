@@ -138,7 +138,7 @@ func TestRoundTrip_serialized(t *testing.T) {
 		check("UsageTypeLabel", "Rental", got.UsageTypeLabel)
 		check("Quantity", "", got.Quantity)
 		check("HasContent", "", got.HasContent)
-		check("UnitIsActive", "1", got.UnitIsActive)
+		check("UnitIsActive", "TRUE", got.UnitIsActive)
 		check("UnitSerialNumber", units[i].SerialNumber, got.UnitSerialNumber)
 		check("UnitManufacturerSerial", units[i].ManufacturerSerialNumber, got.UnitManufacturerSerial)
 		check("UnitPurchasePrice", "2800.00", got.UnitPurchasePrice)
@@ -172,8 +172,8 @@ func TestRoundTrip_serializedHasContent(t *testing.T) {
 	if len(rows) != 1 {
 		t.Fatalf("expected 1 row, got %d", len(rows))
 	}
-	if rows[0].HasContent != "true" {
-		t.Errorf("HasContent: want %q, got %q", "true", rows[0].HasContent)
+	if rows[0].HasContent != "TRUE" {
+		t.Errorf("HasContent: want %q, got %q", "TRUE", rows[0].HasContent)
 	}
 	if rows[0].UnitSerialNumber != "PC-1510-001" {
 		t.Errorf("UnitSerialNumber: want %q, got %q", "PC-1510-001", rows[0].UnitSerialNumber)

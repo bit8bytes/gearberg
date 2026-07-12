@@ -471,24 +471,11 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	form, err := equipment.ParseUnit(r)
-	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
-	}
-
-	if !form.Validate() {
-		return app.renderEquipmentUnits(w, r, orgID, itemID)
-	}
-
-	serialNumber := form.ManufacturerSerialNumber
-	if serialNumber == "" {
-		serialNumber = serial.New()
-	}
 	if _, err := app.services.equipment.AddUnit(ctx, equipment.AddUnit{
 		ID:           ksuid.New().String(),
 		OrgID:        orgID,
 		EquipmentID:  itemID,
-		SerialNumber: serialNumber,
+		SerialNumber: serial.New(),
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
 	}

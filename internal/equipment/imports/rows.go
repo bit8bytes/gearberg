@@ -13,7 +13,7 @@ import (
 func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Unit) [][]string {
 	hasContent := ""
 	if item.HasContent {
-		hasContent = "true"
+		hasContent = "TRUE"
 	}
 
 	base := []string{
@@ -69,10 +69,10 @@ func FormatExportDate(ts *int64) string {
 	return time.Unix(*ts, 0).UTC().Format("2006-01-02")
 }
 
-// FormatExportActive returns "1" for active, "0" for inactive.
+// FormatExportActive returns "TRUE" for active, "FALSE" for inactive.
 func FormatExportActive(active bool) string {
 	if active {
-		return "1"
+		return "TRUE"
 	}
-	return "0"
+	return "FALSE"
 }
