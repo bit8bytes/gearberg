@@ -32,6 +32,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /forgot-password/success", app.withGuest(app.html.Handle(app.getForgotPasswordSuccess)))
 	mux.Handle("GET /reset-password", app.withGuest(app.html.Handle(app.getResetPassword)))
 	mux.Handle("POST /reset-password", app.withGuest(app.html.Handle(app.postResetPassword)))
+	mux.Handle("POST /validate/password", app.html.Handle(app.postValidatePassword))
 
 	// TODO: withLogin needs to be replaced with api specific bearer tokens.
 	mux.Handle("/api/v1/", app.withLogin(apiServer))

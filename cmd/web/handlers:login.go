@@ -10,6 +10,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/locale"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
 	"github.com/segmentio/ksuid"
@@ -211,6 +212,15 @@ func (app *application) postResetPassword(w http.ResponseWriter, r *http.Request
 
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return nil
+}
+
+func (app *application) postValidatePassword(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	if err := r.ParseForm(); err != nil {
+		return nil
+	}
+	data := app.html.TemplateData(r)
+	data.Form = accounts.ValidatePassword(r.PostForm.Get("password"))
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.PasswordValidation, data)
 }
 
 func (app *application) postSignOut(w http.ResponseWriter, r *http.Request) *httperr.Error {

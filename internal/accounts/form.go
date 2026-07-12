@@ -138,6 +138,29 @@ func ParseResetPasswordForm(r *http.Request) (ResetPasswordForm, error) {
 	}, nil
 }
 
+// PasswordValidationForm is used by the HTMX inline password validation endpoint.
+// It has the same Password and Errors fields as SignUpForm and ResetPasswordForm,
+// so the password-validation fragment template works with all three.
+type PasswordValidationForm struct {
+	Password string
+	validator.Validator
+}
+
+// ValidatePassword validates a single password value and returns a form with any errors set.
+func ValidatePassword(password string) *PasswordValidationForm {
+	f := &PasswordValidationForm{Password: password}
+	if password == "" {
+		return f
+	}
+	f.Check(validator.MinChars(password, passwordMinLength), "password",
+		fmt.Sprintf("Must be at least %d characters long", passwordMinLength))
+	f.Check(validator.MaxChars(password, passwordMaxLength), "password",
+		fmt.Sprintf("Must be less than %d characters long", passwordMaxLength))
+	result := zxcvbn.PasswordStrength(password, nil)
+	f.Check(result.Score >= passwordMinStrengthScore, "password", "Password is too weak or common")
+	return f
+}
+
 // PasswordMinLength returns the minimum allowed password length for use in templates.
 func (f *ResetPasswordForm) PasswordMinLength() int { return passwordMinLength }
 
