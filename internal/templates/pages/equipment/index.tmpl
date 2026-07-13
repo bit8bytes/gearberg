@@ -2,7 +2,7 @@
 
 {{ define "page" }}
 <div class="w-full bg-base-200 border-b border-base-300">
-  <div class="max-w-5xl mx-auto px-4 h-24 flex items-center justify-between">
+  <div class="max-w-5xl md:mx-auto px-4 py-3 md:h-24 flex flex-row items-center justify-between gap-2">
     <div>
       <h3>All Items</h3>
       <div class="text-sm text-base-content/50 font-mono">
@@ -11,9 +11,12 @@
         <span>{{ len .Data.Categories }} categories</span>
       </div>
     </div>
-    <div class="flex gap-2">
+    <div class="flex gap-2 shrink-0">
       <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
+        <div tabindex="0" role="button" class="btn btn-ghost">
+          <span class="md:hidden w-4 h-4">{{ template "dot-menu-icon" . }}</span>
+          <span class="hidden md:inline">More ▾</span>
+        </div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-48 p-2 shadow border border-base-300">
           <li>
             <a href="{{ .Data.PrintURL }}" target="_blank">
@@ -35,18 +38,21 @@
           </li>
         </ul>
       </div>
-      <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">+ Add Item</a>
+      <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">
+        <span class="md:hidden">+</span>
+        <span class="hidden md:inline">+ Add Item</span>
+      </a>
     </div>
   </div>
 </div>
 <div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 h-14 flex gap-1 items-center overflow-x-auto scrollbar-none">
-    <form method="get" action="/orgs/{{ .Data.OrgID }}/equipment" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-nowrap">
-      <label class="input input-sm w-xs shrink-0">
+  <div class="max-w-5xl mx-auto px-4 py-2 md:h-14 flex items-center">
+    <form method="get" action="/orgs/{{ .Data.OrgID }}/equipment" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-wrap md:flex-nowrap w-full">
+      <label class="input w-full md:w-xs md:flex-none">
         <span class="flex text-secondary opacity-50 [&>svg]:w-4 [&>svg]:h-4">{{ template "search-icon" . }}</span>
         <input type="search" name="q" placeholder="Search" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
       </label>
-      <select name="category" class="select select-sm">
+      <select name="category" class="select w-full md:w-auto">
         <option value="">All categories</option>
         {{ range .Data.Categories }}
         <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
@@ -63,7 +69,6 @@
         <tr>
           <th></th>
           <th>NAME</th>
-          <th class="text-right">CATEGORY</th>
           <th class="text-right">STOCK</th>
         </tr>
       </thead>
@@ -71,7 +76,7 @@
         {{ range .Data.Inventories }}
         <tr>
           <td class="w-16 items-center">
-            <div class="w-12 h-12 rounded-md border-2 border-base-200 overflow-hidden flex items-center justify-center">
+             <div class="w-16 h-16 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
               {{ if .ImageURL }}
               <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
                 <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
@@ -88,12 +93,8 @@
             <div class="flex items-center gap-1.5">
               <span class="text-xs text-secondary">{{ .Type.Label }}</span>
               {{ if eq .Kind 2 }}<span class="text-xs text-secondary">• Combination</span>{{ end }}
+              <span class="text-xs text-secondary">• <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a></span>
             </div>
-          </td>
-          <td>
-            <span class="inline-flex items-center gap-1.5">
-              <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a>
-            </span>
           </td>
           <td class="w-4 text-right">
             {{ if eq .Type.Label "Serialized" }}

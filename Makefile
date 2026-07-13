@@ -14,7 +14,7 @@ confirm:
 ## run/web: run the web application with live reload
 .PHONY: run/web
 run/web:
-	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web serve --max-orgs=2 -log-level=debug
+	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web serve -log-level=debug
 
 ## run/www: run the web application with live reload
 .PHONY: run/www

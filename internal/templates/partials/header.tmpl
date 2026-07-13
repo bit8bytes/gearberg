@@ -27,7 +27,7 @@
           </div>
           <div class="border border-base-200"></div>
           <li>
-            <a href="/settings/account" class="{{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}text-primary{{ end }}">
+            <a href="/settings/account" class="{{ if eq $.URL.Path "/settings/account" }}text-primary{{ end }}">
               {{ template "account-icon" . }}
               Account
             </a>

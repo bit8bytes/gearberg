@@ -16,7 +16,10 @@
         </div>
       </div>
       <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost">More ▾</div>
+        <div tabindex="0" role="button" class="btn btn-ghost">
+          <span class="md:hidden w-4 h-4">{{ template "dot-menu-icon" . }}</span>
+          <span class="hidden md:inline">More ▾</span>
+        </div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box shadow-sm border border-base-200 w-40 p-1 z-10">
           <li>
             <button
