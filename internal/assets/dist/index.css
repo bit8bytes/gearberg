@@ -6820,6 +6820,12 @@
     --tw-translate-y: calc(calc(1 / 2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
+  .scale-105 {
+    --tw-scale-x: 105%;
+    --tw-scale-y: 105%;
+    --tw-scale-z: 105%;
+    scale: var(--tw-scale-x) var(--tw-scale-y);
+  }
   .swap-rotate {
     @layer daisyui.l1.l2 {
       .swap-on, input:indeterminate ~ .swap-on {
@@ -10749,6 +10755,21 @@
   inherits: false;
   initial-value: 0;
 }
+@property --tw-scale-x {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-scale-y {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
+@property --tw-scale-z {
+  syntax: "*";
+  inherits: false;
+  initial-value: 1;
+}
 @property --tw-rotate-x {
   syntax: "*";
   inherits: false;
@@ -10994,6 +11015,9 @@
       --tw-translate-x: 0;
       --tw-translate-y: 0;
       --tw-translate-z: 0;
+      --tw-scale-x: 1;
+      --tw-scale-y: 1;
+      --tw-scale-z: 1;
       --tw-rotate-x: initial;
       --tw-rotate-y: initial;
       --tw-rotate-z: initial;
