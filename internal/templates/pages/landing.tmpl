@@ -1,5 +1,5 @@
 {{ define "title" }}Equipment &amp; Rental Management{{ end }}
-{{ define "description" }}The affordable Rentman alternative for hobby and solo. Gearberg is $9/month managed for equipment tracking or $19/month with rentals. Free if you self-host. Open-source with no lock-in.{{ end }}
+{{ define "description" }}The affordable Rentman alternative for hobby and solo. Free to self-host with equipment tracking and rentals. Desktop app coming soon for equipment-only use. Open-source with no lock-in.{{ end }}
 
 {{ define "seo" }}
 <meta property="og:type" content="website" />
@@ -48,7 +48,7 @@
 <section id="features" class="py-24 bg-base-100" aria-labelledby="features-heading">
   <div class="container mx-auto px-6 max-w-5xl">
     <h2 id="features-heading" class="text-4xl font-bold text-center mb-16">Features</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
 
       <div class="card bg-base-200 shadow">
         <div class="card-body">
@@ -96,16 +96,34 @@
 
 {{/* Pricing */}}
 <section id="pricing" class="py-24 bg-base-200" aria-labelledby="pricing-heading">
-  <div class="container mx-auto px-6 max-w-5xl">
-    <h2 id="pricing-heading" class="text-4xl font-bold text-center mb-4">Pricing</h2>
-    <p class="text-center text-base-content/60 mb-12">Self-host for free and get everything. Or let us run it for you.</p>
+  <div class="container mx-auto px-6 max-w-5xl text-center">
+    <h2 id="pricing-heading" class="text-4xl font-bold mb-4">Pricing</h2>
+    <p class="text-base-content/60 mb-12">Self-host for free, or wait for the desktop app. Cloud sync is coming for those who need it.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <div class="card bg-base-100 shadow border border-base-300 opacity-60">
+        <div class="card-body text-left">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="card-title text-2xl font-bold">Desktop</h3>
+            <span class="badge badge-ghost badge-sm">Coming soon</span>
+          </div>
+          <p class="text-4xl font-bold mt-2">Free</p>
+          <p class="text-base-content/60 text-sm mb-4">No server, no Docker, just install and run. Requires Chrome.</p>
+          <ul class="space-y-2 text-sm flex-1">
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
+          </ul>
+          <div class="card-actions mt-6">
+            <button class="btn btn-outline w-full" disabled>Not yet available</button>
+          </div>
+        </div>
+      </div>
 
       <div class="card bg-base-100 shadow border border-base-300">
-        <div class="card-body">
-          <h3 class="card-title text-2xl font-bold">Self-Hosted</h3>
+        <div class="card-body text-left">
+          <h3 class="card-title text-2xl font-bold">Self-host</h3>
           <p class="text-4xl font-bold mt-2">Free</p>
-          <p class="text-base-content/60 text-sm mb-4">Your infrastructure</p>
+          <p class="text-base-content/60 text-sm mb-4">Run on your own server with Docker</p>
           <ul class="space-y-2 text-sm flex-1">
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Rentals</li>
@@ -117,39 +135,19 @@
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow border border-primary scale-105">
-        <div class="card-body">
-          <div class="flex items-center gap-2">
-            <h3 class="card-title text-2xl font-bold">Hobby</h3>
-            <span class="badge badge-primary badge-sm">Managed</span>
-          </div>
-          <p class="text-4xl font-bold mt-2">$9<span class="text-base font-normal text-base-content/60">/mo</span></p>
-          <p class="text-base-content/60 text-sm mb-4">Managed hosting, backups &amp; uptime</p>
-          <ul class="space-y-2 text-sm flex-1">
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
-          </ul>
-          <div class="card-actions mt-6">
-            <a href="mailto:gearberg@bit8bytes.com?subject=Managed%20Hobby%20Plan&body=Hi%2C%20I%27d%20like%20to%20get%20started%20with%20the%20Gearberg%20Managed%20Hobby%20plan%20at%20%249%2Fmonth." class="btn btn-primary w-full">Get Started</a>
-          </div>
-        </div>
-      </div>
-
       <div class="card bg-base-100 shadow border border-base-300">
-        <div class="card-body">
-          <div class="flex items-center gap-2">
-            <h3 class="card-title text-2xl font-bold">Solo</h3>
-            <span class="badge badge-ghost badge-sm">Managed</span>
-          </div>
-          <p class="text-4xl font-bold mt-2">$19<span class="text-base font-normal text-base-content/60">/mo</span></p>
-          <p class="text-base-content/60 text-sm mb-4">Managed hosting, backups &amp; uptime</p>
+        <div class="card-body text-left">
+          <h3 class="card-title text-2xl font-bold">Cloud</h3>
+          <p class="text-4xl font-bold mt-2">By request</p>
+          <p class="text-base-content/60 text-sm mb-4">The software is free. You pay for the convenience of not running it yourself</p>
           <ul class="space-y-2 text-sm flex-1">
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Rentals</li>
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
+
           </ul>
           <div class="card-actions mt-6">
-            <a href="mailto:gearberg@bit8bytes.com?subject=Managed%20Solo%20Plan&body=Hi%2C%20I%27d%20like%20to%20get%20started%20with%20the%20Gearberg%20Managed%20Solo%20plan%20at%20%2419%2Fmonth." class="btn btn-outline w-full">Get Started</a>
+            <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline w-full">Get in touch</a>
           </div>
         </div>
       </div>
@@ -254,9 +252,9 @@
       </details>
 
       <details class="collapse collapse-arrow bg-base-200">
-        <summary class="collapse-title text-lg font-medium">What's the difference between self-hosted and managed?</summary>
+        <summary class="collapse-title text-lg font-medium">What's the difference between self-hosted and desktop?</summary>
         <div class="collapse-content">
-          <p>Self-hosted is free. You run it on your own server with Docker and get all features. Managed Hobby is $9/month for equipment tracking only. Managed Solo is $19/month and adds rentals. Self-hosted always has everything; managed tiers unlock features over time.</p>
+          <p>Self-hosted is free. You run it on your own server with Docker and get all features, including rentals. The desktop app is also free and works without a server, but covers equipment tracking only. A cloud option with multi-device sync and rentals is planned for the future.</p>
         </div>
       </details>
 
@@ -288,8 +286,8 @@
       },
       {
         "@type": "Question",
-        "name": "What's the difference between self-hosted and managed?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Self-hosted is free. You run it on your own server with Docker and get all features. Managed Hobby is $9/month for equipment tracking only. Managed Solo is $19/month and adds rentals. Self-hosted always has everything; managed tiers unlock features over time." }
+        "name": "What's the difference between self-hosted and desktop?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Self-hosted is free. You run it on your own server with Docker and get all features, including rentals. The desktop app is also free and works without a server, but covers equipment tracking only. A cloud option with multi-device sync and rentals is planned for the future." }
       },
       {
         "@type": "Question",
