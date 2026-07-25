@@ -21,7 +21,9 @@ INSERT INTO orgs (
     display_name
 )
 SELECT ?, ?
-WHERE (SELECT COUNT(*) FROM orgs) < CAST(sqlc.arg(max_orgs) AS INTEGER)
+WHERE (
+    SELECT COUNT(*) FROM org_members WHERE account_id = sqlc.arg(account_id)
+) < CAST(sqlc.arg(max_orgs) AS INTEGER)
 RETURNING
     id,
     display_name,

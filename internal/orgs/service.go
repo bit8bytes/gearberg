@@ -7,7 +7,7 @@ import (
 )
 
 type orgsRepository interface {
-	Create(ctx context.Context, tx *sql.Tx, id, displayName string) (string, error)
+	Create(ctx context.Context, tx *sql.Tx, accountID, id, displayName string) (string, error)
 	List(ctx context.Context) ([]Org, error)
 	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
 	Get(ctx context.Context, id string) (Org, error)
@@ -104,7 +104,7 @@ func (s *Service) Create(ctx context.Context, createOrg CreateOrg) (string, erro
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	org, err := s.orgs.Create(ctx, tx, createOrg.ID, createOrg.DisplayName)
+	org, err := s.orgs.Create(ctx, tx, createOrg.AccountID, createOrg.ID, createOrg.DisplayName)
 	if err != nil {
 		return "", fmt.Errorf("failed to create org: %w", err)
 	}

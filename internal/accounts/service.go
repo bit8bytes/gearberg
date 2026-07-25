@@ -44,7 +44,7 @@ type credentialsRepository interface {
 }
 
 type organizationsRepository interface {
-	Create(ctx context.Context, tx *sql.Tx, id, displayName string) (string, error)
+	Create(ctx context.Context, tx *sql.Tx, accountID, id, displayName string) (string, error)
 	CreateMember(ctx context.Context, tx *sql.Tx, accountID, organizationID string, roleID int64) error
 	DeleteOwnedByAccount(ctx context.Context, tx *sql.Tx, accountID string) error
 }
@@ -140,7 +140,7 @@ func (s *Service) SignUp(ctx context.Context, params SignUpParams) (string, stri
 	}
 
 	orgID := ksuid.New().String()
-	if _, err := s.organizations.Create(ctx, tx, orgID, "My Organization"); err != nil {
+	if _, err := s.organizations.Create(ctx, tx, accountID, orgID, "My Organization"); err != nil {
 		return fail(err)
 	}
 

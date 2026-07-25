@@ -26,10 +26,11 @@ func NewRepository(db genorgs.DBTX, maxOrgs int64) *Repository {
 }
 
 // Create inserts a new organization and returns its ID.
-func (r *Repository) Create(ctx context.Context, tx *sql.Tx, id, displayName string) (string, error) {
+func (r *Repository) Create(ctx context.Context, tx *sql.Tx, accountID, id, displayName string) (string, error) {
 	row, err := r.orgs.WithTx(tx).Create(ctx, genorgs.CreateParams{
 		ID:          id,
 		DisplayName: displayName,
+		AccountID:   accountID,
 		MaxOrgs:     r.maxOrgs,
 	})
 	if err != nil {

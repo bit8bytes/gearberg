@@ -15,7 +15,9 @@ INSERT INTO orgs (
     display_name
 )
 SELECT ?, ?
-WHERE (SELECT COUNT(*) FROM orgs) < CAST(?3 AS INTEGER)
+WHERE (
+    SELECT COUNT(*) FROM org_members WHERE account_id = ?3
+) < CAST(?4 AS INTEGER)
 RETURNING
     id,
     display_name,
@@ -25,6 +27,7 @@ RETURNING
 type CreateParams struct {
 	ID          string
 	DisplayName string
+	AccountID   string
 	MaxOrgs     int64
 }
 
@@ -35,7 +38,12 @@ type CreateRow struct {
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.DisplayName, arg.MaxOrgs)
+	row := q.db.QueryRowContext(ctx, create,
+		arg.ID,
+		arg.DisplayName,
+		arg.AccountID,
+		arg.MaxOrgs,
+	)
 	var i CreateRow
 	err := row.Scan(&i.ID, &i.DisplayName, &i.CreatedAt)
 	return i, err
