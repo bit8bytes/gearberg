@@ -20,6 +20,7 @@ type options struct {
 	DbDsn               string // SECRET
 	StorageDSN          string
 	SMTP                SMTP
+	OIDCAuthentik       OIDCProvider
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
@@ -53,6 +54,9 @@ func parseServeOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.DefaultCurrency, "default-currency", "EUR", "default currency for new org settings (ISO-4217)")
 	fs.Float64Var(&cfg.DefaultVatRate, "default-vat-rate", 19.0, "default VAT rate for new org settings (percentage)")
 	fs.StringVar(&cfg.DefaultTimezone, "default-timezone", "Europe/Berlin", "default timezone for new org settings (IANA)")
+	fs.StringVar(&cfg.OIDCAuthentik.IssuerURL, "oidc-authentik-issuer", envOr("OIDC_AUTHENTIK_ISSUER", ""), "Authentik OIDC issuer URL")
+	fs.StringVar(&cfg.OIDCAuthentik.ClientID, "oidc-authentik-client-id", envOr("OIDC_AUTHENTIK_CLIENT_ID", ""), "Authentik OIDC client ID")
+	fs.StringVar(&cfg.OIDCAuthentik.ClientSecret, "oidc-authentik-client-secret", envOr("OIDC_AUTHENTIK_CLIENT_SECRET", ""), "Authentik OIDC client secret")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
@@ -106,6 +110,9 @@ func (cfg *options) validate() error {
 	}
 	if !slices.Contains(settings.PermittedTimezones, cfg.DefaultTimezone) {
 		return fmt.Errorf("default-timezone %q is not a permitted IANA timezone", cfg.DefaultTimezone)
+	}
+	if err := cfg.OIDCAuthentik.Valid(); err != nil {
+		return fmt.Errorf("oidc-authentik: %w", err)
 	}
 	return nil
 }
@@ -208,6 +215,32 @@ func (s *SMTP) Valid() error {
 	}
 	if s.From == "" {
 		return fmt.Errorf("smtp from email address cannot be empty")
+	}
+	return nil
+}
+
+type OIDCProvider struct {
+	IssuerURL    string
+	ClientID     string
+	ClientSecret string // SECRET
+}
+
+// Configured reports whether this provider has been enabled via flags.
+func (p *OIDCProvider) Configured() bool {
+	return p.IssuerURL != ""
+}
+
+// Valid returns nil when the provider is not configured (issuer empty).
+// When issuer is set, client ID and secret must also be present.
+func (p *OIDCProvider) Valid() error {
+	if !p.Configured() {
+		return nil
+	}
+	if p.ClientID == "" {
+		return fmt.Errorf("client ID is required when issuer is set")
+	}
+	if p.ClientSecret == "" {
+		return fmt.Errorf("client secret is required when issuer is set")
 	}
 	return nil
 }

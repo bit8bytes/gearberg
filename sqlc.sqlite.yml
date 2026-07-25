@@ -140,3 +140,13 @@ sql:
         out: "internal/database/queries/gen/tokens"
         emit_interface: true
         omit_unused_structs: true
+
+  - engine: "sqlite"
+    queries: "internal/database/queries/sqlite/federated_identities.sql"
+    schema: "internal/database/migrations/sqlite/"
+    gen:
+      go:
+        package: "federated"
+        out: "internal/database/queries/gen/federated"
+        emit_interface: true
+        omit_unused_structs: true

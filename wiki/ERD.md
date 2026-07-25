@@ -291,4 +291,23 @@ erDiagram
   storage_objects ||--o{ equipment_documents : "file"
   equipment ||--o{ equipment_combination_items : "virtual content"
   equipment ||--o{ equipment_combination_items : "member of virtual"
+
+  provider_types {
+    integer id PK
+    text name "UNIQUE NOT NULL"
+  }
+  %% authentik, google, apple, ...
+
+  federated_identities {
+    text account_id "NOT NULL REFERENCES accounts(id) ON DELETE CASCADE"
+    integer provider_id "NOT NULL REFERENCES provider_types(id) ON DELETE RESTRICT"
+    text provider_subject "NOT NULL"
+
+    integer created_at "NOT NULL DEFAULT unixepoch()"
+    integer updated_at "NOT NULL DEFAULT unixepoch()"
+
+    text constraint "PRIMARY KEY (account_id, provider_id)"
+    text constraint "UNIQUE (provider_id, provider_subject)"
+  }
+  %% provider: google, github, etc.
 ```

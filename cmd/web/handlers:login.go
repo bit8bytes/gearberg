@@ -19,6 +19,7 @@ import (
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
 	tmplData.Form = &accounts.SignInForm{}
+	tmplData.Data = app.loginData()
 	return app.html.Render(w, r, http.StatusOK, pages.SignIn, tmplData)
 }
 
@@ -28,6 +29,7 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 	reRender := func(formWithErrors *accounts.SignInForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
+		data.Data = app.loginData()
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.SignIn, data)
 	}
 

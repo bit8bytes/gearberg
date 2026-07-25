@@ -22,6 +22,10 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
+	// OIDC callback is open — state verification happens inside the handler.
+	mux.Handle("GET /auth/authentik", app.withGuest(http.HandlerFunc(app.getAuthAuthentik)))
+	mux.Handle("GET /auth/authentik/callback", app.withGuest(http.HandlerFunc(app.getAuthAuthentikCallback)))
+
 	// Login related routes that are only accessible if the user is not logged in.
 	mux.Handle("GET /signin", app.withGuest(app.html.Handle(app.getSignIn)))
 	mux.Handle("POST /signin", app.withGuest(app.html.Handle(app.postSignIn)))

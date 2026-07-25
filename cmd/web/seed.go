@@ -7,6 +7,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/credentials"
 	"github.com/bit8bytes/gearberg/internal/equipment"
+	"github.com/bit8bytes/gearberg/internal/federated"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/tokens"
 )
@@ -70,6 +71,14 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error {
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO usage_types (id, name) VALUES (?, ?)`, u.ID(), u.String()); err != nil {
 			return fmt.Errorf("seed usage_types: %w", err)
+		}
+	}
+
+	for _, p := range []federated.Provider{
+		federated.AuthentikProvider,
+	} {
+		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO provider_types (id, name) VALUES (?, ?)`, p.ID(), p.String()); err != nil {
+			return fmt.Errorf("seed provider_types: %w", err)
 		}
 	}
 

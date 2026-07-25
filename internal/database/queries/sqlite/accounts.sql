@@ -1,9 +1,10 @@
 -- name: Create :one
 INSERT INTO accounts (
     id,
-    email
+    email,
+    email_verified
 ) VALUES (
-    ?, ?
+    ?, ?, ?
 ) RETURNING
     id,
     email,

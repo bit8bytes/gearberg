@@ -15,6 +15,9 @@ import (
 	"strings"
 	"time"
 
+	gooidc "github.com/coreos/go-oidc/v3/oidc"
+	"golang.org/x/oauth2"
+
 	"github.com/alexedwards/scs/v2"
 	"github.com/bit8bytes/gearberg/internal/accounts"
 	"github.com/bit8bytes/gearberg/internal/credentials"
@@ -25,6 +28,7 @@ import (
 	invimports "github.com/bit8bytes/gearberg/internal/equipment/imports"
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
+	"github.com/bit8bytes/gearberg/internal/federated"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
@@ -160,6 +164,16 @@ func (s scsSession) SetAccountID(ctx context.Context, id string) {
 	s.mgr.Put(ctx, accounts.Key.String(), id)
 }
 
+const oidcStateKey = "oidc_state"
+
+func (s scsSession) OIDCState(ctx context.Context) string {
+	return s.mgr.GetString(ctx, oidcStateKey)
+}
+
+func (s scsSession) SetOIDCState(ctx context.Context, state string) {
+	s.mgr.Put(ctx, oidcStateKey, state)
+}
+
 func (s scsSession) Destroy(ctx context.Context) error {
 	if err := s.mgr.Destroy(ctx); err != nil {
 		return fmt.Errorf("session destroy: %w", err)
@@ -169,6 +183,36 @@ func (s scsSession) Destroy(ctx context.Context) error {
 
 func (s scsSession) LoadAndSave(next http.Handler) http.Handler {
 	return s.mgr.LoadAndSave(next)
+}
+
+// oidcProvider holds the runtime config for a single OIDC provider.
+type oidcProvider struct {
+	oauth2Config oauth2.Config
+	verifier     *gooidc.IDTokenVerifier
+}
+
+// setupOIDCProvider initialises the OIDC provider from the given config.
+// Returns nil when the provider is not configured so the caller can gate on it.
+func setupOIDCProvider(ctx context.Context, cfg OIDCProvider, redirectURL string) (*oidcProvider, error) {
+	if !cfg.Configured() {
+		return nil, nil
+	}
+
+	provider, err := gooidc.NewProvider(ctx, cfg.IssuerURL)
+	if err != nil {
+		return nil, fmt.Errorf("setupOIDCProvider: discover %s: %w", cfg.IssuerURL, err)
+	}
+
+	return &oidcProvider{
+		oauth2Config: oauth2.Config{
+			ClientID:     cfg.ClientID,
+			ClientSecret: cfg.ClientSecret,
+			Endpoint:     provider.Endpoint(),
+			RedirectURL:  redirectURL,
+			Scopes:       []string{gooidc.ScopeOpenID, "email"},
+		},
+		verifier: provider.Verifier(&gooidc.Config{ClientID: cfg.ClientID}),
+	}, nil
 }
 
 func setupMailer(cfg *options, log *slog.Logger) mailer {
@@ -209,8 +253,9 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	accountRepo := accounts.NewRepository(db)
 	credRepo := credentials.NewRepository(db)
 	tokenRepo := tokens.NewRepository(db)
+	federatedRepo := federated.NewRepository(db)
 
-	accountSvc := accounts.NewService(db, &credentials.Password{}, accountRepo, credRepo, orgRepo, tokenRepo, m)
+	accountSvc := accounts.NewService(db, &credentials.Password{}, accountRepo, credRepo, orgRepo, tokenRepo, m, federatedRepo)
 
 	orgsettingsRepo := settings.NewRepository(db)
 	orgsettingsSvc := settings.NewService(orgsettingsRepo)

@@ -35,17 +35,20 @@ import (
 type sessionManager interface {
 	AccountID(ctx context.Context) string
 	SetAccountID(ctx context.Context, id string)
+	OIDCState(ctx context.Context) string
+	SetOIDCState(ctx context.Context, state string)
 	Destroy(ctx context.Context) error
 	LoadAndSave(next http.Handler) http.Handler
 }
 
 type application struct {
-	logger   *slog.Logger
-	options  *options
-	html     *htmlpkg.HTML
-	db       *sql.DB
-	session  sessionManager
-	services *services
+	logger        *slog.Logger
+	options       *options
+	html          *htmlpkg.HTML
+	db            *sql.DB
+	session       sessionManager
+	services      *services
+	oidcAuthentik *oidcProvider // nil when Authentik is not configured
 }
 
 func main() {
@@ -129,13 +132,22 @@ func runServe(args []string) error {
 		return fmt.Errorf("setup services: %w", err)
 	}
 
+	oidcCtx, oidcCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer oidcCancel()
+
+	oidcAuthentik, err := setupOIDCProvider(oidcCtx, options.OIDCAuthentik, options.BaseURL+"/auth/authentik/callback")
+	if err != nil {
+		return fmt.Errorf("setup oidc authentik: %w", err)
+	}
+
 	app := &application{
-		logger:   log,
-		options:  options,
-		html:     html,
-		db:       db,
-		session:  sessionManager,
-		services: services,
+		logger:        log,
+		options:       options,
+		html:          html,
+		db:            db,
+		session:       sessionManager,
+		services:      services,
+		oidcAuthentik: oidcAuthentik,
 	}
 
 	return app.serve(ctx)

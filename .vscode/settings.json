@@ -11,4 +11,11 @@
     "editor.insertSpaces": true
   },
   "html.suggest.html5": true,
+  "terminal.integrated.profiles.osx": {
+    "nix develop": {
+      "path": "/nix/var/nix/profiles/default/bin/nix",
+      "args": ["develop", "--command", "zsh"]
+    }
+  },
+  "terminal.integrated.defaultProfile.osx": "nix develop"
 }

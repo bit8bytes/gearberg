@@ -31,7 +31,7 @@ type passwordHasher interface {
 }
 
 type accountsRepository interface {
-	Create(ctx context.Context, tx *sql.Tx, id, email string) (string, error)
+	Create(ctx context.Context, tx *sql.Tx, id, email string, emailVerifiedAt *int64) (string, error)
 	Delete(ctx context.Context, tx *sql.Tx, id string) error
 	GetByAccountID(ctx context.Context, accountID string) (Record, error)
 }
@@ -59,15 +59,21 @@ type mailer interface {
 	Mail(ctx context.Context, to, subject, body string) error
 }
 
+type federatedIdentitiesRepository interface {
+	GetAccountIDByProviderSubject(ctx context.Context, providerID int64, subject string) (string, error)
+	Create(ctx context.Context, tx *sql.Tx, accountID string, providerID int64, subject string) error
+}
+
 // Service provides account creation and authentication operations.
 type Service struct {
-	db            *sql.DB
-	password      passwordHasher
-	accounts      accountsRepository
-	credentials   credentialsRepository
-	organizations organizationsRepository
-	tokens        tokensRepository
-	mailer        mailer
+	db                  *sql.DB
+	password            passwordHasher
+	accounts            accountsRepository
+	credentials         credentialsRepository
+	organizations       organizationsRepository
+	tokens              tokensRepository
+	mailer              mailer
+	federatedIdentities federatedIdentitiesRepository
 }
 
 // NewService returns a new Service.
@@ -79,15 +85,17 @@ func NewService(
 	organizations organizationsRepository,
 	tokens tokensRepository,
 	mailer mailer,
+	federatedIdentities federatedIdentitiesRepository,
 ) *Service {
 	return &Service{
-		db:            db,
-		password:      hasher,
-		accounts:      accounts,
-		credentials:   creds,
-		organizations: organizations,
-		tokens:        tokens,
-		mailer:        mailer,
+		db:                  db,
+		password:            hasher,
+		accounts:            accounts,
+		credentials:         creds,
+		organizations:       organizations,
+		tokens:              tokens,
+		mailer:              mailer,
+		federatedIdentities: federatedIdentities,
 	}
 }
 
@@ -131,7 +139,7 @@ func (s *Service) SignUp(ctx context.Context, params SignUpParams) (string, stri
 	defer func() { _ = tx.Rollback() }()
 
 	accountID := ksuid.New().String()
-	if _, err := s.accounts.Create(ctx, tx, accountID, params.Email); err != nil {
+	if _, err := s.accounts.Create(ctx, tx, accountID, params.Email, nil); err != nil {
 		return fail(err)
 	}
 
@@ -301,6 +309,60 @@ func (s *Service) SendPasswordChangedNotification(ctx context.Context, email str
 		return fmt.Errorf("SendPasswordChangedNotification: %w", err)
 	}
 	return nil
+}
+
+// SignInOrCreateWithOIDC looks up the account for a known federated identity.
+// If the (providerID, subject) pair is not yet registered, a new account, default
+// organization, and federated identity row are created atomically (JIT provisioning).
+// The returned accountID is safe to store in the session.
+func (s *Service) SignInOrCreateWithOIDC(ctx context.Context, providerID int64, subject, email string, emailVerified bool) (string, error) {
+	fail := func(err error) (string, error) {
+		return "", fmt.Errorf("accounts.SignInOrCreateWithOIDC: %w", err)
+	}
+
+	accountID, err := s.federatedIdentities.GetAccountIDByProviderSubject(ctx, providerID, subject)
+	if err == nil {
+		return accountID, nil
+	}
+	if !errors.Is(err, database.ErrNotFound) {
+		return fail(err)
+	}
+
+	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var emailVerifiedAt *int64
+	if emailVerified {
+		now := time.Now().Unix()
+		emailVerifiedAt = &now
+	}
+
+	accountID = ksuid.New().String()
+	if _, err := s.accounts.Create(ctx, tx, accountID, email, emailVerifiedAt); err != nil {
+		return fail(err)
+	}
+
+	orgID := ksuid.New().String()
+	if _, err := s.organizations.Create(ctx, tx, accountID, orgID, "My Organization"); err != nil {
+		return fail(err)
+	}
+
+	if err := s.organizations.CreateMember(ctx, tx, accountID, orgID, orgs.OwnerRole.ID()); err != nil {
+		return fail(err)
+	}
+
+	if err := s.federatedIdentities.Create(ctx, tx, accountID, providerID, subject); err != nil {
+		return fail(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fail(err)
+	}
+
+	return accountID, nil
 }
 
 // Delete removes an account and all organizations where it is the sole owner.

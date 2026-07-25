@@ -19,6 +19,7 @@ pkgs.mkShellNoCC {
     go-licenses
     git
     ogen
+    docker-compose
   ];
   shellHook = ''
     echo "Welcome to the dev shell! All required tools are available."

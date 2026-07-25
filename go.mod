@@ -9,6 +9,7 @@ require (
 	github.com/bit8bytes/toolbox v0.7.9
 	github.com/boombuler/barcode v1.1.0
 	github.com/ccojocar/zxcvbn-go v1.0.4
+	github.com/coreos/go-oidc/v3 v3.20.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.2.0
 	github.com/klauspost/compress v1.18.6
@@ -19,6 +20,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
 	golang.org/x/image v0.43.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.21.0
 	modernc.org/sqlite v1.50.1
 )
@@ -30,6 +32,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect

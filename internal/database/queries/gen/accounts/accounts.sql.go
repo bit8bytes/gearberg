@@ -13,9 +13,10 @@ import (
 const create = `-- name: Create :one
 INSERT INTO accounts (
     id,
-    email
+    email,
+    email_verified
 ) VALUES (
-    ?, ?
+    ?, ?, ?
 ) RETURNING
     id,
     email,
@@ -25,8 +26,9 @@ INSERT INTO accounts (
 `
 
 type CreateParams struct {
-	ID    string
-	Email string
+	ID            string
+	Email         string
+	EmailVerified sql.NullInt64
 }
 
 type CreateRow struct {
@@ -38,7 +40,7 @@ type CreateRow struct {
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.Email)
+	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.Email, arg.EmailVerified)
 	var i CreateRow
 	err := row.Scan(
 		&i.ID,

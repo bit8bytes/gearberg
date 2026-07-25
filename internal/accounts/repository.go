@@ -30,11 +30,14 @@ func NewRepository(db genaccounts.DBTX) *Repository {
 	}
 }
 
-// Create inserts a new account and returns its ID.
-func (r *Repository) Create(ctx context.Context, tx *sql.Tx, id, email string) (string, error) {
+// Create inserts a new account and returns its ID. emailVerifiedAt is nil for
+// password-based sign-up (not yet verified) and set to the current time for
+// OIDC accounts where the provider already confirmed the email.
+func (r *Repository) Create(ctx context.Context, tx *sql.Tx, id, email string, emailVerifiedAt *int64) (string, error) {
 	row, err := r.accounts.WithTx(tx).Create(ctx, genaccounts.CreateParams{
-		ID:    id,
-		Email: email,
+		ID:            id,
+		Email:         email,
+		EmailVerified: database.NullInt64(emailVerifiedAt),
 	})
 	if err != nil {
 		if errors.Is(database.NormalizeError(err), database.ErrUniqueConstraint) {

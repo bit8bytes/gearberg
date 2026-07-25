@@ -71,6 +71,13 @@
         Login
       </button>
 
+      {{ if .Data.AuthentikEnabled }}
+      <div class="divider text-xs text-base-content/40">or</div>
+      <a href="/auth/authentik" class="btn btn-outline btn-block">
+        Continue with Authentik
+      </a>
+      {{ end }}
+
       <p class="label justify-center">
         Don't have an account?
         <a href="/signup" class="link link-hover">Sign up.</a>
