@@ -8,7 +8,7 @@ import (
 
 type orgsRepository interface {
 	Create(ctx context.Context, tx *sql.Tx, accountID, id, displayName string) (string, error)
-	List(ctx context.Context) ([]Org, error)
+	List(ctx context.Context, accountID string) ([]Org, error)
 	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
 	Get(ctx context.Context, id string) (Org, error)
 	Update(ctx context.Context, p UpdateParams) error
@@ -29,9 +29,9 @@ func NewService(db *sql.DB, orgs orgsRepository) *Service {
 	return &Service{db: db, orgs: orgs}
 }
 
-// GetAll returns all organizations.
-func (s *Service) GetAll(ctx context.Context) ([]Org, error) {
-	records, err := s.orgs.List(ctx)
+// GetAll returns organizations the given account is a member of.
+func (s *Service) GetAll(ctx context.Context, accountID string) ([]Org, error) {
+	records, err := s.orgs.List(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("orgs.Service.GetAll: %w", err)
 	}

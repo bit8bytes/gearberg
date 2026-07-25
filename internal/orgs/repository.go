@@ -56,9 +56,9 @@ func (r *Repository) Max() int {
 	return int(r.maxOrgs)
 }
 
-// List returns all organizations ordered by creation time.
-func (r *Repository) List(ctx context.Context) ([]Org, error) {
-	rows, err := r.orgs.List(ctx)
+// List returns organizations the given account is a member of, ordered by creation time.
+func (r *Repository) List(ctx context.Context, accountID string) ([]Org, error) {
+	rows, err := r.orgs.List(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("orgs.Repository.List: %w", err)
 	}

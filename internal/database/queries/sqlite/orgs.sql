@@ -41,12 +41,14 @@ LIMIT 1;
 
 -- name: List :many
 SELECT
-    id,
-    display_name,
-    updated_at,
-    created_at
-FROM orgs
-ORDER BY created_at;
+    o.id,
+    o.display_name,
+    o.updated_at,
+    o.created_at
+FROM orgs o
+JOIN org_members om ON om.org_id = o.id
+WHERE om.account_id = ?
+ORDER BY o.created_at;
 
 -- name: Update :exec
 UPDATE orgs

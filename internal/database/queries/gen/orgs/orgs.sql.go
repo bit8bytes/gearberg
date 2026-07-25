@@ -229,16 +229,18 @@ func (q *Queries) GetRoleByName(ctx context.Context, name string) (OrgRole, erro
 
 const list = `-- name: List :many
 SELECT
-    id,
-    display_name,
-    updated_at,
-    created_at
-FROM orgs
-ORDER BY created_at
+    o.id,
+    o.display_name,
+    o.updated_at,
+    o.created_at
+FROM orgs o
+JOIN org_members om ON om.org_id = o.id
+WHERE om.account_id = ?
+ORDER BY o.created_at
 `
 
-func (q *Queries) List(ctx context.Context) ([]Org, error) {
-	rows, err := q.db.QueryContext(ctx, list)
+func (q *Queries) List(ctx context.Context, accountID string) ([]Org, error) {
+	rows, err := q.db.QueryContext(ctx, list, accountID)
 	if err != nil {
 		return nil, err
 	}

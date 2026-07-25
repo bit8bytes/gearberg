@@ -20,7 +20,7 @@ type Querier interface {
 	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
 	GetMemberByAccountIDAndOrgID(ctx context.Context, arg GetMemberByAccountIDAndOrgIDParams) (GetMemberByAccountIDAndOrgIDRow, error)
 	GetRoleByName(ctx context.Context, name string) (OrgRole, error)
-	List(ctx context.Context) ([]Org, error)
+	List(ctx context.Context, accountID string) ([]Org, error)
 	ListMembersByOrgID(ctx context.Context, orgID string) ([]ListMembersByOrgIDRow, error)
 	Update(ctx context.Context, arg UpdateParams) error
 	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error

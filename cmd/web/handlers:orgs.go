@@ -23,8 +23,9 @@ type orgsData struct {
 
 func (app *application) getOrgs(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
+	session := sessions.MustFromRequest(r)
 
-	allOrgs, err := app.services.orgs.GetAll(ctx)
+	allOrgs, err := app.services.orgs.GetAll(ctx, session.AccountID)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
