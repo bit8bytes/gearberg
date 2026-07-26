@@ -11,6 +11,11 @@ help:
 confirm:
 	@echo 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
+## run/web/verify: check configuration and connectivity
+.PHONY: run/web/verify
+run/web/verify:
+	go run -tags sqlite ./cmd/web verify
+
 ## run/web: run the web application with live reload
 .PHONY: run/web
 run/web:

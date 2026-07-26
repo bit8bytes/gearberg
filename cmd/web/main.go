@@ -83,7 +83,7 @@ func runServe(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	options, err := parseServeOptions(args)
+	options, err := parseOptions(args)
 	if errors.Is(err, flag.ErrHelp) {
 		return nil
 	}
@@ -157,7 +157,7 @@ func runVerify(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	options, err := parseVerifyOptions(args)
+	options, err := parseOptions(args)
 	if errors.Is(err, flag.ErrHelp) {
 		return nil
 	}
@@ -180,7 +180,19 @@ func runVerify(args []string) error {
 	if err := seedReferenceData(ctx, db); err != nil {
 		return fmt.Errorf("seed reference data: %w", err)
 	}
+	log.InfoContext(ctx, "database ok", "db_version", databaseVersion)
 
-	log.InfoContext(ctx, "ok", "db_version", databaseVersion)
+	if options.OIDCAuthentik.Configured() {
+		if err := options.OIDCAuthentik.Valid(); err != nil {
+			return fmt.Errorf("oidc-authentik: %w", err)
+		}
+		if _, err := setupOIDCProvider(ctx, options.OIDCAuthentik, ""); err != nil {
+			return fmt.Errorf("oidc-authentik: %w", err)
+		}
+		log.InfoContext(ctx, "oidc-authentik ok", "issuer", options.OIDCAuthentik.IssuerURL)
+	} else {
+		log.InfoContext(ctx, "oidc-authentik not configured")
+	}
+
 	return nil
 }

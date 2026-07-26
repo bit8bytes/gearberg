@@ -31,16 +31,12 @@ type options struct {
 	DefaultTimezone     string
 }
 
-func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
-	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
-	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
-}
-
-func parseServeOptions(args []string) (*options, error) {
+func parseOptions(args []string) (*options, error) {
 	cfg := &options{LogLevel: logLevel{level: slog.LevelInfo}}
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
-	registerCommonFlags(fs, cfg)
+	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
+	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
 	fs.BoolVar(&cfg.Version, "version", false, "print version and exit")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.BaseURL, "base-url", envOr("BASE_URL", ""), "base URL for link generation (e.g. https://example.com)")
@@ -120,19 +116,6 @@ func (cfg *options) validate() error {
 // DefaultVatRateBasisPoints converts DefaultVatRate from a percentage to basis points (e.g. 19.0 → 1900).
 func (cfg *options) DefaultVatRateBasisPoints() int64 {
 	return int64(math.Round(cfg.DefaultVatRate * 100))
-}
-
-func parseVerifyOptions(args []string) (*options, error) {
-	cfg := &options{LogLevel: logLevel{level: slog.LevelError}}
-	fs := flag.NewFlagSet("verify", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
-	registerCommonFlags(fs, cfg)
-
-	if err := fs.Parse(args); err != nil {
-		return nil, fmt.Errorf("parseVerifyOptions: %w", err)
-	}
-
-	return cfg, nil
 }
 
 func validatePort(port int) error {
