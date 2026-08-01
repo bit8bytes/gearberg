@@ -41,7 +41,7 @@
           <div class="border border-base-200"></div>
           <li>
             <a href="/orgs/{{ .Data.OrgID }}/equipment" class="{{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .Data.OrgID) }}text-primary{{ end }}">
-              {{ template "inventory-icon" . }}
+              <span class="size-6">{{ template "equipment-icon" . }}</span>
               Equipment
             </a>
           </li>

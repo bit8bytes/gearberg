@@ -1,0 +1,15 @@
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+    letter-spacing: 0.005em;
+    background-color: var(--color-base-200);
+    background-image: radial-gradient(circle at 1px 1px, var(--color-dot) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+
+  .wordmark {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}

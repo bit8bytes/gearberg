@@ -124,11 +124,11 @@
             <td class="py-3 text-right pr-4">
               <div class="flex items-center justify-end gap-1">
                 {{ if eq .TrackingType.String "serialized" }}
-                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square" title="View units">
+                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View units">
                   <span class="w-4 h-4">{{ template "units-icon" . }}</span>
                 </a>
                 {{ end }}
-                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square" title="Edit">
+                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="Edit">
                   <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
                 </a>
               </div>

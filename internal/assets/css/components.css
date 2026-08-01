@@ -1,0 +1,5 @@
+@layer components {
+  .list-item-link {
+    @apply flex items-center gap-3 px-4 py-3 hover:bg-base-200 focus:bg-base-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors;
+  }
+}

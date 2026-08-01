@@ -1,13 +1,13 @@
 {{ define "title" }}Equipment &amp; Rental Management{{ end }}
-{{ define "description" }}The affordable Rentman alternative for hobby and solo. Free to self-host with equipment tracking and rentals. Desktop app coming soon for equipment-only use. Open-source with no lock-in.{{ end }}
+{{ define "description" }}Track your gear. Run your rentals. Open-source with no lock-in.{{ end }}
 
 {{ define "seo" }}
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Gearberg — Track your gear. Run your rentals." />
-<meta property="og:description" content="Free, open-source, self-hostable inventory and rental management. No subscriptions, no lock-in." />
+<meta property="og:title" content="Gearberg: Track your gear. Run your rentals." />
+<meta property="og:description" content="Track your gear. Run your rentals. Open-source with no lock-in." />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Gearberg — Track your gear. Run your rentals." />
-<meta name="twitter:description" content="Free, open-source, self-hostable inventory and rental management. No subscriptions, no lock-in." />
+<meta name="twitter:title" content="Gearberg: Track your gear. Run your rentals." />
+<meta name="twitter:description" content="Track your gear. Run your rentals. Open-source with no lock-in." />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -18,7 +18,7 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "license": "https://www.gnu.org/licenses/agpl-3.0.html",
   "url": "https://github.com/bit8bytes/gearberg",
-  "description": "Free, open-source, self-hostable inventory and rental management system.",
+  "description": "Track your gear. Run your rentals. Open-source with no lock-in.",
   "keywords": "inventory management, rental management, self-hosted, open source, equipment tracking"
 }
 </script>
@@ -27,16 +27,18 @@
 {{ define "page" }}
 <main>
 {{/* Hero Section */}}
-<section class="hero bg-base-200 min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
+<section class="hero min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
   <div class="hero-content text-center">
-    <div class="max-w-md">
-      <h1 id="hero-heading" class="text-6xl font-bold">Track your gear. Run your rentals.</h1>
-      <p class="py-6 text-base-content/60">Open Source &middot; No Lock-in &middot; Docker Ready</p>
+    <div class="max-w-xl">
+      <h1 id="hero-heading" class="text-6xl font-bold">Track your <span class="text-primary">gear.</span> </br> Run your <span class="text-primary">rentals.</span></h1>
+      <div class="py-6 text-base-content/60">
+        <span class="badge badge-dash">Open Source</span>
+        <span class="badge badge-dash">No Lock-in</span>
+        <span class="badge badge-dash">Easy Installation</span>
+      </div>
       <nav aria-label="Page sections" class="mt-2">
         <div class="flex flex-wrap gap-2 justify-center">
-          <div class="tooltip" data-tip="Email: demo@gearberg.org & Password: demo@gearberg.org">
-            <a href="https://demo.gearberg.org" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Try Demo</a>
-          </div>
+          <a href="#quickstart" class="btn btn-primary">Quickstart</a>
           <a href="#pricing" class="btn btn-outline">See Plans</a>
         </div>
       </nav>
@@ -46,14 +48,14 @@
 
 {{/* Features */}}
 <section id="features" class="py-24 bg-base-100" aria-labelledby="features-heading">
-  <div class="container mx-auto px-6 max-w-7xl">
+  <div class="container mx-auto px-6 max-w-5xl">
     <h2 id="features-heading" class="text-4xl font-bold text-center mb-16">Features</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
 
       <div class="card bg-base-200 shadow">
         <div class="card-body">
           <h3 class="card-title text-xl text-primary font-bold">
-            {{ template "inventory-icon" . }}
+            <span class="size-8">{{ template "equipment-icon" . }}</span>
             Equipment
           </h3>
           <p>Bulk quantities or serialized items, with categories and photos.</p>
@@ -63,7 +65,7 @@
       <div class="card bg-base-200 shadow">
         <div class="card-body">
           <h3 class="card-title text-xl text-primary font-bold">
-            {{ template "rentals-icon" . }}
+            <span class="size-8">{{ template "rentals-icon" . }}</span>
             Rentals
           </h3>
           <p>Check out gear to people, set due dates, track returns.</p>
@@ -73,7 +75,7 @@
       <div class="card bg-base-200 shadow">
         <div class="card-body">
           <h3 class="card-title text-xl text-primary font-bold">
-            {{ template "free-icon" . }}
+            <span class="size-8">{{ template "import-export-icon" . }}</span>
             Import &amp; Export
           </h3>
           <p>CSV in, CSV out. Your data is never locked in.</p>
@@ -83,7 +85,7 @@
       <div class="card bg-base-200 shadow" id="open-source">
         <div class="card-body">
           <h3 class="card-title text-xl text-primary font-bold">
-            {{ template "open-source-icon" . }}
+            <span class="size-8">{{ template "open-source-icon" . }}</span>
             Open Source
           </h3>
           <p>AGPL v3. Self-host it, audit it, contribute to it. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a></p>
@@ -95,34 +97,16 @@
 </section>
 
 {{/* Pricing */}}
-<section id="pricing" class="py-24 bg-base-200" aria-labelledby="pricing-heading">
-  <div class="container mx-auto px-6 max-w-7xl text-center">
+<section id="pricing" class="py-24" aria-labelledby="pricing-heading">
+  <div class="container mx-auto px-6 max-w-3xl text-center">
     <h2 id="pricing-heading" class="text-4xl font-bold mb-4">Pricing</h2>
-    <p class="text-base-content/60 mb-12">Self-host for free, or wait for the desktop app. Cloud sync is coming for those who need it.</p>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      
-      <div class="card bg-base-100 shadow border border-base-300 opacity-60">
-        <div class="card-body text-left">
-          <div class="flex items-center gap-2 mb-1">
-            <h3 class="card-title text-2xl font-bold">Desktop</h3>
-            <span class="badge badge-ghost badge-sm">Coming soon</span>
-          </div>
-          <p class="text-4xl font-bold mt-2">Free</p>
-          <p class="text-base-content/60 text-sm mb-4">No server, no Docker, just install and run. Requires Chrome.</p>
-          <ul class="space-y-2 text-sm flex-1">
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
-          </ul>
-          <div class="card-actions mt-6">
-            <button class="btn btn-outline w-full" disabled>Not yet available</button>
-          </div>
-        </div>
-      </div>
+    <p class="text-base-content/60 mb-12">Self-host for free with all features included. Managed, worry-free cloud on request.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <div class="card bg-base-100 shadow border border-base-300">
+      <div class="card bg-primary/10 shadow border border-primary">
         <div class="card-body text-left">
           <h3 class="card-title text-2xl font-bold">Self-host</h3>
-          <p class="text-4xl font-bold mt-2">Free</p>
+          <p class="text-4xl font-bold mt-2 underline text-primary">Free</p>
           <p class="text-base-content/60 text-sm mb-4">Run on your own server with Docker</p>
           <ul class="space-y-2 text-sm flex-1">
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
@@ -157,14 +141,14 @@
 </section>
 
 {{/* Roadmap */}}
-<section id="roadmap" class="py-24 bg-base-200" aria-labelledby="roadmap-heading">
+<section id="roadmap" class="py-24" aria-labelledby="roadmap-heading">
   <div class="container mx-auto px-6 max-w-3xl">
     <h2 id="roadmap-heading" class="text-4xl font-bold text-center mb-4">Roadmap</h2>
     <p class="text-center mb-10">Gearberg is in active development. Here is what is done and what is coming next. Read the <a href="https://github.com/bit8bytes/gearberg/blob/main/wiki/SPECS.md" class="link link-primary" target="_blank" rel="noopener noreferrer">full specification</a> on GitHub.</p>
     <ul class="timeline timeline-vertical mx-auto w-fit">
 
       <li>
-        <div class="timeline-start timeline-box">M0: Orgs &amp; Settings</div>
+        <div class="timeline-start timeline-box">M0: Settings</div>
         <div class="timeline-middle">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
@@ -227,12 +211,22 @@
     <h2 id="quickstart-heading" class="text-4xl font-bold text-center mb-4">Quickstart</h2>
     <p class="text-center mb-10">Try it with a single <a href="https://docker.com" class="link link-primary" target="_blank" rel="noopener noreferrer">Docker</a> command:</p>
 
-    <div class="mockup-code" role="region" aria-label="Quickstart command">
-      <pre data-prefix="$"><code>docker run -it -p 8080:8080 nixos/nix \
+    <div class="mockup-code relative" role="region" aria-label="Quickstart command">
+      <button
+        id="copy-quickstart"
+        class="absolute top-3 right-3 btn btn-xs btn-neutral"
+        aria-label="Copy command to clipboard"
+      >Copy</button>
+      <pre data-prefix="$"><code id="quickstart-cmd">docker run -it -p 8080:8080 nixos/nix \
   nix --extra-experimental-features "nix-command flakes" \
   run github:bit8bytes/gearberg -- serve</code></pre>
-        <pre data-prefix=">" class="text-success"><code>{"time":"2026-05-29T15:40:25.22062-04:00", "msg":"starting server"}</code></pre>
     </div>
+    <script nonce="{{ .Nonce }}">
+      document.getElementById('copy-quickstart').addEventListener('click', function() {
+        navigator.clipboard.writeText(document.getElementById('quickstart-cmd').innerText);
+        this.textContent = 'Copied!';
+      });
+    </script>
 
     <p class="text-center mt-6">Then open <a href="http://localhost:8080" class="badge badge-neutral font-mono" target="_blank" rel="noopener noreferrer">http://localhost:8080</a> in your browser.</p>
   </div>
@@ -247,21 +241,21 @@
       <details class="collapse collapse-arrow bg-base-200">
         <summary class="collapse-title text-lg font-medium">Who is Gearberg for?</summary>
         <div class="collapse-content">
-          <p>Small teams, clubs, schools, and studios that need to track shared equipment and rentals without spreadsheets or expensive SaaS tools.</p>
+          <p>Individuals, freelancers, and small businesses who need straightforward equipment tracking and rentals.</p>
         </div>
       </details>
 
       <details class="collapse collapse-arrow bg-base-200">
-        <summary class="collapse-title text-lg font-medium">What's the difference between self-hosted and desktop?</summary>
+        <summary class="collapse-title text-lg font-medium">What problems does Gearberg solve?</summary>
         <div class="collapse-content">
-          <p>Self-hosted is free. You run it on your own server with Docker and get all features, including rentals. The desktop app is also free and works without a server, but covers equipment tracking only. A cloud option with multi-device sync and rentals is planned for the future.</p>
+          <p>Knowing what gear you own, where it is, and whether it's available. Without spreadsheets or expensive rental software.</p>
         </div>
       </details>
 
       <details class="collapse collapse-arrow bg-base-200">
-        <summary class="collapse-title text-lg font-medium">Can I move my data between self-hosted and managed?</summary>
+        <summary class="collapse-title text-lg font-medium">Can I export my data?</summary>
         <div class="collapse-content">
-          <p>Yes. Export your equipment data as CSV from any Gearberg instance and import it into any other. It works in both directions: self-hosted to managed, or managed to self-hosted. Your data is never locked in.</p>
+          <p>Yes. Export your equipment list as CSV at any time.</p>
         </div>
       </details>
 
@@ -286,6 +280,11 @@
       },
       {
         "@type": "Question",
+        "name": "What problems does Gearberg solve?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Knowing what gear you own, where it is, and whether it's available. Without spreadsheets or expensive rental software." }
+      },
+      {
+        "@type": "Question",
         "name": "What's the difference between self-hosted and desktop?",
         "acceptedAnswer": { "@type": "Answer", "text": "Self-hosted is free. You run it on your own server with Docker and get all features, including rentals. The desktop app is also free and works without a server, but covers equipment tracking only. A cloud option with multi-device sync and rentals is planned for the future." }
       },
@@ -305,15 +304,13 @@
 </section>
 
 {{/* Closing CTA */}}
-<section class="py-24 bg-base-200" aria-labelledby="cta-heading">
+<section class="py-24" aria-labelledby="cta-heading">
   <div class="container mx-auto px-6 max-w-xl text-center">
     <h2 id="cta-heading" class="text-4xl font-bold mb-4">Ready to get started?</h2>
     <p class="text-base-content/60 mb-8">Try the demo or run it yourself with a single Docker command.</p>
     <div class="flex flex-wrap gap-4 justify-center">
-      <div class="tooltip" data-tip="Email: demo@gearberg.org & Password: demo@gearberg.org">
-        <a href="https://demo.gearberg.org" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Try Demo</a>
-      </div>
-      <a href="#quickstart" class="btn btn-outline">Run with Docker</a>
+      <a href="#quickstart" class="btn btn-primary">Run with Docker</a>
+      <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline">Get in touch</a>
     </div>
   </div>
 </section>

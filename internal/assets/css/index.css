@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./fonts.css";
+@import "./base.css";
+@import "./components.css";
 @plugin "./daisyui.mjs";
 @plugin "./daisyui-theme.mjs" {
   name: "gearberg";
@@ -53,50 +56,7 @@
   /* effects */
   --depth: 0;
   --noise: 0;
-}
 
-@font-face {
-  font-family: 'Space Mono';
-  src: url('/dist/SpaceMono-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/dist/PlusJakartaSans-VariableFont_wght.ttf') format('truetype');
-  font-weight: 200 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Caveat';
-  src: url('/dist/Caveat-VariableFont_wght.ttf') format('truetype');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@layer components {
-  .list-item-link {
-    @apply flex items-center gap-3 px-4 py-3 hover:bg-base-200 focus:bg-base-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors;
-  }
-}
-
-@layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
-    letter-spacing: 0.005em;
-    background-color: #f5f4f0;
-    background-image: radial-gradient(circle at 1px 1px, rgba(30,28,24,0.04) 1px, transparent 0);
-    background-size: 24px 24px;
-  }
-
-  .wordmark {
-    font-family: 'Caveat', cursive;
-    font-weight: 700;
-    line-height: 1.2;
-  }
+  /* dot grid */
+  --color-dot: rgba(30,28,24,0.04);
 }
