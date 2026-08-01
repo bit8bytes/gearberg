@@ -1,6 +1,17 @@
 // Package locations handles location routes, business logic, and data access.
 package locations
 
+import "errors"
+
+var (
+	// ErrNotFound is returned when a location does not exist.
+	ErrNotFound = errors.New("location not found")
+	// ErrConflict is returned when a unique constraint is violated.
+	ErrConflict = errors.New("location already exists")
+	// ErrLimitExceeded is returned when an org's location limit is reached.
+	ErrLimitExceeded = errors.New("location limit exceeded")
+)
+
 // Location represents a storage location belonging to an org.
 type Location struct {
 	ID                        string

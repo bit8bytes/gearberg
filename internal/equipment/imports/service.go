@@ -275,16 +275,14 @@ func (s *Service) commitRows(ctx context.Context, tx *sql.Tx, rows []Row, lk com
 	return nil
 }
 
-func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID string, locID *string) {
+func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID, locID string) {
 	catID = lk.catsByName[strings.ToLower(row.CategoryName)]
 	mfrID = lk.mfrsByName[strings.ToLower(row.ManufacturerName)]
-	if id, ok := lk.locsByName[strings.ToLower(row.LocationName)]; ok {
-		locID = &id
-	}
+	locID = lk.locsByName[strings.ToLower(row.LocationName)]
 	return
 }
 
-func buildBase(row Row, catID, mfrID string, locID *string) equipment.Base {
+func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 	usageType := equipment.Rental
 	if strings.EqualFold(row.UsageTypeLabel, "sale") {
 		usageType = equipment.Sale
@@ -333,10 +331,7 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 	if sn == "" {
 		sn = serial.New()
 	}
-	isActive := int64(1)
-	if strings.EqualFold(row.UnitIsActive, "false") || row.UnitIsActive == "0" {
-		isActive = 0
-	}
+	isActive := !strings.EqualFold(row.UnitIsActive, "false") && row.UnitIsActive != "0"
 	return equipment.CreateUnit{
 		ID:                       ksuid.New().String(),
 		EquipmentID:              equipmentID,

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
@@ -85,11 +84,11 @@ func (app *application) postManufacturerNew(w http.ResponseWriter, r *http.Reque
 		Name:  form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, manufacturers.ErrConflict) {
 			form.AddError("name", "A manufacturer with this name already exists.")
 			return reRender(&form)
 		}
-		if errors.Is(err, database.ErrLimitExceeded) {
+		if errors.Is(err, manufacturers.ErrLimitExceeded) {
 			limit := app.services.manufacturers.MaxManufacturers()
 			form.AddError("name", fmt.Sprintf("Manufacturer limit reached. Only %d manufacturers allowed per org.", limit))
 			return reRender(&form)
@@ -113,7 +112,7 @@ func (app *application) getManufacturer(w http.ResponseWriter, r *http.Request) 
 
 	manufacturer, err := app.services.manufacturers.GetByID(ctx, mfrID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, manufacturers.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Manufacturer not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{
@@ -140,7 +139,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 
 	mfr, err := app.services.manufacturers.GetByID(ctx, mfrID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, manufacturers.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Manufacturer not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturer.", Code: http.StatusInternalServerError}
@@ -162,7 +161,7 @@ func (app *application) postManufacturer(w http.ResponseWriter, r *http.Request)
 		Name: form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, manufacturers.ErrConflict) {
 			form.AddError("name", "A manufacturer with this name already exists.")
 			return reRender(&form)
 		}
@@ -184,10 +183,10 @@ func (app *application) postDeleteManufacturer(w http.ResponseWriter, r *http.Re
 	mfrID := r.PathValue("id")
 
 	if err := app.services.manufacturers.Delete(ctx, mfrID); err != nil {
-		if errors.Is(err, database.ErrForeignKeyViolation) {
+		if errors.Is(err, manufacturers.ErrInUse) {
 			manufacturer, fetchErr := app.services.manufacturers.GetByID(ctx, mfrID)
 			if fetchErr != nil {
-				if errors.Is(fetchErr, database.ErrNotFound) {
+				if errors.Is(fetchErr, manufacturers.ErrNotFound) {
 					return &httperr.Error{Error: fetchErr, Message: "Manufacturer not found.", Code: http.StatusNotFound}
 				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve manufacturer.", Code: http.StatusInternalServerError}

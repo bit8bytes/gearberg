@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/bit8bytes/gearberg/internal/barcodes"
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment"
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -201,11 +200,10 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		Name:           form.Name,
 		CategoryID:     form.CategoryID,
 		ManufacturerID: form.ManufacturerID,
-		LocationID:     database.StringOrNil(form.LocationID),
-		HasContent:     form.HasContentBool(),
+		LocationID:     form.LocationID,
+		HasContent:     form.HasContent,
 		Notes:          form.Notes,
 		Pricing:        form.ToPricing(),
-		Properties:     form.ToProperties(),
 	}
 
 	eqType := equipment.TypeFromString(form.TypeID)
@@ -293,7 +291,7 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -397,7 +395,7 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -452,7 +450,7 @@ func (app *application) getEquipmentItemProperties(w http.ResponseWriter, r *htt
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -503,14 +501,14 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 	if err := app.services.equipment.UpdateUnit(ctx, equipment.UpdateUnit{
 		ID:                       unitID,
 		SerialNumber:             form.SerialNumber,
-		StatusID:                 form.StatusID,
+		IsActive:                 form.StatusID,
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
 		Remark:                   form.Remark,
-		PurchasePrice:            form.PurchasePrice,
+		PurchasePrice:            form.ParsedPurchasePrice(),
 		PurchasedAt:              form.PurchasedAt,
 		NextInspectionAt:         form.NextInspectionAt,
 	}); err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, equipment.ErrConflict) {
 			return app.renderEquipmentUnits(w, r, orgID, itemID)
 		}
 		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
@@ -572,7 +570,7 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -604,7 +602,7 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -612,7 +610,7 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 
 	unit, err := app.services.equipment.GetUnit(ctx, unitID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
@@ -640,7 +638,7 @@ func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.R
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -648,7 +646,7 @@ func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.R
 
 	unit, err := app.services.equipment.GetUnit(ctx, unitID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
@@ -792,7 +790,7 @@ func (app *application) postArchiveEquipmentItem(w http.ResponseWriter, r *http.
 
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -815,7 +813,7 @@ func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.R
 	itemID := r.PathValue("id")
 
 	if err := app.services.equipment.Delete(ctx, itemID); err != nil {
-		if errors.Is(err, database.ErrForeignKeyViolation) {
+		if errors.Is(err, equipment.ErrInUse) {
 			return &httperr.Error{
 				Error:   err,
 				Message: "Cannot delete an inventory item that is part of an active rental.",
@@ -836,7 +834,7 @@ func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.R
 func (app *application) loadContentPageData(ctx context.Context, orgID, itemID string) (*equipment.Equipment, []equipment.ContentItem, []equipment.Equipment, *httperr.Error) {
 	item, err := app.services.equipment.GetByID(ctx, itemID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, equipment.ErrNotFound) {
 			return nil, nil, nil, &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
@@ -943,7 +941,7 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 		Quantity:    form.Quantity,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, equipment.ErrConflict) {
 			return reRender(&form, "This item is already assigned as content.")
 		}
 		return reRender(&form, "Failed to assign content item.")

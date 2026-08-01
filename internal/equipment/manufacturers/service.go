@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/segmentio/ksuid"
 )
 
@@ -56,7 +55,7 @@ func (s *Service) Create(ctx context.Context, c CreateManufacturer) (*Manufactur
 		return nil, fmt.Errorf("failed to create manufacturer: %w", err)
 	}
 	if count >= int64(s.opts.MaxManufacturers) {
-		return nil, fmt.Errorf("failed to create manufacturer: %w", database.ErrLimitExceeded)
+		return nil, ErrLimitExceeded
 	}
 
 	manufacturer, err := s.repo.Create(ctx, c)
@@ -88,7 +87,7 @@ func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string,
 		OrgID: orgID,
 		Name:  name,
 	})
-	if err != nil && !errors.Is(err, database.ErrUniqueConstraint) {
+	if err != nil && !errors.Is(err, ErrConflict) {
 		return "", fmt.Errorf("EnsureByName: %w", err)
 	}
 	m, err := s.repo.GetByName(ctx, orgID, name)

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
@@ -85,11 +84,11 @@ func (app *application) postLocationNew(w http.ResponseWriter, r *http.Request) 
 		Name:  form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, locations.ErrConflict) {
 			form.AddError("name", "A location with this name already exists.")
 			return reRender(&form)
 		}
-		if errors.Is(err, database.ErrLimitExceeded) {
+		if errors.Is(err, locations.ErrLimitExceeded) {
 			limit := app.services.locations.MaxLocations()
 			form.AddError("name", fmt.Sprintf("Location limit reached. Only %d locations allowed per org.", limit))
 			return reRender(&form)
@@ -113,7 +112,7 @@ func (app *application) getLocation(w http.ResponseWriter, r *http.Request) *htt
 
 	loc, err := app.services.locations.GetByID(ctx, locID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, locations.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Location not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{
@@ -140,7 +139,7 @@ func (app *application) postLocation(w http.ResponseWriter, r *http.Request) *ht
 
 	loc, err := app.services.locations.GetByID(ctx, locID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, locations.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Location not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve location.", Code: http.StatusInternalServerError}
@@ -162,7 +161,7 @@ func (app *application) postLocation(w http.ResponseWriter, r *http.Request) *ht
 		Name: form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, locations.ErrConflict) {
 			form.AddError("name", "A location with this name already exists.")
 			return reRender(&form)
 		}

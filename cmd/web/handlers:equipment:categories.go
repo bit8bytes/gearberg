@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
@@ -85,11 +84,11 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 		Name:  form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, categories.ErrConflict) {
 			form.AddError("name", "A category with this name already exists.")
 			return reRender(&form)
 		}
-		if errors.Is(err, database.ErrLimitExceeded) {
+		if errors.Is(err, categories.ErrLimitExceeded) {
 			limit := app.services.equipmentcategories.MaxCategories()
 			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per org.", limit))
 			return reRender(&form)
@@ -112,7 +111,7 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 
 	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, categories.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment category not found.", Code: http.StatusNotFound}
 		}
 		return &httperr.Error{
@@ -154,7 +153,7 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 		Name: form.Name,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, categories.ErrConflict) {
 			form.AddError("name", "A category with this name already exists.")
 			return reRender(&form)
 		}
@@ -175,10 +174,10 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 	catID := r.PathValue("id")
 
 	if err := app.services.equipmentcategories.Delete(ctx, catID); err != nil {
-		if errors.Is(err, database.ErrForeignKeyViolation) {
+		if errors.Is(err, categories.ErrInUse) {
 			category, fetchErr := app.services.equipmentcategories.GetByID(ctx, catID)
 			if fetchErr != nil {
-				if errors.Is(fetchErr, database.ErrNotFound) {
+				if errors.Is(fetchErr, categories.ErrNotFound) {
 					return &httperr.Error{Error: fetchErr, Message: "Equipment category not found.", Code: http.StatusNotFound}
 				}
 				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}

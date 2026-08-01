@@ -2,10 +2,142 @@
 package equipment
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
+
+var (
+	// ErrNotFound is returned when an equipment item does not exist.
+	ErrNotFound = errors.New("equipment not found")
+	// ErrConflict is returned when a unique constraint is violated.
+	ErrConflict = errors.New("equipment already exists")
+	// ErrLimitExceeded is returned when an org's equipment limit is reached.
+	ErrLimitExceeded = errors.New("equipment limit exceeded")
+	// ErrInUse is returned when an item cannot be deleted due to active references.
+	ErrInUse = errors.New("equipment is in use and cannot be deleted")
+)
+
+// Base holds fields shared between bulk and serialized creation.
+type Base struct {
+	ID             string
+	OrgID          string
+	UsageTypeID    int64
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	LocationID     string
+	HasContent     bool
+	Notes          string
+	Pricing        Pricing
+	Properties     Properties
+}
+
+// CreateEquipment holds the data required to create a new inventory item of any type.
+// For Bulk, TotalStock is the initial stock quantity. For Serialized, UnitCount determines
+// how many units are generated.
+type CreateEquipment struct {
+	Base
+	Type       Type
+	TotalStock int64
+	UnitCount  int64
+}
+
+// CreateBulkEquipment holds the data required to create a bulk inventory item.
+type CreateBulkEquipment struct {
+	Base
+	TotalStock int64
+}
+
+// CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
+type CreateSerializedEquipment struct {
+	Base
+	Units []CreateUnit
+}
+
+// CreateUnit holds the data required to create a single serialized inventory unit.
+type CreateUnit struct {
+	ID                       string
+	OrgID                    string
+	EquipmentID              string
+	SerialNumber             string
+	ManufacturerSerialNumber string
+	Remark                   string
+	PurchasePrice            *Cents
+	PurchasedAt              *int64
+	NextInspectionAt         *int64
+	IsActive                 bool
+}
+
+// AddUnit holds the data required to add a single unit to a serialized inventory item.
+type AddUnit struct {
+	ID           string
+	OrgID        string
+	EquipmentID  string
+	SerialNumber string
+}
+
+// UpdateEquipmentDetails holds the data required to update the details tab fields.
+type UpdateEquipmentDetails struct {
+	ID             string
+	Type           Type
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	LocationID     string
+	Notes          string
+	TotalStock     int64 // TotalStock is only applied for bulk inventory items.
+}
+
+// UpdateEquipmentPricing holds the data required to update the pricing tab fields.
+type UpdateEquipmentPricing struct {
+	ID      string
+	Pricing Pricing
+}
+
+// UpdateEquipmentProperties holds the data required to update the properties tab fields.
+type UpdateEquipmentProperties struct {
+	ID         string
+	Properties Properties
+}
+
+// UpdateUnit holds the data required to update a single unit's editable fields.
+type UpdateUnit struct {
+	ID                       string
+	SerialNumber             string
+	IsActive                 int64
+	ManufacturerSerialNumber string
+	Remark                   string
+	PurchasePrice            *Cents
+	PurchasedAt              *int64
+	NextInspectionAt         *int64
+}
+
+// AssignContent holds the data required to assign an equipment as content of a container.
+type AssignContent struct {
+	ID          string
+	EquipmentID string
+	MemberID    string
+	Quantity    int64
+}
+
+// RemoveContent holds the data required to remove a content entry.
+type RemoveContent struct {
+	ID string
+}
+
+// ArchiveEquipment holds the data required to archive or unarchive an equipment item.
+type ArchiveEquipment struct {
+	ID         string
+	IsArchived bool
+}
+
+// SetImage links or unlinks a storage object from an inventory item.
+type SetImage struct {
+	ID              string
+	StorageObjectID *string
+}
 
 // Cents is a monetary amount in the smallest currency unit (e.g. 1999 = €19.99).
 type Cents int64
@@ -142,74 +274,10 @@ type ContentItem struct {
 	Quantity    int64
 }
 
-// AssignContent holds the data required to assign an equipment as content of a container.
-type AssignContent struct {
-	ID          string
-	EquipmentID string
-	MemberID    string
-	Quantity    int64
-}
-
-// RemoveContent holds the data required to remove a content entry.
-type RemoveContent struct {
-	ID string
-}
-
 // PartOf identifies a container equipment that includes this item in its content definition.
 type PartOf struct {
 	ID   string
 	Name string
-}
-
-// Base holds fields shared between bulk and serialized creation.
-type Base struct {
-	ID             string
-	OrgID          string
-	UsageTypeID    int64
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	LocationID     *string
-	HasContent     bool
-	Notes          string
-	Pricing        Pricing
-	Properties     Properties
-}
-
-// CreateBulkEquipment holds the data required to create a bulk inventory item.
-type CreateBulkEquipment struct {
-	Base
-	TotalStock int64
-}
-
-// CreateUnit holds the data required to create a single serialized inventory unit.
-type CreateUnit struct {
-	ID                       string
-	OrgID                    string
-	EquipmentID              string
-	SerialNumber             string
-	ManufacturerSerialNumber string
-	Remark                   string
-	PurchasePrice            *Cents
-	PurchasedAt              *int64
-	NextInspectionAt         *int64
-	IsActive                 int64 // 1 = active (default), 0 = inactive
-}
-
-// CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
-type CreateSerializedEquipment struct {
-	Base
-	Units []CreateUnit
-}
-
-// CreateEquipment holds the data required to create a new inventory item of any type.
-// For Bulk, TotalStock is the initial stock quantity. For Serialized, UnitCount determines
-// how many units are generated.
-type CreateEquipment struct {
-	Type Type
-	Base
-	TotalStock int64
-	UnitCount  int64
 }
 
 // Unit represents a single serialized unit.
@@ -264,51 +332,6 @@ func (u *Unit) IsInspectionOverdue() bool {
 // IsActive returns true when the unit's is_active flag is set.
 func (u *Unit) IsActive() bool { return u.StatusID == 1 }
 
-// UpdateEquipmentDetails holds the data required to update the details tab fields.
-type UpdateEquipmentDetails struct {
-	ID             string
-	Type           Type
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	LocationID     string
-	Notes          string
-	// TotalStock is only applied for bulk inventory items.
-	TotalStock int64
-}
-
-// UpdateEquipmentPricing holds the data required to update the pricing tab fields.
-type UpdateEquipmentPricing struct {
-	ID      string
-	Pricing Pricing
-}
-
-// UpdateEquipmentProperties holds the data required to update the properties tab fields.
-type UpdateEquipmentProperties struct {
-	ID         string
-	Properties Properties
-}
-
-// ArchiveEquipment holds the data required to archive or unarchive an equipment item.
-type ArchiveEquipment struct {
-	ID         string
-	IsArchived bool
-}
-
-// SetImage links or unlinks a storage object from an inventory item.
-type SetImage struct {
-	ID              string
-	StorageObjectID *string
-}
-
-// AddUnit holds the data required to add a single unit to a serialized inventory item.
-type AddUnit struct {
-	ID           string
-	OrgID        string
-	EquipmentID  string
-	SerialNumber string
-}
-
 // UnitStatusEntry is a row from the unit_statuses lookup table.
 type UnitStatusEntry struct {
 	ID   int64
@@ -324,16 +347,4 @@ func (u UnitStatusEntry) Label() string {
 		}
 	}
 	return strings.Join(words, " ")
-}
-
-// UpdateUnit holds the data required to update a single unit's editable fields.
-type UpdateUnit struct {
-	ID                       string
-	SerialNumber             string
-	StatusID                 int64
-	ManufacturerSerialNumber string
-	Remark                   string
-	PurchasePrice            *Cents
-	PurchasedAt              *int64
-	NextInspectionAt         *int64
 }

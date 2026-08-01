@@ -46,12 +46,12 @@ func (r *Repository) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentC
 	return result, nil
 }
 
-// GetByID returns the category with id, or database.ErrNotFound when it does not exist.
+// GetByID returns the category with id, or ErrNotFound when it does not exist.
 func (r *Repository) GetByID(ctx context.Context, id string) (*EquipmentCategory, error) {
 	row, err := r.equipmentCategories.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
@@ -67,7 +67,14 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 		Name:  c.Name,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Create: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		if errors.Is(normalized, database.ErrLimitExceeded) {
+			return nil, ErrLimitExceeded
+		}
+		return nil, fmt.Errorf("Create: %w", normalized)
 	}
 	m := EquipmentCategory{
 		ID:        row.ID,
@@ -85,13 +92,17 @@ func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*Eq
 		Name: u.Name,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Update: %w", err)
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("Update: %w", normalized)
 	}
 	m := toModel(row)
 	return &m, nil
 }
 
-// GetByName returns the category with the given name within orgID, or database.ErrNotFound
+// GetByName returns the category with the given name within orgID, or ErrNotFound
 // when it does not exist.
 func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*EquipmentCategory, error) {
 	row, err := r.equipmentCategories.GetByName(ctx, genec.GetByNameParams{
@@ -100,7 +111,7 @@ func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Equipm
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetByName: %w", err)
 	}
@@ -108,11 +119,14 @@ func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Equipm
 	return &m, nil
 }
 
-// Delete removes the category. Returns database.ErrForeignKeyViolation when inventory
-// items are still assigned to the category.
+// Delete removes the category. Returns ErrInUse when inventory items are still assigned.
 func (r *Repository) Delete(ctx context.Context, id string) error {
 	if err := r.equipmentCategories.Delete(ctx, id); err != nil {
-		return fmt.Errorf("Delete: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrForeignKeyViolation) {
+			return ErrInUse
+		}
+		return fmt.Errorf("Delete: %w", normalized)
 	}
 	return nil
 }

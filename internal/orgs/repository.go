@@ -3,8 +3,10 @@ package orgs
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/bit8bytes/gearberg/internal/database"
 	genorgs "github.com/bit8bytes/gearberg/internal/database/queries/gen/orgs"
 )
 
@@ -34,7 +36,14 @@ func (r *Repository) Create(ctx context.Context, tx *sql.Tx, accountID, id, disp
 		MaxOrgs:     r.maxOrgs,
 	})
 	if err != nil {
-		return "", fmt.Errorf("orgs.Repository.Create: %w", err)
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return "", ErrConflict
+		}
+		if errors.Is(normalized, database.ErrLimitExceeded) {
+			return "", ErrLimitExceeded
+		}
+		return "", fmt.Errorf("orgs.Repository.Create: %w", normalized)
 	}
 	return row.ID, nil
 }
@@ -122,7 +131,11 @@ func (r *Repository) Update(ctx context.Context, p UpdateParams) error {
 		DisplayName: p.DisplayName,
 	})
 	if err != nil {
-		return fmt.Errorf("orgs.Repository.Update: %w", err)
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return ErrConflict
+		}
+		return fmt.Errorf("orgs.Repository.Update: %w", normalized)
 	}
 	return nil
 }

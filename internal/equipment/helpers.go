@@ -19,16 +19,16 @@ func parseCheckbox(s string) int64 {
 func ParseQuantity(s string) int64 {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return 1
+		return 0
 	}
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil || n < 1 {
-		return 1
+		return 0
 	}
 	return n
 }
 
-// ParseCents parses a decimal price string and returns the value in cents. Returns nil when blank.
+// ParseCents parses a decimal price string and returns a pointer. Returns nil when blank or invalid.
 func ParseCents(s string) *Cents {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -42,7 +42,7 @@ func ParseCents(s string) *Cents {
 	return &v
 }
 
-// ParseGrams parses a kg decimal string and returns the value in grams. Returns nil when blank.
+// ParseGrams parses a kg decimal string and returns a pointer. Returns nil when blank or invalid.
 func ParseGrams(s string) *Grams {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -56,7 +56,7 @@ func ParseGrams(s string) *Grams {
 	return &v
 }
 
-// ParseMillimeters parses a cm decimal string and returns the value in mm. Returns nil when blank.
+// ParseMillimeters parses a cm decimal string and returns a pointer. Returns nil when blank or invalid.
 func ParseMillimeters(s string) *Millimeters {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -70,7 +70,7 @@ func ParseMillimeters(s string) *Millimeters {
 	return &v
 }
 
-// ParseMilliwatts parses a W decimal string and returns the value in mW. Returns nil when blank.
+// ParseMilliwatts parses a W decimal string and returns a pointer. Returns nil when blank or invalid.
 func ParseMilliwatts(s string) *Milliwatts {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -84,7 +84,7 @@ func ParseMilliwatts(s string) *Milliwatts {
 	return &v
 }
 
-// ParseMilliamps parses an A decimal string and returns the value in mA. Returns nil when blank.
+// ParseMilliamps parses an A decimal string and returns a pointer. Returns nil when blank or invalid.
 func ParseMilliamps(s string) *Milliamps {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -98,7 +98,7 @@ func ParseMilliamps(s string) *Milliamps {
 	return &v
 }
 
-// ParseVolts parses a decimal volt string and returns the value in millivolts. Returns nil when blank.
+// ParseVolts parses a V decimal string and returns a pointer. Returns nil when blank or invalid.
 func ParseVolts(s string) *Millivolts {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -112,7 +112,7 @@ func ParseVolts(s string) *Millivolts {
 	return &v
 }
 
-// ParseWireGauge parses a whole-number mm²×100 string. Returns nil when blank.
+// ParseWireGauge parses a whole-number mm²×100 string and returns a pointer. Returns nil when blank or invalid.
 func ParseWireGauge(s string) *WireGauge {
 	s = strings.TrimSpace(s)
 	if s == "" {

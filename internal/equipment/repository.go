@@ -97,12 +97,12 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 	return items, int(totalRecords), nil
 }
 
-// GetByID returns the inventory item with id, or database.ErrNotFound when it does not exist.
+// GetByID returns the inventory item with id, or ErrNotFound when it does not exist.
 func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error) {
 	row, err := r.equipment.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
@@ -153,7 +153,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		CategoryID:       database.NullString(database.StringOrNil(c.CategoryID)),
 		ManufacturerID:   database.NullString(database.StringOrNil(c.ManufacturerID)),
 		UsageTypeID:      c.UsageTypeID,
-		LocationID:       database.NullString(c.LocationID),
+		LocationID:       database.NullString(database.StringOrNil(c.LocationID)),
 		Name:             c.Name,
 		HasContent:       database.Bool(c.HasContent),
 		IsArchived:       0,
@@ -170,7 +170,11 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		WireGaugeMm2X100: database.NullOf(c.Properties.WireGauge),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("createBulkWith: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("createBulkWith: %w", normalized)
 	}
 	if _, err := bulkQ.Create(ctx, genbulk.CreateParams{
 		ID:          ksuid.New().String(),
@@ -221,7 +225,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		CategoryID:       database.NullString(database.StringOrNil(c.CategoryID)),
 		ManufacturerID:   database.NullString(database.StringOrNil(c.ManufacturerID)),
 		UsageTypeID:      c.UsageTypeID,
-		LocationID:       database.NullString(c.LocationID),
+		LocationID:       database.NullString(database.StringOrNil(c.LocationID)),
 		Name:             c.Name,
 		HasContent:       database.Bool(c.HasContent),
 		IsArchived:       0,
@@ -238,7 +242,11 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		WireGaugeMm2X100: database.NullOf(c.Properties.WireGauge),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateSerialized: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("CreateSerialized: %w", normalized)
 	}
 
 	for _, u := range c.Units {
@@ -247,7 +255,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 			OrgID:              c.OrgID,
 			EquipmentID:        row.ID,
 			SerialNumber:       u.SerialNumber,
-			IsActive:           u.IsActive,
+			IsActive:           database.Bool(u.IsActive),
 			Remark:             database.NullString(database.StringOrNil(u.Remark)),
 			PurchasePrice:      database.NullOf(u.PurchasePrice),
 			PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
@@ -411,21 +419,24 @@ func (r *Repository) Archive(ctx context.Context, a ArchiveEquipment) error {
 	return nil
 }
 
-// Delete removes the inventory item. Returns database.ErrForeignKeyViolation when
-// active rental line items reference it.
+// Delete removes the inventory item. Returns ErrInUse when active rental line items reference it.
 func (r *Repository) Delete(ctx context.Context, id string) error {
 	if err := r.equipment.Delete(ctx, id); err != nil {
-		return fmt.Errorf("Delete: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrForeignKeyViolation) {
+			return ErrInUse
+		}
+		return fmt.Errorf("Delete: %w", normalized)
 	}
 	return nil
 }
 
-// GetUnit returns the serialized unit with id, or database.ErrNotFound when it does not exist.
+// GetUnit returns the serialized unit with id, or ErrNotFound when it does not exist.
 func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 	row, err := r.serializedItems.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetUnit: %w", err)
 	}
@@ -455,7 +466,11 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 		IsActive:     1,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("AddUnit: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("AddUnit: %w", normalized)
 	}
 	u := Unit{
 		ID:           row.ID,
@@ -471,7 +486,7 @@ func (r *Repository) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
 func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 	if err := r.serializedItems.Update(ctx, genserialized.UpdateParams{
 		SerialNumber:       u.SerialNumber,
-		IsActive:           u.StatusID,
+		IsActive:           u.IsActive,
 		Remark:             database.NullString(database.StringOrNil(u.Remark)),
 		PurchasePrice:      database.NullOf(u.PurchasePrice),
 		PurchasedAt:        database.NullInt64Ptr(u.PurchasedAt),
@@ -479,7 +494,11 @@ func (r *Repository) UpdateUnit(ctx context.Context, u UpdateUnit) error {
 		ManufacturerSerial: database.NullString(database.StringOrNil(u.ManufacturerSerialNumber)),
 		ID:                 u.ID,
 	}); err != nil {
-		return fmt.Errorf("UpdateUnit: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return ErrConflict
+		}
+		return fmt.Errorf("UpdateUnit: %w", normalized)
 	}
 	return nil
 }
@@ -535,7 +554,11 @@ func (r *Repository) AssignContent(ctx context.Context, a AssignContent) (*Conte
 		Quantity:          a.Quantity,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("AssignContent: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("AssignContent: %w", normalized)
 	}
 	return &ContentItem{
 		ID:          row.ID,

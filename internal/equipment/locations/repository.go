@@ -46,12 +46,12 @@ func (r *Repository) GetByOrgID(ctx context.Context, orgID string) ([]Location, 
 	return result, nil
 }
 
-// GetByID returns the location with id, or database.ErrNotFound when it does not exist.
+// GetByID returns the location with id, or ErrNotFound when it does not exist.
 func (r *Repository) GetByID(ctx context.Context, id string) (*Location, error) {
 	row, err := r.locations.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
@@ -59,12 +59,12 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Location, error) 
 	return &m, nil
 }
 
-// GetByName returns the location with the given name within orgID, or database.ErrNotFound.
+// GetByName returns the location with the given name within orgID, or ErrNotFound.
 func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Location, error) {
 	row, err := r.locations.GetByName(ctx, genloc.GetByNameParams{OrgID: orgID, Name: name})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, database.ErrNotFound
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("GetByName: %w", err)
 	}
@@ -85,7 +85,14 @@ func (r *Repository) Create(ctx context.Context, c CreateLocation) (*Location, e
 		Name:                      c.Name,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Create: %w", database.NormalizeError(err))
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		if errors.Is(normalized, database.ErrLimitExceeded) {
+			return nil, ErrLimitExceeded
+		}
+		return nil, fmt.Errorf("Create: %w", normalized)
 	}
 	m := toModel(row)
 	return &m, nil
@@ -98,7 +105,11 @@ func (r *Repository) Update(ctx context.Context, u UpdateLocation) (*Location, e
 		Name: u.Name,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Update: %w", err)
+		normalized := database.NormalizeError(err)
+		if errors.Is(normalized, database.ErrUniqueConstraint) {
+			return nil, ErrConflict
+		}
+		return nil, fmt.Errorf("Update: %w", normalized)
 	}
 	m := toModel(row)
 	return &m, nil

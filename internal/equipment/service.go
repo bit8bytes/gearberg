@@ -47,7 +47,7 @@ func NewService(repo *Repository, db *sql.DB, cats CategoryLister, mfrs Manufact
 func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, error) {
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
-		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: serial.New(), IsActive: 1}
+		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: serial.New(), IsActive: true}
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {

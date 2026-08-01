@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/sessions"
@@ -130,7 +129,7 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 		DisplayName: form.DisplayName,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, orgs.ErrConflict) {
 			form.AddError("name", "A org with this name already exists.")
 			return reRender(&form)
 		}
@@ -170,11 +169,11 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 		AccountID:   session.AccountID,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrUniqueConstraint) {
+		if errors.Is(err, orgs.ErrConflict) {
 			form.AddError("name", "A org with this name already exists.")
 			return reRender(&form)
 		}
-		if errors.Is(err, database.ErrLimitExceeded) {
+		if errors.Is(err, orgs.ErrLimitExceeded) {
 			limit := app.services.orgs.Max()
 			form.AddError("name", fmt.Sprintf("Org limit reached. Only %d orgs allowed.", limit))
 			return reRender(&form)
