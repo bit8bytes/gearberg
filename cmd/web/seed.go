@@ -15,7 +15,7 @@ import (
 // seedReferenceData populates fixed lookup tables on every startup using
 // INSERT OR IGNORE, so it is safe to run repeatedly.
 //
-// These tables hold values that are defined in application code — adding or
+// These tables hold values that are defined in application code -- adding or
 // renaming a value only requires changing the relevant package constant and
 // this file, with no migration needed.
 func seedReferenceData(ctx context.Context, db *sql.DB) error {

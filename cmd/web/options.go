@@ -37,7 +37,6 @@ func parseOptions(args []string) (*options, error) {
 	fs.SetOutput(os.Stderr)
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
 	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
-	fs.BoolVar(&cfg.Version, "version", false, "print version and exit")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.BaseURL, "base-url", envOr("BASE_URL", ""), "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")

@@ -30,6 +30,8 @@ import (
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
+// application holds the dependencies for the web application.
+// It is the glue between internal and external packages.
 type application struct {
 	logger        *slog.Logger
 	options       *options
@@ -51,12 +53,18 @@ func run() error {
 		printUsage()
 		return nil
 	}
+
+	// The first argument is the command, the rest are flags for that command.
+	// This allows us to have different flags for different commands.
 	cmd, args := os.Args[1], os.Args[2:]
 	switch cmd {
 	case "serve":
 		return runServe(args)
 	case "verify":
 		return runVerify(args)
+	case "version":
+		fmt.Printf("%s\n", revision)
+		return nil
 	default:
 		printUsage()
 		return fmt.Errorf("unknown command %q", cmd)
@@ -67,6 +75,7 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n  verify  check configuration and database connectivity\n\nRun 'gearberg <command> -help' for command flags.\n")
 }
 
+// runServe glues together the internal and external packages to start the web server.
 func runServe(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -77,11 +86,6 @@ func runServe(args []string) error {
 	}
 	if err != nil {
 		return fmt.Errorf("parse options: %w", err)
-	}
-
-	if options.Version {
-		fmt.Printf("%s\n", revision)
-		return nil
 	}
 
 	log := setupLogger(options.LogLevel.Level())
@@ -97,10 +101,8 @@ func runServe(args []string) error {
 	if err != nil {
 		return fmt.Errorf("setup database: %w", err)
 	}
-	defer func(appDb *sql.DB) {
-		if err := appDb.Close(); err != nil {
-			log.InfoContext(ctx, "close database", "error", err.Error())
-		}
+	defer func(appDB *sql.DB) {
+		_ = appDB.Close()
 	}(db)
 
 	if err := seedReferenceData(ctx, db); err != nil {
@@ -123,11 +125,13 @@ func runServe(args []string) error {
 	oidcCtx, oidcCancel := context.WithTimeout(ctx, 10*time.Second)
 	defer oidcCancel()
 
+	// setup OIDC provider for Authentik if configured
 	oidcAuthentik, err := setupOIDCProvider(oidcCtx, options.OIDCAuthentik, options.BaseURL+"/auth/authentik/callback")
 	if err != nil {
 		return fmt.Errorf("setup oidc authentik: %w", err)
 	}
 
+	// glue together the dependencies
 	app := &application{
 		logger:        log,
 		options:       options,
@@ -160,9 +164,7 @@ func runVerify(args []string) error {
 		return fmt.Errorf("database: %w", err)
 	}
 	defer func(appDb *sql.DB) {
-		if err := appDb.Close(); err != nil {
-			log.InfoContext(ctx, "close database", "error", err.Error())
-		}
+		_ = appDb.Close()
 	}(db)
 
 	if err := seedReferenceData(ctx, db); err != nil {
