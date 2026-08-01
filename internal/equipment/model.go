@@ -39,7 +39,7 @@ type Base struct {
 // how many units are generated.
 type CreateEquipment struct {
 	Base
-	Type       Type
+	Type       TrackingType
 	TotalStock int64
 	UnitCount  int64
 }
@@ -81,7 +81,7 @@ type AddUnit struct {
 // UpdateEquipmentDetails holds the data required to update the details tab fields.
 type UpdateEquipmentDetails struct {
 	ID             string
-	Type           Type
+	Type           TrackingType
 	Name           string
 	CategoryID     string
 	ManufacturerID string
@@ -242,7 +242,7 @@ type Equipment struct {
 	ID                     string
 	OrgID                  string
 	Kind                   Kind
-	Type                   Type
+	Type                   TrackingType
 	UsageType              UsageType
 	Name                   string
 	CategoryID             string
@@ -270,7 +270,7 @@ type ContentItem struct {
 	EquipmentID string
 	MemberID    string
 	MemberName  string
-	MemberType  Type
+	MemberType  TrackingType
 	Quantity    int64
 }
 

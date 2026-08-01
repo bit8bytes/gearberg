@@ -47,7 +47,7 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 		}
 	}
 
-	for _, t := range []equipment.Type{
+	for _, t := range []equipment.TrackingType{
 		equipment.Bulk,
 		equipment.Serialized,
 	} {

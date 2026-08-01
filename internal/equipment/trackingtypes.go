@@ -1,21 +1,21 @@
 package equipment
 
-// Type represents an inventory type (Bulk or Serialized).
+// TrackingType represents an inventory type (Bulk or Serialized).
 // The integer value matches the id stored in the inventory_types table,
 // which is seeded at startup rather than via migrations.
-type Type int64
+type TrackingType int64
 
 // Equipment type identifiers seeded into the inventory_types table.
 const (
-	Bulk       Type = 1
-	Serialized Type = 2
+	Bulk       TrackingType = 1
+	Serialized TrackingType = 2
 )
 
 // ID returns the database id for the inventory type.
-func (k Type) ID() int64 { return int64(k) }
+func (k TrackingType) ID() int64 { return int64(k) }
 
 // String returns the name stored in the inventory_types table.
-func (k Type) String() string {
+func (k TrackingType) String() string {
 	switch k {
 	case Bulk:
 		return "bulk"
@@ -27,7 +27,7 @@ func (k Type) String() string {
 }
 
 // TypeFromString returns the Type matching name ("bulk" or "serialized"), or 0 when unknown.
-func TypeFromString(name string) Type {
+func TypeFromString(name string) TrackingType {
 	switch name {
 	case "bulk":
 		return Bulk
@@ -39,7 +39,7 @@ func TypeFromString(name string) Type {
 }
 
 // Label returns the human-friendly label for the inventory type.
-func (k Type) Label() string {
+func (k TrackingType) Label() string {
 	switch k {
 	case Bulk:
 		return "Bulk"
