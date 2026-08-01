@@ -91,17 +91,10 @@
             </a>
             <br />
             <div class="flex items-center gap-1.5">
-              <span class="text-xs text-secondary">{{ .Type.Label }}</span>
+              <span class="text-xs text-secondary">{{ .TrackingType.Label }}</span>
               {{ if eq .Kind 2 }}<span class="text-xs text-secondary">• Combination</span>{{ end }}
               <span class="text-xs text-secondary">• <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a></span>
             </div>
-          </td>
-          <td class="w-4 text-right">
-            {{ if eq .Type.Label "Serialized" }}
-              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="link link-hover">{{ .TotalStock }}</a>
-            {{ else }}
-              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}#total_stock" class="link link-hover">{{ .TotalStock }}</a>
-            {{ end }}
           </td>
         </tr>
         {{ end }}

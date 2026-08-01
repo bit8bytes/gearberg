@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
 
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/equipment/locations"
@@ -13,19 +14,22 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-// CategoryLister fetches equipment categories by org.
+// CategoryLister fetches and upserts equipment categories by org.
 type CategoryLister interface {
 	GetByOrgID(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error)
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
-// ManufacturerLister fetches manufacturers by org.
+// ManufacturerLister fetches and upserts manufacturers by org.
 type ManufacturerLister interface {
 	GetByOrgID(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error)
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
-// LocationLister fetches locations by org.
+// LocationLister fetches and upserts locations by org.
 type LocationLister interface {
 	GetByOrgID(ctx context.Context, orgID string) ([]locations.Location, error)
+	EnsureByName(ctx context.Context, orgID, name string) (string, error)
 }
 
 // Service implements business logic for inventory.
@@ -44,10 +48,45 @@ func NewService(repo *Repository, db *sql.DB, cats CategoryLister, mfrs Manufact
 
 // Create creates a new inventory item, dispatching to the correct path based on type.
 // Serialized creation runs inside a transaction managed by the service.
+// resolveRefs upserts category, manufacturer, and location by name when the
+// corresponding ID is empty. It mutates the three ID pointers in place.
+func (s *Service) resolveRefs(ctx context.Context, orgID string, categoryID *string, categoryName string, manufacturerID *string, manufacturerName string, locationID *string, locationName string) error {
+	if *categoryID == "" && categoryName != "" {
+		id, err := s.categories.EnsureByName(ctx, orgID, categoryName)
+		if err != nil {
+			return fmt.Errorf("resolveRefs: category: %w", err)
+		}
+		*categoryID = id
+	}
+	if *manufacturerID == "" && manufacturerName != "" {
+		id, err := s.manufacturers.EnsureByName(ctx, orgID, manufacturerName)
+		if err != nil {
+			return fmt.Errorf("resolveRefs: manufacturer: %w", err)
+		}
+		*manufacturerID = id
+	}
+	if *locationID == "" && locationName != "" {
+		id, err := s.locations.EnsureByName(ctx, orgID, locationName)
+		if err != nil {
+			return fmt.Errorf("resolveRefs: location: %w", err)
+		}
+		*locationID = id
+	}
+	return nil
+}
+
+// Create creates a new equipment item with its associated units.
 func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, error) {
+	if err := s.resolveRefs(ctx, c.OrgID, &c.CategoryID, c.CategoryName, &c.ManufacturerID, c.ManufacturerName, &c.LocationID, c.LocationName); err != nil {
+		return nil, fmt.Errorf("Create: %w", err)
+	}
+	if c.TrackingType == Bulk {
+		c.HasContent = false
+	}
+	itemID := ksuid.New().String()
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
-		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: c.ID, SerialNumber: serial.New(), IsActive: true}
+		units[i] = CreateUnit{ID: ksuid.New().String(), OrgID: c.OrgID, EquipmentID: itemID, SerialNumber: serial.New(), IsActive: true}
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -58,13 +97,13 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	// Both types go through the same tx path; Bulk doesn't need atomicity but a
 	// single code path is easier to maintain than two separate non-tx branches.
 	var item *Equipment
-	switch c.Type {
+	switch c.TrackingType {
 	case Bulk:
-		item, err = s.repo.CreateBulk(ctx, tx, CreateBulkEquipment{Base: c.Base, TotalStock: c.TotalStock})
+		item, err = s.repo.CreateBulk(ctx, tx, CreateBulkEquipment{ID: itemID, Base: c.Base, TotalStock: c.TotalStock})
 	case Serialized:
-		item, err = s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{Base: c.Base, Units: units})
+		item, err = s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{ID: itemID, Base: c.Base, Units: units})
 	default:
-		return nil, fmt.Errorf("Create: unknown equipment type %q", c.Type)
+		return nil, fmt.Errorf("Create: unknown equipment type %q", c.TrackingType)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("Create: %w", err)
@@ -78,8 +117,8 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 // GetFiltered returns a page of inventory items for orgID, filtered by query,
 // category, and archive status, sorted and paginated according to f.
 // sortBy may be "code" to order by unit code; otherwise orders by name.
-func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
-	items, total, err := s.repo.List(ctx, orgID, query, category, showArchived, f)
+func (s *Service) GetFiltered(ctx context.Context, orgID, query, category string, f pagination.Filters) ([]Equipment, pagination.Metadata, error) {
+	items, total, err := s.repo.List(ctx, orgID, query, category, false, f)
 	if err != nil {
 		return nil, pagination.Metadata{}, fmt.Errorf("GetFiltered: %w", err)
 	}
@@ -94,6 +133,46 @@ func (s *Service) ListAll(ctx context.Context, orgID string) ([]Equipment, error
 		return nil, fmt.Errorf("ListAll: %w", err)
 	}
 	return items, nil
+}
+
+// ListAllFiltered returns all items for orgID that match the given filters, with no pagination.
+func (s *Service) ListAllFiltered(ctx context.Context, orgID, query, category string, showArchived bool) ([]Equipment, error) {
+	f := pagination.Filters{Page: 1, PageSize: math.MaxInt32}
+	items, _, err := s.repo.List(ctx, orgID, query, category, showArchived, f)
+	if err != nil {
+		return nil, fmt.Errorf("ListAllFiltered: %w", err)
+	}
+	return items, nil
+}
+
+// findByName returns the first equipment item in items whose name matches name,
+// or nil when no match is found.
+func findByName(items []Equipment, name string) *Equipment {
+	for i := range items {
+		if items[i].Name == name {
+			return &items[i]
+		}
+	}
+	return nil
+}
+
+// AssignContentByName resolves the member by name within the org then assigns it as content.
+// Returns ErrNotFound when no equipment matches name.
+func (s *Service) AssignContentByName(ctx context.Context, orgID, memberName string, a AssignContent) (*ContentItem, error) {
+	all, err := s.repo.ListAll(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("AssignContentByName: %w", err)
+	}
+	member := findByName(all, memberName)
+	if member == nil {
+		return nil, fmt.Errorf("AssignContentByName: %w", ErrNotFound)
+	}
+	a.MemberID = member.ID
+	item, err := s.AssignContent(ctx, a, *member)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
 }
 
 // GetByID returns the inventory item with id.
@@ -126,6 +205,9 @@ func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSeri
 // UpdateDetails updates the details-tab fields. For bulk items it also updates
 // the stock quantity; for serialized items only the inventory row is written.
 func (s *Service) UpdateDetails(ctx context.Context, u UpdateEquipmentDetails) error {
+	if err := s.resolveRefs(ctx, u.OrgID, &u.CategoryID, u.CategoryName, &u.ManufacturerID, u.ManufacturerName, &u.LocationID, u.LocationName); err != nil {
+		return fmt.Errorf("UpdateDetails: %w", err)
+	}
 	if u.Type == Bulk {
 		if err := s.repo.UpdateDetailsBulk(ctx, u); err != nil {
 			return fmt.Errorf("UpdateDetails: %w", err)
@@ -225,6 +307,8 @@ func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
 
 // AddUnit adds a new unit to the serialized inventory item.
 func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
+	a.ID = ksuid.New().String()
+	a.SerialNumber = serial.New()
 	u, err := s.repo.AddUnit(ctx, a)
 	if err != nil {
 		return nil, fmt.Errorf("AddUnit: %w", err)
@@ -256,6 +340,19 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID string) error {
 	return nil
 }
 
+// GetContentContainer fetches the equipment item and verifies it supports the content tab.
+// Returns ErrNotFound when the item does not exist, ErrNoContentTab when it is not a container.
+func (s *Service) GetContentContainer(ctx context.Context, id string) (*Equipment, error) {
+	item, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("GetContentContainer: %w", err)
+	}
+	if item.TrackingType != Serialized && !item.HasContent {
+		return nil, fmt.Errorf("GetContentContainer: %w", ErrNoContentTab)
+	}
+	return item, nil
+}
+
 // ListContent returns all content items for equipmentID.
 func (s *Service) ListContent(ctx context.Context, equipmentID string) ([]ContentItem, error) {
 	items, err := s.repo.ListContent(ctx, equipmentID)
@@ -265,12 +362,17 @@ func (s *Service) ListContent(ctx context.Context, equipmentID string) ([]Conten
 	return items, nil
 }
 
-// AssignContent adds an equipment definition as content of a container. Returns
-// database.ErrUniqueConstraint when already assigned, or an error when memberID == equipmentID.
+// AssignContent adds an equipment item as content of a container.
+// Returns ErrInvalidContent when the member is the container itself or is itself a container.
+// Returns ErrConflict when the member is already assigned.
 // Stock sufficiency is not enforced here; callers should surface warnings via ListContent.
-func (s *Service) AssignContent(ctx context.Context, a AssignContent) (*ContentItem, error) {
-	if a.MemberID == a.EquipmentID {
-		return nil, fmt.Errorf("AssignContent: an item cannot contain itself")
+func (s *Service) AssignContent(ctx context.Context, a AssignContent, member Equipment) (*ContentItem, error) {
+	a.ID = ksuid.New().String()
+	if member.ID == a.EquipmentID {
+		return nil, fmt.Errorf("AssignContent: %w: an item cannot contain itself", ErrInvalidContent)
+	}
+	if member.HasContent || member.TrackingType == Serialized {
+		return nil, fmt.Errorf("AssignContent: %w: cannot add a container as content", ErrInvalidContent)
 	}
 	item, err := s.repo.AssignContent(ctx, a)
 	if err != nil {

@@ -48,7 +48,7 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 		}
 
 		var units []equipment.Unit
-		if item.Type == equipment.Serialized {
+		if item.TrackingType == equipment.Serialized {
 			units, err = app.services.equipment.ListUnits(ctx, item.ID)
 			if err != nil {
 				return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}

@@ -27,7 +27,7 @@ func TestRoundTrip_bulk(t *testing.T) {
 	stock := int64(7)
 	item := equipment.Equipment{
 		Name:         "Shure SM58",
-		Type:         equipment.Bulk,
+		TrackingType: equipment.Bulk,
 		UsageType:    equipment.Rental,
 		CategoryName: "Audio",
 		LocationName: "Main Warehouse",
@@ -80,7 +80,7 @@ func TestRoundTrip_serialized(t *testing.T) {
 
 	item := equipment.Equipment{
 		Name:         "Sony A7 IV",
-		Type:         equipment.Serialized,
+		TrackingType: equipment.Serialized,
 		UsageType:    equipment.Rental,
 		CategoryName: "Camera",
 		LocationName: "Main Warehouse",
@@ -150,7 +150,7 @@ func TestRoundTrip_serialized(t *testing.T) {
 func TestRoundTrip_serializedHasContent(t *testing.T) {
 	item := equipment.Equipment{
 		Name:         "Pelican 1510 Case",
-		Type:         equipment.Serialized,
+		TrackingType: equipment.Serialized,
 		UsageType:    equipment.Rental,
 		CategoryName: "Case",
 		LocationName: "Main Warehouse",

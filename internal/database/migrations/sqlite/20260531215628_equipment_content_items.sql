@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE equipment_combination_items (
+CREATE TABLE equipment_content_items (
   id TEXT PRIMARY KEY,
   equipment_id TEXT NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,
   member_equipment_id TEXT NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,

@@ -5,7 +5,7 @@
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab{{ if eq .Data.ActiveTab "details" }} tab-active{{ end }}">Details</a>
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab{{ if eq .Data.ActiveTab "pricing" }} tab-active{{ end }}">Pricing</a>
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" role="tab" class="tab{{ if eq .Data.ActiveTab "properties" }} tab-active{{ end }}">Properties</a>
-      {{ if .Data.Item }}{{ if eq .Data.Item.Type 2 }}
+      {{ if .Data.Item }}{{ if eq .Data.Item.TrackingType 2 }}
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units" role="tab" class="tab{{ if eq .Data.ActiveTab "units" }} tab-active{{ end }}">
         Units
         <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>

@@ -8,7 +8,6 @@ type Kind int64
 // Equipment kind identifiers seeded into the equipment_types table.
 const (
 	Physical Kind = 1
-	Virtual  Kind = 2
 )
 
 // ID returns the database id for the equipment kind.
@@ -19,8 +18,6 @@ func (k Kind) String() string {
 	switch k {
 	case Physical:
 		return "physical"
-	case Virtual:
-		return "virtual"
 	default:
 		return ""
 	}
@@ -31,8 +28,6 @@ func KindFromString(name string) Kind {
 	switch name {
 	case "physical":
 		return Physical
-	case "virtual":
-		return Virtual
 	default:
 		return 0
 	}
@@ -43,8 +38,6 @@ func (k Kind) Label() string {
 	switch k {
 	case Physical:
 		return "Physical"
-	case Virtual:
-		return "Virtual"
 	default:
 		return ""
 	}

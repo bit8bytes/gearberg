@@ -2,14 +2,14 @@
 // versions:
 //   sqlc v1.31.1
 
-package equipmentcombinationitems
+package equipmentcontentitems
 
 import (
 	"context"
 )
 
 type Querier interface {
-	Create(ctx context.Context, arg CreateParams) (EquipmentCombinationItem, error)
+	Create(ctx context.Context, arg CreateParams) (EquipmentContentItem, error)
 	Delete(ctx context.Context, id string) error
 	ListByEquipmentID(ctx context.Context, equipmentID string) ([]ListByEquipmentIDRow, error)
 	ListContainersByMemberID(ctx context.Context, memberEquipmentID string) ([]ListContainersByMemberIDRow, error)

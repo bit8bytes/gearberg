@@ -33,7 +33,7 @@ func (app *application) ListEquipment(ctx context.Context, params gen.ListEquipm
 	page := params.Page.Or(1)
 	f := pagination.Filters{Page: page, PageSize: 25}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", false, f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch equipment: %w", err)
 	}
@@ -44,7 +44,7 @@ func (app *application) ListEquipment(ctx context.Context, params gen.ListEquipm
 			ID:         item.ID,
 			Name:       item.Name,
 			TotalStock: item.TotalStock,
-			Type:       gen.EquipmentItemType(item.Type.String()),
+			Type:       gen.EquipmentItemType(item.TrackingType.String()),
 			UsageType:  gen.EquipmentItemUsageType(item.UsageType.String()),
 		}
 		if item.CategoryName != "" {

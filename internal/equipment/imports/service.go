@@ -285,7 +285,6 @@ func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID, locID
 func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 	usageType := equipment.Rental
 	return equipment.Base{
-		ID:             ksuid.New().String(),
 		OrgID:          row.OrgID,
 		UsageTypeID:    usageType.ID(),
 		Name:           row.Name,
@@ -315,6 +314,7 @@ func (s *Service) commitBulkRow(ctx context.Context, tx *sql.Tx, row Row, lk com
 	catID, mfrID, locID := s.resolveLookups(row, lk)
 	base := buildBase(row, catID, mfrID, locID)
 	if _, err := s.inventory.CreateBulkTx(ctx, tx, equipment.CreateBulkEquipment{
+		ID:         ksuid.New().String(),
 		Base:       base,
 		TotalStock: equipment.ParseQuantity(row.Quantity),
 	}); err != nil {
@@ -346,11 +346,13 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 func (s *Service) commitSerializedGroup(ctx context.Context, tx *sql.Tx, first Row, rows []Row, lk commitLookups) error {
 	catID, mfrID, locID := s.resolveLookups(first, lk)
 	base := buildBase(first, catID, mfrID, locID)
+	itemID := ksuid.New().String()
 	units := make([]equipment.CreateUnit, 0, len(rows))
 	for _, row := range rows {
-		units = append(units, buildUnit(row, base.ID))
+		units = append(units, buildUnit(row, itemID))
 	}
 	if _, err := s.inventory.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
+		ID:    itemID,
 		Base:  base,
 		Units: units,
 	}); err != nil {

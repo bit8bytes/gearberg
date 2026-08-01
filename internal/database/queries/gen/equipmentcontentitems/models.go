@@ -2,9 +2,9 @@
 // versions:
 //   sqlc v1.31.1
 
-package equipmentcombinationitems
+package equipmentcontentitems
 
-type EquipmentCombinationItem struct {
+type EquipmentContentItem struct {
 	ID                string
 	EquipmentID       string
 	MemberEquipmentID string

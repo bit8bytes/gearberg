@@ -17,21 +17,27 @@ var (
 	ErrLimitExceeded = errors.New("equipment limit exceeded")
 	// ErrInUse is returned when an item cannot be deleted due to active references.
 	ErrInUse = errors.New("equipment is in use and cannot be deleted")
+	// ErrInvalidContent is returned when a content assignment violates a domain rule.
+	ErrInvalidContent = errors.New("invalid content assignment")
+	// ErrNoContentTab is returned when the content tab is not enabled for an item.
+	ErrNoContentTab = errors.New("content tab not enabled")
 )
 
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
-	ID             string
-	OrgID          string
-	UsageTypeID    int64
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	LocationID     string
-	HasContent     bool
-	Notes          string
-	Pricing        Pricing
-	Properties     Properties
+	OrgID            string
+	UsageTypeID      int64
+	Name             string
+	CategoryID       string
+	CategoryName     string
+	ManufacturerID   string
+	ManufacturerName string
+	LocationID       string
+	LocationName     string
+	HasContent       bool
+	Notes            string
+	Pricing          Pricing
+	Properties       Properties
 }
 
 // CreateEquipment holds the data required to create a new inventory item of any type.
@@ -39,19 +45,21 @@ type Base struct {
 // how many units are generated.
 type CreateEquipment struct {
 	Base
-	Type       TrackingType
-	TotalStock int64
-	UnitCount  int64
+	TrackingType TrackingType
+	TotalStock   int64
+	UnitCount    int64
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
 type CreateBulkEquipment struct {
+	ID string
 	Base
 	TotalStock int64
 }
 
 // CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
 type CreateSerializedEquipment struct {
+	ID string
 	Base
 	Units []CreateUnit
 }
@@ -80,14 +88,18 @@ type AddUnit struct {
 
 // UpdateEquipmentDetails holds the data required to update the details tab fields.
 type UpdateEquipmentDetails struct {
-	ID             string
-	Type           TrackingType
-	Name           string
-	CategoryID     string
-	ManufacturerID string
-	LocationID     string
-	Notes          string
-	TotalStock     int64 // TotalStock is only applied for bulk inventory items.
+	ID               string
+	OrgID            string
+	Type             TrackingType
+	Name             string
+	CategoryID       string
+	CategoryName     string
+	ManufacturerID   string
+	ManufacturerName string
+	LocationID       string
+	LocationName     string
+	Notes            string
+	TotalStock       int64 // TotalStock is only applied for bulk inventory items.
 }
 
 // UpdateEquipmentPricing holds the data required to update the pricing tab fields.
@@ -242,7 +254,7 @@ type Equipment struct {
 	ID                     string
 	OrgID                  string
 	Kind                   Kind
-	Type                   TrackingType
+	TrackingType           TrackingType
 	UsageType              UsageType
 	Name                   string
 	CategoryID             string

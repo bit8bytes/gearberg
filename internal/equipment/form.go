@@ -208,7 +208,7 @@ func (f *PricingForm) ToPricing() Pricing {
 // DetailsFormFromEquipment pre-populates a DetailsForm from an existing Equipment's stored values.
 func DetailsFormFromEquipment(e *Equipment) DetailsForm {
 	return DetailsForm{
-		TypeID:         e.Type.String(),
+		TypeID:         e.TrackingType.String(),
 		Name:           e.Name,
 		CategoryID:     e.CategoryID,
 		ManufacturerID: e.ManufacturerID,

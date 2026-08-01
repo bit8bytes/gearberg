@@ -10,7 +10,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	genequip "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipment"
 	genbulk "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentbulkitems"
-	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcombinationitems"
+	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcontentitems"
 	genserialized "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentserializeditems"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/segmentio/ksuid"
@@ -75,7 +75,7 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 			ID:              row.ID,
 			OrgID:           row.OrgID,
 			Kind:            KindFromString(row.EquipmentTypeName),
-			Type:            TrackingType(row.TrackingTypeID.Int64),
+			TrackingType:    TrackingType(row.TrackingTypeID.Int64),
 			UsageType:       UsageType(row.UsageTypeID),
 			Name:            row.Name,
 			CategoryID:      database.String(row.CategoryID),
@@ -110,7 +110,7 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		ID:              row.ID,
 		OrgID:           row.OrgID,
 		Kind:            KindFromString(row.EquipmentTypeName),
-		Type:            TrackingType(row.TrackingTypeID.Int64),
+		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),
@@ -187,7 +187,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		ID:              row.ID,
 		OrgID:           row.OrgID,
 		Kind:            Physical,
-		Type:            TrackingType(row.TrackingTypeID.Int64),
+		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),
@@ -270,7 +270,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		ID:              row.ID,
 		OrgID:           row.OrgID,
 		Kind:            Physical,
-		Type:            TrackingType(row.TrackingTypeID.Int64),
+		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
 		UsageType:       UsageType(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),

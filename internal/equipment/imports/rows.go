@@ -18,7 +18,7 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 
 	base := []string{
 		item.Name,
-		item.Type.Label(),
+		item.TrackingType.Label(),
 		item.UsageType.Label(),
 		item.CategoryName,
 		mfrName,
@@ -36,7 +36,7 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 		item.Properties.WireGauge.String(),
 	}
 
-	if item.Type != equipment.Serialized {
+	if item.TrackingType != equipment.Serialized {
 		row := make([]string, len(ExpectedHeaders))
 		copy(row, base)
 		row[17] = strconv.FormatInt(item.TotalStock, 10)

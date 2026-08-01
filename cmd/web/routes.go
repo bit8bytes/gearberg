@@ -80,7 +80,6 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/units/{unit_id}/qr", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentUnitQR))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/units/{unit_id}/barcode", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentUnitBarcode))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/units/{unit_id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postDeleteEquipmentUnit))))
-	mux.Handle("POST /orgs/{org_id}/equipment/{id}/archive", app.withLogin(app.withPermission(app.html.Handle(app.postArchiveEquipmentItem))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postDeleteEquipmentItem))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/content", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentContent))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/content", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentAssignContent))))

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -20,66 +19,12 @@ import (
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/money"
 	"github.com/bit8bytes/gearberg/internal/pagination"
-	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/internal/uid"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
-	"github.com/segmentio/ksuid"
 )
-
-type equipmentData struct {
-	OrgID             string
-	Categories        []categories.EquipmentCategory
-	Inventories       []equipment.Equipment
-	Filtered          bool
-	Query             string
-	Category          string
-	Sort              string
-	ShowArchived      bool
-	PageBaseURL       template.URL
-	PrintURL          template.URL
-	ToggleArchivedURL template.URL
-	Pagination        pagination.Metadata
-}
-
-type equipmentPrintData struct {
-	OrgID          string
-	OrgDisplayName string
-	Inventories    []equipment.Equipment
-	Query          string
-	Category       string
-	PrintDate      string
-	TotalCount     int
-	Currency       money.Currency
-	VatRate        money.VatRate
-}
-
-type equipmentItemData struct {
-	OrgID     string
-	Item      *equipment.Equipment
-	ID        string
-	ActiveTab string
-}
-
-type equipmentUnitsData struct {
-	OrgID     string
-	ID        string
-	ItemName  string
-	ItemCode  int64
-	Units     []equipment.Unit
-	Item      *equipment.Equipment
-	ActiveTab string
-}
-
-type equipmentContentData struct {
-	OrgID        string
-	ID           string
-	Item         *equipment.Equipment
-	Content      []equipment.ContentItem
-	AllEquipment []equipment.Equipment
-	ActiveTab    string
-}
 
 type equipmentPartOfData struct {
 	OrgID  string
@@ -110,9 +55,25 @@ func (app *application) getEquipmentPartOfFragment(w http.ResponseWriter, r *htt
 	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentPartOf, tmplData)
 }
 
+type equipmentData struct {
+	OrgID       string
+	Categories  []categories.EquipmentCategory
+	Inventories []equipment.Equipment
+	Filtered    bool
+	Query       string
+	Category    string
+	Sort        string
+	PageBaseURL template.URL
+	PrintURL    template.URL
+	Pagination  pagination.Metadata
+}
+
 func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
-	id := r.PathValue("org_id")
+	id, err := uid.Parse(r.PathValue("org_id"))
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Invalid organization ID.", Code: http.StatusBadRequest}
+	}
 
 	cats, err := app.services.equipment.ListCategories(ctx, id)
 	if err != nil {
@@ -123,7 +84,6 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	query := qs.Get("q")
 	category := qs.Get("category")
 	sort := qs.Get("sort")
-	showArchived := qs.Get("archived") == "true"
 
 	page, err := strconv.Atoi(qs.Get("page"))
 	if err != nil || page < 1 {
@@ -135,7 +95,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PageSize: 25,
 	}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, showArchived, f)
+	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, f)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
@@ -144,20 +104,25 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 
 	data := app.html.TemplateData(r)
 	data.Data = equipmentData{
-		OrgID:             id,
-		Categories:        cats,
-		Inventories:       items,
-		Filtered:          query != "" || category != "",
-		Query:             query,
-		Category:          category,
-		Sort:              sort,
-		ShowArchived:      showArchived,
-		PageBaseURL:       template.URL(equipmentPageURL(id, query, category, sort, showArchived)),  // #nosec G203
-		PrintURL:          template.URL(equipmentPrintURL(id, query, category, showArchived)),       // #nosec G203
-		ToggleArchivedURL: template.URL(equipmentPageURL(id, query, category, sort, !showArchived)), // #nosec G203
-		Pagination:        meta,
+		OrgID:       id,
+		Categories:  cats,
+		Inventories: items,
+		Filtered:    query != "" || category != "",
+		Query:       query,
+		Category:    category,
+		Sort:        sort,
+		PageBaseURL: template.URL(equipmentPageURL(id, query, category, sort)),  // #nosec G203
+		PrintURL:    template.URL(equipmentPrintURL(id, query, category, sort)), // #nosec G203
+		Pagination:  meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
+}
+
+type equipmentItemData struct {
+	OrgID     string
+	Item      *equipment.Equipment
+	ID        string
+	ActiveTab string
 }
 
 func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -188,98 +153,39 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		return reRender(&form)
 	}
 
-	if appErr := app.resolveNewFormRefs(r, id, &form); appErr != nil {
-		return appErr
-	}
-
-	itemID := ksuid.New().String()
 	base := equipment.Base{
-		ID:             itemID,
-		OrgID:          id,
-		UsageTypeID:    equipment.ParseUsage(form.UsageTypeID).ID(),
-		Name:           form.Name,
-		CategoryID:     form.CategoryID,
-		ManufacturerID: form.ManufacturerID,
-		LocationID:     form.LocationID,
-		HasContent:     form.HasContent,
-		Notes:          form.Notes,
-		Pricing:        form.ToPricing(),
+		OrgID:            id,
+		UsageTypeID:      equipment.ParseUsage(form.UsageTypeID).ID(),
+		Name:             form.Name,
+		CategoryID:       form.CategoryID,
+		CategoryName:     form.CategoryName,
+		ManufacturerID:   form.ManufacturerID,
+		ManufacturerName: form.ManufacturerName,
+		LocationID:       form.LocationID,
+		LocationName:     form.LocationName,
+		HasContent:       form.HasContent,
+		Notes:            form.Notes,
+		Pricing:          form.ToPricing(),
 	}
 
-	eqType := equipment.TypeFromString(form.TypeID)
-	if eqType == equipment.Bulk {
-		base.HasContent = false
-	}
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
-		Type:       eqType,
-		Base:       base,
-		TotalStock: form.Count,
-		UnitCount:  form.Count,
+		TrackingType: equipment.TypeFromString(form.TypeID),
+		Base:         base,
+		TotalStock:   form.Count,
+		UnitCount:    form.Count,
 	})
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to create inventory item.", Code: http.StatusInternalServerError}
 	}
 
-	if appErr := app.processEquipmentImage(r, id, itemID, form.Image, form.ImageHeader); appErr != nil {
+	if appErr := app.processEquipmentImage(r, id, eq.ID, form.Image, form.ImageHeader); appErr != nil {
 		return appErr
 	}
 
-	if eq.Type == equipment.Bulk {
+	if eq.TrackingType == equipment.Bulk {
 		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment", http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
-	}
-	return nil
-}
-
-func (app *application) resolveDetailsFormRefs(r *http.Request, orgID string, form *equipment.DetailsForm) *httperr.Error {
-	ctx := r.Context()
-	if form.CategoryID == "" && form.CategoryName != "" {
-		catID, err := app.services.equipmentcategories.EnsureByName(ctx, orgID, form.CategoryName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve category.", Code: http.StatusInternalServerError}
-		}
-		form.CategoryID = catID
-	}
-	if form.ManufacturerID == "" && form.ManufacturerName != "" {
-		mfrID, err := app.services.manufacturers.EnsureByName(ctx, orgID, form.ManufacturerName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
-		}
-		form.ManufacturerID = mfrID
-	}
-	if form.LocationID == "" && form.LocationName != "" {
-		locID, err := app.services.locations.EnsureByName(ctx, orgID, form.LocationName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve location.", Code: http.StatusInternalServerError}
-		}
-		form.LocationID = locID
-	}
-	return nil
-}
-
-func (app *application) resolveNewFormRefs(r *http.Request, orgID string, form *equipment.NewForm) *httperr.Error {
-	ctx := r.Context()
-	if form.CategoryID == "" && form.CategoryName != "" {
-		catID, err := app.services.equipmentcategories.EnsureByName(ctx, orgID, form.CategoryName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve category.", Code: http.StatusInternalServerError}
-		}
-		form.CategoryID = catID
-	}
-	if form.ManufacturerID == "" && form.ManufacturerName != "" {
-		mfrID, err := app.services.manufacturers.EnsureByName(ctx, orgID, form.ManufacturerName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve manufacturer.", Code: http.StatusInternalServerError}
-		}
-		form.ManufacturerID = mfrID
-	}
-	if form.LocationID == "" && form.LocationName != "" {
-		locID, err := app.services.locations.EnsureByName(ctx, orgID, form.LocationName)
-		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to resolve location.", Code: http.StatusInternalServerError}
-		}
-		form.LocationID = locID
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(eq.ID)+"/units", http.StatusSeeOther)
 	}
 	return nil
 }
@@ -331,20 +237,20 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
 
-	if appErr := app.resolveDetailsFormRefs(r, orgID, &form); appErr != nil {
-		return appErr
-	}
-
 	itemType := equipment.TypeFromString(form.TypeID)
 	if err := app.services.equipment.UpdateDetails(ctx, equipment.UpdateEquipmentDetails{
-		ID:             itemID,
-		Type:           itemType,
-		Name:           form.Name,
-		CategoryID:     form.CategoryID,
-		ManufacturerID: form.ManufacturerID,
-		LocationID:     form.LocationID,
-		Notes:          form.Notes,
-		TotalStock:     form.TotalStock,
+		ID:               itemID,
+		OrgID:            orgID,
+		Type:             itemType,
+		Name:             form.Name,
+		CategoryID:       form.CategoryID,
+		CategoryName:     form.CategoryName,
+		ManufacturerID:   form.ManufacturerID,
+		ManufacturerName: form.ManufacturerName,
+		LocationID:       form.LocationID,
+		LocationName:     form.LocationName,
+		Notes:            form.Notes,
+		TotalStock:       form.TotalStock,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -471,10 +377,8 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 	itemID := r.PathValue("id")
 
 	if _, err := app.services.equipment.AddUnit(ctx, equipment.AddUnit{
-		ID:           ksuid.New().String(),
-		OrgID:        orgID,
-		EquipmentID:  itemID,
-		SerialNumber: serial.New(),
+		OrgID:       orgID,
+		EquipmentID: itemID,
 	}); err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
 	}
@@ -561,6 +465,16 @@ func (app *application) postDeleteEquipmentUnit(w http.ResponseWriter, r *http.R
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
 	return nil
+}
+
+type equipmentUnitsData struct {
+	OrgID     string
+	ID        string
+	ItemName  string
+	ItemCode  int64
+	Units     []equipment.Unit
+	Item      *equipment.Equipment
+	ActiveTab string
 }
 
 func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -693,21 +607,11 @@ func (app *application) processEquipmentImage(r *http.Request, orgID, itemID str
 	if file == nil {
 		return nil
 	}
-	record, appErr := app.storeEquipmentImage(r, orgID, itemID, file, header)
-	if appErr != nil {
-		return appErr
-	}
-	return app.linkEquipmentImage(r, itemID, record.ID)
-}
-
-// storeEquipmentImage processes an uploaded image and writes it to storage.
-// It does not link the image to the inventory item; call linkEquipmentImage for that.
-func (app *application) storeEquipmentImage(r *http.Request, orgID, itemID string, file multipart.File, header *multipart.FileHeader) (*storage.Object, *httperr.Error) {
 	ctx := r.Context()
 
 	result, err := imgpkg.Process(file)
 	if err != nil {
-		return nil, &httperr.Error{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
+		return &httperr.Error{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
 	}
 
 	key := fmt.Sprintf("orgs/%s/equipment/%s", orgID, itemID)
@@ -716,14 +620,20 @@ func (app *application) storeEquipmentImage(r *http.Request, orgID, itemID strin
 		ContentType: result.ContentType,
 	})
 	if err != nil {
-		return nil, &httperr.Error{Error: err, Message: "Failed to store image.", Code: http.StatusInternalServerError}
+		return &httperr.Error{Error: err, Message: "Failed to store image.", Code: http.StatusInternalServerError}
 	}
 
-	return record, nil
+	if err := app.services.equipment.SetImage(ctx, equipment.SetImage{
+		ID:              itemID,
+		StorageObjectID: &record.ID,
+	}); err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
+	}
+	return nil
 }
 
 // equipmentPageURL builds the paginated base URL for the inventory list.
-func equipmentPageURL(orgID, query, category, sort string, showArchived bool) string {
+func equipmentPageURL(orgID, query, category, sort string) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment?"
 	if category != "" {
 		base += "category=" + url.QueryEscape(category) + "&"
@@ -734,14 +644,11 @@ func equipmentPageURL(orgID, query, category, sort string, showArchived bool) st
 	if sort != "" {
 		base += "sort=" + url.QueryEscape(sort) + "&"
 	}
-	if showArchived {
-		base += "archived=true&"
-	}
 	return base
 }
 
 // equipmentPrintURL builds the print URL with optional filter params.
-func equipmentPrintURL(orgID, query, category string, showArchived bool) string {
+func equipmentPrintURL(orgID, query, category, sort string) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment/print"
 	sep := "?"
 	if category != "" {
@@ -752,8 +659,8 @@ func equipmentPrintURL(orgID, query, category string, showArchived bool) string 
 		base += sep + "q=" + url.QueryEscape(query)
 		sep = "&"
 	}
-	if showArchived {
-		base += sep + "archived=true"
+	if sort != "" {
+		base += sep + "sort=" + url.QueryEscape(sort)
 	}
 	return base
 }
@@ -770,41 +677,6 @@ func (app *application) resolveEquipmentURLs(items []equipment.Equipment) {
 	for i := range items {
 		app.resolveItemURLs(&items[i])
 	}
-}
-
-// linkEquipmentImage associates a storage object with an inventory item.
-func (app *application) linkEquipmentImage(r *http.Request, itemID, storageObjectID string) *httperr.Error {
-	if err := app.services.equipment.SetImage(r.Context(), equipment.SetImage{
-		ID:              itemID,
-		StorageObjectID: &storageObjectID,
-	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
-	}
-	return nil
-}
-
-func (app *application) postArchiveEquipmentItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
-	orgID := r.PathValue("org_id")
-	itemID := r.PathValue("id")
-
-	item, err := app.services.equipment.GetByID(ctx, itemID)
-	if err != nil {
-		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
-		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
-	}
-
-	if err := app.services.equipment.Archive(ctx, equipment.ArchiveEquipment{
-		ID:         itemID,
-		IsArchived: !item.IsArchived,
-	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to update archive status.", Code: http.StatusInternalServerError}
-	}
-
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
-	return nil
 }
 
 func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -831,26 +703,13 @@ func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.R
 	return nil
 }
 
-func (app *application) loadContentPageData(ctx context.Context, orgID, itemID string) (*equipment.Equipment, []equipment.ContentItem, []equipment.Equipment, *httperr.Error) {
-	item, err := app.services.equipment.GetByID(ctx, itemID)
-	if err != nil {
-		if errors.Is(err, equipment.ErrNotFound) {
-			return nil, nil, nil, &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
-		}
-		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
-	}
-	if item.Kind != equipment.Virtual && !item.HasContent {
-		return nil, nil, nil, &httperr.Error{Error: nil, Message: "Content tab is not enabled for this item.", Code: http.StatusForbidden}
-	}
-	content, err := app.services.equipment.ListContent(ctx, itemID)
-	if err != nil {
-		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
-	}
-	all, err := app.services.equipment.ListAll(ctx, orgID)
-	if err != nil {
-		return nil, nil, nil, &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
-	}
-	return item, content, all, nil
+type equipmentContentData struct {
+	OrgID        string
+	ID           string
+	Item         *equipment.Equipment
+	Content      []equipment.ContentItem
+	AllEquipment []equipment.Equipment
+	ActiveTab    string
 }
 
 func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -858,11 +717,26 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	item, content, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
-	if appErr != nil {
-		return appErr
+	item, err := app.services.equipment.GetContentContainer(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, equipment.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+		}
+		if errors.Is(err, equipment.ErrNoContentTab) {
+			return &httperr.Error{Error: err, Message: "Content tab is not enabled for this item.", Code: http.StatusForbidden}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
 	app.resolveItemURLs(item)
+
+	content, err := app.services.equipment.ListContent(ctx, itemID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
+	}
+	all, err := app.services.equipment.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
+	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &equipment.ContentForm{}
@@ -870,30 +744,34 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }
 
-// equipmentByName returns the first equipment whose Name matches name, or nil.
-func equipmentByName(all []equipment.Equipment, name string) *equipment.Equipment {
-	for i := range all {
-		if all[i].Name == name {
-			return &all[i]
+func (app *application) renderEquipmentContentForm(w http.ResponseWriter, r *http.Request, orgID, itemID string, f *equipment.ContentForm, extraErr string) *httperr.Error {
+	ctx := r.Context()
+	item, err := app.services.equipment.GetContentContainer(ctx, itemID)
+	if err != nil {
+		if errors.Is(err, equipment.ErrNotFound) {
+			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
+		if errors.Is(err, equipment.ErrNoContentTab) {
+			return &httperr.Error{Error: err, Message: "Content tab is not enabled for this item.", Code: http.StatusForbidden}
+		}
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
-	return nil
-}
-
-// validateContentMember checks that member can be added as content of containerID.
-// Returns a non-empty error message when the assignment should be rejected.
-func validateContentMember(all []equipment.Equipment, name, containerID string) (string, string) {
-	member := equipmentByName(all, name)
-	if member == nil {
-		return "", "No equipment found with that name."
+	app.resolveItemURLs(item)
+	content, err := app.services.equipment.ListContent(ctx, itemID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
 	}
-	if member.ID == containerID {
-		return "", "An item cannot contain itself."
+	all, err := app.services.equipment.ListAll(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
 	}
-	if member.HasContent || member.Kind == equipment.Virtual {
-		return "", "Cannot add a container as content."
+	if extraErr != "" {
+		f.AddError("assign", extraErr)
 	}
-	return member.ID, ""
+	data := app.html.TemplateData(r)
+	data.Form = f
+	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
+	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
 }
 
 func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -906,45 +784,25 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
 	}
 
-	reRender := func(f *equipment.ContentForm, extraErr string) *httperr.Error {
-		item, content, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
-		if appErr != nil {
-			return appErr
-		}
-		app.resolveItemURLs(item)
-		if extraErr != "" {
-			f.AddError("assign", extraErr)
-		}
-		data := app.html.TemplateData(r)
-		data.Form = f
-		data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
-		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
-	}
-
 	if !form.Validate() {
-		return reRender(&form, "")
+		return app.renderEquipmentContentForm(w, r, orgID, itemID, &form, "")
 	}
 
-	_, _, all, appErr := app.loadContentPageData(ctx, orgID, itemID)
-	if appErr != nil {
-		return appErr
-	}
-	memberID, memberErr := validateContentMember(all, form.MemberName, itemID)
-	if memberErr != "" {
-		return reRender(&form, memberErr)
-	}
-
-	_, err = app.services.equipment.AssignContent(ctx, equipment.AssignContent{
-		ID:          ksuid.New().String(),
+	_, err = app.services.equipment.AssignContentByName(ctx, orgID, form.MemberName, equipment.AssignContent{
 		EquipmentID: itemID,
-		MemberID:    memberID,
 		Quantity:    form.Quantity,
 	})
 	if err != nil {
-		if errors.Is(err, equipment.ErrConflict) {
-			return reRender(&form, "This item is already assigned as content.")
+		if errors.Is(err, equipment.ErrNotFound) {
+			return app.renderEquipmentContentForm(w, r, orgID, itemID, &form, "No equipment found with that name.")
 		}
-		return reRender(&form, "Failed to assign content item.")
+		if errors.Is(err, equipment.ErrInvalidContent) {
+			return app.renderEquipmentContentForm(w, r, orgID, itemID, &form, err.Error())
+		}
+		if errors.Is(err, equipment.ErrConflict) {
+			return app.renderEquipmentContentForm(w, r, orgID, itemID, &form, "This item is already assigned as content.")
+		}
+		return app.renderEquipmentContentForm(w, r, orgID, itemID, &form, "Failed to assign content item.")
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/content", http.StatusSeeOther)
@@ -965,6 +823,18 @@ func (app *application) postEquipmentRemoveContent(w http.ResponseWriter, r *htt
 	return nil
 }
 
+type equipmentPrintData struct {
+	OrgID          string
+	OrgDisplayName string
+	Inventories    []equipment.Equipment
+	Query          string
+	Category       string
+	PrintDate      string
+	TotalCount     int
+	Currency       money.Currency
+	VatRate        money.VatRate
+}
+
 func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
@@ -979,16 +849,18 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	category := qs.Get("category")
 	showArchived := qs.Get("archived") == "true"
 
-	items, err := app.services.equipment.ListAll(ctx, orgID)
+	filtered, err := app.services.equipment.ListAllFiltered(ctx, orgID, query, category, showArchived)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
 	}
 
-	filtered := filterEquipmentForPrint(items, query, category, showArchived)
-
 	app.resolveEquipmentURLs(filtered)
 
-	orgSettings, _ := app.services.orgsettings.Get(ctx, orgID)
+	orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve organization settings.", Code: http.StatusInternalServerError}
+	}
+
 	var currency money.Currency
 	var vatRate money.VatRate
 	if orgSettings != nil {
@@ -1011,19 +883,3 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPrint, data)
 }
 
-func filterEquipmentForPrint(items []equipment.Equipment, query, category string, showArchived bool) []equipment.Equipment {
-	filtered := make([]equipment.Equipment, 0, len(items))
-	for _, item := range items {
-		if item.IsArchived != showArchived {
-			continue
-		}
-		if query != "" && !strings.Contains(strings.ToLower(item.Name), strings.ToLower(query)) {
-			continue
-		}
-		if category != "" && item.CategoryName != category {
-			continue
-		}
-		filtered = append(filtered, item)
-	}
-	return filtered
-}
