@@ -1,0 +1,59 @@
+{{ define "equipment-search" }}
+{{ if .Data.Inventories }}
+{{ range .Data.Inventories }}
+<tr class="border-b border-base-200 last:border-0">
+  <td class="py-3 pl-4 pr-2">
+    <div class="w-14 h-14 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center shrink-0">
+      {{ if .ImageURL }}
+      <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
+        <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
+      </button>
+      {{ end }}
+    </div>
+  </td>
+  <td class="py-3">
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
+    <div class="flex items-center gap-1.5 mt-0.5">
+      <span class="badge badge-sm badge-ghost border border-base-300 text-xs">{{ .TrackingType.Label }}</span>
+    </div>
+  </td>
+  <td class="py-3">
+    {{ if .CategoryName }}
+    <span class="badge badge-ghost border border-base-300 text-xs">
+      {{ .CategoryName }}
+    </span>
+    {{ end }}
+  </td>
+  <td class="py-3 text-right">
+    <span class="font-mono font-bold text-base">{{ .TotalStock }}</span>
+  </td>
+  <td class="py-3 text-right pr-4">
+    <div class="flex items-center justify-end gap-1">
+      {{ if eq .TrackingType.String "serialized" }}
+      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View units">
+        <span class="w-4 h-4">{{ template "units-icon" . }}</span>
+      </a>
+      {{ end }}
+      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="Edit">
+        <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
+      </a>
+    </div>
+  </td>
+</tr>
+{{ end }}
+{{ else }}
+<tr>
+  <td colspan="5">
+    <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+      {{ if .Data.Query }}
+        <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
+      {{ else if .Data.Filtered }}
+        <p class="text-sm">No items found for the selected category.</p>
+      {{ else }}
+        <p class="text-sm">No items yet. <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="link">Add your first item.</a></p>
+      {{ end }}
+    </div>
+  </td>
+</tr>
+{{ end }}
+{{ end }}

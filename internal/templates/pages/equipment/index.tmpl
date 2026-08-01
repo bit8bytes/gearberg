@@ -66,22 +66,40 @@
 
     {{/* Toolbar */}}
     <div class="px-6 py-3 border-b border-base-300 flex flex-wrap items-center gap-2">
-      <form method="get" action="/orgs/{{ .Data.OrgID }}/equipment" id="filter-form" data-auto-submit class="contents">
-        <label class="input input-sm w-full sm:w-64 flex-none">
-          <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
-          <input type="search" name="q" placeholder="Search name or serial number…" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
-        </label>
-        <select name="category" class="select select-sm w-full sm:w-auto">
-          <option value="">All categories</option>
-          {{ range .Data.Categories }}
-          <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
-          {{ end }}
-        </select>
-      </form>
+      <label class="input input-sm w-full sm:w-64 flex-none">
+        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
+        <input
+          type="search"
+          name="q"
+          placeholder="Search name or serial number…"
+          {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
+          hx-get="/orgs/{{ .Data.OrgID }}/equipment/search"
+          hx-trigger="input changed delay:300ms"
+          hx-target="#equipment-rows"
+          hx-swap="innerHTML"
+          hx-include="[name='category']"
+          hx-indicator="#search-indicator"
+        />
+      </label>
+      <select
+        name="category"
+        class="select select-sm w-full sm:w-auto"
+        hx-get="/orgs/{{ .Data.OrgID }}/equipment/search"
+        hx-trigger="change"
+        hx-target="#equipment-rows"
+        hx-swap="innerHTML"
+        hx-include="[name='q']"
+        hx-indicator="#search-indicator"
+      >
+        <option value="">All categories</option>
+        {{ range .Data.Categories }}
+        <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
+        {{ end }}
+      </select>
+      <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
     </div>
 
     {{/* Table */}}
-    {{ if .Data.Inventories }}
     <div class="overflow-x-auto">
       <table class="table w-full">
         <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
@@ -93,84 +111,11 @@
             <th class="text-right">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          {{ range .Data.Inventories }}
-          <tr class="border-b border-base-200 last:border-0">
-            <td class="py-3 pl-4 pr-2">
-              <div class="w-14 h-14 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center shrink-0">
-                {{ if .ImageURL }}
-                <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
-                  <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
-                </button>
-                {{ end }}
-              </div>
-            </td>
-            <td class="py-3">
-              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="badge badge-sm badge-ghost border border-base-300 text-xs">{{ .TrackingType.Label }}</span>
-              </div>
-            </td>
-            <td class="py-3">
-              {{ if .CategoryName }}
-              <span class="badge badge-ghost border border-base-300 text-xs">
-                {{ .CategoryName }}
-              </span>
-              {{ end }}
-            </td>
-            <td class="py-3 text-right">
-              <span class="font-mono font-bold text-base">{{ .TotalStock }}</span>
-            </td>
-            <td class="py-3 text-right pr-4">
-              <div class="flex items-center justify-end gap-1">
-                {{ if eq .TrackingType.String "serialized" }}
-                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View units">
-                  <span class="w-4 h-4">{{ template "units-icon" . }}</span>
-                </a>
-                {{ end }}
-                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="Edit">
-                  <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
-                </a>
-              </div>
-            </td>
-          </tr>
-          {{ end }}
+        <tbody id="equipment-rows">
+          {{ template "equipment-search" . }}
         </tbody>
       </table>
     </div>
-
-    {{/* Pagination */}}
-    {{ if gt .Data.Pagination.LastPage 1 }}
-    <div class="flex items-center gap-1 px-6 py-4 border-t border-base-300">
-      {{ $cur := .Data.Pagination.CurrentPage }}
-      {{ $last := .Data.Pagination.LastPage }}
-      {{ $base := .Data.PageBaseURL }}
-      <a href="{{ $base }}page=1"
-         class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
-         {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>«</a>
-      <a href="{{ $base }}page={{ .Data.Pagination.PrevPage }}"
-         class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
-         {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>‹</a>
-      <a href="{{ $base }}page={{ .Data.Pagination.NextPage }}"
-         class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
-         {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>›</a>
-      <a href="{{ $base }}page={{ $last }}"
-         class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
-         {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>»</a>
-    </div>
-    {{ end }}
-
-    {{ else }}
-    <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
-      {{ if .Data.Query }}
-        <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
-      {{ else if .Data.Filtered }}
-        <p class="text-sm">No items found for the selected category.</p>
-      {{ else }}
-        <p class="text-sm">No items yet. <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="link">Add your first item.</a></p>
-      {{ end }}
-    </div>
-    {{ end }}
 
   </div>{{/* end card */}}
 </div>

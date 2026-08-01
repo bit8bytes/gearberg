@@ -118,6 +118,40 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
 }
 
+func (app *application) getEquipmentSearchFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	id, err := uid.Parse(r.PathValue("org_id"))
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Invalid organization ID.", Code: http.StatusBadRequest}
+	}
+
+	qs := r.URL.Query()
+	query := qs.Get("q")
+	category := qs.Get("category")
+
+	f := pagination.Filters{
+		Page:     1,
+		PageSize: 25,
+	}
+
+	items, _, err := app.services.equipment.GetFiltered(ctx, id, query, category, f)
+	if err != nil {
+		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+	}
+
+	app.resolveEquipmentURLs(items)
+
+	data := app.html.TemplateData(r)
+	data.Data = equipmentData{
+		OrgID:       id,
+		Inventories: items,
+		Filtered:    query != "" || category != "",
+		Query:       query,
+		Category:    category,
+	}
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentSearch, data)
+}
+
 type equipmentItemData struct {
 	OrgID     string
 	Item      *equipment.Equipment
