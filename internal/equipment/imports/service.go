@@ -284,9 +284,6 @@ func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID, locID
 
 func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 	usageType := equipment.Rental
-	if strings.EqualFold(row.UsageTypeLabel, "sale") {
-		usageType = equipment.Sale
-	}
 	return equipment.Base{
 		ID:             ksuid.New().String(),
 		OrgID:          row.OrgID,
