@@ -58,7 +58,6 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 
 	for _, k := range []equipment.Kind{
 		equipment.Physical,
-		equipment.Virtual,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO equipment_types (id, name) VALUES (?, ?)`, k.ID(), k.String()); err != nil {
 			return fmt.Errorf("seed equipment_types: %w", err)
@@ -67,7 +66,6 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 
 	for _, u := range []equipment.UsageType{
 		equipment.Rental,
-		equipment.Sale,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO usage_types (id, name) VALUES (?, ?)`, u.ID(), u.String()); err != nil {
 			return fmt.Errorf("seed usage_types: %w", err)
