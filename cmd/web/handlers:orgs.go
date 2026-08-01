@@ -8,7 +8,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/orgs"
-	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/sessions"
 	"github.com/bit8bytes/gearberg/internal/storage"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -204,13 +203,7 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 		}
 	}
 
-	_, err = app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{
-		ID:       ksuid.New().String(),
-		OrgID:    orgID,
-		Currency: app.options.DefaultCurrency,
-		VatRate:  app.options.DefaultVatRateBasisPoints(),
-		Timezone: app.options.DefaultTimezone,
-	})
+	_, err = app.services.orgsettings.Create(ctx, ksuid.New().String(), orgID)
 	if err != nil {
 		return &httperr.Error{
 			Error:   fmt.Errorf("postOrgsNew: seed default settings: %w", err),

@@ -19,6 +19,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
+	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/bit8bytes/gearberg/internal/storage"
@@ -51,8 +52,8 @@ type equipmentPrintData struct {
 	Category       string
 	PrintDate      string
 	TotalCount     int
-	Currency       string
-	VatRateDisplay string
+	Currency       settings.Currency
+	VatRate        settings.VatRate
 }
 
 type equipmentItemData struct {
@@ -989,14 +990,12 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 
 	app.resolveEquipmentURLs(filtered)
 
-	orgSettings, _ := app.services.orgsettings.GetByOrgID(ctx, orgID)
-	var currency string
-	var vatRateDisplay string
+	orgSettings, _ := app.services.orgsettings.Get(ctx, orgID)
+	var currency settings.Currency
+	var vatRate settings.VatRate
 	if orgSettings != nil {
 		currency = orgSettings.Currency
-		if orgSettings.VatRate > 0 {
-			vatRateDisplay = fmt.Sprintf("%.4g%%", float64(orgSettings.VatRate)/100)
-		}
+		vatRate = orgSettings.VatRate
 	}
 
 	data := app.html.TemplateData(r)
@@ -1009,7 +1008,7 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 		PrintDate:      time.Now().UTC().Format("2006-01-02"),
 		TotalCount:     len(filtered),
 		Currency:       currency,
-		VatRateDisplay: vatRateDisplay,
+		VatRate:        vatRate,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPrint, data)
 }

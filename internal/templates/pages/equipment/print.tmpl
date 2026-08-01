@@ -11,7 +11,7 @@
       {{ if .Data.Query }} · Search: "{{ .Data.Query }}"{{ end }}
       {{ if .Data.Category }} · Category: {{ .Data.Category }}{{ end }}
       {{ if .Data.Currency }} · Currency: {{ .Data.Currency }}{{ end }}
-      {{ if .Data.VatRateDisplay }} · VAT: {{ .Data.VatRateDisplay }}{{ end }}
+      {{ if .Data.VatRate }} · VAT: {{ .Data.VatRate.Display }}{{ end }}
     </p>
   </div>
   {{ if .Data.Inventories }}

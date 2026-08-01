@@ -10,7 +10,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
-	"github.com/segmentio/ksuid"
 )
 
 type orgSettingsData struct {
@@ -18,7 +17,7 @@ type orgSettingsData struct {
 }
 
 type orgCurrencyData struct {
-	Currency string
+	Currency settings.Currency
 }
 
 func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -30,7 +29,7 @@ func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Re
 		return nil
 	}
 
-	s, err := app.services.orgsettings.GetByOrgID(ctx, orgID)
+	s, err := app.services.orgsettings.Get(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{
 			Error:   fmt.Errorf("getOrgCurrencyFragment: %w", err),
@@ -39,7 +38,7 @@ func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	currency := ""
+	var currency settings.Currency
 	if s != nil {
 		currency = s.Currency
 	}
@@ -53,7 +52,7 @@ func (app *application) getOrgSettings(w http.ResponseWriter, r *http.Request) *
 	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	s, err := app.services.orgsettings.GetByOrgID(ctx, id)
+	s, err := app.services.orgsettings.Get(ctx, id)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
@@ -89,11 +88,10 @@ func (app *application) postOrgSettings(w http.ResponseWriter, r *http.Request) 
 		return reRender(&form)
 	}
 
-	s, err := app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{
-		ID:       ksuid.New().String(),
+	s, err := app.services.orgsettings.Update(ctx, settings.UpdateOrgSettings{
 		OrgID:    id,
 		Currency: form.Currency,
-		VatRate:  form.VatRateBasisPoints(),
+		VatRate:  form.ParsedVatRate(),
 		Timezone: form.Timezone,
 	})
 	if err != nil {

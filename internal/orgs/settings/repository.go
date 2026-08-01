@@ -35,42 +35,38 @@ func (r *Repository) GetByOrgID(ctx context.Context, orgID string) (*OrgSettings
 	return toModel(row), nil
 }
 
-// Upsert creates settings when none exist for the org, or updates the existing row.
-// The ID field in u is used only on insert; on update the existing row's ID is kept.
-func (r *Repository) Upsert(ctx context.Context, u UpsertOrgSettings) (*OrgSettings, error) {
-	existing, err := r.settings.GetByOrgID(ctx, u.OrgID)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("Upsert: %w", err)
-	}
-
-	if errors.Is(err, sql.ErrNoRows) {
-		row, err := r.settings.Create(ctx, gencs.CreateParams{
-			ID:       u.ID,
-			OrgID:    u.OrgID,
-			Currency: u.Currency,
-			VatRate:  u.VatRate,
-			Timezone: u.Timezone,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("Upsert: %w", err)
-		}
-		return &OrgSettings{
-			ID:       row.ID,
-			OrgID:    row.OrgID,
-			Currency: row.Currency,
-			VatRate:  row.VatRate,
-			Timezone: row.Timezone,
-		}, nil
-	}
-
-	row, err := r.settings.Update(ctx, gencs.UpdateParams{
-		ID:       existing.ID,
-		Currency: u.Currency,
-		VatRate:  u.VatRate,
-		Timezone: u.Timezone,
+// Create inserts a new settings row with migration defaults for currency, vat_rate, and timezone.
+func (r *Repository) Create(ctx context.Context, id, orgID string) (*OrgSettings, error) {
+	row, err := r.settings.Create(ctx, gencs.CreateParams{
+		ID:    id,
+		OrgID: orgID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Upsert: %w", err)
+		return nil, fmt.Errorf("Create: %w", err)
+	}
+	return &OrgSettings{
+		ID:       row.ID,
+		OrgID:    row.OrgID,
+		Currency: Currency(row.Currency),
+		VatRate:  VatRate(row.VatRate),
+		Timezone: Timezone(row.Timezone),
+	}, nil
+}
+
+// Update applies currency, vat_rate, and timezone changes to the existing settings row for orgID.
+func (r *Repository) Update(ctx context.Context, u UpdateOrgSettings) (*OrgSettings, error) {
+	existing, err := r.settings.GetByOrgID(ctx, u.OrgID)
+	if err != nil {
+		return nil, fmt.Errorf("Update: %w", err)
+	}
+	row, err := r.settings.Update(ctx, gencs.UpdateParams{
+		ID:       existing.ID,
+		Currency: u.Currency.String(),
+		VatRate:  int64(u.VatRate),
+		Timezone: u.Timezone.String(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Update: %w", err)
 	}
 	return toModel(row), nil
 }
@@ -79,8 +75,8 @@ func toModel(s gencs.OrgSetting) *OrgSettings {
 	return &OrgSettings{
 		ID:       s.ID,
 		OrgID:    s.OrgID,
-		Currency: s.Currency,
-		VatRate:  s.VatRate,
-		Timezone: s.Timezone,
+		Currency: Currency(s.Currency),
+		VatRate:  VatRate(s.VatRate),
+		Timezone: Timezone(s.Timezone),
 	}
 }

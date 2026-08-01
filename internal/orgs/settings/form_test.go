@@ -7,9 +7,9 @@ import (
 func TestValidate_PermittedCurrencyAndTimezone(t *testing.T) {
 	cases := []struct {
 		name     string
-		currency string
+		currency Currency
 		vatRate  string
-		timezone string
+		timezone Timezone
 		valid    bool
 	}{
 		{"valid", "EUR", "19", "Europe/Berlin", true},

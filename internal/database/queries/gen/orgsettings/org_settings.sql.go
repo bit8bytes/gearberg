@@ -12,14 +12,8 @@ import (
 const create = `-- name: Create :one
 INSERT INTO org_settings (
     id,
-    org_id,
-    currency,
-    vat_rate,
-    timezone
+    org_id
 ) VALUES (
-    ?,
-    ?,
-    ?,
     ?,
     ?
 ) RETURNING
@@ -32,11 +26,8 @@ INSERT INTO org_settings (
 `
 
 type CreateParams struct {
-	ID       string
-	OrgID    string
-	Currency string
-	VatRate  int64
-	Timezone string
+	ID    string
+	OrgID string
 }
 
 type CreateRow struct {
@@ -49,13 +40,7 @@ type CreateRow struct {
 }
 
 func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, error) {
-	row := q.db.QueryRowContext(ctx, create,
-		arg.ID,
-		arg.OrgID,
-		arg.Currency,
-		arg.VatRate,
-		arg.Timezone,
-	)
+	row := q.db.QueryRowContext(ctx, create, arg.ID, arg.OrgID)
 	var i CreateRow
 	err := row.Scan(
 		&i.ID,

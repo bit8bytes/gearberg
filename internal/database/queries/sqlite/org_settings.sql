@@ -1,14 +1,8 @@
 -- name: Create :one
 INSERT INTO org_settings (
     id,
-    org_id,
-    currency,
-    vat_rate,
-    timezone
+    org_id
 ) VALUES (
-    ?,
-    ?,
-    ?,
     ?,
     ?
 ) RETURNING

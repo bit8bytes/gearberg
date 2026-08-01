@@ -8,8 +8,6 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/accounts"
 	"github.com/bit8bytes/gearberg/internal/httperr"
-	"github.com/bit8bytes/gearberg/internal/locale"
-	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
@@ -102,13 +100,7 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *http
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
 
-	ld := locale.FromAcceptLanguage(r.Header.Get("Accept-Language"))
-	_, _ = app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{
-		ID:       ksuid.New().String(),
-		OrgID:    orgID,
-		Currency: ld.Currency,
-		Timezone: ld.Timezone,
-	})
+	_, _ = app.services.orgsettings.Create(ctx, ksuid.New().String(), orgID)
 
 	http.Redirect(w, r, "/orgs/"+orgID+"/equipment", http.StatusSeeOther)
 	return nil

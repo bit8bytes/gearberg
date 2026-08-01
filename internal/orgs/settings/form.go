@@ -42,9 +42,9 @@ var PermittedTimezones = []string{
 
 // Form holds the parsed form input and validation state for org settings requests.
 type Form struct {
-	Currency string
+	Currency Currency
 	VatRate  string // entered as a percentage e.g. "19" or "19,5"
-	Timezone string
+	Timezone Timezone
 	validator.Validator
 }
 
@@ -54,15 +54,15 @@ func Parse(r *http.Request) (Form, error) {
 		return Form{}, fmt.Errorf("parse form: %w", err)
 	}
 	return Form{
-		Currency: strings.TrimSpace(r.PostForm.Get("currency")),
+		Currency: Currency(strings.TrimSpace(r.PostForm.Get("currency"))),
 		VatRate:  strings.TrimSpace(r.PostForm.Get("vat_rate")),
-		Timezone: strings.TrimSpace(r.PostForm.Get("timezone")),
+		Timezone: Timezone(strings.TrimSpace(r.PostForm.Get("timezone"))),
 	}, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.
 func (f *Form) Validate() bool {
-	f.Check(validator.PermittedValue(f.Currency, PermittedCurrencies...), "currency", "Must be a valid ISO-4217 currency code")
+	f.Check(validator.PermittedValue(f.Currency.String(), PermittedCurrencies...), "currency", "Must be a valid ISO-4217 currency code")
 	if validator.NotBlank(f.VatRate) {
 		v, err := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
 		f.Check(err == nil, "vat_rate", "Must be a valid number")
@@ -70,7 +70,7 @@ func (f *Form) Validate() bool {
 	} else {
 		f.AddError("vat_rate", "This field cannot be blank")
 	}
-	f.Check(validator.PermittedValue(f.Timezone, PermittedTimezones...), "timezone", "Must be a valid IANA timezone")
+	f.Check(validator.PermittedValue(f.Timezone.String(), PermittedTimezones...), "timezone", "Must be a valid IANA timezone")
 	return f.Valid()
 }
 
@@ -81,14 +81,14 @@ func FormFromOrgSettings(s *OrgSettings) Form {
 	}
 	return Form{
 		Currency: s.Currency,
-		VatRate:  s.VatRatePercent(),
+		VatRate:  s.VatRate.Percent(),
 		Timezone: s.Timezone,
 	}
 }
 
-// VatRateBasisPoints returns the VAT rate as basis points (e.g. "19" → 1900).
+// ParsedVatRate converts the entered percentage string to a VatRate (basis points).
 // Call only after Validate() returns true.
-func (f *Form) VatRateBasisPoints() int64 {
+func (f *Form) ParsedVatRate() VatRate {
 	v, _ := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
-	return int64(math.Round(v * 100))
+	return VatRate(math.Round(v * 100))
 }

@@ -25,9 +25,6 @@ func testOptions(dir string) *options {
 		MaxOrgManufacturers: 100,
 		MaxOrgLocations:     100,
 		MaxStorageBytes:     1 << 30,
-		DefaultCurrency:     "EUR",
-		DefaultVatRate:      19.0,
-		DefaultTimezone:     "Europe/Berlin",
 	}
 }
 
