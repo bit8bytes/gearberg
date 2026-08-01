@@ -51,11 +51,6 @@ func (r *Repository) CreateMember(ctx context.Context, tx *sql.Tx, accountID, or
 	return nil
 }
 
-// Max returns the configured maximum number of organizations.
-func (r *Repository) Max() int {
-	return int(r.maxOrgs)
-}
-
 // List returns organizations the given account is a member of, ordered by creation time.
 func (r *Repository) List(ctx context.Context, accountID string) ([]Org, error) {
 	rows, err := r.orgs.List(ctx, accountID)
@@ -70,15 +65,6 @@ func (r *Repository) List(ctx context.Context, accountID string) ([]Org, error) 
 		}
 	}
 	return orgs, nil
-}
-
-// GetFirstByAccountID returns the ID of the first organization the account belongs to.
-func (r *Repository) GetFirstByAccountID(ctx context.Context, accountID string) (string, error) {
-	id, err := r.orgs.GetFirstByAccountID(ctx, accountID)
-	if err != nil {
-		return "", fmt.Errorf("orgs.Repository.GetFirstByAccountID: %w", err)
-	}
-	return id, nil
 }
 
 // DeleteOwnedByAccount deletes all organizations where accountID is the sole owner.

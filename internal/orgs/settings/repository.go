@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	gencs "github.com/bit8bytes/gearberg/internal/database/queries/gen/orgsettings"
+	"github.com/bit8bytes/gearberg/internal/money"
+	"github.com/bit8bytes/gearberg/internal/timezone"
 )
 
 // Repository provides data access for org settings.
@@ -47,9 +49,9 @@ func (r *Repository) Create(ctx context.Context, id, orgID string) (*OrgSettings
 	return &OrgSettings{
 		ID:       row.ID,
 		OrgID:    row.OrgID,
-		Currency: Currency(row.Currency),
-		VatRate:  VatRate(row.VatRate),
-		Timezone: Timezone(row.Timezone),
+		Currency: money.Currency(row.Currency),
+		VatRate:  money.VatRate(row.VatRate),
+		Timezone: timezone.Timezone(row.Timezone),
 	}, nil
 }
 
@@ -75,8 +77,8 @@ func toModel(s gencs.OrgSetting) *OrgSettings {
 	return &OrgSettings{
 		ID:       s.ID,
 		OrgID:    s.OrgID,
-		Currency: Currency(s.Currency),
-		VatRate:  VatRate(s.VatRate),
-		Timezone: Timezone(s.Timezone),
+		Currency: money.Currency(s.Currency),
+		VatRate:  money.VatRate(s.VatRate),
+		Timezone: timezone.Timezone(s.Timezone),
 	}
 }

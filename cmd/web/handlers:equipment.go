@@ -19,7 +19,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/equipment/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
-	"github.com/bit8bytes/gearberg/internal/orgs/settings"
+	"github.com/bit8bytes/gearberg/internal/money"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/bit8bytes/gearberg/internal/storage"
@@ -52,8 +52,8 @@ type equipmentPrintData struct {
 	Category       string
 	PrintDate      string
 	TotalCount     int
-	Currency       settings.Currency
-	VatRate        settings.VatRate
+	Currency       money.Currency
+	VatRate        money.VatRate
 }
 
 type equipmentItemData struct {
@@ -991,8 +991,8 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	app.resolveEquipmentURLs(filtered)
 
 	orgSettings, _ := app.services.orgsettings.Get(ctx, orgID)
-	var currency settings.Currency
-	var vatRate settings.VatRate
+	var currency money.Currency
+	var vatRate money.VatRate
 	if orgSettings != nil {
 		currency = orgSettings.Currency
 		vatRate = orgSettings.VatRate

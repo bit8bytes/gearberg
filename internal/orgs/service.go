@@ -6,50 +6,56 @@ import (
 	"fmt"
 )
 
-type orgsRepository interface {
+type orgRepository interface {
 	Create(ctx context.Context, tx *sql.Tx, accountID, id, displayName string) (string, error)
 	List(ctx context.Context, accountID string) ([]Org, error)
-	GetFirstByAccountID(ctx context.Context, accountID string) (string, error)
 	Get(ctx context.Context, id string) (Org, error)
 	Update(ctx context.Context, p UpdateParams) error
-	Max() int
-	CreateMember(ctx context.Context, tx *sql.Tx, accountID, orgID string, roleID int64) error
 	Delete(ctx context.Context, orgID, accountID string) error
+}
+
+type memberRepository interface {
+	CreateMember(ctx context.Context, tx *sql.Tx, accountID, orgID string, roleID int64) error
 	GetMember(ctx context.Context, orgID, accountID string) error
 }
 
 // Service provides organization business logic.
 type Service struct {
-	db   *sql.DB
-	orgs orgsRepository
+	db      *sql.DB
+	orgs    orgRepository
+	members memberRepository
+	maxOrgs int
 }
 
 // NewService creates a new organization service.
-func NewService(db *sql.DB, orgs orgsRepository) *Service {
-	return &Service{db: db, orgs: orgs}
+func NewService(db *sql.DB, orgs orgRepository, members memberRepository, maxOrgs int) *Service {
+	return &Service{db: db, orgs: orgs, members: members, maxOrgs: maxOrgs}
 }
 
-// GetAll returns organizations the given account is a member of.
-func (s *Service) GetAll(ctx context.Context, accountID string) ([]Org, error) {
+// List returns organizations the given account is a member of.
+func (s *Service) List(ctx context.Context, accountID string) ([]Org, error) {
 	records, err := s.orgs.List(ctx, accountID)
 	if err != nil {
-		return nil, fmt.Errorf("orgs.Service.GetAll: %w", err)
+		return nil, fmt.Errorf("orgs.Service.List: %w", err)
 	}
 	return records, nil
 }
 
 // Max returns the maximum number of organizations allowed.
 func (s *Service) Max() int {
-	return s.orgs.Max()
+	return s.maxOrgs
 }
 
 // GetFirstByAccountID returns the ID of the first organization the account belongs to.
 func (s *Service) GetFirstByAccountID(ctx context.Context, accountID string) (string, error) {
-	id, err := s.orgs.GetFirstByAccountID(ctx, accountID)
+	orgs, err := s.orgs.List(ctx, accountID)
 	if err != nil {
 		return "", fmt.Errorf("orgs.Service.GetFirstByAccountID: %w", err)
 	}
-	return id, nil
+	if len(orgs) == 0 {
+		return "", fmt.Errorf("orgs.Service.GetFirstByAccountID: no orgs found for account")
+	}
+	return orgs[0].ID, nil
 }
 
 // Get retrieves an organization by ID.
@@ -79,7 +85,7 @@ func (s *Service) Delete(ctx context.Context, orgID, accountID string) error {
 
 // GetMember returns an error if accountID is not a member of orgID.
 func (s *Service) GetMember(ctx context.Context, orgID, accountID string) error {
-	if err := s.orgs.GetMember(ctx, orgID, accountID); err != nil {
+	if err := s.members.GetMember(ctx, orgID, accountID); err != nil {
 		return fmt.Errorf("orgs.Service.GetMember: %w", err)
 	}
 	return nil
@@ -109,7 +115,7 @@ func (s *Service) Create(ctx context.Context, createOrg CreateOrg) (string, erro
 		return "", fmt.Errorf("failed to create org: %w", err)
 	}
 
-	if err := s.orgs.CreateMember(ctx, tx, createOrg.AccountID, org, int64(OwnerRole)); err != nil {
+	if err := s.members.CreateMember(ctx, tx, createOrg.AccountID, org, int64(OwnerRole)); err != nil {
 		return fail(err)
 	}
 

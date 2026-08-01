@@ -6,9 +6,11 @@ import (
 	"net/url"
 
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/money"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"github.com/bit8bytes/gearberg/internal/timezone"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
 )
 
@@ -17,7 +19,7 @@ type orgSettingsData struct {
 }
 
 type orgCurrencyData struct {
-	Currency settings.Currency
+	Currency money.Currency
 }
 
 func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -38,7 +40,7 @@ func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	var currency settings.Currency
+	var currency money.Currency
 	if s != nil {
 		currency = s.Currency
 	}
@@ -90,9 +92,9 @@ func (app *application) postOrgSettings(w http.ResponseWriter, r *http.Request) 
 
 	s, err := app.services.orgsettings.Update(ctx, settings.UpdateOrgSettings{
 		OrgID:    id,
-		Currency: form.Currency,
+		Currency: money.Currency(form.Currency),
 		VatRate:  form.ParsedVatRate(),
-		Timezone: form.Timezone,
+		Timezone: timezone.Timezone(form.Timezone),
 	})
 	if err != nil {
 		return &httperr.Error{

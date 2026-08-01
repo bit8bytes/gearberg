@@ -263,7 +263,7 @@ type mailer interface {
 
 func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*services, error) {
 	orgRepo := orgs.NewRepository(db, int64(opts.MaxOrgs))
-	orgSvc := orgs.NewService(db, orgRepo)
+	orgSvc := orgs.NewService(db, orgRepo, orgRepo, opts.MaxOrgs)
 
 	accountRepo := accounts.NewRepository(db)
 	credRepo := credentials.NewRepository(db)

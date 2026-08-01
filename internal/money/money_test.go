@@ -1,4 +1,4 @@
-package settings
+package money
 
 import (
 	"testing"
