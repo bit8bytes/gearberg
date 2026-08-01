@@ -21,6 +21,10 @@ var (
 	ErrInvalidContent = errors.New("invalid content assignment")
 	// ErrNoContentTab is returned when the content tab is not enabled for an item.
 	ErrNoContentTab = errors.New("content tab not enabled")
+	// ErrNotSerializedUnit is returned when a unit operation is attempted on non-serialized equipment.
+	ErrNotSerializedUnit = errors.New("units are only supported for serialized equipment")
+	// ErrNoUnitsTab is returned when the units tab is not available for an item.
+	ErrNoUnitsTab = errors.New("units tab not available for bulk equipment")
 )
 
 // Base holds fields shared between bulk and serialized creation.

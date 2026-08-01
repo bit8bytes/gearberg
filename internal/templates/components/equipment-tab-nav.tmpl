@@ -1,6 +1,6 @@
 {{ define "equipment-tab-nav" }}
 <div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
+  <div class="max-w-7xl mx-auto px-4 min-h-14 flex items-center overflow-x-auto scrollbar-none">
     <div role="tablist" class="tabs tabs-border">
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}" role="tab" class="tab{{ if eq .Data.ActiveTab "details" }} tab-active{{ end }}">Details</a>
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/pricing" role="tab" class="tab{{ if eq .Data.ActiveTab "pricing" }} tab-active{{ end }}">Pricing</a>

@@ -306,7 +306,15 @@ func (s *Service) GetUnit(ctx context.Context, id string) (*Unit, error) {
 }
 
 // AddUnit adds a new unit to the serialized inventory item.
+// Returns ErrNotSerializedUnit when the equipment is not serialized.
 func (s *Service) AddUnit(ctx context.Context, a AddUnit) (*Unit, error) {
+	item, err := s.repo.GetByID(ctx, a.EquipmentID)
+	if err != nil {
+		return nil, fmt.Errorf("AddUnit: %w", err)
+	}
+	if item.TrackingType != Serialized {
+		return nil, fmt.Errorf("AddUnit: %w", ErrNotSerializedUnit)
+	}
 	a.ID = ksuid.New().String()
 	a.SerialNumber = serial.New()
 	u, err := s.repo.AddUnit(ctx, a)
@@ -338,6 +346,19 @@ func (s *Service) DeleteUnit(ctx context.Context, unitID string) error {
 		return fmt.Errorf("DeleteUnit: %w", err)
 	}
 	return nil
+}
+
+// GetUnitsContainer fetches the equipment item and verifies it supports the units tab.
+// Returns ErrNotFound when the item does not exist, ErrNoUnitsTab when it is bulk equipment.
+func (s *Service) GetUnitsContainer(ctx context.Context, id string) (*Equipment, error) {
+	item, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("GetUnitsContainer: %w", err)
+	}
+	if item.TrackingType != Serialized {
+		return nil, fmt.Errorf("GetUnitsContainer: %w", ErrNoUnitsTab)
+	}
+	return item, nil
 }
 
 // GetContentContainer fetches the equipment item and verifies it supports the content tab.

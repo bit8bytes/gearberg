@@ -2,7 +2,7 @@
 <header class="border-b border-base-300">
   <div class="navbar bg-gray-950">
     <div class="flex-1 flex flex-row items-center gap-6">
-      <h2 class="text-white"><a href="/orgs/{{ .Data.OrgID }}/equipment">Gear<span class="text-primary">berg</span></a></h2>
+      <span class="wordmark text-2xl text-white"><a href="/orgs/{{ .Data.OrgID }}/equipment">Gear<span class="text-primary">berg</span></a></span>
       <ul class="text-white">
         <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .Data.OrgID) }}text-primary{{ end }}" href="/orgs/{{ .Data.OrgID }}/equipment">Equipment</a></li>
       </ul>
@@ -10,7 +10,7 @@
     <div class="flex gap-2">
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
-          <div class="bg-neutral text-neutral-content w-24 rounded-full">
+          <div class="bg-primary text-primary-content w-24 rounded-full">
             <span>gb</span>
           </div>
         </div>

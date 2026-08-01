@@ -1,138 +1,181 @@
 {{ define "title" }}Equipment{{ end }}
 
 {{ define "page" }}
-<div class="w-full bg-base-200 border-b border-base-300">
-  <div class="max-w-5xl md:mx-auto px-4 py-3 md:h-24 flex flex-row items-center justify-between gap-2">
-    <div>
-      <h3>All Items</h3>
-      <div class="text-sm text-base-content/50 font-mono">
-        <span>{{ .Data.Pagination.TotalRecords }} items</span>
-        •
-        <span>{{ len .Data.Categories }} categories</span>
-      </div>
-    </div>
-    <div class="flex gap-2 shrink-0">
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost">
-          <span class="md:hidden w-4 h-4">{{ template "dot-menu-icon" . }}</span>
-          <span class="hidden md:inline">More ▾</span>
+<div class="max-w-6xl mx-auto px-4 py-8 w-full">
+
+  {{/* Main card */}}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+    {{/* Header block */}}
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold tracking-widest text-primary uppercase mb-1">Your Gear</p>
+          <p class="text-3xl font-bold leading-tight">All Items</p>
         </div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-48 p-2 shadow border border-base-300">
-          <li>
-            <a href="{{ .Data.PrintURL }}" target="_blank">
-              <span class="w-4 h-4">{{ template "print-icon" . }}</span>
-              Print
-            </a>
-          </li>
-          <li>
-            <a href="/orgs/{{ .Data.OrgID }}/equipment/import">
-              <span class="w-4 h-4">{{ template "import-icon" . }}</span>
-              Import
-            </a>
-          </li>
-          <li>
-            <button data-modal-target="export-dialog" class="w-full">
-              <span class="w-4 h-4">{{ template "export-icon" . }}</span>
-              Export CSV
-            </button>
-          </li>
-        </ul>
+        <div class="flex items-center gap-2 shrink-0 pt-1">
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost border border-base-300">
+              More
+              <span class="size-4">{{ template "chevron-down" . }}</span>
+            </div>
+            <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
+              <li>
+                <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="flex flex-col items-start py-2">
+                  <span class="flex items-center gap-2 font-medium">
+                    <span class="size-4">{{ template "import-icon" . }}</span>
+                    Import
+                  </span>
+                </a>
+              </li>
+              <li>
+                <button data-modal-target="export-dialog" class="w-full flex flex-col items-start py-2">
+                  <span class="flex items-center gap-2 font-medium">
+                    <span class="size-4">{{ template "export-icon" . }}</span>
+                    Export
+                  </span>
+                </button>
+              </li>
+              <li>
+                <a href="{{ .Data.PrintURL }}" target="_blank" class="flex flex-col items-start py-2">
+                  <span class="flex items-center gap-2 font-medium">
+                    <span class="size-4">{{ template "print-icon" . }}</span>
+                    Print
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">
+            <span class="size-4">{{ template "add-icon" . }}</span>
+            Add Item
+          </a>
+        </div>
       </div>
-      <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">
-        <span class="md:hidden">+</span>
-        <span class="hidden md:inline">+ Add Item</span>
-      </a>
+
+      {{/* Stats row */}}
+      <div class="flex flex-wrap items-center gap-2 mt-4">
+        <span class="badge badge-ghost border border-base-300 font-mono text-sm px-3 py-2 h-auto">
+          <span class="font-bold">{{ .Data.Pagination.TotalRecords }}</span>item{{ if gt .Data.Pagination.TotalRecords 1 }}s{{ end }}
+        </span>
+        <span class="badge badge-ghost border border-base-300 font-mono text-sm px-3 py-2 h-auto">
+          <span class="font-bold">{{ len .Data.Categories }}</span>categor{{ if gt (len .Data.Categories) 1 }}ies{{ else }}y{{ end }}
+        </span>
+      </div>
     </div>
-  </div>
-</div>
-<div class="w-full bg-base-100 border-b border-base-200">
-  <div class="max-w-5xl mx-auto px-4 py-2 md:h-14 flex items-center">
-    <form method="get" action="/orgs/{{ .Data.OrgID }}/equipment" id="filter-form" data-auto-submit class="flex items-center gap-1 flex-wrap md:flex-nowrap w-full">
-      <label class="input w-full md:w-xs md:flex-none">
-        <span class="flex text-secondary opacity-50 [&>svg]:w-4 [&>svg]:h-4">{{ template "search-icon" . }}</span>
-        <input type="search" name="q" placeholder="Search" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
-      </label>
-      <select name="category" class="select w-full md:w-auto">
-        <option value="">All categories</option>
-        {{ range .Data.Categories }}
-        <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
-        {{ end }}
-      </select>
-    </form>
-  </div>
-</div>
-<div class="max-w-5xl w-full mx-auto px-4 my-[42px]">
-  {{ if .Data.Inventories }}
-  <div class="overflow-x-auto">
-    <table class="table w-full overflow-x-scroll border border-base-300 rounded-lg">
-      <thead class="bg-base-200">
-        <tr>
-          <th></th>
-          <th>NAME</th>
-          <th class="text-right">STOCK</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ range .Data.Inventories }}
-        <tr>
-          <td class="w-16 items-center">
-             <div class="w-16 h-16 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
-              {{ if .ImageURL }}
-              <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
-                <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
-              </button>
+
+    {{/* Toolbar */}}
+    <div class="px-6 py-3 border-b border-base-300 flex flex-wrap items-center gap-2">
+      <form method="get" action="/orgs/{{ .Data.OrgID }}/equipment" id="filter-form" data-auto-submit class="contents">
+        <label class="input input-sm w-full sm:w-64 flex-none">
+          <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
+          <input type="search" name="q" placeholder="Search name or serial number…" {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }} />
+        </label>
+        <select name="category" class="select select-sm w-full sm:w-auto">
+          <option value="">All categories</option>
+          {{ range .Data.Categories }}
+          <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
+          {{ end }}
+        </select>
+      </form>
+    </div>
+
+    {{/* Table */}}
+    {{ if .Data.Inventories }}
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+          <tr>
+            <th class="w-20"></th>
+            <th>Name</th>
+            <th>Category</th>
+            <th class="text-right">Stock</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Data.Inventories }}
+          <tr class="border-b border-base-200 last:border-0">
+            <td class="py-3 pl-4 pr-2">
+              <div class="w-14 h-14 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center shrink-0">
+                {{ if .ImageURL }}
+                <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
+                  <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
+                </button>
+                {{ end }}
+              </div>
+            </td>
+            <td class="py-3">
+              <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="badge badge-sm badge-ghost border border-base-300 text-xs">{{ .TrackingType.Label }}</span>
+              </div>
+            </td>
+            <td class="py-3">
+              {{ if .CategoryName }}
+              <span class="badge badge-ghost border border-base-300 text-xs">
+                {{ .CategoryName }}
+              </span>
               {{ end }}
-            </div>
-          </td>
-          <td class="w-full">
-            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}"
-              class="font-bold link link-hover">
-              {{ .Name }}
-            </a>
-            <br />
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-secondary">{{ .TrackingType.Label }}</span>
-              {{ if eq .Kind 2 }}<span class="text-xs text-secondary">• Combination</span>{{ end }}
-              <span class="text-xs text-secondary">• <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .CategoryID }}" class="link link-hover">{{ .CategoryName }}</a></span>
-            </div>
-          </td>
-        </tr>
-        {{ end }}
-      </tbody>
-    </table>
-  </div>
-  {{ if gt .Data.Pagination.LastPage 1 }}
-  <div class="flex items-center gap-1 px-4 py-4">
-    {{ $cur := .Data.Pagination.CurrentPage }}
-    {{ $last := .Data.Pagination.LastPage }}
-    {{ $base := .Data.PageBaseURL }}
-    <a href="{{ $base }}page=1"
-       class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
-       {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>«</a>
-    <a href="{{ $base }}page={{ .Data.Pagination.PrevPage }}"
-       class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
-       {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>‹</a>
-    <a href="{{ $base }}page={{ .Data.Pagination.NextPage }}"
-       class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
-       {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>›</a>
-    <a href="{{ $base }}page={{ $last }}"
-       class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
-       {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>»</a>
-  </div>
-  {{ end }}
-  {{ else }}
-  <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
-    {{ if .Data.Query }}
-      <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
-    {{ else if .Data.Filtered }}
-      <p class="text-sm">No items found for the selected category.</p>
-    {{ else }}
-      <p class="text-sm">No items yet. <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="link">Add your first item.</a></p>
+            </td>
+            <td class="py-3 text-right">
+              <span class="font-mono font-bold text-base">{{ .TotalStock }}</span>
+            </td>
+            <td class="py-3 text-right pr-4">
+              <div class="flex items-center justify-end gap-1">
+                {{ if eq .TrackingType.String "serialized" }}
+                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square" title="View units">
+                  <span class="w-4 h-4">{{ template "units-icon" . }}</span>
+                </a>
+                {{ end }}
+                <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square" title="Edit">
+                  <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+
+    {{/* Pagination */}}
+    {{ if gt .Data.Pagination.LastPage 1 }}
+    <div class="flex items-center gap-1 px-6 py-4 border-t border-base-300">
+      {{ $cur := .Data.Pagination.CurrentPage }}
+      {{ $last := .Data.Pagination.LastPage }}
+      {{ $base := .Data.PageBaseURL }}
+      <a href="{{ $base }}page=1"
+         class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
+         {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>«</a>
+      <a href="{{ $base }}page={{ .Data.Pagination.PrevPage }}"
+         class="btn btn-sm{{ if eq $cur 1 }} btn-disabled pointer-events-none{{ end }}"
+         {{ if eq $cur 1 }}aria-disabled="true" tabindex="-1"{{ end }}>‹</a>
+      <a href="{{ $base }}page={{ .Data.Pagination.NextPage }}"
+         class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
+         {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>›</a>
+      <a href="{{ $base }}page={{ $last }}"
+         class="btn btn-sm{{ if eq $cur $last }} btn-disabled pointer-events-none{{ end }}"
+         {{ if eq $cur $last }}aria-disabled="true" tabindex="-1"{{ end }}>»</a>
+    </div>
     {{ end }}
-  </div>
-  {{ end }}
+
+    {{ else }}
+    <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+      {{ if .Data.Query }}
+        <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
+      {{ else if .Data.Filtered }}
+        <p class="text-sm">No items found for the selected category.</p>
+      {{ else }}
+        <p class="text-sm">No items yet. <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="link">Add your first item.</a></p>
+      {{ end }}
+    </div>
+    {{ end }}
+
+  </div>{{/* end card */}}
 </div>
 
+{{/* Export dialog */}}
 <dialog id="export-dialog" class="modal">
   <div class="modal-box">
     <h3 class="text-xl font-bold">Export Equipment CSV</h3>

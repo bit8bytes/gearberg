@@ -380,6 +380,9 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 		OrgID:       orgID,
 		EquipmentID: itemID,
 	}); err != nil {
+		if errors.Is(err, equipment.ErrNotSerializedUnit) {
+			return &httperr.Error{Error: err, Message: "Units can only be added to serialized equipment.", Code: http.StatusBadRequest}
+		}
 		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
 	}
 
@@ -482,10 +485,14 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.GetUnitsContainer(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+		}
+		if errors.Is(err, equipment.ErrNoUnitsTab) {
+			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
+			return nil
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -723,7 +730,8 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		if errors.Is(err, equipment.ErrNoContentTab) {
-			return &httperr.Error{Error: err, Message: "Content tab is not enabled for this item.", Code: http.StatusForbidden}
+			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
+			return nil
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -752,7 +760,8 @@ func (app *application) renderEquipmentContentForm(w http.ResponseWriter, r *htt
 			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
 		}
 		if errors.Is(err, equipment.ErrNoContentTab) {
-			return &httperr.Error{Error: err, Message: "Content tab is not enabled for this item.", Code: http.StatusForbidden}
+			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
+			return nil
 		}
 		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
 	}
@@ -882,4 +891,3 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPrint, data)
 }
-
