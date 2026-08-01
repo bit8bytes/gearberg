@@ -29,7 +29,7 @@ func (app *application) getAuthAuthentik(w http.ResponseWriter, r *http.Request)
 	}
 
 	state := pkgtokens.Generate().Hex()
-	sessionSetOIDCState(app.session, r.Context(), state)
+	sessionSetOIDCState(r.Context(), app.session, state)
 	http.Redirect(w, r, app.oidcAuthentik.oauth2Config.AuthCodeURL(state), http.StatusSeeOther)
 }
 
@@ -45,7 +45,7 @@ func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 
 	state := r.URL.Query().Get("state")
-	if state == "" || state != sessionOIDCState(app.session, ctx) {
+	if state == "" || state != sessionOIDCState(ctx, app.session) {
 		app.logger.WarnContext(ctx, "oidc: state mismatch in authentik callback")
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
@@ -96,6 +96,6 @@ func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.
 		return
 	}
 
-	sessionSetAccountID(app.session, ctx, accountID)
+	sessionSetAccountID(r.Context(), app.session, accountID)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -182,7 +182,7 @@ func withSecurityHeaders(next http.Handler) http.Handler {
 func (app *application) withLogin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// accountID is added to the session after successful login.
-		accountID := sessionAccountID(app.session, r.Context())
+		accountID := sessionAccountID(r.Context(), app.session)
 		if accountID == "" {
 			http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
@@ -214,7 +214,7 @@ func (app *application) withPermission(next http.Handler) http.Handler {
 // If the user is already signed in, they are redirected to the home page.
 func (app *application) withGuest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accountID := sessionAccountID(app.session, r.Context())
+		accountID := sessionAccountID(r.Context(), app.session)
 		if accountID == "" {
 			next.ServeHTTP(w, r)
 			return

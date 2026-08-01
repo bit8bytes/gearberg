@@ -18,7 +18,7 @@ import (
 // These tables hold values that are defined in application code -- adding or
 // renaming a value only requires changing the relevant package constant and
 // this file, with no migration needed.
-func seedReferenceData(ctx context.Context, db *sql.DB) error {
+func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop // repetitive inserts, not branching logic
 	for _, t := range []tokens.Scope{
 		tokens.PasswordReset,
 		tokens.EmailVerification,

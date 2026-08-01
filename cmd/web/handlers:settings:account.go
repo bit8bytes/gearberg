@@ -21,7 +21,7 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) *http
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	accountID := sessionAccountID(app.session, ctx)
+	accountID := sessionAccountID(ctx, app.session)
 	record, err := app.services.accounts.Get(ctx, accountID)
 	if err != nil {
 		return &httperr.Error{

@@ -184,19 +184,19 @@ func (s scsSession) LoadAndSave(next http.Handler) http.Handler {
 
 const oidcStateKey = "oidc_state"
 
-func sessionAccountID(s sessionManager, ctx context.Context) string {
+func sessionAccountID(ctx context.Context, s sessionManager) string {
 	return s.GetString(ctx, accounts.Key.String())
 }
 
-func sessionSetAccountID(s sessionManager, ctx context.Context, id string) {
+func sessionSetAccountID(ctx context.Context, s sessionManager, id string) {
 	s.Put(ctx, accounts.Key.String(), id)
 }
 
-func sessionOIDCState(s sessionManager, ctx context.Context) string {
+func sessionOIDCState(ctx context.Context, s sessionManager) string {
 	return s.GetString(ctx, oidcStateKey)
 }
 
-func sessionSetOIDCState(s sessionManager, ctx context.Context, state string) {
+func sessionSetOIDCState(ctx context.Context, s sessionManager, state string) {
 	s.Put(ctx, oidcStateKey, state)
 }
 
