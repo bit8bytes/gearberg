@@ -146,32 +146,29 @@ func setupSCS(db *sql.DB) (*scs.SessionManager, error) {
 	return mgr, nil
 }
 
+// sessionManager abstracts the SCS session store for testing and dependency inversion.
+type sessionManager interface {
+	GetString(ctx context.Context, key string) string
+	Put(ctx context.Context, key string, val any)
+	Destroy(ctx context.Context) error
+	LoadAndSave(next http.Handler) http.Handler
+}
+
 func setupSessionManager(mgr *scs.SessionManager) sessionManager {
 	return scsSession{mgr: mgr}
 }
 
 // scsSession wraps *scs.SessionManager and implements sessionManager.
-// It encapsulates the accounts.Key so callers never reference the raw session key.
 type scsSession struct {
 	mgr *scs.SessionManager
 }
 
-func (s scsSession) AccountID(ctx context.Context) string {
-	return s.mgr.GetString(ctx, accounts.Key.String())
+func (s scsSession) GetString(ctx context.Context, key string) string {
+	return s.mgr.GetString(ctx, key)
 }
 
-func (s scsSession) SetAccountID(ctx context.Context, id string) {
-	s.mgr.Put(ctx, accounts.Key.String(), id)
-}
-
-const oidcStateKey = "oidc_state"
-
-func (s scsSession) OIDCState(ctx context.Context) string {
-	return s.mgr.GetString(ctx, oidcStateKey)
-}
-
-func (s scsSession) SetOIDCState(ctx context.Context, state string) {
-	s.mgr.Put(ctx, oidcStateKey, state)
+func (s scsSession) Put(ctx context.Context, key string, val any) {
+	s.mgr.Put(ctx, key, val)
 }
 
 func (s scsSession) Destroy(ctx context.Context) error {
@@ -183,6 +180,24 @@ func (s scsSession) Destroy(ctx context.Context) error {
 
 func (s scsSession) LoadAndSave(next http.Handler) http.Handler {
 	return s.mgr.LoadAndSave(next)
+}
+
+const oidcStateKey = "oidc_state"
+
+func sessionAccountID(s sessionManager, ctx context.Context) string {
+	return s.GetString(ctx, accounts.Key.String())
+}
+
+func sessionSetAccountID(s sessionManager, ctx context.Context, id string) {
+	s.Put(ctx, accounts.Key.String(), id)
+}
+
+func sessionOIDCState(s sessionManager, ctx context.Context) string {
+	return s.GetString(ctx, oidcStateKey)
+}
+
+func sessionSetOIDCState(s sessionManager, ctx context.Context, state string) {
+	s.Put(ctx, oidcStateKey, state)
 }
 
 // oidcProvider holds the runtime config for a single OIDC provider.

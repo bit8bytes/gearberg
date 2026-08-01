@@ -54,7 +54,7 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 		return reRender(&form)
 	}
 
-	app.session.SetAccountID(ctx, accountID)
+	sessionSetAccountID(app.session, ctx, accountID)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 	return nil
 }
@@ -100,7 +100,7 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *http
 		return reRender(&form)
 	}
 
-	app.session.SetAccountID(ctx, accountID)
+	sessionSetAccountID(app.session, ctx, accountID)
 
 	ld := locale.FromAcceptLanguage(r.Header.Get("Accept-Language"))
 	_, _ = app.services.orgsettings.Upsert(ctx, settings.UpsertOrgSettings{

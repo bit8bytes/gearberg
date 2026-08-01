@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,16 +29,6 @@ import (
 
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
-
-// sessionManager abstracts the SCS session store for testing and dependency inversion.
-type sessionManager interface {
-	AccountID(ctx context.Context) string
-	SetAccountID(ctx context.Context, id string)
-	OIDCState(ctx context.Context) string
-	SetOIDCState(ctx context.Context, state string)
-	Destroy(ctx context.Context) error
-	LoadAndSave(next http.Handler) http.Handler
-}
 
 type application struct {
 	logger        *slog.Logger
@@ -62,7 +51,6 @@ func run() error {
 		printUsage()
 		return nil
 	}
-
 	cmd, args := os.Args[1], os.Args[2:]
 	switch cmd {
 	case "serve":
