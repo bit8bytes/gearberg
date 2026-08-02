@@ -5705,12 +5705,6 @@
   .mt-16 {
     margin-top: calc(var(--spacing) * 16);
   }
-  .mt-24 {
-    margin-top: calc(var(--spacing) * 24);
-  }
-  .mt-\[64px\] {
-    margin-top: 64px;
-  }
   .breadcrumbs {
     @layer daisyui.l1.l2.l3 {
       max-width: 100%;
