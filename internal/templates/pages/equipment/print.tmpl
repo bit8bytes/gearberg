@@ -1,55 +1,66 @@
 {{ define "title" }}Equipment – Print{{ end }}
 
 {{ define "page" }}
-<div class="p-8 max-w-7xl mx-auto">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold">Equipment List</h1>
-    <p class="text-sm text-base-content/60">
-      {{ .Data.OrgDisplayName }}
-      · {{ .Data.PrintDate }}
-      · {{ .Data.TotalCount }} items
-      {{ if .Data.Query }} · Search: "{{ .Data.Query }}"{{ end }}
-      {{ if .Data.Category }} · Category: {{ .Data.Category }}{{ end }}
-      {{ if .Data.Currency }} · Currency: {{ .Data.Currency }}{{ end }}
-      {{ if .Data.VatRate }} · VAT: {{ .Data.VatRate.Display }}{{ end }}
-    </p>
+<div class="print-page">
+  <div class="print-header">
+    <div class="print-header-left">
+      <h1>Equipment List</h1>
+      <div class="meta">
+        <span>{{ .Data.OrgDisplayName }}</span>
+        <span>{{ .Data.PrintDate }}</span>
+        <span>{{ .Data.TotalCount }} items</span>
+        {{ if .Data.Query }}<span>Search: "{{ .Data.Query }}"</span>{{ end }}
+        {{ if .Data.Category }}<span>{{ .Data.Category }}</span>{{ end }}
+        {{ if .Data.Currency }}<span>{{ .Data.Currency }}</span>{{ end }}
+        {{ if .Data.VatRate }}<span>VAT {{ .Data.VatRate.Display }}</span>{{ end }}
+      </div>
+    </div>
+    <div class="print-logo">
+      {{ template "logo" . }}
+      <span class="print-logo-sub">by bit8bytes</span>
+    </div>
   </div>
+
   {{ if .Data.Inventories }}
-  <table class="table w-full">
+  <table class="print-table">
     <thead>
       <tr>
-        <th></th>
-        <th>NAME</th>
-        <th>CATEGORY</th>
-        <th>STOCK</th>
-        <th>RENTAL PRICE</th>
+        <th class="print-img-cell"></th>
+        <th>Name</th>
+        <th>Category</th>
+        <th class="print-col-stock">Stock</th>
+        <th class="print-col-price">Rental Price</th>
       </tr>
     </thead>
     <tbody>
       {{ range .Data.Inventories }}
       <tr>
-        <td class="w-20">
-          <div class="w-16 h-16 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center">
+        <td class="print-img-cell">
+          <div class="print-img-box">
             {{ if .ImageURL }}
-            <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-cover" />
+            <img src="{{ .ImageURL }}" alt="{{ .Name }}" />
             {{ end }}
           </div>
         </td>
-        <td class="w-1/3">
-          <span class="font-bold">{{ .Name }}</span>
-          <br />
-          <span class="text-xs text-secondary">{{ .TrackingType.Label }}</span>
+        <td>
+          <div class="print-item-name">{{ .Name }}</div>
+          <div class="print-item-type">{{ .TrackingType.Label }}</div>
         </td>
         <td>{{ .CategoryName }}</td>
-        <td>{{ .TotalStock }}</td>
-        <td>{{ .Pricing.RentalPrice.ToDecimal }}</td>
+        <td class="print-col-stock">{{ .TotalStock }}</td>
+        <td class="print-col-price">{{ .Pricing.RentalPrice.ToDecimal }}</td>
       </tr>
       {{ end }}
     </tbody>
   </table>
   {{ else }}
-  <p class="text-base-content/40 text-sm py-8 text-center">No items found.</p>
+  <p class="print-empty">No items found.</p>
   {{ end }}
+
+  <div class="print-footer">
+    <span>{{ .Data.OrgDisplayName }}</span>
+    <span>gearberg.org</span>
+  </div>
 </div>
 <script nonce="{{ .Nonce }}">window.print();</script>
 {{ end }}
