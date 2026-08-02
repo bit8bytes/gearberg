@@ -1,24 +1,31 @@
 {{ define "title" }}{{ .Data.Item.Name }} — Content{{ end }}
 
 {{ define "page" }}
-{{ template "equipment-header" . }}
+<div class="max-w-6xl mx-auto px-4 py-8 w-full">
 
-{{ template "equipment-tab-nav" . }}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
-<div class="max-w-7xl w-full mx-auto px-4 my-6 flex flex-col gap-6">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">Your Gear</a>
+          <p class="text-3xl font-bold leading-tight">{{ .Data.Item.Name }}</p>
+        </div>
+      </div>
+    </div>
 
-  {{/* Assign form */}}
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" class="flex flex-col gap-3" novalidate>
-    <h4>Add Content Item</h4>
-    <div class="flex gap-2 items-start">
-      <div class="flex flex-col gap-1 flex-1">
+    {{ template "equipment-tab-nav" . }}
+
+    {{/* Toolbar / Add Content form */}}
+    <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" class="px-6 py-3 border-b border-base-300 flex flex-wrap items-start gap-2" novalidate>
+      <div class="flex flex-col gap-1 flex-1 min-w-48">
         <input
           list="members-datalist"
           name="member_name"
           value="{{ .Form.MemberName }}"
           placeholder="Search equipment…"
           autocomplete="off"
-          class="input w-full"
+          class="input input-sm w-full"
         />
         <datalist id="members-datalist">
           {{ range .Data.AllEquipment }}
@@ -38,51 +45,54 @@
           value="{{ if .Form.Quantity }}{{ .Form.Quantity }}{{ else }}1{{ end }}"
           min="1"
           placeholder="Qty"
-          class="input w-full"
+          class="input input-sm w-full"
         />
         {{ with index .Form.Errors "quantity" }}
           <p class="text-error text-sm">{{ . }}</p>
         {{ end }}
       </div>
-      <button type="submit" class="btn btn-primary" data-loading-trigger>
+      <button type="submit" class="btn btn-sm btn-primary" data-loading-trigger>
         {{ template "loading-spinner" . }}
         Add
       </button>
-    </div>
-    {{ with index .Form.Errors "assign" }}
-      <p class="text-error text-sm">{{ . }}</p>
-    {{ end }}
-  </form>
+      {{ with index .Form.Errors "assign" }}
+        <p class="text-error text-sm w-full">{{ . }}</p>
+      {{ end }}
+    </form>
 
-  {{/* Content list */}}
-  {{ if .Data.Content }}
-  <div class="overflow-x-auto">
-    <table class="table w-full">
-      <thead>
-        <tr>
-          <th>ITEM</th>
-          <th>QTY</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ range .Data.Content }}
-        <tr>
-          <td class="text-sm hover:link"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .MemberID }}">{{ .MemberName }}</a></td>
-          <td class="text-sm">{{ .Quantity }}</td>
-          <td class="text-right">
-            <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/content/{{ .ID }}/delete">
-              <button type="submit" class="btn btn-ghost btn-sm text-error">Remove</button>
-            </form>
-          </td>
-        </tr>
-        {{ end }}
-      </tbody>
-    </table>
+    {{/* Content table */}}
+    {{ if .Data.Content }}
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Data.Content }}
+          <tr>
+            <td class="text-sm"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .MemberID }}" class="hover:underline">{{ .MemberName }}</a></td>
+            <td class="text-sm">{{ .Quantity }}</td>
+            <td class="text-right">
+              <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/content/{{ .ID }}/delete">
+                <button type="submit" class="btn btn-ghost btn-sm text-error">Remove</button>
+              </form>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    {{ else }}
+    <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+      <p class="text-sm">No content assigned yet.</p>
+    </div>
+    {{ end }}
+
   </div>
-  {{ else }}
-  <p class="text-base-content/50 text-sm">No content assigned yet.</p>
-  {{ end }}
 
 </div>
 {{ end }}

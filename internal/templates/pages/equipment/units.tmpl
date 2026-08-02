@@ -1,11 +1,7 @@
 {{ define "title" }}{{ .Data.ItemName }} — Units{{ end }}
 
 {{ define "page" }}
-{{ template "equipment-header" . }}
-
-{{ template "equipment-tab-nav" . }}
-
-<div class="max-w-7xl w-full mx-auto mb-16">
+<div class="max-w-6xl mx-auto px-4 py-8 w-full">
 
   {{/* All forms live outside the table to avoid nesting. */}}
   {{ range .Data.Units }}
@@ -14,19 +10,32 @@
   <form id="add-unit-form" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units"></form>
   <form id="bulk-inspect-form" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units/bulk-inspect"></form>
 
-  {{ if .Data.Units }}
-  <div class="max-w-7xl w-full mx-auto px-4 my-[42px]">
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">Your Gear</a>
+          <p class="text-3xl font-bold leading-tight">{{ .Data.ItemName }}</p>
+        </div>
+      </div>
+    </div>
+
+    {{ template "equipment-tab-nav" . }}
+
+    {{ if .Data.Units }}
     <div class="overflow-x-auto">
-      <table class="table w-full overflow-x-scroll border border-base-300 rounded-lg">
+      <table class="table w-full">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
           <tr>
             <th></th>
-            <th>SERIAL</th>
-            <th>STATUS</th>
-            <th>MFR SERIAL</th>
-            <th>NEXT INSPECTION</th>
-            <th class="text-right">PURCHASE PRICE</th>
-            <th>PURCHASED</th>
-            <th>NOTES</th>
+            <th>Serial</th>
+            <th>Status</th>
+            <th>MFR Serial</th>
+            <th>Next Inspection</th>
+            <th class="text-right">Purchase Price</th>
+            <th>Purchased</th>
+            <th>Notes</th>
             <th></th>
           </tr>
         </thead>
@@ -46,7 +55,7 @@
                 <span class="badge badge-ghost badge-sm">Inactive</span>
               {{ end }}
             </td>
-            <td class="text-sm">{{ if .ManufacturerSerialNumber }}{{ .ManufacturerSerialNumber }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
+            <td class="text-sm w-0 min-w-0 max-w-40"><span class="truncate block">{{ if .ManufacturerSerialNumber }}{{ .ManufacturerSerialNumber }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</span></td>
             <td class="text-sm">
               {{ $next := .NextInspectionAtInput }}
               {{ $label := .NextInspectionLabel }}
@@ -71,7 +80,7 @@
               {{ else }}<span class="text-base-content/30">—</span>{{ end }}
             </td>
             <td class="text-sm font-mono">{{ if .PurchasedAtInput }}{{ .PurchasedAtInput }}{{ else }}<span class="text-base-content/30">—</span>{{ end }}</td>
-            <td class="text-sm max-w-xs">
+            <td class="text-sm w-0 min-w-0 max-w-xs">
               {{ if .Remark }}<span class="truncate block" title="{{ .Remark }}">{{ .Remark }}</span>{{ else }}<span class="text-base-content/30">—</span>{{ end }}
             </td>
             <td class="text-right">
@@ -109,113 +118,116 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="9" class="pt-2 px-4">
-              <div class="flex items-center justify-between gap-3">
+            <td colspan="9" class="px-4 py-3 border-t border-base-300">
+              <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
                   <input type="date" name="next_inspection_at" form="bulk-inspect-form" class="input input-sm" />
                   <button type="submit" form="bulk-inspect-form" class="btn btn-sm btn-outline">Set Inspection Date</button>
                 </div>
-                <button type="submit" form="add-unit-form" class="btn btn-sm btn-primary">Add unit</button>
+                <button type="submit" form="add-unit-form" class="btn btn-sm btn-primary">
+                  <span class="size-4">{{ template "add-icon" . }}</span>
+                  Add Unit
+                </button>
               </div>
             </td>
           </tr>
         </tfoot>
       </table>
     </div>
-  </div>
-  {{ else }}
-  <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
-    <p class="text-sm">No units recorded.
-      <form class="inline" method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/units">
-        <button type="submit" class="link">Add the first unit.</button>
-      </form>
-    </p>
-  </div>
-  {{ end }}
-
-  {{/* Unit delete modals — one per unit */}}
-  {{ range .Data.Units }}
-  <dialog id="unit-delete-modal-{{ .ID }}" class="modal">
-    <div class="modal-box">
-      <h3>Delete Unit</h3>
-      <p class="py-4">Are you sure you want to permanently delete unit <strong>{{ .SerialNumber }}</strong>? This action cannot be undone.</p>
-      <div class="modal-action">
-        <form method="dialog">
-          <button class="btn">Cancel</button>
-        </form>
-        <button type="submit" form="unit-{{ .ID }}-delete" class="btn btn-error">Delete</button>
-      </div>
+    {{ else }}
+    <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
+      <p class="text-sm">No units recorded.
+        <button type="submit" form="add-unit-form" class="link">Add the first unit.</button>
+      </p>
     </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-  </dialog>
-  {{ end }}
+    {{ end }}
 
-  {{/* Unit edit modals — one per unit */}}
-  {{ range .Data.Units }}
-  <dialog id="unit-modal-{{ .ID }}" class="modal">
-    <div class="modal-box max-w-md flex flex-col gap-4">
-      <h3 class="font-semibold">Unit {{ .SerialNumber }}</h3>
-
-      <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}" class="flex flex-col gap-4">
-
-        <div class="flex flex-col gap-1">
-          <label class="label cursor-pointer gap-3 self-start">
-            <span>Active</span>
-            <input type="checkbox" name="status_id" value="1" class="toggle toggle-success" {{ if .IsActive }}checked{{ end }} />
-          </label>
-          <p class="text-base-content/50 text-xs">Inactive units are not available for rental.</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-
-          <div class="flex flex-col gap-1 col-span-2">
-            <label for="unit_serial_number-{{ .ID }}">Serial Number</label>
-            <input id="unit_serial_number-{{ .ID }}" type="text" name="unit_serial_number" value="{{ .SerialNumber }}" maxlength="200" class="input w-full" required />
-            <p class="text-xs text-base-content/50">Changing the serial number will invalidate any previously generated QR codes and barcodes for this unit.</p>
-          </div>
-
-          <div class="flex flex-col gap-1 col-span-2">
-            <label for="serial_number-{{ .ID }}">Manufacturer Serial Number</label>
-            <input id="serial_number-{{ .ID }}" type="text" name="serial_number" value="{{ .ManufacturerSerialNumber }}" maxlength="200" class="input w-full" placeholder="—" />
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label for="purchase_price-{{ .ID }}">Purchase Price</label>
-            <input id="purchase_price-{{ .ID }}" type="number" inputmode="decimal" step="0.01" min="0" name="purchase_price" value="{{ .PurchasePrice.ToDecimal }}" class="input w-full" placeholder="—" />
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label for="purchased_at-{{ .ID }}">Purchased</label>
-            <input id="purchased_at-{{ .ID }}" type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
-          </div>
-
-          <div class="flex flex-col gap-1 col-span-2">
-            <label for="next_inspection_at-{{ .ID }}">Next Inspection</label>
-            <input id="next_inspection_at-{{ .ID }}" type="date" name="next_inspection_at" value="{{ .NextInspectionAtInput }}" class="input w-full" />
-          </div>
-
-          <div class="flex flex-col gap-1 col-span-2">
-            <label for="remark-{{ .ID }}">Remark</label>
-            <textarea id="remark-{{ .ID }}" name="remark" maxlength="1000" class="textarea w-full" placeholder="—">{{ .Remark }}</textarea>
-          </div>
-
-        </div>
-
-      </form>
-
-      <div class="modal-action">
-        <form method="dialog">
-          <button class="btn btn-ghost">Cancel</button>
-        </form>
-        <button type="submit" form="unit-edit-{{ .ID }}" class="btn btn-primary" data-loading-trigger>
-          {{ template "loading-spinner" . }}
-          Save
-        </button>
-      </div>
-    </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-  </dialog>
-  {{ end }}
+  </div>
 
 </div>
+
+{{/* Unit delete modals — one per unit */}}
+{{ range .Data.Units }}
+<dialog id="unit-delete-modal-{{ .ID }}" class="modal">
+  <div class="modal-box">
+    <h3>Delete Unit</h3>
+    <p class="py-4">Are you sure you want to permanently delete unit <strong>{{ .SerialNumber }}</strong>? This action cannot be undone.</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Cancel</button>
+      </form>
+      <button type="submit" form="unit-{{ .ID }}-delete" class="btn btn-error">Delete</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+{{ end }}
+
+{{/* Unit edit modals — one per unit */}}
+{{ range .Data.Units }}
+<dialog id="unit-modal-{{ .ID }}" class="modal">
+  <div class="modal-box max-w-md flex flex-col gap-4">
+    <h3 class="font-semibold">Unit {{ .SerialNumber }}</h3>
+
+    <form id="unit-edit-{{ .ID }}" method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ $.Data.ID }}/units/{{ .ID }}" class="flex flex-col gap-4">
+
+      <div class="flex flex-col gap-1">
+        <label class="label cursor-pointer gap-3 self-start">
+          <span>Active</span>
+          <input type="checkbox" name="status_id" value="1" class="toggle toggle-success" {{ if .IsActive }}checked{{ end }} />
+        </label>
+        <p class="text-base-content/50 text-xs">Inactive units are not available for rental.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+
+        <div class="flex flex-col gap-1 col-span-2">
+          <label for="unit_serial_number-{{ .ID }}">Serial Number</label>
+          <input id="unit_serial_number-{{ .ID }}" type="text" name="unit_serial_number" value="{{ .SerialNumber }}" maxlength="200" class="input w-full" required />
+          <p class="text-xs text-base-content/50">Changing the serial number will invalidate any previously generated QR codes and barcodes for this unit.</p>
+        </div>
+
+        <div class="flex flex-col gap-1 col-span-2">
+          <label for="serial_number-{{ .ID }}">Manufacturer Serial Number</label>
+          <input id="serial_number-{{ .ID }}" type="text" name="serial_number" value="{{ .ManufacturerSerialNumber }}" maxlength="200" class="input w-full" placeholder="—" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="purchase_price-{{ .ID }}">Purchase Price</label>
+          <input id="purchase_price-{{ .ID }}" type="number" inputmode="decimal" step="0.01" min="0" name="purchase_price" value="{{ .PurchasePrice.ToDecimal }}" class="input w-full" placeholder="—" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="purchased_at-{{ .ID }}">Purchased</label>
+          <input id="purchased_at-{{ .ID }}" type="date" name="purchased_at" value="{{ .PurchasedAtInput }}" class="input w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1 col-span-2">
+          <label for="next_inspection_at-{{ .ID }}">Next Inspection</label>
+          <input id="next_inspection_at-{{ .ID }}" type="date" name="next_inspection_at" value="{{ .NextInspectionAtInput }}" class="input w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1 col-span-2">
+          <label for="remark-{{ .ID }}">Remark</label>
+          <textarea id="remark-{{ .ID }}" name="remark" maxlength="1000" class="textarea w-full" placeholder="—">{{ .Remark }}</textarea>
+        </div>
+
+      </div>
+
+    </form>
+
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn btn-ghost">Cancel</button>
+      </form>
+      <button type="submit" form="unit-edit-{{ .ID }}" class="btn btn-primary" data-loading-trigger>
+        {{ template "loading-spinner" . }}
+        Save
+      </button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+{{ end }}
+
 {{ end }}

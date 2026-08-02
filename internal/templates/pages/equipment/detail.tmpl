@@ -1,17 +1,35 @@
 {{ define "title" }}{{ .Form.Name }}{{ end }}
 
 {{ define "page" }}
-{{ template "equipment-header" . }}
+<div class="max-w-6xl mx-auto px-4 py-8 w-full">
 
-{{ template "equipment-tab-nav" . }}
+  {{/* Main card */}}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+    
+    {{/* Header block */}}
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">Your Gear</a>
+          <p class="text-3xl font-bold leading-tight">{{ .Form.Name }}</p>
+        </div>
+        <div class="shrink-0 pt-1">
+          <button type="button" data-modal-target="delete_equipment_modal" class="btn btn-ghost text-error">
+            <span class="w-4 h-4">{{ template "delete-icon" }}</span>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
 
-<div class="max-w-7xl w-full mx-auto px-4 my-8">
-  <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-4" novalidate>
-    <input type="hidden" name="type_id" value="{{ .Form.TypeID }}">
+    {{/* Tab Navigation */}}
+    {{ template "equipment-tab-nav" . }}
 
-    <fieldset class="border border-base-300 rounded-lg p-4">
-      <legend class="px-1 text-sm font-medium text-base-content/60">General</legend>
-
+    {{/* Tab Content */}}
+    <form 
+      method="POST" 
+      enctype="multipart/form-data" 
+      class="flex flex-col gap-4 px-6 py-4" novalidate>
       <div class="flex flex-col gap-4">
 
         {{ template "photo-picker" . }}
@@ -96,18 +114,33 @@
         </div>
 
       </div>
-    </fieldset>
 
-    <div id="save" class="flex gap-2">
-      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/details" class="btn btn-primary" data-loading-trigger>
-        {{ template "loading-spinner" . }}
-        Save
-      </button>
-    </div>
+      <div id="save" class="flex gap-2">
+        <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/details" class="btn btn-primary" data-loading-trigger>
+          {{ template "loading-spinner" . }}
+          Save
+        </button>
+      </div>
 
-  </form>
+    </form>
+  </div>
 
   {{ template "photo-picker-dialog" . }}
 
 </div>
+
+<dialog id="delete_equipment_modal" class="modal">
+  <div class="modal-box">
+    <h3>Delete Equipment</h3>
+    <p class="py-4">Are you sure you want to permanently delete <strong>{{ .Form.Name }}</strong>? This action cannot be undone.</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Cancel</button>
+      </form>
+      <form method="POST" action="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/delete">
+        <button type="submit" class="btn btn-error">Delete</button>
+      </form>
+    </div>
+  </div>
+</dialog>
 {{ end }}

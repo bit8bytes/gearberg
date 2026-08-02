@@ -1,109 +1,118 @@
 {{ define "title" }}{{ if .Data.Item }}{{ .Data.Item.Name }} — Properties{{ end }}{{ end }}
 
 {{ define "page" }}
-{{ template "equipment-header" . }}
+<div class="max-w-6xl mx-auto px-4 py-8 w-full">
 
-{{ template "equipment-tab-nav" . }}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
-<div class="max-w-7xl w-full mx-auto px-4 my-8">
-  <form method="POST" class="flex flex-col gap-4" novalidate>
-
-    <fieldset class="border border-base-300 rounded-lg p-4">
-      <legend class="px-1 text-sm font-medium text-base-content/60">Physical</legend>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="weight_kg" class="label">Weight <span class="text-base-content/40 text-xs">kg</span></label>
-          <input id="weight_kg" type="number" inputmode="decimal" step="any" min="0" name="weight_kg" class="input w-full"
-            value="{{ .Form.Weight }}" />
-          {{ with index .Form.Errors "weight_kg" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">Your Gear</a>
+          <p class="text-3xl font-bold leading-tight">{{ .Data.Item.Name }}</p>
         </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="width_cm" class="label">Width <span class="text-base-content/40 text-xs">cm</span></label>
-          <input id="width_cm" type="number" inputmode="decimal" step="any" min="0" name="width_cm" class="input w-full"
-            value="{{ .Form.Width }}" />
-          {{ with index .Form.Errors "width_cm" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="height_cm" class="label">Height <span class="text-base-content/40 text-xs">cm</span></label>
-          <input id="height_cm" type="number" inputmode="decimal" step="any" min="0" name="height_cm" class="input w-full"
-            value="{{ .Form.Height }}" />
-          {{ with index .Form.Errors "height_cm" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="depth_cm" class="label">Depth <span class="text-base-content/40 text-xs">cm</span></label>
-          <input id="depth_cm" type="number" inputmode="decimal" step="any" min="0" name="depth_cm" class="input w-full"
-            value="{{ .Form.Depth }}" />
-          {{ with index .Form.Errors "depth_cm" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="wire_gauge_mm2_x100" class="label">Wire gauge <span class="text-base-content/40 text-xs">mm² ×100</span></label>
-          <input id="wire_gauge_mm2_x100" type="number" name="wire_gauge_mm2_x100" min="0" class="input w-full"
-            value="{{ .Form.WireGauge }}" />
-          {{ with index .Form.Errors "wire_gauge_mm2_x100" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
       </div>
-    </fieldset>
-
-    <fieldset class="border border-base-300 rounded-lg p-4">
-      <legend class="px-1 text-sm font-medium text-base-content/60">Electrical</legend>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="voltage_v" class="label">Voltage <span class="text-base-content/40 text-xs">V</span></label>
-          <input id="voltage_v" type="number" name="voltage_v" min="0" class="input w-full"
-            value="{{ .Form.Voltage }}" />
-          {{ with index .Form.Errors "voltage_v" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="power_w" class="label">Power <span class="text-base-content/40 text-xs">W</span></label>
-          <input id="power_w" type="number" inputmode="decimal" step="any" min="0" name="power_w" class="input w-full"
-            value="{{ .Form.Power }}" />
-          {{ with index .Form.Errors "power_w" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="current_a" class="label">Current <span class="text-base-content/40 text-xs">A</span></label>
-          <input id="current_a" type="number" inputmode="decimal" step="any" min="0" name="current_a" class="input w-full"
-            value="{{ .Form.Current }}" />
-          {{ with index .Form.Errors "current_a" }}
-            <p class="text-red-500 text-sm">{{ . }}</p>
-          {{ end }}
-        </div>
-
-      </div>
-    </fieldset>
-
-    <div id="save" class="flex gap-2">
-      <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" class="btn btn-primary" data-loading-trigger>
-        {{ template "loading-spinner" . }}
-        Save
-      </button>
     </div>
 
-  </form>
+    {{ template "equipment-tab-nav" . }}
+
+    <form method="POST" class="flex flex-col gap-4 px-6 py-4" novalidate>
+
+      <div class="flex flex-col gap-4">
+        <p class="text-sm font-medium text-base-content/60">Physical</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="weight_kg" class="label">Weight <span class="text-base-content/40 text-xs">kg</span></label>
+            <input id="weight_kg" type="number" inputmode="decimal" step="any" min="0" name="weight_kg" class="input w-full"
+              value="{{ .Form.Weight }}" />
+            {{ with index .Form.Errors "weight_kg" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="width_cm" class="label">Width <span class="text-base-content/40 text-xs">cm</span></label>
+            <input id="width_cm" type="number" inputmode="decimal" step="any" min="0" name="width_cm" class="input w-full"
+              value="{{ .Form.Width }}" />
+            {{ with index .Form.Errors "width_cm" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="height_cm" class="label">Height <span class="text-base-content/40 text-xs">cm</span></label>
+            <input id="height_cm" type="number" inputmode="decimal" step="any" min="0" name="height_cm" class="input w-full"
+              value="{{ .Form.Height }}" />
+            {{ with index .Form.Errors "height_cm" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="depth_cm" class="label">Depth <span class="text-base-content/40 text-xs">cm</span></label>
+            <input id="depth_cm" type="number" inputmode="decimal" step="any" min="0" name="depth_cm" class="input w-full"
+              value="{{ .Form.Depth }}" />
+            {{ with index .Form.Errors "depth_cm" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="wire_gauge_mm2_x100" class="label">Wire gauge <span class="text-base-content/40 text-xs">mm² ×100</span></label>
+            <input id="wire_gauge_mm2_x100" type="number" name="wire_gauge_mm2_x100" min="0" class="input w-full"
+              value="{{ .Form.WireGauge }}" />
+            {{ with index .Form.Errors "wire_gauge_mm2_x100" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <p class="text-sm font-medium text-base-content/60">Electrical</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="voltage_v" class="label">Voltage <span class="text-base-content/40 text-xs">V</span></label>
+            <input id="voltage_v" type="number" name="voltage_v" min="0" class="input w-full"
+              value="{{ .Form.Voltage }}" />
+            {{ with index .Form.Errors "voltage_v" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="power_w" class="label">Power <span class="text-base-content/40 text-xs">W</span></label>
+            <input id="power_w" type="number" inputmode="decimal" step="any" min="0" name="power_w" class="input w-full"
+              value="{{ .Form.Power }}" />
+            {{ with index .Form.Errors "power_w" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="current_a" class="label">Current <span class="text-base-content/40 text-xs">A</span></label>
+            <input id="current_a" type="number" inputmode="decimal" step="any" min="0" name="current_a" class="input w-full"
+              value="{{ .Form.Current }}" />
+            {{ with index .Form.Errors "current_a" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
+
+        </div>
+      </div>
+
+      <div id="save" class="flex gap-2">
+        <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/properties" class="btn btn-primary" data-loading-trigger>
+          {{ template "loading-spinner" . }}
+          Save
+        </button>
+      </div>
+
+    </form>
+  </div>
 
 </div>
 {{ end }}
