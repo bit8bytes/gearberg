@@ -14,6 +14,17 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+// redirectAfterLogin sends the user to their single org's equipment page if they
+// belong to exactly one org, otherwise to the organizations settings page.
+func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, accountID string) {
+	orgs, err := app.services.orgs.List(ctx, accountID)
+	if err == nil && len(orgs) == 1 {
+		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
+}
+
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
 	tmplData.Form = &accounts.SignInForm{}
@@ -53,7 +64,7 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 	}
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	app.redirectAfterLogin(ctx, w, r, accountID)
 	return nil
 }
 

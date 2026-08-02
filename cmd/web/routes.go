@@ -18,7 +18,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("/", app.html.Handle(app.getNotFound))
 	mux.Handle("GET /forbidden", app.html.Handle(app.getForbidden))
 
-	mux.Handle("GET /{$}", http.RedirectHandler("/orgs", http.StatusSeeOther))
+	mux.Handle("GET /{$}", http.RedirectHandler("/settings/organizations", http.StatusSeeOther))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
@@ -48,7 +48,9 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /image-proxy", app.withLogin(http.HandlerFunc(app.getImageProxy)))
 
 	// Org related actions. The account only needs to be logged in via [app.withLogin].
-	mux.Handle("GET /orgs", app.withLogin(app.html.Handle(app.getOrgs)))
+	mux.Handle("GET /orgs", app.withLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
+	})))
 	mux.Handle("GET /orgs/new", app.withLogin(app.html.Handle(app.getOrgsNew)))
 	mux.Handle("POST /orgs/new", app.withLogin(app.html.Handle(app.postOrgsNew)))
 
@@ -94,6 +96,7 @@ func (app *application) routes() (http.Handler, error) {
 	// Account Settings
 	mux.Handle("GET /settings/account", app.withLogin(app.html.Handle(app.getAccount)))
 	mux.Handle("DELETE /settings/account", app.withLogin(app.html.Handle(app.deleteAccount)))
+	mux.Handle("GET /settings/organizations", app.withLogin(app.html.Handle(app.getOrgs)))
 
 	// Org related settings
 	mux.Handle("GET /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.getOrgSettings))))

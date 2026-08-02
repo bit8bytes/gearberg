@@ -102,5 +102,8 @@ var (
 	ResetPassword = newPage("pages/login/reset-password.tmpl", layouts.Login)
 
 	// SettingsAccount is the account settings page.
-	SettingsAccount = newPage("pages/settings/account.tmpl", layouts.Center)
+	SettingsAccount = newPage("pages/settings/account.tmpl", layouts.UserSettings)
+
+	// SettingsOrganizations is the org list/selector page within settings.
+	SettingsOrganizations = newPage("pages/orgs/index.tmpl", layouts.UserSettings)
 )

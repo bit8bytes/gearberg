@@ -97,5 +97,5 @@ func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.
 	}
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	app.redirectAfterLogin(ctx, w, r, accountID)
 }

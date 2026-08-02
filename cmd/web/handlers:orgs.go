@@ -38,7 +38,7 @@ func (app *application) getOrgs(w http.ResponseWriter, r *http.Request) *httperr
 		Max:  app.services.orgs.Max(),
 	}
 
-	return app.html.Render(w, r, http.StatusOK, pages.Orgs, data)
+	return app.html.Render(w, r, http.StatusOK, pages.SettingsOrganizations, data)
 }
 
 func (app *application) getOrgsNew(w http.ResponseWriter, r *http.Request) *httperr.Error {

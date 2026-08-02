@@ -21,6 +21,9 @@ var (
 	// Settings renders the full HTML shell with a GitHub-style settings sidebar.
 	Settings = Layout{File: "layouts/settings.tmpl", Partials: "partials/*.tmpl"}
 
+	// UserSettings renders the settings shell with the personal/account sidebar.
+	UserSettings = Layout{File: "layouts/user-settings.tmpl", Partials: "partials/*.tmpl"}
+
 	// Empty skips the HTML shell entirely; used for HTMX fragments.
 	Empty = Layout{File: "layouts/empty.tmpl"}
 

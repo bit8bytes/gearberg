@@ -31,6 +31,9 @@ type TemplateData struct {
 	Nonce nonce.Nonce
 	// Revision is the binary revision string used for cache-busting static asset URLs.
 	Revision string
+	// OrgID is the active organisation from the URL path, populated on org-scoped pages.
+	// Empty on user-level pages (e.g. /settings/account). Used by the header partial.
+	OrgID string
 }
 
 // HTML renders HTML responses and adapts httperr.HandlerFunc into standard http.HandlerFunc.
@@ -133,5 +136,6 @@ func (rnd *HTML) TemplateData(r *http.Request) *TemplateData {
 		URL:      r.URL,
 		Nonce:    nonce.From(r.Context()),
 		Revision: rnd.revision,
+		OrgID:    r.PathValue("org_id"),
 	}
 }

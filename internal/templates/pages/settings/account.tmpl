@@ -1,11 +1,14 @@
 {{ define "title" }}Account Settings{{ end }}
 
 {{ define "page" }}
-<div class="max-w-xl">
-  <div class="flex items-center justify-between mb-6">
-    <h2>Account</h2>
-    <a href="/orgs" class="btn">Back</a>
-  </div>
+<div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <p class="text-xs font-semibold tracking-widest text-primary uppercase mb-1">Settings</p>
+      <p class="text-3xl font-bold leading-tight">Account</p>
+    </div>
+
+    <div class="px-6 py-6 max-w-xl">
   <p class="text-sm text-neutral mb-6">Your email address and account information.</p>
 
   <div class="flex flex-col gap-4">
@@ -50,7 +53,8 @@
     <p class="text-sm text-neutral mb-4">Permanently delete your account and all associated data.</p>
     <button class="btn btn-error" data-modal-target="delete_account_modal">Delete Account</button>
   </div>
-</div>
+    </div>{{/* end px-6 py-6 */}}
+</div>{{/* end card */}}
 
 <dialog id="delete_account_modal" class="modal">
   <div class="modal-box">

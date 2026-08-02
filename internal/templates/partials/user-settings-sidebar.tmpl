@@ -1,0 +1,15 @@
+{{ define "user-settings-sidebar" }}
+<aside class="card bg-base-100 border border-base-300 shadow-sm w-56 shrink-0 p-4 flex flex-col gap-0.5">
+  <p class="pb-2 text-xs font-medium text-base-content/40 uppercase tracking-wider">Settings</p>
+  <a href="/settings/account"
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path "/settings/account" }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "account-icon" . }}</span>
+     Account
+  </a>
+  <a href="/settings/organizations"
+     class="flex gap-2  items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path "/settings/organizations" }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "orgs-icon" . }}</span>
+     Organizations
+  </a>
+</aside>
+{{ end }}
