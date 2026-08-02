@@ -19,7 +19,7 @@ import (
 func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, accountID string) {
 	orgs, err := app.services.orgs.List(ctx, accountID)
 	if err == nil && len(orgs) == 1 {
-		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther)
+		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther) //nolint:gosec
 		return
 	}
 	http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
