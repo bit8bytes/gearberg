@@ -2,25 +2,30 @@
 <aside class="card bg-base-100 border border-base-300 shadow-sm w-56 shrink-0 p-4 flex flex-col gap-0.5">
   <p class="pb-2 text-xs font-medium text-base-content/40 uppercase tracking-wider">Org</p>
   <a href="/orgs/{{ .Data.OrgID }}"
-     class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
-    General
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "settings-icon" . }}</span>
+     General
   </a>
   <a href="/orgs/{{ .Data.OrgID }}/settings"
-     class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
-    Billing &amp; Tax
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "localization-icon" . }}</span>
+     Localization
   </a>
   <p class="pb-2 pt-4 text-xs font-medium text-base-content/40 uppercase tracking-wider">Equipment</p>
   <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories"
-     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/equipment-categories" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
-    Categories
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/equipment-categories" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "categories-icon" . }}</span>
+     Categories
   </a>
   <a href="/orgs/{{ .Data.OrgID }}/settings/manufacturers"
-     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/manufacturers" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
-    Manufacturers
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/manufacturers" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "manufacturers-icon" . }}</span>
+     Manufacturers
   </a>
   <a href="/orgs/{{ .Data.OrgID }}/settings/locations"
-     class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/locations" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
-    Locations
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/locations" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+    <span class="size-4">{{ template "locations-icon" . }}</span>
+     Locations
   </a>
 </aside>
 {{ end }}

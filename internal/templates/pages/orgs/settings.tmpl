@@ -1,15 +1,15 @@
-{{ define "title" }}Billing &amp; Tax{{ end }}
+{{ define "title" }}Localization{{ end }}
 
 {{ define "page" }}
 <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
   <div class="px-6 pt-6 pb-4 border-b border-base-300">
     <p class="text-xs font-semibold tracking-widest text-primary uppercase mb-1">Settings</p>
-    <p class="text-3xl font-bold leading-tight">Billing &amp; Tax</p>
+    <p class="text-3xl font-bold leading-tight">Localization</p>
   </div>
 
   <div class="px-6 py-6 max-w-xl">
-  <p class="text-sm text-neutral mb-6">Currency, VAT rate, and timezone for this org.</p>
+  <p class="text-sm text-neutral mb-6">Regional defaults for currency, VAT rate, and timezone.</p>
 
   <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
