@@ -1,9 +1,14 @@
 {{ define "title" }}Equipment Categories{{ end }}
 
 {{ define "page" }}
-<div class="max-w-xl">
-  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-1">
-    <h2 class="heading heading--md">Equipment Categories</h2>
+<div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+  <div class="px-6 pt-6 pb-4 border-b border-base-300 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold tracking-widest text-primary uppercase mb-1">Settings</p>
+      <p class="text-3xl font-bold leading-tight">Equipment Categories</p>
+      <p class="text-sm text-neutral">Categories used to classify rental equipment.</p>
+    </div>
     {{ if ge (len .Data.Categories) .Data.MaxCategories }}
     <div class="tooltip" data-tip="Maximum of {{ .Data.MaxCategories }} categories reached">
       <button class="btn btn-primary" disabled>New Category</button>
@@ -12,20 +17,32 @@
     <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories/new" class="btn btn-primary">New Category</a>
     {{ end }}
   </div>
-  <p class="text-sm text-neutral mb-6">Categories used to classify rental equipment.</p>
 
   {{ if .Data.Categories }}
-  <ul class="flex flex-col gap-2">
-    {{ range .Data.Categories }}
-    <li class="flex items-center justify-between p-3 rounded border border-base-300">
-      <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .ID }}" class="flex items-center gap-2 hover:underline">
-        {{ .Name }}
-      </a>
-    </li>
-    {{ end }}
-  </ul>
+  <div class="overflow-x-auto">
+    <table class="table w-full">
+      <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+        <tr>
+          <th>Name</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Categories }}
+        <tr class="hover:bg-base-50">
+          <td class="font-medium">{{ .Name }}</td>
+          <td class="text-right">
+            <a href="/orgs/{{ $.Data.OrgID }}/settings/equipment-categories/{{ .ID }}" class="btn btn-ghost btn-sm">Edit</a>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
   {{ else }}
-  <p class="text-neutral">No equipment categories yet.</p>
+  <div class="px-6 py-6">
+    <p class="text-neutral">No equipment categories yet.</p>
+  </div>
   {{ end }}
-</div>
+</div>{{/* end card */}}
 {{ end }}

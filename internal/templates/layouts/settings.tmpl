@@ -1,19 +1,25 @@
 {{define "body"}}
-  {{ template "header" . }}
+  {{ template "header-settings" . }}
   <div class="drawer lg:drawer-open min-h-[calc(100vh-4rem)]">
     <input id="settings-drawer" type="checkbox" class="drawer-toggle" />
-    <div class="drawer-content flex flex-col max-w-7xl mx-auto w-full">
+    <div class="drawer-content flex flex-col w-full">
       <div class="flex items-center gap-2 py-3 border-b border-base-300 lg:hidden">
         <label for="settings-drawer" class="btn btn-ghost drawer-button">
           {{ template "menu-icon" . }}
           Settings
         </label>
       </div>
-      <main class="flex-1 p-4">{{ template "page" . }}</main>
+      <main class="flex-1">
+        <div class="max-w-6xl px-4 py-8 w-full">
+          {{ template "page" . }}
+        </div>
+      </main>
     </div>
     <div class="drawer-side z-10">
       <label for="settings-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-      {{ template "org-settings-sidebar" . }}
+      <div class="max-w-6xl px-4 py-8">
+        {{ template "org-settings-sidebar" . }}
+      </div>
     </div>
   </div>
   {{ template "footer" . }}

@@ -1,6 +1,6 @@
 {{ define "org-settings-sidebar" }}
-<aside class="w-56 shrink-0 border-r border-base-300 pt-8 px-3 flex flex-col gap-0.5 bg-base-100 min-h-full">
-  <p class="px-3 pb-2 pt-4 text-xs font-medium text-neutral uppercase tracking-wider">Org</p>
+<aside class="card bg-base-100 border border-base-300 shadow-sm w-56 shrink-0 p-4 flex flex-col gap-0.5">
+  <p class="pb-2 text-xs font-medium text-base-content/40 uppercase tracking-wider">Org</p>
   <a href="/orgs/{{ .Data.OrgID }}"
      class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
     General
@@ -9,7 +9,7 @@
      class="flex items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
     Billing &amp; Tax
   </a>
-  <p class="px-3 pb-2 pt-4 text-xs font-medium text-neutral uppercase tracking-wider">Equipment</p>
+  <p class="pb-2 pt-4 text-xs font-medium text-base-content/40 uppercase tracking-wider">Equipment</p>
   <a href="/orgs/{{ .Data.OrgID }}/settings/equipment-categories"
      class="flex items-center px-3 py-1.5 rounded text-sm {{ if inPath $.URL.Path (printf "/orgs/%v/settings/equipment-categories" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
     Categories

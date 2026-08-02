@@ -16,14 +16,14 @@
         <div class="flex items-center gap-2 shrink-0 pt-1">
           <div class="dropdown dropdown-end">
             <div tabindex="0" role="button" class="btn btn-ghost border border-base-300">
-              More
-              <span class="size-4">{{ template "chevron-down" . }}</span>
+              <span class="hidden sm:inline">More</span>
+              <span class="size-6">{{ template "chevron-down" . }}</span>
             </div>
             <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
               <li>
                 <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="flex flex-col items-start py-2">
                   <span class="flex items-center gap-2 font-medium">
-                    <span class="size-4">{{ template "import-icon" . }}</span>
+                    <span class="size-6">{{ template "import-icon" . }}</span>
                     Import
                   </span>
                 </a>
@@ -31,7 +31,7 @@
               <li>
                 <button data-modal-target="export-dialog" class="w-full flex flex-col items-start py-2">
                   <span class="flex items-center gap-2 font-medium">
-                    <span class="size-4">{{ template "export-icon" . }}</span>
+                    <span class="size-6">{{ template "export-icon" . }}</span>
                     Export
                   </span>
                 </button>
@@ -39,7 +39,7 @@
               <li>
                 <a href="{{ .Data.PrintURL }}" target="_blank" class="flex flex-col items-start py-2">
                   <span class="flex items-center gap-2 font-medium">
-                    <span class="size-4">{{ template "print-icon" . }}</span>
+                    <span class="size-6">{{ template "print-icon" . }}</span>
                     Print
                   </span>
                 </a>
@@ -47,8 +47,8 @@
             </ul>
           </div>
           <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">
-            <span class="size-4">{{ template "add-icon" . }}</span>
-            Add Item
+            <span class="size-6">{{ template "add-icon" . }}</span>
+            <span class="hidden sm:inline">Add Item</span>
           </a>
         </div>
       </div>
