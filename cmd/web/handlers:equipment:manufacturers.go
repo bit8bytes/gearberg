@@ -31,7 +31,7 @@ func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request)
 	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	mfrs, err := app.services.manufacturers.GetByOrgID(ctx, id)
+	mfrs, err := app.services.manufacturers.List(ctx, id)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
@@ -222,7 +222,7 @@ func (app *application) getEquipmentManufacturersFragment(w http.ResponseWriter,
 	selected := r.URL.Query().Get("selected")
 	selectedName := r.URL.Query().Get("selected_name")
 
-	mfrs, err := app.services.manufacturers.GetByOrgID(ctx, orgID)
+	mfrs, err := app.services.manufacturers.List(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{
 			Error:   fmt.Errorf("getEquipmentManufacturersFragment: %w", err),

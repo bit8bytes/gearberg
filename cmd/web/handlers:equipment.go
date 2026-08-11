@@ -75,7 +75,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		return &httperr.Error{Error: err, Message: "Invalid organization ID.", Code: http.StatusBadRequest}
 	}
 
-	cats, err := app.services.equipment.ListCategories(ctx, id)
+	cats, err := app.services.equipmentcategories.List(ctx, id)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
 	}

@@ -25,7 +25,7 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment.", Code: http.StatusInternalServerError}
 	}
 
-	mfrs, err := app.services.equipment.ListManufacturers(ctx, orgID)
+	mfrs, err := app.services.manufacturers.List(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
 	}

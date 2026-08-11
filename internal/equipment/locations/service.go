@@ -86,13 +86,13 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// EnsureByName returns the ID of the location with the given name within orgID,
+// Upsert returns the ID of the location with the given name within orgID,
 // creating it if it does not exist. Bypasses the MaxLocations limit check
 // since this is an implicit creation triggered by the user typing a new name.
-func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string, error) {
+func (s *Service) Upsert(ctx context.Context, orgID, name string) (string, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return "", fmt.Errorf("EnsureByName: name is blank")
+		return "", fmt.Errorf("Upsert: name is blank")
 	}
 	_, err := s.repo.Create(ctx, CreateLocation{
 		ID:    ksuid.New().String(),
@@ -100,11 +100,11 @@ func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string,
 		Name:  name,
 	})
 	if err != nil && !errors.Is(err, ErrConflict) {
-		return "", fmt.Errorf("EnsureByName: %w", err)
+		return "", fmt.Errorf("Upsert: %w", err)
 	}
 	loc, err := s.repo.GetByName(ctx, orgID, name)
 	if err != nil {
-		return "", fmt.Errorf("EnsureByName: %w", err)
+		return "", fmt.Errorf("Upsert: %w", err)
 	}
 	return loc.ID, nil
 }

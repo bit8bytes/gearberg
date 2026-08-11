@@ -6,78 +6,72 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/categories"
-	"github.com/bit8bytes/gearberg/internal/equipment/locations"
-	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/serial"
 	"github.com/segmentio/ksuid"
 )
 
-// CategoryLister fetches and upserts equipment categories by org.
-type CategoryLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error)
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+// Manufacturers upserts manufacturers by name.
+type Manufacturers interface {
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
-// ManufacturerLister fetches and upserts manufacturers by org.
-type ManufacturerLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error)
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+// Locations upserts locations by name.
+type Locations interface {
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
-// LocationLister fetches and upserts locations by org.
-type LocationLister interface {
-	GetByOrgID(ctx context.Context, orgID string) ([]locations.Location, error)
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+// Categories upserts categories by name.
+type Categories interface {
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
 // Service implements business logic for inventory.
 type Service struct {
 	db            *sql.DB
 	repo          *Repository
-	categories    CategoryLister
-	manufacturers ManufacturerLister
-	locations     LocationLister
+	manufacturers Manufacturers
+	locations     Locations
+	categories    Categories
 }
 
 // NewService returns a new Service.
-func NewService(repo *Repository, db *sql.DB, cats CategoryLister, mfrs ManufacturerLister, locs LocationLister) *Service {
+func NewService(repo *Repository, db *sql.DB, cats Categories, mfrs Manufacturers, locs Locations) *Service {
 	return &Service{db: db, repo: repo, categories: cats, manufacturers: mfrs, locations: locs}
 }
 
 // Create creates a new inventory item, dispatching to the correct path based on type.
 // Serialized creation runs inside a transaction managed by the service.
-// resolveRefs upserts category, manufacturer, and location by name when the
-// corresponding ID is empty. It mutates the three ID pointers in place.
-func (s *Service) resolveRefs(ctx context.Context, orgID string, categoryID *string, categoryName string, manufacturerID *string, manufacturerName string, locationID *string, locationName string) error {
-	if *categoryID == "" && categoryName != "" {
-		id, err := s.categories.EnsureByName(ctx, orgID, categoryName)
-		if err != nil {
-			return fmt.Errorf("resolveRefs: category: %w", err)
-		}
-		*categoryID = id
-	}
+// resolveRefs upserts manufacturer and location by name when the corresponding
+// ID is empty. It mutates the two ID pointers in place.
+func (s *Service) resolveRefs(ctx context.Context, orgID string, manufacturerID *string, manufacturerName string, locationID *string, locationName string, categoryID *string, categoryName string) error {
 	if *manufacturerID == "" && manufacturerName != "" {
-		id, err := s.manufacturers.EnsureByName(ctx, orgID, manufacturerName)
+		id, err := s.manufacturers.Upsert(ctx, orgID, manufacturerName)
 		if err != nil {
 			return fmt.Errorf("resolveRefs: manufacturer: %w", err)
 		}
 		*manufacturerID = id
 	}
 	if *locationID == "" && locationName != "" {
-		id, err := s.locations.EnsureByName(ctx, orgID, locationName)
+		id, err := s.locations.Upsert(ctx, orgID, locationName)
 		if err != nil {
 			return fmt.Errorf("resolveRefs: location: %w", err)
 		}
 		*locationID = id
+	}
+	if *categoryID == "" && categoryName != "" {
+		id, err := s.categories.Upsert(ctx, orgID, categoryName)
+		if err != nil {
+			return fmt.Errorf("resolveRefs: category: %w", err)
+		}
+		*categoryID = id
 	}
 	return nil
 }
 
 // Create creates a new equipment item with its associated units.
 func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, error) {
-	if err := s.resolveRefs(ctx, c.OrgID, &c.CategoryID, c.CategoryName, &c.ManufacturerID, c.ManufacturerName, &c.LocationID, c.LocationName); err != nil {
+	if err := s.resolveRefs(ctx, c.OrgID, &c.ManufacturerID, c.ManufacturerName, &c.LocationID, c.LocationName, &c.CategoryID, c.CategoryName); err != nil {
 		return nil, fmt.Errorf("Create: %w", err)
 	}
 	if c.TrackingType == Bulk {
@@ -205,7 +199,7 @@ func (s *Service) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateSeri
 // UpdateDetails updates the details-tab fields. For bulk items it also updates
 // the stock quantity; for serialized items only the inventory row is written.
 func (s *Service) UpdateDetails(ctx context.Context, u UpdateEquipmentDetails) error {
-	if err := s.resolveRefs(ctx, u.OrgID, &u.CategoryID, u.CategoryName, &u.ManufacturerID, u.ManufacturerName, &u.LocationID, u.LocationName); err != nil {
+	if err := s.resolveRefs(ctx, u.OrgID, &u.ManufacturerID, u.ManufacturerName, &u.LocationID, u.LocationName, &u.CategoryID, u.CategoryName); err != nil {
 		return fmt.Errorf("UpdateDetails: %w", err)
 	}
 	if u.Type == Bulk {
@@ -267,33 +261,6 @@ func (s *Service) ListUnits(ctx context.Context, inventoryID string) ([]Unit, er
 		return nil, fmt.Errorf("ListUnits: %w", err)
 	}
 	return units, nil
-}
-
-// ListCategories returns all equipment categories for orgID.
-func (s *Service) ListCategories(ctx context.Context, orgID string) ([]categories.EquipmentCategory, error) {
-	cats, err := s.categories.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("ListCategories: %w", err)
-	}
-	return cats, nil
-}
-
-// ListManufacturers returns all manufacturers for orgID.
-func (s *Service) ListManufacturers(ctx context.Context, orgID string) ([]manufacturers.Manufacturer, error) {
-	mfrs, err := s.manufacturers.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("ListManufacturers: %w", err)
-	}
-	return mfrs, nil
-}
-
-// ListLocations returns all locations for orgID.
-func (s *Service) ListLocations(ctx context.Context, orgID string) ([]locations.Location, error) {
-	locs, err := s.locations.GetByOrgID(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("ListLocations: %w", err)
-	}
-	return locs, nil
 }
 
 // GetUnit returns the unit with id, or database.ErrNotFound when it does not exist.

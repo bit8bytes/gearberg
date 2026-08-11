@@ -31,7 +31,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	cats, err := app.services.equipmentcategories.GetByOrgID(ctx, id)
+	cats, err := app.services.equipmentcategories.List(ctx, id)
 	if err != nil {
 		return &httperr.Error{
 			Error:   err,
@@ -212,7 +212,7 @@ func (app *application) getEquipmentCategoriesFragment(w http.ResponseWriter, r 
 	selected := r.URL.Query().Get("selected")
 	selectedName := r.URL.Query().Get("selected_name")
 
-	cats, err := app.services.equipmentcategories.GetByOrgID(ctx, orgID)
+	cats, err := app.services.equipmentcategories.List(ctx, orgID)
 	if err != nil {
 		return &httperr.Error{
 			Error:   fmt.Errorf("getEquipmentCategoriesFragment: %w", err),

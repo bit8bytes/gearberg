@@ -30,8 +30,8 @@ func (s *Service) MaxCategories() int {
 	return s.opts.MaxCategories
 }
 
-// GetByOrgID returns all equipmentCategories belonging to orgID.
-func (s *Service) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
+// List returns all equipmentCategories belonging to orgID.
+func (s *Service) List(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
 	equipmentCategories, err := s.repo.GetByOrgID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get equipment equipmentCategories: %w", err)
@@ -74,13 +74,13 @@ func (s *Service) Update(ctx context.Context, u UpdateEquipmentCategory) (*Equip
 	return category, nil
 }
 
-// EnsureByName returns the ID of the category with the given name within orgID,
+// Upsert returns the ID of the category with the given name within orgID,
 // creating it if it does not exist. Bypasses the MaxCategories limit check
 // since this is an implicit creation triggered by the user typing a new name.
-func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string, error) {
+func (s *Service) Upsert(ctx context.Context, orgID, name string) (string, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return "", fmt.Errorf("EnsureByName: name is blank")
+		return "", fmt.Errorf("Upsert: name is blank")
 	}
 	_, err := s.repo.Create(ctx, CreateEquipmentCategory{
 		ID:    ksuid.New().String(),
@@ -88,11 +88,11 @@ func (s *Service) EnsureByName(ctx context.Context, orgID, name string) (string,
 		Name:  name,
 	})
 	if err != nil && !errors.Is(err, ErrConflict) {
-		return "", fmt.Errorf("EnsureByName: %w", err)
+		return "", fmt.Errorf("Upsert: %w", err)
 	}
 	c, err := s.repo.GetByName(ctx, orgID, name)
 	if err != nil {
-		return "", fmt.Errorf("EnsureByName: %w", err)
+		return "", fmt.Errorf("Upsert: %w", err)
 	}
 	return c.ID, nil
 }

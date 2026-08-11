@@ -20,17 +20,17 @@ type EquipmentWriter interface {
 
 // CategoryEnsurer resolves or creates categories by name.
 type CategoryEnsurer interface {
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
 // ManufacturerEnsurer resolves or creates manufacturers by name.
 type ManufacturerEnsurer interface {
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
 // LocationEnsurer resolves or creates locations by name.
 type LocationEnsurer interface {
-	EnsureByName(ctx context.Context, orgID, name string) (string, error)
+	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
 // Service handles CSV import staging and commit.
@@ -136,7 +136,7 @@ type commitLookups struct {
 	locsByName map[string]string
 }
 
-// ensureCommitLookups calls EnsureByName for every unique category, manufacturer,
+// ensureCommitLookups upserts every unique category, manufacturer,
 // and location name in the batch, creating them if they don't exist yet.
 func (s *Service) ensureCommitLookups(ctx context.Context, orgID string, rows []Row) (commitLookups, error) {
 	lk := commitLookups{
@@ -170,7 +170,7 @@ func (s *Service) ensureCategory(ctx context.Context, lk *commitLookups, orgID, 
 	if _, ok := lk.catsByName[key]; ok {
 		return nil
 	}
-	id, err := s.categories.EnsureByName(ctx, orgID, name)
+	id, err := s.categories.Upsert(ctx, orgID, name)
 	if err != nil {
 		return fmt.Errorf("category %q: %w", name, err)
 	}
@@ -183,7 +183,7 @@ func (s *Service) ensureManufacturer(ctx context.Context, lk *commitLookups, org
 	if _, ok := lk.mfrsByName[key]; ok {
 		return nil
 	}
-	id, err := s.manufacturers.EnsureByName(ctx, orgID, name)
+	id, err := s.manufacturers.Upsert(ctx, orgID, name)
 	if err != nil {
 		return fmt.Errorf("manufacturer %q: %w", name, err)
 	}
@@ -196,7 +196,7 @@ func (s *Service) ensureLocation(ctx context.Context, lk *commitLookups, orgID, 
 	if _, ok := lk.locsByName[key]; ok {
 		return nil
 	}
-	id, err := s.locations.EnsureByName(ctx, orgID, name)
+	id, err := s.locations.Upsert(ctx, orgID, name)
 	if err != nil {
 		return fmt.Errorf("location %q: %w", name, err)
 	}
