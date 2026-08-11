@@ -1,17 +1,19 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log/slog"
 	"os"
-	"slices"
 )
 
 type options struct {
 	LogLevel            logLevel
 	Port                int
 	TLSMode             string
+	TLSCertPath         string
+	TLSKeyPath          string
 	BaseURL             string
 	DbDsn               string // SECRET
 	StorageDSN          string
@@ -33,6 +35,8 @@ func parseOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.BaseURL, "base-url", envOr("BASE_URL", ""), "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
+	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
+	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", "", "Path to TLS key file (required with -tls-mode=local)")
 	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
@@ -47,17 +51,8 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
-	modes := []string{"off", "local"}
-	if !slices.Contains(modes, cfg.TLSMode) {
-		return nil, fmt.Errorf("tls-mode must be one of: %v", modes)
-	}
-	if cfg.TLSMode == "local" {
-		return nil, fmt.Errorf("tls-mode 'local' is not supported yet")
-	}
-	if cfg.TLSMode == "off" {
-		if err := validatePort(cfg.Port); err != nil {
-			return nil, fmt.Errorf("invalid port: %w", err)
-		}
+	if err := cfg.validateTLS(); err != nil {
+		return nil, err
 	}
 
 	if cfg.BaseURL == "" {
@@ -199,6 +194,31 @@ func (p *OIDCProvider) Valid() error {
 	}
 	if p.ClientSecret == "" {
 		return fmt.Errorf("client secret is required when issuer is set")
+	}
+	return nil
+}
+
+func (o *options) validateTLS() error {
+	switch o.TLSMode {
+	case "off":
+		if err := validatePort(o.Port); err != nil {
+			return fmt.Errorf("invalid port: %w", err)
+		}
+	case "local":
+		if o.TLSCertPath == "" {
+			return fmt.Errorf("-tls-cert-path is required with -tls-mode=local")
+		}
+		if o.TLSKeyPath == "" {
+			return fmt.Errorf("-tls-key-path is required with -tls-mode=local")
+		}
+		if _, err := tls.LoadX509KeyPair(o.TLSCertPath, o.TLSKeyPath); err != nil {
+			return fmt.Errorf("invalid TLS cert/key pair: %w", err)
+		}
+		if err := validatePort(o.Port); err != nil {
+			return fmt.Errorf("invalid port: %w", err)
+		}
+	default:
+		return fmt.Errorf("tls-mode must be one of: off, local")
 	}
 	return nil
 }

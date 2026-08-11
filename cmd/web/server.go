@@ -12,7 +12,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// serve selects the appropriate server implementation based on the TLS mode.
+// It runs either: An autocert-enabled server, a local server with manually provisioned TLS certificates, or in unsecure http mode.
 func (app *application) serve(ctx context.Context) error {
+	if app.options.TLSMode == "local" {
+		return app.serveCertAndKey(ctx)
+	}
 	return app.serveUnsecure(ctx)
 }
 
@@ -63,6 +68,44 @@ func (app *application) serveUnsecure(ctx context.Context) error {
 
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("serve: %w", err)
+	}
+	return nil
+}
+
+// serveCertAndKey is used in deployment environments where TLS certificates
+// are provisioned manually and provided via the Cert and Key config fields.
+func (app *application) serveCertAndKey(ctx context.Context) error {
+	srv, err := app.newServer(ctx)
+	if err != nil {
+		return err
+	}
+
+	app.logger.Info("starting server",
+		"addr", srv.Addr,
+		"revision", revision,
+	)
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		if err := srv.ListenAndServeTLS(app.options.TLSCertPath, app.options.TLSKeyPath); !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("listen and serve tls: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		app.logger.Info("shutting down server...")
+		return srv.Shutdown(shutdownCtx)
+	})
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("serveCertAndKey: %w", err)
 	}
 	return nil
 }
