@@ -12,6 +12,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+// Package credentials provides credentials functionality.
 package credentials
 
 // Type represents a credential type. The integer value matches the id stored

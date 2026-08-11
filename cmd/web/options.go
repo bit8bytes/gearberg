@@ -212,23 +212,23 @@ func (p *OIDCProvider) Valid() error {
 	return nil
 }
 
-func (o *options) validateTLS() error {
-	switch o.TLSMode {
+func (cfg *options) validateTLS() error {
+	switch cfg.TLSMode {
 	case "off":
-		if err := validatePort(o.Port); err != nil {
+		if err := validatePort(cfg.Port); err != nil {
 			return fmt.Errorf("invalid port: %w", err)
 		}
 	case "local":
-		if o.TLSCertPath == "" {
+		if cfg.TLSCertPath == "" {
 			return fmt.Errorf("-tls-cert-path is required with -tls-mode=local")
 		}
-		if o.TLSKeyPath == "" {
+		if cfg.TLSKeyPath == "" {
 			return fmt.Errorf("-tls-key-path is required with -tls-mode=local")
 		}
-		if _, err := tls.LoadX509KeyPair(o.TLSCertPath, o.TLSKeyPath); err != nil {
+		if _, err := tls.LoadX509KeyPair(cfg.TLSCertPath, cfg.TLSKeyPath); err != nil {
 			return fmt.Errorf("invalid TLS cert/key pair: %w", err)
 		}
-		if err := validatePort(o.Port); err != nil {
+		if err := validatePort(cfg.Port); err != nil {
 			return fmt.Errorf("invalid port: %w", err)
 		}
 	default:

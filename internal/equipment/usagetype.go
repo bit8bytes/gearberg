@@ -12,6 +12,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+// Package equipment provides equipment functionality.
 package equipment
 
 // UsageType represents how an inventory item is used (rental or sale).
