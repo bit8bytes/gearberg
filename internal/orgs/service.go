@@ -24,12 +24,11 @@ type Service struct {
 	db      *sql.DB
 	orgs    orgRepository
 	members memberRepository
-	maxOrgs int
 }
 
 // NewService creates a new organization service.
-func NewService(db *sql.DB, orgs orgRepository, members memberRepository, maxOrgs int) *Service {
-	return &Service{db: db, orgs: orgs, members: members, maxOrgs: maxOrgs}
+func NewService(db *sql.DB, orgs orgRepository, members memberRepository) *Service {
+	return &Service{db: db, orgs: orgs, members: members}
 }
 
 // List returns organizations the given account is a member of.
@@ -39,11 +38,6 @@ func (s *Service) List(ctx context.Context, accountID string) ([]Org, error) {
 		return nil, fmt.Errorf("orgs.Service.List: %w", err)
 	}
 	return records, nil
-}
-
-// Max returns the maximum number of organizations allowed.
-func (s *Service) Max() int {
-	return s.maxOrgs
 }
 
 // GetFirstByAccountID returns the ID of the first organization the account belongs to.
