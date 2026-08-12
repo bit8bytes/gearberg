@@ -16,8 +16,31 @@ in
   pkgs.dockerTools.buildImage {
     name = "gearberg";
     tag = version;
+    # Required for outbound TLS: OIDC discovery and JWKS calls will fail without it.
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      paths = [pkgsTarget.cacert];
+    };
     config = {
-      Cmd = ["${gearberg}/bin/gearberg"];
+      # The gearberg binary has sane defaults and will start without environment variables but
+      # you can override them if you want to change the defaults. Environment variables can be set
+      # in the docker run command or in a docker-compose file.
+      Entrypoint = ["${gearberg}/bin/gearberg" "serve"];
+      # Any flag can be called that is exposed by gearberg binary.
+      # See `gearberg serve --help` for all available flags.
+      Cmd = [];
+      # curl is pulled in via the Nix closure this is why there is no need to add it to copyToRoot.
+      # Timing fields are in nanoseconds per the OCI config spec.
+      Healthcheck = {
+        Test = ["CMD" "${pkgsTarget.curl}/bin/curl" "-f" "http://localhost:8080/v1/healthz"];
+        Interval = 30 * 1000000000;
+        Timeout = 5 * 1000000000;
+        Retries = 3;
+      };
+      # By default, gearberg listens on port 8080 but this can be overridden by -port flag.
       ExposedPorts = {"8080/tcp" = {};};
+      # Gearberg does save its data to /data, which is a volume in the image.
+      # When starting the image, you should mount a host directory to /data to persist the data.
+      Volumes = {"/data" = {};};
     };
   }
