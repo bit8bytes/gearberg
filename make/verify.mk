@@ -46,3 +46,8 @@ verify: fix lint license addlicense test
 .PHONY: nix/check
 nix/check:
 	nix flake check --all-systems
+
+## nix/fmt: format Nix
+.PHONY: nix/fmt
+nix/fmt:
+	alejandra --quiet .
