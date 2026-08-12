@@ -25,10 +25,11 @@ in
       # The gearberg binary has sane defaults and will start without environment variables but
       # you can override them if you want to change the defaults. Environment variables can be set
       # in the docker run command or in a docker-compose file.
-      Entrypoint = ["${gearberg}/bin/gearberg" "serve"];
-      # Any flag can be called that is exposed by gearberg binary.
-      # See `gearberg serve --help` for all available flags.
-      Cmd = [];
+      Entrypoint = ["${gearberg}/bin/gearberg"];
+      # Default subcommand. Override by passing a different command to docker run,
+      # e.g. `docker run ghcr.io/bit8bytes/gearberg verify`.
+      # See `gearberg --help` for all available subcommands.
+      Cmd = ["serve"];
       # curl is pulled in via the Nix closure this is why there is no need to add it to copyToRoot.
       # Timing fields are in nanoseconds per the OCI config spec.
       Healthcheck = {
