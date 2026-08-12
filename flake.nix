@@ -22,16 +22,25 @@
       };
     });
 
-    # Go binaries built with Nix.
-    packages = forAllSystems (system: {
-      default = import ./nixos/web.nix {
-        buildpkgs = nixpkgs-unstable.legacyPackages.${system};
-        version = self.rev or self.dirtyRev or "dev";
+    # Go binaries built with Nix for all systems.
+    # Docker image is only built for x86_64-linux.
+    packages =
+      forAllSystems (system: {
+        default = import ./nixos/web.nix {
+          buildpkgs = nixpkgs-unstable.legacyPackages.${system};
+          version = self.rev or self.dirtyRev or "dev";
+        };
+        www = import ./nixos/www.nix {
+          buildpkgs = nixpkgs-unstable.legacyPackages.${system};
+          version = self.rev or self.dirtyRev or "dev";
+        };
+      })
+      // {
+        x86_64-linux.docker = import ./nixos/web.docker.nix {
+          pkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          pkgsTarget = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          version = self.rev or self.dirtyRev or "dev";
+        };
       };
-      www = import ./nixos/www.nix {
-        buildpkgs = nixpkgs-unstable.legacyPackages.${system};
-        version = self.rev or self.dirtyRev or "dev";
-      };
-    });
   };
 }
