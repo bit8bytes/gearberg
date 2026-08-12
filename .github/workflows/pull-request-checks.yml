@@ -1,17 +1,19 @@
-name: ci
+# Validates every PR to main: builds the binary and
+# the Docker image via Nix to catch broken build before merge.
+name: "Pull Request Checks"
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main] # Runs only on PRs to main branch to validate the build.
     paths-ignore:
       - 'README.md'
       - 'wiki/**'
   workflow_dispatch:
 
 jobs:
-  # Runs on PRs only to validate the build.
   # nixos/web.nix uses buildGoModule which compiles the Go binary (no separate build job needed)
-  # and runs `go test -short` via doCheck = true (no separate test job needed).
+  # and runs `go test -short` via doCheck = true (no separate test job needed). 
+  # nixos/web.docker.nix builds the Docker image which includes the compiled binary.
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -34,5 +36,8 @@ jobs:
           restore-prefixes-first-match: nix-${{ runner.os }}-
           gc-max-store-size-linux: 5368709120  # 5 GB
 
-      - name: Build NixOS configuration
-        run: nix build
+      - name: Build binary
+        run: nix build .#default
+
+      - name: Build Docker image
+        run: nix build .#docker
