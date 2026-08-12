@@ -1,0 +1,80 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix', '**/*.go') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5368709120  # 5 GB
+
+      - name: Build Docker image
+        run: nix build .#docker
+
+      - name: Export Docker image as tar
+        run: cp --dereference result gearberg-docker.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gearberg-docker
+          path: gearberg-docker.tar.gz
+          retention-days: 1
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gearberg-docker
+
+      - name: Login to ghcr.io
+        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push Docker image to ghcr.io
+        run: |
+          IMAGE_ID=$(docker load < gearberg-docker.tar.gz | grep "Loaded image" | awk '{print $NF}')
+          docker tag "$IMAGE_ID" ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker tag "$IMAGE_ID" ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker push ghcr.io/${{ github.repository }}:latest
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
+
