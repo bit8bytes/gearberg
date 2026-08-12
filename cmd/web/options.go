@@ -46,7 +46,7 @@ func parseOptions(args []string) (*options, error) {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
-	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
+	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:/data/gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.BaseURL, "base-url", "localhost:8080", "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
@@ -56,7 +56,7 @@ func parseOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
 	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
-	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
+	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "file:///data/uploads"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 	fs.Var(&cfg.OIDCProviders, "oidc-provider", "OIDC provider: name,issuer=URL,client-id=ID,client-secret=SECRET (repeatable)")
 
