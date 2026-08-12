@@ -26,6 +26,16 @@ const (
 	AuthentikProvider Provider = 1
 )
 
+// ByName returns the Provider matching the given name and whether it was found.
+func ByName(name string) (Provider, bool) {
+	switch name {
+	case "authentik":
+		return AuthentikProvider, true
+	default:
+		return 0, false
+	}
+}
+
 // ID returns the database id for the provider.
 func (p Provider) ID() int64 { return int64(p) }
 

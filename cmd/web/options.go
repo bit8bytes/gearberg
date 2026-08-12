@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 type options struct {
@@ -32,7 +33,7 @@ type options struct {
 	DbDsn               string // SECRET
 	StorageDSN          string
 	SMTP                SMTP
-	OIDCAuthentik       OIDCProvider
+	OIDCProviders       OIDCProviderMap
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
@@ -41,13 +42,13 @@ type options struct {
 }
 
 func parseOptions(args []string) (*options, error) {
-	cfg := &options{LogLevel: logLevel{level: slog.LevelInfo}}
+	cfg := &options{LogLevel: logLevel{level: slog.LevelInfo}, OIDCProviders: make(OIDCProviderMap)}
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
 	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
-	fs.StringVar(&cfg.BaseURL, "base-url", envOr("BASE_URL", ""), "base URL for link generation (e.g. https://example.com)")
+	fs.StringVar(&cfg.BaseURL, "base-url", "localhost:8080", "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
 	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", "", "Path to TLS key file (required with -tls-mode=local)")
@@ -57,12 +58,31 @@ func parseOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "./var/data"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
-	fs.StringVar(&cfg.OIDCAuthentik.IssuerURL, "oidc-authentik-issuer", envOr("OIDC_AUTHENTIK_ISSUER", ""), "Authentik OIDC issuer URL")
-	fs.StringVar(&cfg.OIDCAuthentik.ClientID, "oidc-authentik-client-id", envOr("OIDC_AUTHENTIK_CLIENT_ID", ""), "Authentik OIDC client ID")
-	fs.StringVar(&cfg.OIDCAuthentik.ClientSecret, "oidc-authentik-client-secret", envOr("OIDC_AUTHENTIK_CLIENT_SECRET", ""), "Authentik OIDC client secret")
+	fs.Var(&cfg.OIDCProviders, "oidc-provider", "OIDC provider: name,issuer=URL,client-id=ID,client-secret=SECRET (repeatable)")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
+	}
+
+	// Load OIDC providers from env vars matching OIDC_<NAME>_PROVIDER.
+	// Flags take precedence — env vars only fill in providers not already set via flag.
+	for _, env := range os.Environ() {
+		k, v, _ := strings.Cut(env, "=")
+		after, ok := strings.CutPrefix(k, "OIDC_")
+		if !ok {
+			continue
+		}
+		name, ok := strings.CutSuffix(after, "_PROVIDER")
+		if !ok {
+			continue
+		}
+		name = strings.ToLower(name)
+		if _, exists := cfg.OIDCProviders[name]; exists {
+			continue
+		}
+		if err := cfg.OIDCProviders.Set(v); err != nil {
+			return nil, fmt.Errorf("env %s: %w", k, err)
+		}
 	}
 
 	if err := cfg.validateTLS(); err != nil {
@@ -81,6 +101,9 @@ func parseOptions(args []string) (*options, error) {
 }
 
 func (cfg *options) validate() error {
+	if cfg.BaseURL == "" {
+		return fmt.Errorf("base-url is required")
+	}
 	if cfg.StorageDSN == "" {
 		return fmt.Errorf("storage-dsn is required")
 	}
@@ -96,8 +119,10 @@ func (cfg *options) validate() error {
 	if cfg.MaxOrgLocations <= 0 {
 		return fmt.Errorf("max locations must be greater than 0")
 	}
-	if err := cfg.OIDCAuthentik.Valid(); err != nil {
-		return fmt.Errorf("oidc-authentik: %w", err)
+	for name, p := range cfg.OIDCProviders {
+		if err := p.Valid(); err != nil {
+			return fmt.Errorf("oidc-provider %s: %w", name, err)
+		}
 	}
 	return nil
 }
@@ -195,6 +220,42 @@ type OIDCProvider struct {
 // Configured reports whether this provider has been enabled via flags.
 func (p *OIDCProvider) Configured() bool {
 	return p.IssuerURL != ""
+}
+
+// OIDCProviderMap implements flag.Value to allow --oidc-provider to be repeated.
+// Each value has the form: name,issuer=URL,client-id=ID,client-secret=SECRET.
+type OIDCProviderMap map[string]OIDCProvider
+
+func (m OIDCProviderMap) String() string { return "" }
+
+func (m *OIDCProviderMap) Set(v string) error {
+	idx := strings.IndexByte(v, ',')
+	if idx <= 0 {
+		return fmt.Errorf("oidc-provider: expected name,issuer=URL,client-id=ID,client-secret=SECRET")
+	}
+	name := v[:idx]
+	p := OIDCProvider{}
+	for kv := range strings.SplitSeq(v[idx+1:], ",") {
+		k, val, ok := strings.Cut(kv, "=")
+		if !ok {
+			return fmt.Errorf("oidc-provider %s: malformed key=value %q", name, kv)
+		}
+		switch k {
+		case "issuer":
+			p.IssuerURL = val
+		case "client-id":
+			p.ClientID = val
+		case "client-secret":
+			p.ClientSecret = val
+		default:
+			return fmt.Errorf("oidc-provider %s: unknown key %q", name, k)
+		}
+	}
+	if *m == nil {
+		*m = make(OIDCProviderMap)
+	}
+	(*m)[name] = p
+	return nil
 }
 
 // Valid returns nil when the provider is not configured (issuer empty).

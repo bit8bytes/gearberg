@@ -8,7 +8,8 @@ run/web/verify:
 run/web:
 	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/web serve \
 		-log-level=debug \
-		-tls-mode=local -port=443 -tls-cert-path=certs/cert.pem -tls-key-path=certs/key.pem
+		-tls-mode=local -port=443 -tls-cert-path=certs/cert.pem -tls-key-path=certs/key.pem \
+		-base-url=https://localhost:443
 
 ## run/www: run the web application with live reload
 .PHONY: run/www

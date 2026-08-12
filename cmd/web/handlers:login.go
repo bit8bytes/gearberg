@@ -259,37 +259,41 @@ func (app *application) postSignOut(w http.ResponseWriter, r *http.Request) *htt
 	return nil
 }
 
-// LoginData carries the set of enabled OIDC providers to the sign-in and
+// LoginData carries the set of enabled OIDC provider names to the sign-in and
 // sign-up templates so they can render the appropriate provider buttons.
 type LoginData struct {
-	AuthentikEnabled bool
+	OIDCProviders []string
 }
 
 func (app *application) loginData() LoginData {
-	return LoginData{
-		AuthentikEnabled: app.oidcAuthentik != nil,
+	names := make([]string, 0, len(app.oidcProviders))
+	for name := range app.oidcProviders {
+		names = append(names, name)
 	}
+	return LoginData{OIDCProviders: names}
 }
 
-// getAuthAuthentik initiates the Authentik OIDC login flow. It generates a
-// random state token, stores it in the session for CSRF verification, then
-// redirects the browser to Authentik's authorization endpoint.
-func (app *application) getAuthAuthentik(w http.ResponseWriter, r *http.Request) {
-	if app.oidcAuthentik == nil {
+// getAuthOIDC initiates the OIDC login flow for the named provider. It generates
+// a random state token, stores it in the session for CSRF verification, then
+// redirects the browser to the provider's authorization endpoint.
+func (app *application) getAuthOIDC(w http.ResponseWriter, r *http.Request, name string) {
+	p, ok := app.oidcProviders[name]
+	if !ok {
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
 	state := pkgtokens.Generate().Hex()
 	sessionSetOIDCState(r.Context(), app.session, state)
-	http.Redirect(w, r, app.oidcAuthentik.oauth2Config.AuthCodeURL(state), http.StatusSeeOther)
+	http.Redirect(w, r, p.oauth2Config.AuthCodeURL(state), http.StatusSeeOther)
 }
 
-// getAuthAuthentikCallback handles the redirect from Authentik after the user
+// getAuthOIDCCallback handles the redirect from an OIDC provider after the user
 // authenticates. It verifies the CSRF state, exchanges the authorization code
 // for tokens, validates the ID token, then signs in or JIT-provisions an account.
-func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.Request) {
-	if app.oidcAuthentik == nil {
+func (app *application) getAuthOIDCCallback(w http.ResponseWriter, r *http.Request, name string) {
+	p, ok := app.oidcProviders[name]
+	if !ok {
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
@@ -298,29 +302,29 @@ func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.
 
 	state := r.URL.Query().Get("state")
 	if state == "" || state != sessionOIDCState(ctx, app.session) {
-		app.logger.WarnContext(ctx, "oidc: state mismatch in authentik callback")
+		app.logger.WarnContext(ctx, "oidc: state mismatch", "provider", name)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
 	code := r.URL.Query().Get("code")
-	token, err := app.oidcAuthentik.oauth2Config.Exchange(ctx, code)
+	token, err := p.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: code exchange failed", "error", err)
+		app.logger.ErrorContext(ctx, "oidc: code exchange failed", "provider", name, "error", err)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		app.logger.ErrorContext(ctx, "oidc: id_token missing from token response")
+		app.logger.ErrorContext(ctx, "oidc: id_token missing from token response", "provider", name)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
-	idToken, err := app.oidcAuthentik.verifier.Verify(ctx, rawIDToken)
+	idToken, err := p.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: id_token verification failed", "error", err)
+		app.logger.ErrorContext(ctx, "oidc: id_token verification failed", "provider", name, "error", err)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
@@ -330,20 +334,27 @@ func (app *application) getAuthAuthentikCallback(w http.ResponseWriter, r *http.
 		EmailVerified bool   `json:"email_verified"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
-		app.logger.ErrorContext(ctx, "oidc: claims extraction failed", "error", err)
+		app.logger.ErrorContext(ctx, "oidc: claims extraction failed", "provider", name, "error", err)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
 	if !claims.EmailVerified {
-		app.logger.WarnContext(ctx, "oidc: rejected login with unverified email", "subject", idToken.Subject)
+		app.logger.WarnContext(ctx, "oidc: rejected login with unverified email", "provider", name, "subject", idToken.Subject)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
 
-	accountID, err := app.services.accounts.SignInOrCreateWithOIDC(ctx, federated.AuthentikProvider.ID(), idToken.Subject, claims.Email, claims.EmailVerified)
+	providerID, known := federated.ByName(name)
+	if !known {
+		app.logger.ErrorContext(ctx, "oidc: unknown provider name", "provider", name)
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	}
+
+	accountID, err := app.services.accounts.SignInOrCreateWithOIDC(ctx, providerID.ID(), idToken.Subject, claims.Email, claims.EmailVerified)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: sign in or create failed", "error", err)
+		app.logger.ErrorContext(ctx, "oidc: sign in or create failed", "provider", name, "error", err)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}

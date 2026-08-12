@@ -39,7 +39,7 @@ type application struct {
 	db            *sql.DB
 	session       sessionManager
 	services      *services
-	oidcAuthentik *oidcProvider // nil when Authentik is not configured
+	oidcProviders map[string]*oidcProvider
 }
 
 func main() {
@@ -125,10 +125,9 @@ func runServe(args []string) error {
 	oidcCtx, oidcCancel := context.WithTimeout(ctx, 10*time.Second)
 	defer oidcCancel()
 
-	// setup OIDC provider for Authentik if configured
-	oidcAuthentik, err := setupOIDCProvider(oidcCtx, options.OIDCAuthentik, options.BaseURL+"/auth/authentik/callback")
+	oidcProviders, err := setupOIDCProviders(oidcCtx, options.OIDCProviders, options.BaseURL)
 	if err != nil {
-		return fmt.Errorf("setup oidc authentik: %w", err)
+		return fmt.Errorf("setup oidc providers: %w", err)
 	}
 
 	// glue together the dependencies
@@ -139,7 +138,7 @@ func runServe(args []string) error {
 		db:            db,
 		session:       sessionManager,
 		services:      services,
-		oidcAuthentik: oidcAuthentik,
+		oidcProviders: oidcProviders,
 	}
 
 	return app.serve(ctx)
@@ -172,16 +171,14 @@ func runVerify(args []string) error {
 	}
 	log.InfoContext(ctx, "database ok", "db_version", databaseVersion)
 
-	if options.OIDCAuthentik.Configured() {
-		if err := options.OIDCAuthentik.Valid(); err != nil {
-			return fmt.Errorf("oidc-authentik: %w", err)
+	if len(options.OIDCProviders) == 0 {
+		log.InfoContext(ctx, "oidc providers not configured")
+	}
+	for name, p := range options.OIDCProviders {
+		if _, err := setupOIDCProvider(ctx, p, ""); err != nil {
+			return fmt.Errorf("oidc-provider %s: %w", name, err)
 		}
-		if _, err := setupOIDCProvider(ctx, options.OIDCAuthentik, ""); err != nil {
-			return fmt.Errorf("oidc-authentik: %w", err)
-		}
-		log.InfoContext(ctx, "oidc-authentik ok", "issuer", options.OIDCAuthentik.IssuerURL)
-	} else {
-		log.InfoContext(ctx, "oidc-authentik not configured")
+		log.InfoContext(ctx, "oidc provider ok", "name", name, "issuer", p.IssuerURL)
 	}
 
 	return nil

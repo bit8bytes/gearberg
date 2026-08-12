@@ -244,6 +244,19 @@ func setupOIDCProvider(ctx context.Context, cfg OIDCProvider, redirectURL string
 	}, nil
 }
 
+// setupOIDCProviders initialises all configured OIDC providers and returns a name→provider map.
+func setupOIDCProviders(ctx context.Context, cfgs OIDCProviderMap, baseURL string) (map[string]*oidcProvider, error) {
+	result := make(map[string]*oidcProvider, len(cfgs))
+	for name, cfg := range cfgs {
+		p, err := setupOIDCProvider(ctx, cfg, baseURL+"/auth/oidc/"+name+"/callback")
+		if err != nil {
+			return nil, fmt.Errorf("oidc-provider %s: %w", name, err)
+		}
+		result[name] = p
+	}
+	return result, nil
+}
+
 func setupMailer(cfg *options, log *slog.Logger) mailer {
 	if cfg.SMTP.Host == "" {
 		log.Warn("SMTP not configured, emails will be logged only")
