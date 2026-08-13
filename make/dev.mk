@@ -1,7 +1,7 @@
-## run/web/verify: check configuration and connectivity
-.PHONY: run/web/verify
-run/web/verify:
-	go run -tags sqlite ./cmd/web verify
+## run/web/check: check configuration and connectivity
+.PHONY: run/web/check
+run/web/check:
+	go run -tags sqlite ./cmd/web check
 
 ## run/web: run the web application with live reload
 .PHONY: run/web
@@ -16,6 +16,11 @@ run/web:
 run/www:
 	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/www serve
 
+## run/docs: run the docs application with live reload
+.PHONY: run/docs
+run/docs:
+	reflex -s -r '\.(go|tmpl|js)$$' -- go run -tags sqlite ./cmd/docs
+
 ## dev/web: start development server (web + tailwind watch)
 .PHONY: dev/web
 dev/web:
@@ -25,6 +30,11 @@ dev/web:
 .PHONY: dev/www
 dev/www:
 	$(MAKE) -j2 tailwind run/www
+
+## dev/docs: start development server (docs + tailwind watch)
+.PHONY: dev/docs
+dev/docs:
+	$(MAKE) -j2 tailwind run/docs
 
 ## tailwind: run Tailwind CSS in watch mode
 .PHONY: tailwind

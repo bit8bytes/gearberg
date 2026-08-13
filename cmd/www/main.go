@@ -57,7 +57,7 @@ func run() error {
 }
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n  verify  check configuration and database connectivity\n\nRun 'gearberg <command> -help' for command flags.\n")
+	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n\nRun 'gearberg <command> -help' for command flags.\n")
 }
 
 func runServe(args []string) error {

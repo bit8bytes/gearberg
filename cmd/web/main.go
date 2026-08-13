@@ -60,8 +60,8 @@ func run() error {
 	switch cmd {
 	case "serve":
 		return runServe(args)
-	case "verify":
-		return runVerify(args)
+	case "check":
+		return runCheck(args)
 	case "version":
 		fmt.Printf("%s\n", revision)
 		return nil
@@ -72,7 +72,7 @@ func run() error {
 }
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n  verify  check configuration and database connectivity\n\nRun 'gearberg <command> -help' for command flags.\n")
+	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n  check   check configuration and database connectivity\n\nRun 'gearberg <command> -help' for command flags.\n")
 }
 
 // runServe glues together the internal and external packages to start the web server.
@@ -144,7 +144,7 @@ func runServe(args []string) error {
 	return app.serve(ctx)
 }
 
-func runVerify(args []string) error {
+func runCheck(args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
