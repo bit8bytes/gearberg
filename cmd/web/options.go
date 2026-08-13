@@ -103,22 +103,22 @@ func parseOptions(args []string) (*options, error) {
 
 func (cfg *options) validate() error {
 	if cfg.BaseURL == "" {
-		return fmt.Errorf("base-url is required (e.g. -base-url https://gearberg.example.com)")
+		return fmt.Errorf("-base-url is required (e.g. -base-url https://gearberg.example.com)")
 	}
 	if cfg.StorageDSN == "" {
-		return fmt.Errorf("storage-dsn is required")
+		return fmt.Errorf("-storage-dsn is required (e.g. -storage-dsn file:///data/uploads)")
 	}
 	if cfg.MaxOrgs <= 0 {
-		return fmt.Errorf("max orgs must be greater than 0")
+		return fmt.Errorf("-max-orgs must be greater than 0")
 	}
 	if cfg.MaxOrgCategories <= 0 {
-		return fmt.Errorf("max categories must be greater than 0")
+		return fmt.Errorf("-max-categories must be greater than 0")
 	}
 	if cfg.MaxOrgManufacturers <= 0 {
-		return fmt.Errorf("max manufacturers must be greater than 0")
+		return fmt.Errorf("-max-manufacturers must be greater than 0")
 	}
 	if cfg.MaxOrgLocations <= 0 {
-		return fmt.Errorf("max locations must be greater than 0")
+		return fmt.Errorf("-max-locations must be greater than 0")
 	}
 	for name, p := range cfg.OIDCProviders {
 		if err := p.Valid(); err != nil {
@@ -204,10 +204,10 @@ func (s *SMTP) Valid() error {
 		return fmt.Errorf("smtp port is not in valid range of 1-65535")
 	}
 	if s.Username == "" && s.Password != "" {
-		return fmt.Errorf("smtp password requires a username")
+		return fmt.Errorf("-smtp-username is required when -smtp-password is set")
 	}
 	if s.From == "" {
-		return fmt.Errorf("smtp from email address cannot be empty")
+		return fmt.Errorf("-smtp-from is required when -smtp-host is set")
 	}
 	return nil
 }
@@ -266,10 +266,10 @@ func (p *OIDCProvider) Valid() error {
 		return nil
 	}
 	if p.ClientID == "" {
-		return fmt.Errorf("client ID is required when issuer is set")
+		return fmt.Errorf("-client-id is required when issuer is set")
 	}
 	if p.ClientSecret == "" {
-		return fmt.Errorf("client secret is required when issuer is set")
+		return fmt.Errorf("-client-secret is required when issuer is set")
 	}
 	return nil
 }
@@ -294,7 +294,7 @@ func (cfg *options) validateTLS() error {
 			return fmt.Errorf("invalid port: %w", err)
 		}
 	default:
-		return fmt.Errorf("tls-mode must be one of: off, local")
+		return fmt.Errorf("-tls-mode must be one of: off, local")
 	}
 	return nil
 }
