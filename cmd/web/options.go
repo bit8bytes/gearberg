@@ -48,7 +48,7 @@ func parseOptions(args []string) (*options, error) {
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
 	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:/data/gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
-	fs.StringVar(&cfg.BaseURL, "base-url", "localhost:8080", "base URL for link generation (e.g. https://example.com)")
+	fs.StringVar(&cfg.BaseURL, "base-url", "", "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
 	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", "", "Path to TLS key file (required with -tls-mode=local)")
@@ -94,10 +94,6 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
-	if cfg.BaseURL == "" {
-		cfg.BaseURL = fmt.Sprintf("http://localhost:%d", cfg.Port)
-	}
-
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
@@ -107,7 +103,7 @@ func parseOptions(args []string) (*options, error) {
 
 func (cfg *options) validate() error {
 	if cfg.BaseURL == "" {
-		return fmt.Errorf("base-url is required")
+		return fmt.Errorf("base-url is required (e.g. -base-url https://gearberg.example.com)")
 	}
 	if cfg.StorageDSN == "" {
 		return fmt.Errorf("storage-dsn is required")
