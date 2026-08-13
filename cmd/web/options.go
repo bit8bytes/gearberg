@@ -42,7 +42,7 @@ type options struct {
 }
 
 func parseOptions(args []string) (*options, error) {
-	cfg := &options{LogLevel: logLevel{level: slog.LevelInfo}, OIDCProviders: make(OIDCProviderMap)}
+	cfg := &options{LogLevel: logLevel{level: slog.LevelError}, OIDCProviders: make(OIDCProviderMap)}
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
