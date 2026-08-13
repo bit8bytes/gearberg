@@ -17,7 +17,7 @@ jobs:
 
       - name: Generate version
         id: version
-        run: echo "version=$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
