@@ -32,7 +32,7 @@ type options struct {
 	BaseURL             string
 	DbDsn               string // SECRET
 	StorageDSN          string
-	SMTP                SMTP
+	SMTP                SMTP // has SECRET
 	OIDCProviders       OIDCProviderMap
 	MaxOrgs             int
 	MaxOrgCategories    int
@@ -59,6 +59,11 @@ func parseOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "file:///data/uploads"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 	fs.Var(&cfg.OIDCProviders, "oidc-provider", "OIDC provider: name,issuer=URL,client-id=ID,client-secret=SECRET (repeatable)")
+	fs.StringVar(&cfg.SMTP.Host, "smtp-host", "", "SMTP server hostname (omit to log emails only)")
+	fs.IntVar(&cfg.SMTP.Port, "smtp-port", 587, "SMTP server port")
+	fs.StringVar(&cfg.SMTP.Username, "smtp-username", "", "SMTP username")
+	fs.StringVar(&cfg.SMTP.Password, "smtp-password", envOr("SMTP_PASSWORD", ""), "SMTP password (prefer SMTP_PASSWORD env var over flag)")
+	fs.StringVar(&cfg.SMTP.From, "smtp-from", "", "from address for outgoing mail")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
