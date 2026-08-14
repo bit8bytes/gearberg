@@ -259,8 +259,7 @@ func setupOIDCProviders(ctx context.Context, cfgs OIDCProviderMap, baseURL strin
 
 func setupMailer(cfg *options, log *slog.Logger) mailer {
 	if cfg.SMTP.Host == "" {
-		log.Warn("SMTP not configured, emails will be logged only")
-		return mailerpkg.LogMailer{}
+		return mailerpkg.NoopMailer{}
 	}
 	return mailerpkg.New(
 		cfg.SMTP.Host,

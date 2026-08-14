@@ -47,10 +47,10 @@ func (m *SMTP) Mail(_ context.Context, to, subject, body string) error {
 	return nil
 }
 
-// LogMailer is a no-op mailer that discards emails silently.
-type LogMailer struct{}
+// NoopMailer is a no-op mailer that discards emails silently.
+type NoopMailer struct{}
 
 // Mail discards the email and returns nil.
-func (LogMailer) Mail(_ context.Context, _, _, _ string) error {
+func (NoopMailer) Mail(_ context.Context, _, _, _ string) error {
 	return nil
 }

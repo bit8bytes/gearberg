@@ -136,7 +136,7 @@ func startTestServer() (*application, *testServer, func(), error) {
 	}
 	sessionMgr := setupSessionManager(scsMgr)
 
-	services, err := setupServices(db, opts, log, mailerpkg.LogMailer{})
+	services, err := setupServices(db, opts, log, mailerpkg.NoopMailer{})
 	if err != nil {
 		_ = db.Close()
 		_ = os.RemoveAll(dir)
