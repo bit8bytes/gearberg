@@ -26,7 +26,14 @@ type Layout struct {
 var (
 	// Landing renders the public landing page with a simple full-bleed layout.
 	Landing = Layout{File: "layouts/landing.tmpl", Partials: "partials/*.tmpl"}
+)
 
+var (
+	// Docs renders the public docs page with a simple full-bleed layout.
+	Docs = Layout{File: "layouts/docs.tmpl", Partials: "partials/docs-*.tmpl"}
+)
+
+var (
 	// Center renders the full HTML shell with a simple centered body.
 	Center = Layout{File: "layouts/center.tmpl"}
 
