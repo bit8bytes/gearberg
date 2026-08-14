@@ -257,7 +257,7 @@ func setupOIDCProviders(ctx context.Context, cfgs OIDCProviderMap, baseURL strin
 	return result, nil
 }
 
-func setupMailer(cfg *options, log *slog.Logger) mailer {
+func setupMailer(cfg *options, _ *slog.Logger) mailer {
 	if cfg.SMTP.Host == "" {
 		return mailerpkg.NoopMailer{}
 	}
