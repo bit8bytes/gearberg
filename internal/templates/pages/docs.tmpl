@@ -1,0 +1,350 @@
+{{ define "title" }}Documentation{{ end }}
+{{ define "description" }}Gearberg documentation — quick start, configuration, deployment, and reference.{{ end }}
+
+{{ define "page" }}
+
+<section id="getting-started" class="mb-16" aria-labelledby="getting-started-heading">
+  <h2 id="getting-started-heading" class="text-2xl font-bold mb-8">Getting Started</h2>
+
+  <div id="prerequisites" class="mb-12">
+    <h3 id="prerequisites-heading" class="text-xl font-semibold mb-4">Prerequisites</h3>
+    <p class="mb-4">
+      These steps require <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer" class="link">Docker</a>.
+      Open a terminal and verify it is installed by running:
+    </p>
+    <div class="mockup-code mb-6" role="region" aria-label="Check Docker version">
+      <pre data-prefix="$"><code>docker --version</code></pre>
+    </div>
+    <p>
+      If Docker is not installed, you will see something like <span class="font-mono text-warning">docker: command not found</span>. In that case, <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer" class="link">install Docker</a> first and come back here.
+    </p>
+  </div>
+
+  <div id="quick-start" class="mb-12">
+    <h3 id="quick-start-heading" class="text-xl font-semibold mb-4">Quick Start</h3>
+    <p class="mb-4">Pull the image:</p>
+    <div class="mockup-code mb-6" role="region" aria-label="Pull image">
+      <pre data-prefix="$"><code>docker pull ghcr.io/bit8bytes/gearberg</code></pre>
+    </div>
+    <p class="mb-4">Try starting the server but it will fail with a clear error:</p>
+    <div class="mockup-code mb-6" role="region" aria-label="Missing base-url error">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve</code></pre>
+      <pre data-prefix=">" class="bg-warning text-warning-content"><code>error: -base-url is required (e.g. -base-url https://gearberg.example.com)</code></pre>
+    </div>
+    <p class="mb-4">
+      <span class="text-warning font-semibold">The app will not start without a base URL.</span>
+      The base URL is used e.g. for password reset links or OIDC callbacks.
+      Gearberg reports all configuration errors on startup so you can fix them before the server starts.
+    </p>
+    <p class="mb-4">
+      Add the <code class="badge badge-neutral font-mono">-base-url</code> flag to start the server:
+    </p>
+    <div class="mockup-code mb-6" role="region" aria-label="Start server with base-url">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url https://gearberg.example.com</code></pre>
+    </div>
+    <p class="mb-4">
+      Now, the server is running and you can access the web interface at
+      <a href="http://localhost:8080" target="_blank" class="badge badge-neutral font-mono">http://localhost:8080</a>.
+      You can stop the server by pressing <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">C</kbd> in the terminal.
+    </p>
+    <p class="mb-4">
+      Visit <a href="http://localhost:8080/signup" target="_blank" class="badge badge-neutral font-mono">http://localhost:8080/signup</a>
+      to create your first account. The first user to sign up becomes the org admin.
+    </p>
+    <p class="mb-4">
+      The previous code does not persist data across restarts, so any changes you make will be lost when the container is stopped or removed.
+      To avoid this, mount a named volume so data persists across restarts:
+    </p>
+    <div class="mockup-code mb-6" role="region" aria-label="Run with base-url">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 -v gearberg-data:/data \</code></pre>
+      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url https://gearberg.example.com</code></pre>
+    </div>
+    <p>Gearberg is up and running and ready to use for testing. For actual deployment, see <a href="#docker-compose" class="link link-primary">Docker Compose</a>.</p>
+  </div>
+</section>
+
+<section id="configuration" class="mb-16" aria-labelledby="configuration-heading">
+  <h2 id="configuration-heading" class="text-2xl font-bold mb-8">Configuration</h2>
+
+  <div id="configuration-overview" class="mb-12">
+    <h3 id="configuration-overview-heading" class="text-xl font-semibold mb-4">Overview</h3>
+    <p class="mb-4">
+      Gearberg is configured via command-line flags and environment variables. Flags take precedence over env vars.
+      All configuration errors are reported on startup and the server will not start with invalid or missing required values.
+    </p>
+    <p class="mb-4">
+      To check your configuration without starting the server, run:
+    </p>
+    <div class="mockup-code mb-6" role="region" aria-label="Check configuration">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg check \</code></pre>
+      <pre data-prefix=""><code>  -base-url https://gearberg.example.com</code></pre>
+    </div>
+
+    <h4 class="text-base font-semibold mb-2">Flags</h4>
+    <p class="mb-4">Use <span class="text-info">flags</span> for non-sensitive settings (e.g. log-level):</p>
+    <div class="mockup-code mb-6" role="region" aria-label="Flag example">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url https://gearberg.example.com \</code></pre>
+      <pre data-prefix="" class="bg-info text-info-content"><code>  -log-level info</code></pre>
+    </div>
+    <h4 class="text-base font-semibold mb-2">Env vars</h4>
+    <p class="mb-4">Use <span class="text-info">environment variables</span> for secrets because flags appear in process listings and shell history:</p>
+    <div class="mockup-code mb-6" role="region" aria-label="Env var example">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 \</code></pre>
+      <pre data-prefix="" class="bg-info text-info-content"><code>  -e SMTP_PASSWORD=secret \</code></pre>
+      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url https://gearberg.example.com \</code></pre>
+      <pre data-prefix=""><code>  -smtp-host smtp.example.com \</code></pre>
+      <pre data-prefix=""><code>  -smtp-username gearberg@example.com \</code></pre>
+      <pre data-prefix=""><code>  -smtp-from gearberg@example.com</code></pre>
+    </div>
+    <p>
+      See <a href="#flags-env-vars" class="link link-primary">All Flags &amp; Env Vars</a> for the complete reference.
+    </p>
+  </div>
+
+  <div id="oidc-sso" class="mb-12">
+    <h3 id="oidc-sso-heading" class="text-xl font-semibold mb-4">OIDC</h3>
+
+    <p class="mb-4">
+      By default, Gearberg uses email/password login which does not require any configuration. To extend it with SSO, configure one or more OIDC providers.
+      Currently, only the <a href="https://goauthentik.io/" target="_blank" rel="noopener noreferrer" class="link">Authentik</a> provider is supported.
+    </p>
+
+    <h4 class="text-base font-semibold mb-2">Env var format</h4>
+    <div class="mockup-code mb-4" role="region" aria-label="OIDC env var format">
+      <pre data-prefix=""><code>OIDC_&lt;NAME&gt;_PROVIDER=name,issuer=URL,client-id=ID,client-secret=SECRET</code></pre>
+    </div>
+    <p class="mb-8">
+      <code class="badge badge-neutral font-mono">&lt;NAME&gt;</code> becomes the provider name.
+      Repeat the variable for multiple providers. Flags take precedence over env vars. 
+      For authentik, the env var would look like this: <code class="badge badge-neutral font-mono">OIDC_AUTHENTIK_PROVIDER</code>.
+    </p>
+  </div>
+
+  <div id="smtp">
+    <h3 id="smtp-heading" class="text-xl font-semibold mb-4">SMTP</h3>
+    <p class="mb-4">
+      Gearberg uses SMTP to send transactional emails such as password reset links and invitations.
+      SMTP is optional. When <code class="badge badge-neutral font-mono">-smtp-host</code> is omitted,
+      emails are silently discarded and no mail is sent.
+    </p>
+    <p class="mb-6">
+      Pass the password via the <code class="badge badge-info font-mono">SMTP_PASSWORD</code> env var and not the flag.
+    </p>
+    <h4 class="text-base font-semibold mb-2">Docker run example</h4>
+    <div class="mockup-code mb-4" role="region" aria-label="SMTP docker run example">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 \</code></pre>
+      <pre data-prefix=""><code>  -v gearberg-data:/data \</code></pre>
+      <pre data-prefix="" class="bg-info text-info-content"><code>  -e SMTP_PASSWORD=secret \</code></pre>
+      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -smtp-host smtp.example.com \</code></pre>
+      <pre data-prefix=""><code>  -smtp-username gearberg@example.com \</code></pre>
+      <pre data-prefix=""><code>  -smtp-from gearberg@example.com</code></pre>
+    </div>
+    <p>
+      <code class="badge badge-neutral font-mono">-smtp-port</code> defaults to <code class="badge badge-neutral font-mono">587</code>.
+    </p>
+  </div>
+</section>
+
+<section id="deployment" class="mb-16" aria-labelledby="deployment-heading">
+  <h2 id="deployment-heading" class="text-2xl font-bold mb-8">Deployment</h2>
+
+  <div id="docker-compose">
+    <h3 id="docker-compose-heading" class="text-xl font-semibold mb-4">Docker Compose</h3>
+    <p class="mb-4">
+      The recommended way to run Gearberg in production is via the official Docker image using Docker Compose.
+    </p>
+    <p class="mb-4">For this, we recommend creating a <code class="badge badge-neutral font-mono">.env</code> file next to <code class="badge badge-neutral font-mono">compose.yaml</code> and fill in your secrets:</p>
+    <div class="mockup-code mb-4" role="region" aria-label="Create .env file">
+      <pre data-prefix="$"><code>printf 'OIDC_AUTHENTIK_PROVIDER=\nSMTP_PASSWORD=\n' > .env</code></pre>
+    </div>
+
+    <h4 class="text-base font-semibold mb-2">.env</h4>
+    <div class="mockup-code mb-6" role="region" aria-label=".env example">
+      <pre data-prefix=""><code>OIDC_AUTHENTIK_PROVIDER=authentik,issuer=https://auth.example.com/application/o/gearberg/,client-id=&lt;your-client-id&gt;,client-secret=&lt;your-client-secret&gt;</code></pre>
+      <pre data-prefix=""><code>SMTP_PASSWORD=&lt;your-smtp-password&gt;</code></pre>
+    </div>
+
+    <p class="mb-4">Then create <code class="badge badge-neutral font-mono">compose.yaml</code>, replacing the highlighted line with your domain:</p>
+    <h4 class="text-base font-semibold mb-2">compose.yaml</h4>
+    <div class="mockup-code" role="region" aria-label="Production docker compose example">
+      <pre data-prefix=""><code>services:</code></pre>
+      <pre data-prefix=""><code>  gearberg:</code></pre>
+      <pre data-prefix=""><code>    image: ghcr.io/bit8bytes/gearberg</code></pre>
+      <pre data-prefix="" class="bg-info text-info-content"><code>    command: serve -base-url https://gearberg.example.com</code></pre>
+      <pre data-prefix=""><code>    restart: unless-stopped</code></pre>
+      <pre data-prefix=""><code>    ports:</code></pre>
+      <pre data-prefix=""><code>      - "8080:8080"</code></pre>
+      <pre data-prefix=""><code>    volumes:</code></pre>
+      <pre data-prefix=""><code>      - gearberg-data:/data</code></pre>
+      <pre data-prefix=""><code>    environment:</code></pre>
+      <pre data-prefix=""><code>      OIDC_AUTHENTIK_PROVIDER: "${OIDC_AUTHENTIK_PROVIDER}"</code></pre>
+      <pre data-prefix=""><code>      SMTP_PASSWORD: "${SMTP_PASSWORD}"</code></pre>
+      <pre data-prefix=""><code>    env_file:</code></pre>
+      <pre data-prefix=""><code>      - .env</code></pre>
+      <pre data-prefix=""><code></code></pre>
+      <pre data-prefix=""><code>volumes:</code></pre>
+      <pre data-prefix=""><code>  gearberg-data:</code></pre>
+    </div>
+
+    <p class="mt-6 mb-4">Start Gearberg in the background:</p>
+    <div class="mockup-code mb-6" role="region" aria-label="Start docker compose">
+      <pre data-prefix="$"><code>docker compose up -d</code></pre>
+    </div>
+
+    <div class="alert alert-info">
+      {{ template "info-icon" . }}
+      <div>
+        <p class="font-semibold mb-1">Add a reverse proxy for HTTPS</p>
+        <p>For production, place a reverse proxy in front of Gearberg to terminate TLS. Popular options include
+          <a href="https://caddyserver.com/" target="_blank" rel="noopener noreferrer" class="link">Caddy</a> (automatic HTTPS with zero config),
+          <a href="https://traefik.io/" target="_blank" rel="noopener noreferrer" class="link">Traefik</a> (Docker-native with Let's Encrypt), and
+          <a href="https://nginx.org/" target="_blank" rel="noopener noreferrer" class="link">nginx</a> (battle-tested, manual cert management).
+          Point whichever you choose at <code class="font-mono">localhost:8080</code>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reference" class="mb-16" aria-labelledby="reference-heading">
+  <h2 id="reference-heading" class="text-2xl font-bold mb-8">Reference</h2>
+
+  <div id="flags-env-vars">
+    <h3 id="flags-env-vars-heading" class="text-xl font-semibold mb-6">All Flags &amp; Env Vars</h3>
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Flag</th>
+            <th>Env var</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-base-url</code></td>
+            <td>—</td>
+            <td><span class="text-error font-medium">required</span></td>
+            <td>Public base URL</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-db-dsn</code></td>
+            <td><code class="badge badge-neutral font-mono">DB_DSN</code></td>
+            <td><code class="font-mono text-xs">file:/data/gearberg.db</code></td>
+            <td>Database DSN</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-storage-dsn</code></td>
+            <td><code class="badge badge-neutral font-mono">STORAGE_DSN</code></td>
+            <td><code class="font-mono text-xs">file:///data/uploads</code></td>
+            <td>Storage backend DSN</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-port</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">8080</code></td>
+            <td>Port to listen on</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-log-level</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">error</code></td>
+            <td><code class="font-mono text-xs">debug</code>, <code class="font-mono text-xs">info</code>, <code class="font-mono text-xs">warn</code>, <code class="font-mono text-xs">error</code></td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-tls-mode</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">off</code></td>
+            <td><code class="font-mono text-xs">off</code> or <code class="font-mono text-xs">local</code></td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-tls-cert-path</code></td>
+            <td>—</td>
+            <td>—</td>
+            <td>TLS certificate (required with <code class="font-mono text-xs">-tls-mode=local</code>)</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-tls-key-path</code></td>
+            <td><code class="badge badge-neutral font-mono">TLS_KEY_PATH</code></td>
+            <td>—</td>
+            <td>TLS key (required with <code class="font-mono text-xs">-tls-mode=local</code>)</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-max-orgs</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">1</code></td>
+            <td>Maximum number of orgs</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-max-categories</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">25</code></td>
+            <td>Equipment categories per org</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono whitespace-nowrap">-max-manufacturers</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">100</code></td>
+            <td>Manufacturers per org</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-max-locations</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">100</code></td>
+            <td>Locations per org</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono whitespace-nowrap">-max-storage-bytes</code></td>
+            <td>—</td>
+            <td><code class="font-mono text-xs">1073741824</code> <span class="text-base-content/60 text-xs">(1 GiB)</span></td>
+            <td>Storage per org</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-oidc-provider</code></td>
+            <td><code class="badge badge-neutral font-mono">OIDC_&lt;NAME&gt;_PROVIDER</code></td>
+            <td>—</td>
+            <td>OIDC provider (repeatable)</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-smtp-host</code></td>
+            <td>—</td>
+            <td>-</td>
+            <td>SMTP hostname</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-smtp-port</code></td>
+            <td>—</td>
+            <td><code class="badge badge-neutral font-mono">587</code></td>
+            <td>SMTP port</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-smtp-username</code></td>
+            <td>—</td>
+            <td>—</td>
+            <td>SMTP username</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-smtp-password</code></td>
+            <td><code class="badge badge-neutral font-mono">SMTP_PASSWORD</code></td>
+            <td>—</td>
+            <td>SMTP password</td>
+          </tr>
+          <tr>
+            <td><code class="badge badge-neutral font-mono">-smtp-from</code></td>
+            <td>—</td>
+            <td>—</td>
+            <td>From address</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{{ end }}

@@ -1,0 +1,39 @@
+{{ define "root" }}
+<!DOCTYPE html>
+<html
+  lang="{{ block "lang" . }}en{{ end }}"
+  data-theme="gearberg"
+  class="scroll-smooth"
+  >
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ block "title" . }}Docs{{ end }} - Gearberg</title>
+    <meta
+      name="description"
+      content="{{ block "description" . }}Gearberg documentation.{{ end }}"
+      />
+    <link rel="icon" type="image/x-icon" href="/dist/images/favicon.ico" />
+    {{ template "styles" . }}
+    {{ block "seo" . }}{{ end }}
+  </head>
+  <body class="min-h-screen flex flex-col">
+    {{ template "docs-header" . }}
+    <div class="drawer lg:drawer-open flex-1">
+      <input id="docs-drawer" type="checkbox" class="drawer-toggle" />
+      <div class="drawer-content flex flex-col w-full">
+        <main class="flex-1 container mx-auto max-w-4xl px-6 py-10">
+          {{ template "page" . }}
+        </main>
+      </div>
+      <div class="drawer-side z-10">
+        <label for="docs-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <nav class="w-64 min-h-full bg-base-200 px-4 py-8" aria-label="Documentation navigation">
+          {{ template "docs-sidebar" . }}
+        </nav>
+      </div>
+    </div>
+    {{ template "docs-footer" . }}
+  </body>
+</html>
+{{ end }}

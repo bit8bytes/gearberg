@@ -41,15 +41,11 @@ func newPage(file string, layout layouts.Layout) Page {
 	return p
 }
 
-var (
-	// Landing is the public landing page.
-	Landing = newPage("pages/landing.tmpl", layouts.Landing)
-)
+// Landing is the public landing page.
+var Landing = newPage("pages/landing.tmpl", layouts.Landing)
 
-var (
-	// Docs is the public docs page.
-	Docs = newPage("pages/docs.tmpl", layouts.Docs)
-)
+// Docs is the public docs page.
+var Docs = newPage("pages/docs.tmpl", layouts.Docs)
 
 // Web app pages.
 var (

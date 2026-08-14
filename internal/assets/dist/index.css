@@ -23,6 +23,7 @@
     --container-md: 28rem;
     --container-xl: 36rem;
     --container-3xl: 48rem;
+    --container-4xl: 56rem;
     --container-5xl: 64rem;
     --container-6xl: 72rem;
     --container-7xl: 80rem;
@@ -46,6 +47,7 @@
     --text-6xl--line-height: 1;
     --text-7xl: 4.5rem;
     --text-7xl--line-height: 1;
+    --font-weight-light: 300;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
@@ -6760,6 +6762,9 @@
   .w-56 {
     width: calc(var(--spacing) * 56);
   }
+  .w-64 {
+    width: calc(var(--spacing) * 64);
+  }
   .w-80 {
     width: calc(var(--spacing) * 80);
   }
@@ -6774,6 +6779,9 @@
   }
   .max-w-3xl {
     max-width: var(--container-3xl);
+  }
+  .max-w-4xl {
+    max-width: var(--container-4xl);
   }
   .max-w-5xl {
     max-width: var(--container-5xl);
@@ -7736,6 +7744,9 @@
   .bg-gray-950 {
     background-color: var(--color-gray-950);
   }
+  .bg-info {
+    background-color: var(--color-info);
+  }
   .bg-neutral {
     background-color: var(--color-neutral);
   }
@@ -7759,6 +7770,9 @@
   }
   .bg-transparent {
     background-color: transparent;
+  }
+  .bg-warning {
+    background-color: var(--color-warning);
   }
   .divider-accent {
     @layer daisyui.l1.l2 {
@@ -8222,6 +8236,9 @@
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
   }
+  .py-10 {
+    padding-block: calc(var(--spacing) * 10);
+  }
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
   }
@@ -8510,6 +8527,10 @@
   .font-bold {
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
+  }
+  .font-light {
+    --tw-font-weight: var(--font-weight-light);
+    font-weight: var(--font-weight-light);
   }
   .font-medium {
     --tw-font-weight: var(--font-weight-medium);
@@ -8952,6 +8973,12 @@
   .text-base-100 {
     color: var(--color-base-100);
   }
+  .text-base-100\/50 {
+    color: var(--color-base-100);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-base-100) 50%, transparent);
+    }
+  }
   .text-base-content {
     color: var(--color-base-content);
   }
@@ -9000,6 +9027,12 @@
   .text-gray-800 {
     color: var(--color-gray-800);
   }
+  .text-info {
+    color: var(--color-info);
+  }
+  .text-info-content {
+    color: var(--color-info-content);
+  }
   .text-neutral {
     color: var(--color-neutral);
   }
@@ -9032,6 +9065,9 @@
   }
   .text-warning {
     color: var(--color-warning);
+  }
+  .text-warning-content {
+    color: var(--color-warning-content);
   }
   .text-white {
     color: var(--color-white);
