@@ -4,7 +4,6 @@ package mailer
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net"
 	"net/smtp"
 	"strconv"
@@ -48,11 +47,10 @@ func (m *SMTP) Mail(_ context.Context, to, subject, body string) error {
 	return nil
 }
 
-// LogMailer is a no-op mailer that logs emails instead of sending them.
+// LogMailer is a no-op mailer that discards emails silently.
 type LogMailer struct{}
 
-// Mail logs the email details and returns nil.
-func (LogMailer) Mail(_ context.Context, to, subject, body string) error {
-	slog.Info("mailer: email suppressed", "to", to, "subject", subject, "body", body)
+// Mail discards the email and returns nil.
+func (LogMailer) Mail(_ context.Context, _, _, _ string) error {
 	return nil
 }

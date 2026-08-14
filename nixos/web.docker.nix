@@ -27,7 +27,7 @@ in
       # in the docker run command or in a docker-compose file.
       Entrypoint = ["${gearberg}/bin/gearberg"];
       # Default subcommand. Override by passing a different command to docker run,
-      # e.g. `docker run ghcr.io/bit8bytes/gearberg verify`.
+      # e.g. `docker run ghcr.io/bit8bytes/gearberg check`.
       # See `gearberg --help` for all available subcommands.
       Cmd = ["serve"];
       # curl is pulled in via the Nix closure this is why there is no need to add it to copyToRoot.

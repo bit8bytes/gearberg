@@ -16,12 +16,9 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"log/slog"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -41,33 +38,10 @@ func main() {
 }
 
 func run() error {
-	if len(os.Args) < 2 {
-		printUsage()
-		return nil
-	}
-
-	cmd, args := os.Args[1], os.Args[2:]
-	switch cmd {
-	case "serve":
-		return runServe(args)
-	default:
-		printUsage()
-		return fmt.Errorf("unknown command %q", cmd)
-	}
-}
-
-func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: gearberg <command> [flags]\n\nCommands:\n  serve   start the web server\n\nRun 'gearberg <command> -help' for command flags.\n")
-}
-
-func runServe(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	options, err := parseServeOptions(args)
-	if errors.Is(err, flag.ErrHelp) {
-		return nil
-	}
+	options, err := parseOptions()
 	if err != nil {
 		return fmt.Errorf("parse options: %w", err)
 	}

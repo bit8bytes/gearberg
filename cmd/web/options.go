@@ -28,12 +28,12 @@ type options struct {
 	Port                int
 	TLSMode             string
 	TLSCertPath         string
-	TLSKeyPath          string
+	TLSKeyPath          string // conditional SECRET
 	BaseURL             string
-	DbDsn               string // SECRET
-	StorageDSN          string
-	SMTP                SMTP // has SECRET
-	OIDCProviders       OIDCProviderMap
+	DbDsn               string          // SECRET
+	StorageDSN          string          // conditional SECRET
+	SMTP                SMTP            // has SECRET
+	OIDCProviders       OIDCProviderMap // has SECRET
 	MaxOrgs             int
 	MaxOrgCategories    int
 	MaxOrgManufacturers int
@@ -51,7 +51,7 @@ func parseOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.BaseURL, "base-url", "", "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
-	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", "", "Path to TLS key file (required with -tls-mode=local)")
+	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
 	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")

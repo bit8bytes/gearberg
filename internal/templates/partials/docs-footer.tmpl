@@ -1,0 +1,13 @@
+{{ define "docs-footer" }}
+<footer class="footer footer-horizontal footer-center bg-base-300 text-base-content rounded p-10">
+  <nav class="grid grid-flow-col gap-4">
+    <a href="mailto:gearberg@bit8bytes.com" class="link link-hover">Contact</a>
+    <a href="https://www.gearberg.org/imprint" class="link link-hover">Imprint</a>
+    <a href="https://www.gearberg.org/privacy" class="link link-hover">Privacy Policy</a>
+    <a href="https://github.com/bit8bytes/gearberg" target="_blank" rel="noopener noreferrer" class="link link-hover">GitHub</a>
+  </nav>
+  <aside>
+    <p>Copyright &copy; {{ .Data.Year }} Gearberg by <a href="https://github.com/bit8bytes" class="link" target="_blank" rel="noopener noreferrer">bit8bytes</a> &mdash; Licensed under <a href="https://github.com/bit8bytes/gearberg" class="link" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
+  </aside>
+</footer>
+{{ end }}

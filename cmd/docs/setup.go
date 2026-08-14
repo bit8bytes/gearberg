@@ -20,11 +20,7 @@ import (
 	"io/fs"
 	"log"
 	"log/slog"
-	"net/url"
 	"path/filepath"
-	"slices"
-	"strings"
-	"time"
 
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -52,32 +48,18 @@ func includeSourceFile(_ []string, a slog.Attr) slog.Attr {
 }
 
 func templateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"inQuery": func(vals url.Values, key, val string) bool {
-			return slices.Contains(vals[key], val)
-		},
-		"inPath": func(currentPath, targetPath string) bool {
-			return currentPath == targetPath || strings.HasPrefix(currentPath, targetPath+"/")
-		},
-		// unixDate formats a *int64 Unix timestamp as "2006-01-02", or returns "" for nil.
-		"unixDate": func(v *int64) string {
-			if v == nil {
-				return ""
-			}
-			return time.Unix(*v, 0).UTC().Format("2006-01-02")
-		},
-	}
+	return template.FuncMap{}
 }
 
 func parseTemplates() (*template.Template, map[string]*template.Template, error) {
-	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/landing.tmpl", "components/*.tmpl")
+	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/docs.tmpl", "components/*.tmpl")
 	if err != nil {
 		return nil, nil, fmt.Errorf("base template: %w", err)
 	}
 
-	allPages := []pages.Page{pages.Landing, pages.Error}
-	tmpls := make(map[string]*template.Template, len(allPages))
-	for _, page := range allPages {
+	docsPages := []pages.Page{pages.Docs, pages.Error}
+	tmpls := make(map[string]*template.Template, len(docsPages))
+	for _, page := range docsPages {
 		t, err := pageTemplate(templates.EmbedFS, base, page)
 		if err != nil {
 			return nil, nil, fmt.Errorf("page template %s: %w", page.File, err)
