@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"os"
 	"slices"
 )
 
@@ -29,29 +28,17 @@ type options struct {
 	TLSMode  string
 }
 
-func registerCommonFlags(fs *flag.FlagSet, cfg *options) {
-	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
-}
+func parseServeOptions() (*options, error) {
+	cfg := &options{LogLevel: logLevel{level: slog.LevelError}}
+	flag.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
+	flag.BoolVar(&cfg.Version, "version", false, "print version and exit")
+	flag.IntVar(&cfg.Port, "port", 8080, "port to listen on")
+	flag.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
+	flag.Parse()
 
-func parseServeOptions(args []string) (*options, error) {
-	cfg := &options{}
-	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
-	fs.SetOutput(os.Stderr)
-	registerCommonFlags(fs, cfg)
-	fs.BoolVar(&cfg.Version, "version", false, "print version and exit")
-	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
-	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
-
-	if err := fs.Parse(args); err != nil {
-		return nil, fmt.Errorf("parseServeOptions: %w", err)
-	}
-
-	modes := []string{"off", "local"}
+	modes := []string{"off"}
 	if !slices.Contains(modes, cfg.TLSMode) {
 		return nil, fmt.Errorf("tls-mode must be one of: %v", modes)
-	}
-	if cfg.TLSMode == "local" {
-		return nil, fmt.Errorf("tls-mode 'local' is not supported yet")
 	}
 	if cfg.TLSMode == "off" {
 		if err := validatePort(cfg.Port); err != nil {
