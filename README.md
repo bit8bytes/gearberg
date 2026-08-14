@@ -2,9 +2,7 @@
 
 Self-hostable AV equipment and rental software. Free as in freedom.
 
-![mockup](/mockup/gearberg.png)
-
-Mockup generated with [Claude Design](https://www.anthropic.com/news/claude-design-anthropic-labs) and is subject to change. This is just for inspirational purposes to get the project off and running.
+![mockup](/mockup/gearberg-demo.gif)
 
 ## Features
 
