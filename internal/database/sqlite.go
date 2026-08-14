@@ -84,7 +84,7 @@ func New(ctx context.Context, dsn string) (*sql.DB, error) {
 	}
 
 	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("ping failed: %w", err)
+		return nil, fmt.Errorf("cannot open database at %q (use -db-dsn or DB_DSN): %w", dsn, err)
 	}
 
 	db.SetMaxOpenConns(5)
