@@ -13,5 +13,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//go:generate ogen --target ../internal/api/gen --clean openapi.yaml
+//go:generate ogen --target ./gen --clean openapi.yaml
 package api
