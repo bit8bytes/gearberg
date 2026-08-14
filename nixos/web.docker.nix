@@ -40,6 +40,13 @@ in
       };
       # By default, gearberg listens on port 8080 but this can be overridden by -port flag.
       ExposedPorts = {"8080/tcp" = {};};
+      # Env vars can be overwritten on runtime.
+      # These are needed here to ensure clean non-docker binary starts
+      # without configuring flags or env vars.
+      Env = [
+        "DB_DSN=file:/data/gearberg.db"
+        "STORAGE_DSN=file:///data/uploads"
+      ];
       # Gearberg does save its data to /data, which is a volume in the image.
       # When starting the image, you should mount a host directory to /data to persist the data.
       Volumes = {"/data" = {};};
