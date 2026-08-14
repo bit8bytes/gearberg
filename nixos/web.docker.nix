@@ -1,11 +1,11 @@
 # Builds a minimal Docker image containing the gearberg web binary.
-# On macOS or non-x86_64-linux hosts you need cross-compilation support.
+# The image targets the same platform as the host by default.
 # See https://nix.dev/tutorials/nixos/building-and-running-docker-images.html
 {
   pkgs ? import <nixpkgs> {},
   # pkgsTarget must be passed explicitly when called from a flake (pure mode
   # forbids <nixpkgs> lookups). Defaults to a Linux nixpkgs for standalone use.
-  pkgsTarget ? import <nixpkgs> {system = "x86_64-linux";},
+  pkgsTarget ? import <nixpkgs> {},
   version ? "dev",
 }: let
   gearberg = import ./web.nix {

@@ -22,8 +22,7 @@
       };
     });
 
-    # Go binaries built with Nix for all systems.
-    # Docker image is only built for x86_64-linux.
+    # Go binaries and Docker images built with Nix for all supported systems.
     packages = forAllSystems (system:
       {
         default = import ./nixos/web.nix {
@@ -39,10 +38,10 @@
           version = self.rev or self.dirtyRev or "dev";
         };
       }
-      // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      // {
         docker = import ./nixos/web.docker.nix {
-          pkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
-          pkgsTarget = nixpkgs-unstable.legacyPackages.x86_64-linux;
+          pkgs = nixpkgs-unstable.legacyPackages.${system};
+          pkgsTarget = nixpkgs-unstable.legacyPackages.${system};
           version = self.rev or self.dirtyRev or "dev";
         };
       });
