@@ -1,16 +1,16 @@
 # Gearberg
 
-Self-hostable AV equipment and rental software. Free as in freedom.
+Equipment rental software that doesn't rent itself to you. Manage your gear inventory, track rentals, handle customers, and generate invoices. Self-hostable and free.
 
 ![mockup](/mockup/gearberg-demo.gif)
 
 ## Features
 
-**Equipment** — Organize equipment by category with descriptions, pictures, and quantities.
+**Equipment**: Bulk quantities or serialized items, with categories and photos.
 
-**Rentals** — Check items out to people, set due dates, and track partial checkouts.
+**Rentals**: Check out gear to people, set due dates, track returns.
 
-Future developments will be *import* and *export* of data into CSV files. This will make it easy to switch back to paper or use any other desired provider.
+**Import/Export**: CSV in, CSV out. Your data is never locked in.
 
 For more information see current specification [here](./wiki/SPECS.md).
 
@@ -19,32 +19,17 @@ For more information see current specification [here](./wiki/SPECS.md).
 Try it with a single [Docker](https://docker.com) command:
 
 ```sh
-docker run -it -p 8080:8080 nixos/nix \
-  nix --extra-experimental-features "nix-command flakes" \
-  run github:bit8bytes/gearberg -- serve
+docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve
 ```
 
 Then open `http://localhost:8080` in your browser.
 
-Self-hosting is provided via NixOS with a full NixOS configuration included.
-
-## Contributing
-
-**Obtain** — Download the latest release from the [releases page](https://github.com/bit8bytes/gearberg/releases), or run it directly with Nix as shown above.
-
-**Feedback** — Open a [GitHub issue](https://github.com/bit8bytes/gearberg/issues) to report bugs or request features. Please include steps to reproduce for bug reports.
-
-**Contribute** — See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get involved. The project is in early development; reach out via an issue before submitting code.
-
 ## Development
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/bit8bytes/gearberg)](https://goreportcard.com/report/github.com/bit8bytes/gearberg)
-[![REUSE status](https://api.reuse.software/badge/github.com/bit8bytes/gearberg)](https://api.reuse.software/info/github.com/bit8bytes/gearberg)
 
 We follow the [Leitfaden zur Entwicklung
 sicherer Webanwendungen](https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Studien/Webanwendungen/Webanw_Auftragnehmer.pdf?__blob=publicationFile&v=1) from the [Bundesamt für Sicherheit in der Informationstechnik (BSI)](https://www.bsi.bund.de/EN) to ensure secure software. There is no English translation yet, but we will document all steps in English. Find more info in our [wiki](./wiki/).
-
-We are also in process of [OpenSSF Best Practices Badge Program](https://www.bestpractices.dev/en) to ensure trusted high quality open source software.
 
 ## License
 
