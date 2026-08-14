@@ -34,6 +34,10 @@
           buildpkgs = nixpkgs-unstable.legacyPackages.${system};
           version = self.rev or self.dirtyRev or "dev";
         };
+        docs = import ./nixos/docs.nix {
+          buildpkgs = nixpkgs-unstable.legacyPackages.${system};
+          version = self.rev or self.dirtyRev or "dev";
+        };
       }
       // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
         docker = import ./nixos/web.docker.nix {
