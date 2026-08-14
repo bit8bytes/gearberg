@@ -51,6 +51,6 @@ func (m *SMTP) Mail(_ context.Context, to, subject, body string) error {
 type LogMailer struct{}
 
 // Mail discards the email and returns nil.
-func (LogMailer) Mail(_ context.Context, to, subject, body string) error {
+func (LogMailer) Mail(_ context.Context, _, _, _ string) error {
 	return nil
 }
