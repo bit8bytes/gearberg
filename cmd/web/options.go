@@ -47,9 +47,9 @@ func parseOptions(args []string) (*options, error) {
 	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
-	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:/data/gearberg.db"), "database DSN")
+	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
-	fs.StringVar(&cfg.BaseURL, "base-url", fmt.Sprintf("http://localhost:%d", cfg.Port), "base URL for link generation (e.g. https://example.com)")
+	fs.StringVar(&cfg.BaseURL, "base-url", "", "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
 	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
@@ -57,7 +57,7 @@ func parseOptions(args []string) (*options, error) {
 	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
 	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
-	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "file:///data/uploads"), "storage backend DSN")
+	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "file://./uploads"), "storage backend DSN")
 	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 	fs.Var(&cfg.OIDCProviders, "oidc-provider", "OIDC provider: name,issuer=URL,client-id=ID,client-secret=SECRET (repeatable)")
 	fs.StringVar(&cfg.SMTP.Host, "smtp-host", "", "SMTP server hostname (omit to log emails only)")
@@ -70,8 +70,15 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
+	// If base URL is not set, default to localhost with the configured port.
+	// This is useful to get the server running quickly. For production, it needs
+	// to be configured.
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = fmt.Sprintf("http://localhost:%d", cfg.Port)
+	}
+
 	// Load OIDC providers from env vars matching OIDC_<NAME>_PROVIDER.
-	// Flags take precedence — env vars only fill in providers not already set via flag.
+	// Flags take precedence. Env vars only fill in providers not already set via flag.
 	for _, env := range os.Environ() {
 		k, v, _ := strings.Cut(env, "=")
 		after, ok := strings.CutPrefix(k, "OIDC_")
