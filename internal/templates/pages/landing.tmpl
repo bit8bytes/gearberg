@@ -217,12 +217,11 @@
         class="absolute top-3 right-3 btn btn-xs btn-neutral"
         aria-label="Copy command to clipboard"
       >Copy</button>
-      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve \</code></pre>
-      <pre data-prefix=""><code>  -base-url http://localhost:8080</code></pre>
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve</code></pre>
     </div>
     <script nonce="{{ .Nonce }}">
       document.getElementById('copy-quickstart').addEventListener('click', function() {
-        navigator.clipboard.writeText('docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve -base-url https://gearberg.example.com');
+        navigator.clipboard.writeText('docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve');
         this.textContent = 'Copied!';
       });
     </script>
