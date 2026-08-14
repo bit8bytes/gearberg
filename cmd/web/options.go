@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -48,7 +49,7 @@ func parseOptions(args []string) (*options, error) {
 	fs.Var(&cfg.LogLevel, "log-level", "log level (debug|info|warn|error)")
 	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:/data/gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
-	fs.StringVar(&cfg.BaseURL, "base-url", "", "base URL for link generation (e.g. https://example.com)")
+	fs.StringVar(&cfg.BaseURL, "base-url", fmt.Sprintf("http://localhost:%d", cfg.Port), "base URL for link generation (e.g. https://example.com)")
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
 	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
@@ -102,8 +103,13 @@ func parseOptions(args []string) (*options, error) {
 }
 
 func (cfg *options) validate() error {
-	if cfg.BaseURL == "" {
-		return fmt.Errorf("-base-url is required (e.g. -base-url https://gearberg.example.com)")
+	if isLocalhostURL(cfg.BaseURL) {
+		if len(cfg.OIDCProviders) > 0 {
+			return fmt.Errorf("-base-url must not be localhost when OIDC providers are configured (e.g. -base-url https://gearberg.example.com)")
+		}
+		if cfg.SMTP.Host != "" {
+			return fmt.Errorf("-base-url must not be localhost when SMTP is configured (e.g. -base-url https://gearberg.example.com)")
+		}
 	}
 	if cfg.StorageDSN == "" {
 		return fmt.Errorf("-storage-dsn is required (e.g. -storage-dsn file:///data/uploads)")
@@ -126,6 +132,15 @@ func (cfg *options) validate() error {
 		}
 	}
 	return nil
+}
+
+func isLocalhostURL(rawURL string) bool {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	h := u.Hostname()
+	return h == "localhost" || h == "127.0.0.1" || h == "::1"
 }
 
 func validatePort(port int) error {
