@@ -28,16 +28,22 @@
 <main>
 {{/* Hero Section */}}
 <section class="hero min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
-  <div class="hero-content text-center">
-    <div class="max-w-xl">
-      <h1 id="hero-heading" class="text-6xl font-bold">Track your <span class="text-primary">gear.</span> </br> Run your <span class="text-primary">rentals.</span></h1>
+  <div class="hero-content flex-col lg:flex-row-reverse gap-12">
+    <div class="hover-3d">
+      <figure class="w-full max-w-lg rounded-2xl">
+        <img src="/dist/gearberg.webp" alt="Gearberg equipment management interface" class="w-full rounded-xl" width="720" height="411" />
+      </figure>
+      <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
+    <div class="max-w-md text-center lg:text-left">
+      <h1 id="hero-heading" class="text-3xl sm:text-5xl font-bold">Track your <span class="text-primary">gear.</span> </br> Run your <span class="text-primary">rentals.</span></h1>
       <div class="py-6 text-base-content/60">
         <span class="badge badge-dash">Open Source</span>
         <span class="badge badge-dash">No Lock-in</span>
         <span class="badge badge-dash">Easy Installation</span>
       </div>
       <nav aria-label="Page sections" class="mt-2">
-        <div class="flex flex-wrap gap-2 justify-center">
+        <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
           <a href="#quickstart" class="btn btn-primary">Quickstart</a>
           <a href="#pricing" class="btn btn-outline">See Plans</a>
         </div>
