@@ -155,7 +155,9 @@
       <pre data-prefix=""><code>services:</code></pre>
       <pre data-prefix=""><code>  gearberg:</code></pre>
       <pre data-prefix=""><code>    image: ghcr.io/bit8bytes/gearberg</code></pre>
-      <pre data-prefix="" class="bg-info text-info-content"><code>    command: serve -base-url https://gearberg.example.com</code></pre>
+      <pre data-prefix=""><code>    command:</code></pre>
+      <pre data-prefix=""><code>      - serve</code></pre>
+      <pre data-prefix="" class="bg-info text-info-content"><code>      - -base-url=https://gearberg.example.com</code></pre>
       <pre data-prefix=""><code>    restart: unless-stopped</code></pre>
       <pre data-prefix=""><code>    ports:</code></pre>
       <pre data-prefix=""><code>      - "8080:8080"</code></pre>
