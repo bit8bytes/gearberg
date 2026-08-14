@@ -19,7 +19,6 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"net/url"
 	"os"
 	"strings"
 )
@@ -110,14 +109,6 @@ func parseOptions(args []string) (*options, error) {
 }
 
 func (cfg *options) validate() error {
-	if isLocalhostURL(cfg.BaseURL) {
-		if len(cfg.OIDCProviders) > 0 {
-			return fmt.Errorf("-base-url must not be localhost when OIDC providers are configured (e.g. -base-url https://gearberg.example.com)")
-		}
-		if cfg.SMTP.Host != "" {
-			return fmt.Errorf("-base-url must not be localhost when SMTP is configured (e.g. -base-url https://gearberg.example.com)")
-		}
-	}
 	if cfg.StorageDSN == "" {
 		return fmt.Errorf("-storage-dsn is required (e.g. -storage-dsn file:///data/uploads)")
 	}
@@ -139,15 +130,6 @@ func (cfg *options) validate() error {
 		}
 	}
 	return nil
-}
-
-func isLocalhostURL(rawURL string) bool {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return false
-	}
-	h := u.Hostname()
-	return h == "localhost" || h == "127.0.0.1" || h == "::1"
 }
 
 func validatePort(port int) error {
