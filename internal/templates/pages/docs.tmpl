@@ -138,16 +138,6 @@
 
   <div id="docker-compose">
     <h3 id="docker-compose-heading" class="text-xl font-semibold mb-4">Docker Compose</h3>
-    <p class="mb-4">For this, we recommend creating a <code class="badge badge-neutral font-mono">.env</code> file next to <code class="badge badge-neutral font-mono">compose.yaml</code> and fill in your secrets:</p>
-    <div class="mockup-code mb-4" role="region" aria-label="Create .env file">
-      <pre data-prefix="$"><code>printf 'OIDC_AUTHENTIK_PROVIDER=\nSMTP_PASSWORD=\n' > .env</code></pre>
-    </div>
-
-    <h4 class="text-base font-semibold mb-2">.env</h4>
-    <div class="mockup-code mb-6" role="region" aria-label=".env example">
-      <pre data-prefix=""><code>OIDC_AUTHENTIK_PROVIDER=authentik,issuer=https://auth.example.com/application/o/gearberg/,client-id=&lt;your-client-id&gt;,client-secret=&lt;your-client-secret&gt;</code></pre>
-      <pre data-prefix=""><code>SMTP_PASSWORD=&lt;your-smtp-password&gt;</code></pre>
-    </div>
 
     <p class="mb-4">Then create <code class="badge badge-neutral font-mono">compose.yaml</code>, replacing the highlighted line with your domain:</p>
     <h4 class="text-base font-semibold mb-2">compose.yaml</h4>
@@ -163,11 +153,6 @@
       <pre data-prefix=""><code>      - "8080:8080"</code></pre>
       <pre data-prefix=""><code>    volumes:</code></pre>
       <pre data-prefix=""><code>      - gearberg-data:/data</code></pre>
-      <pre data-prefix=""><code>    environment:</code></pre>
-      <pre data-prefix=""><code>      OIDC_AUTHENTIK_PROVIDER: "${OIDC_AUTHENTIK_PROVIDER}"</code></pre>
-      <pre data-prefix=""><code>      SMTP_PASSWORD: "${SMTP_PASSWORD}"</code></pre>
-      <pre data-prefix=""><code>    env_file:</code></pre>
-      <pre data-prefix=""><code>      - .env</code></pre>
       <pre data-prefix=""><code></code></pre>
       <pre data-prefix=""><code>volumes:</code></pre>
       <pre data-prefix=""><code>  gearberg-data:</code></pre>
