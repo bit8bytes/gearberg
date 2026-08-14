@@ -57,7 +57,7 @@ func parseTemplates() (*template.Template, map[string]*template.Template, error)
 		return nil, nil, fmt.Errorf("base template: %w", err)
 	}
 
-	allPages := []pages.Page{pages.Landing, pages.Imprint, pages.Privacy, pages.Error}
+	allPages := []pages.Page{pages.Landing, pages.Imprint, pages.Privacy, pages.Error, pages.NotFound}
 	tmpls := make(map[string]*template.Template, len(allPages))
 	for _, page := range allPages {
 		t, err := pageTemplate(templates.EmbedFS, base, page)
