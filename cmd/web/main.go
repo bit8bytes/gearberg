@@ -30,19 +30,33 @@ import (
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
-// application holds the dependencies for the web application.
-// It is the glue between internal and external packages.
+// application is the dependency container for the web server. Fields are
+// initialized once in runServe and shared across all HTTP handlers via method
+// receivers; the alternative of passing each dependency as a function argument
+// does not scale past a handful of handlers.
 type application struct {
-	logger        *slog.Logger
-	options       *options
-	html          *htmlpkg.HTML
-	db            *sql.DB
-	session       sessionManager
-	services      *services
+	logger *slog.Logger
+
+	options *options
+
+	html *htmlpkg.HTML
+
+	// db is the raw connection pool. Handlers must not use it directly;
+	// all queries go through services so business rules are enforced in one place.
+	db *sql.DB
+
+	session sessionManager
+
+	services *services
+
+	// oidcProviders is keyed by provider name. Providers are configured at
+	// startup because OIDC discovery is a network call that should not happen per-request.
 	oidcProviders map[string]*oidcProvider
 }
 
+// main entry point of the app.
 func main() {
+	// run is called to allow calling defer inside run() to gracefully stop the app.
 	if err := run(); err != nil {
 		log.Fatalf("error: %v", err)
 	}
@@ -58,8 +72,10 @@ func run() error {
 	// This allows us to have different flags for different commands.
 	cmd, args := os.Args[1], os.Args[2:]
 	switch cmd {
+	// serve starts the server and listens on the configured port via options
 	case "serve":
 		return runServe(args)
+		// check verifies the provided configuration and returns nothing if successfull.
 	case "check":
 		return runCheck(args)
 	case "version":
