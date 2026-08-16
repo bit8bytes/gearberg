@@ -1,6 +1,6 @@
 # Gearberg
 
-Equipment rental software that doesn't rent itself to you. Manage your gear inventory, track rentals, handle customers, and generate invoices. Self-hostable and free.
+Easy to use and affordable Rentman alternative. Simple equipment tracking and rentals. No lock-in. Self-host with a single Docker command.
 
 ![mockup](/mockup/gearberg-demo.gif)
 
