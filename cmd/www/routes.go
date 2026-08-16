@@ -34,6 +34,11 @@ func (app *application) routes() http.Handler {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		_, _ = fmt.Fprint(w, "User-agent: *\nAllow: /\n")
 	})
+	mux.HandleFunc("GET /llms.txt", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		_, _ = fmt.Fprint(w, "# Gearberg\n\nOpen-source equipment tracking and rental management. Self-host with Docker. Licensed under AGPL-3.0.\n\n## Links\n\n- [GitHub](https://github.com/bit8bytes/gearberg)\n- [Specification](https://github.com/bit8bytes/gearberg/blob/main/wiki/SPECS.md)\n- [License](https://www.gnu.org/licenses/agpl-3.0.html)\n")
+	})
 
 	mux.HandleFunc("/", app.html.Handle(app.getLanding))
 	mux.HandleFunc("GET /imprint", app.html.Handle(app.getImprint))
