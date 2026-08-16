@@ -4048,9 +4048,6 @@
       }
     }
   }
-  .inset-0 {
-    inset: calc(var(--spacing) * 0);
-  }
   .toast-center {
     @layer daisyui.l1.l2 {
       inset-inline-start: calc(1/2 * 100%);
@@ -8379,10 +8376,6 @@
     font-size: var(--text-4xl);
     line-height: var(--tw-leading, var(--text-4xl--line-height));
   }
-  .text-5xl {
-    font-size: var(--text-5xl);
-    line-height: var(--tw-leading, var(--text-5xl--line-height));
-  }
   .text-7xl {
     font-size: var(--text-7xl);
     line-height: var(--tw-leading, var(--text-7xl--line-height));
@@ -9161,17 +9154,11 @@
       }
     }
   }
-  .opacity-0 {
-    opacity: 0%;
-  }
   .opacity-40 {
     opacity: 40%;
   }
   .opacity-50 {
     opacity: 50%;
-  }
-  .opacity-60 {
-    opacity: 60%;
   }
   .opacity-70 {
     opacity: 70%;
@@ -9179,15 +9166,8 @@
   .opacity-90 {
     opacity: 90%;
   }
-  .opacity-100 {
-    opacity: 100%;
-  }
   .shadow {
     --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  .shadow-2xl {
-    --tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-lg {
@@ -9228,10 +9208,6 @@
   }
   .blur {
     --tw-blur: blur(8px);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
-  .blur-3xl {
-    --tw-blur: blur(var(--blur-3xl));
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
   .filter {
@@ -9685,15 +9661,6 @@
         --timeline-row-start: minmax(0, 1fr);
       }
     }
-  }
-  .\[background\:radial-gradient\(ellipse_at_center\,var\(--color-primary\)_0\%\,color-mix\(in_oklab\,var\(--color-primary\)_40\%\,transparent\)_60\%\,transparent_85\%\)\] {
-    background: radial-gradient(ellipse at center,var(--color-primary) 0%,var(--color-primary) 60%,transparent 85%);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: radial-gradient(ellipse at center,var(--color-primary) 0%,color-mix(in oklab,var(--color-primary) 40%,transparent) 60%,transparent 85%);
-    }
-  }
-  .\[background\:radial-gradient\(ellipse_at_center\,var\(--color-primary\)_0\%\,var\(--color-accent\)_50\%\,transparent_80\%\)\] {
-    background: radial-gradient(ellipse at center,var(--color-primary) 0%,var(--color-accent) 50%,transparent 80%);
   }
   .card-border {
     @layer daisyui.l1.l2 {
