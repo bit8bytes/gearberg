@@ -28,82 +28,76 @@
 <main>
 {{/* Hero Section */}}
 <section class="hero min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
-  <div class="hero-content flex-col lg:flex-row-reverse gap-12">
-    <div class="hover-3d">
-      <figure class="w-full max-w-lg rounded-2xl">
-        <img
-          src="/dist/gearberg-1440.webp"
-          srcset="/dist/gearberg-680.webp 680w, /dist/gearberg-1440.webp 1440w"
-          sizes="(max-width: 768px) 680px, 1440px"
-          alt="Gearberg equipment management interface"
-          class="w-full rounded-xl"
-          width="1440"
-          height="822"
-          fetchpriority="high"
-        />
-      </figure>
-      <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-    </div>
-    <div class="max-w-md text-center lg:text-left">
-      <h1 id="hero-heading" class="text-3xl sm:text-5xl font-bold">Track your <span class="text-primary">gear.</span> </br> Run your <span class="text-primary">rentals.</span></h1>
-      <div class="py-6 text-base-content/80">
-        <span class="badge badge-dash">Open Source</span>
-        <span class="badge badge-dash">No Lock-in</span>
-        <span class="badge badge-dash">Easy Installation</span>
-      </div>
-      <nav aria-label="Page sections" class="mt-2">
-        <div class="flex flex-wrap gap-2 justify-center lg:justify-start">
+  <div class="hero-content flex-col gap-8 py-12 w-full max-w-5xl">
+    <div class="max-w-2xl text-center">
+      <h1 id="hero-heading" class="text-3xl sm:text-5xl font-bold leading-tight">
+        Easy to use and<br class="sm:hidden"> affordable <span class="text-primary">Rentman alternative</span>
+      </h1>
+      <p class="mt-6 text-lg text-base-content/70 max-w-lg mx-auto">
+        Simple equipment tracking and rentals. 
+        No lock-in. 
+        Self-host with a single Docker command.
+      </p>
+      <nav aria-label="Page sections" class="mt-8">
+        <div class="flex flex-wrap gap-3 justify-center">
           <a href="#quickstart" class="btn btn-primary">Quickstart</a>
-          <a href="#pricing" class="btn btn-outline">See Plans</a>
+          <a href="#pricing" class="btn btn-outline">Pricing</a>
         </div>
       </nav>
     </div>
-  </div>
+    <figure class="w-full">
+      <img
+        src="/dist/gearberg-1440.webp"
+        srcset="/dist/gearberg-680.webp 680w, /dist/gearberg-1440.webp 1440w"
+        sizes="(max-width: 768px) 680px, 1440px"
+        alt="Gearberg equipment management interface"
+        class="w-full rounded-xl shadow-xl border border-base-300"
+        width="1440"
+        height="755"
+        fetchpriority="high"
+      />
+    </figure>
+    </div>
 </section>
 
-{{/* Features */}}
-<section id="features" class="py-24 bg-base-100" aria-labelledby="features-heading">
+{{/* Why use Gearberg? */}}
+<section id="why" class="py-24 bg-base-100" aria-labelledby="why-heading">
   <div class="container mx-auto px-6 max-w-5xl">
-    <h2 id="features-heading" class="text-4xl font-bold text-center mb-16">Features</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div class="text-center mb-16">
+      <h2 id="why-heading" class="text-4xl font-bold">Why use Gearberg?</h2>
+      <p class="mt-4 text-base-content/70 max-w-xl mx-auto">Rentman is overkill for most shops. Gearberg gives you clear, useful tracking without complexity, training or prior experience.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <div class="card bg-base-200 shadow">
-        <div class="card-body">
-          <h3 class="card-title text-xl text-primary font-bold">
-            <span class="size-8">{{ template "equipment-icon" . }}</span>
-            Equipment
-          </h3>
-          <p>Bulk quantities or serialized items, with categories and photos.</p>
+      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold text-lg">Equipment</h3>
+          <p class="text-base-content/70 mt-1">Bulk quantities or serialized items, with categories and photos.</p>
         </div>
       </div>
 
-      <div class="card bg-base-200 shadow">
-        <div class="card-body">
-          <h3 class="card-title text-xl text-primary font-bold">
-            <span class="size-8">{{ template "rentals-icon" . }}</span>
-            Rentals
-          </h3>
-          <p>Check out gear to people, set due dates, track returns.</p>
+      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold text-lg">Rentals</h3>
+          <p class="text-base-content/70 mt-1">Check out gear to people, set due dates, track returns.</p>
         </div>
       </div>
 
-      <div class="card bg-base-200 shadow">
-        <div class="card-body">
-          <h3 class="card-title text-xl text-primary font-bold">
-            <span class="size-8">{{ template "import-export-icon" . }}</span>
-            Import &amp; Export
-          </h3>
-          <p>CSV in, CSV out. Your data is never locked in.</p>
+      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold text-lg">Import &amp; Export</h3>
+          <p class="text-base-content/70 mt-1">CSV in, CSV out. Your data is never locked in.</p>
         </div>
       </div>
 
-      <div class="card bg-base-200 shadow" id="open-source">
-        <div class="card-body">
-          <h3 class="card-title text-xl text-primary font-bold">
-            <span class="size-8">{{ template "open-source-icon" . }}</span>
-            Open Source
-          </h3>
-          <p>AGPL v3. Self-host it, audit it, contribute to it. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a></p>
+      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200" id="open-source">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold text-lg">Open Source</h3>
+          <p class="text-base-content/70 mt-1">AGPL v3. Self-host it, audit it, contribute to it. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a></p>
         </div>
       </div>
 
