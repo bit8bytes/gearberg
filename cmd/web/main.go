@@ -157,6 +157,8 @@ func runServe(args []string) error {
 		oidcProviders: oidcProviders,
 	}
 
+	fmt.Printf("\033]8;;https://gearberg.org\033\\Gearberg\033]8;;\033\\ is running now. Open \033]8;;%s\033\\%s\033]8;;\033\\\n", options.BaseURL, options.BaseURL)
+
 	return app.serve(ctx)
 }
 
