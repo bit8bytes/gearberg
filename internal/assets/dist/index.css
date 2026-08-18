@@ -49,7 +49,6 @@
     --text-5xl--line-height: 1;
     --text-7xl: 4.5rem;
     --text-7xl--line-height: 1;
-    --font-weight-light: 300;
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
@@ -7766,9 +7765,6 @@
   .bg-gray-950 {
     background-color: var(--color-gray-950);
   }
-  .bg-info {
-    background-color: var(--color-info);
-  }
   .bg-neutral {
     background-color: var(--color-neutral);
   }
@@ -8546,10 +8542,6 @@
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
   }
-  .font-light {
-    --tw-font-weight: var(--font-weight-light);
-    font-weight: var(--font-weight-light);
-  }
   .font-medium {
     --tw-font-weight: var(--font-weight-medium);
     font-weight: var(--font-weight-medium);
@@ -8996,15 +8988,6 @@
       color: var(--color-warning);
     }
   }
-  .text-base-100 {
-    color: var(--color-base-100);
-  }
-  .text-base-100\/50 {
-    color: var(--color-base-100);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-base-100) 50%, transparent);
-    }
-  }
   .text-base-content {
     color: var(--color-base-content);
   }
@@ -9052,9 +9035,6 @@
   }
   .text-gray-800 {
     color: var(--color-gray-800);
-  }
-  .text-info-content {
-    color: var(--color-info-content);
   }
   .text-neutral {
     color: var(--color-neutral);
@@ -10023,28 +10003,6 @@
     &:focus-within {
       --tw-ring-offset-width: 2px;
       --tw-ring-offset-shadow: var(--tw-ring-inset,) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-    }
-  }
-  .hover\:link {
-    &:hover {
-      @media (hover: hover) {
-        @layer daisyui.l1.l2.l3 {
-          cursor: pointer;
-          text-decoration-line: underline;
-          &:focus {
-            --tw-outline-style: none;
-            outline-style: none;
-            @media (forced-colors: active) {
-              outline: 2px solid transparent;
-              outline-offset: 2px;
-            }
-          }
-          &:focus-visible {
-            outline: 2px solid currentColor;
-            outline-offset: 2px;
-          }
-        }
-      }
     }
   }
   .hover\:bg-base-200 {

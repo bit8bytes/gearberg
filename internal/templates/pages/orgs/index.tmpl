@@ -38,7 +38,15 @@
             </a>
           </td>
           <td class="text-right">
-            <a href="/orgs/{{ .ID }}" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="Organization settings">
+            <a 
+              href="/orgs/{{ .ID }}/equipment" 
+              class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" 
+              data-tip="Go to equipment">
+              <span class="size-4">{{ template "arrow-right-icon" . }}</span>
+            </a>
+            <a href="/orgs/{{ .ID }}" 
+              class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" 
+              data-tip="Organization settings">
               <span class="size-4">{{ template "settings-icon" . }}</span>
             </a>
           </td>
