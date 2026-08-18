@@ -64,40 +64,56 @@
 <section id="why" class="py-24 bg-base-100" aria-labelledby="why-heading">
   <div class="container mx-auto px-6 max-w-5xl">
     <div class="text-center mb-16">
-      <h2 id="why-heading" class="text-4xl font-bold">Why use Gearberg?</h2>
+      <h2 id="why-heading" class="text-3xl font-bold">Why use Gearberg?</h2>
       <p class="mt-4 text-base-content/70 max-w-xl mx-auto">Rentman is overkill for most shops. Gearberg gives you clear, useful tracking without complexity, training or prior experience.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+      <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold text-lg">Equipment</h3>
-          <p class="text-base-content/70 mt-1">Bulk quantities or serialized items, with categories and photos.</p>
+          <h3 class="font-semibold">Know where your gear is</h3>
+          <p class="text-base-content/70 mt-1">You lent that lens out three weeks ago. Gearberg tells you who has it, when it's back, and what's still on the shelf.</p>
         </div>
       </div>
 
-      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+      <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold text-lg">Rentals</h3>
-          <p class="text-base-content/70 mt-1">Check out gear to people, set due dates, track returns.</p>
+          <h3 class="font-semibold">Answer availability questions in seconds</h3>
+          <p class="text-base-content/70 mt-1">Pick a date range, see what's free. No spreadsheet, no back-and-forth, no double-booking a client.</p>
         </div>
       </div>
 
-      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200">
+      <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold text-lg">Import &amp; Export</h3>
-          <p class="text-base-content/70 mt-1">CSV in, CSV out. Your data is never locked in.</p>
+          <h3 class="font-semibold">Know what your inventory is worth</h3>
+          <p class="text-base-content/70 mt-1">See the total value of everything you own. Useful for insurance, purchasing decisions, and your accountant.</p>
         </div>
       </div>
 
-      <div class="flex items-start gap-4 p-6 rounded-xl bg-base-200" id="open-source">
+      <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold text-lg">Open Source</h3>
-          <p class="text-base-content/70 mt-1">AGPL v3. Self-host it, audit it, contribute to it. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a></p>
+          <h3 class="font-semibold">Your data, no lock-in</h3>
+          <p class="text-base-content/70 mt-1">Import your existing gear list from CSV. Export it anytime. Nothing is trapped inside Gearberg.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Kits that travel together</h3>
+          <p class="text-base-content/70 mt-1">Group your cables, stands, and lights into a kit. Check the whole thing out at once and know instantly if anything is missing.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4" id="open-source">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Open source, self-hostable</h3>
+          <p class="text-base-content/70 mt-1">AGPL v3. Run it on your own server, read the code, and contribute. No vendor risk. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">View on GitHub.</a></p>
         </div>
       </div>
 
