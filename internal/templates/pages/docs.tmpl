@@ -3,117 +3,194 @@
 
 {{ define "page" }}
 
-<section id="getting-started" class="mb-16" aria-labelledby="getting-started-heading">
-  <h2 id="getting-started-heading" class="text-2xl font-bold mb-8">Getting Started</h2>
+<section id="getting-started" class="flex flex-col gap-8" aria-labelledby="getting-started-heading">
+  <h2 id="getting-started-heading" class="text-2xl font-bold">Getting Started</h2>
 
-  <div id="prerequisites" class="mb-12">
+  <div id="prerequisites" class="flex flex-col gap-2">
     <h3 id="prerequisites-heading" class="text-xl font-semibold mb-4">Prerequisites</h3>
-    <p class="mb-4">
+    <p>
       These steps require <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer" class="link">Docker</a>.
       Open a terminal and verify it is installed by running:
     </p>
-    <div class="mockup-code mb-6" role="region" aria-label="Check Docker version">
+    <div class="mockup-code" role="region" aria-label="Check Docker version">
       <pre data-prefix="$"><code>docker --version</code></pre>
+    </div>
+    <p>You should see something like this:</p>
+    <div class="mockup-code w-full">
+      <pre data-prefix="~"><code>Docker version 27.4.0, build bde2b89</code></pre>
     </div>
     <p>
       If Docker is not installed, you will see something like "docker: command not found". In that case, <a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer" class="link">install Docker</a> first and come back here.
     </p>
   </div>
 
-  <div id="quick-start" class="mb-12">
-    <h3 id="quick-start-heading" class="text-xl font-semibold mb-4">Quick Start</h3>
-    <p class="mb-4">Start the server:</p>
-    <div class="mockup-code mb-6" role="region" aria-label="Start server with base-url">
-      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve</code></pre>
+  <div id="quick-start" class="flex flex-col gap-2">
+    <h3 id="quick-start-heading" class="text-xl font-semibold">Quick Start</h3>
+    <p>Start the server:</p>
+    <div class="mockup-code" role="region" aria-label="Start server with base-url">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 -v gearberg-data:/data ghcr.io/bit8bytes/gearberg serve</code></pre>
     </div>
-    <p class="mb-4">
-      Now, the server is running and you can access the web interface at
-      <a href="http://localhost:8080" target="_blank" class="badge badge-neutral font-mono">http://localhost:8080</a>.
-      You can stop the server by pressing <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">C</kbd> in the terminal.
-    </p>
-    <p class="mb-4">
-      The previous code does not persist data across restarts, so any changes you make will be lost when the container is stopped or removed.
-      To avoid this, mount a named volume so data persists across restarts:
-    </p>
-    <div class="mockup-code mb-6" role="region" aria-label="Run with volume">
-      <pre data-prefix="$"><code>docker run -p 8080:8080 -v gearberg-data:/data \</code></pre>
-      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve</code></pre>
+    <p>You should see something like this:</p>
+    <div class="mockup-code w-full">
+      <pre data-prefix="~"><code><a href="https://gearberg.org" target="_blank" class="link decoration-dashed hover:decoration-solid">Gearberg</a> is running now. Open <a href="http://localhost:8080" target="_blank" class="link decoration-dashed hover:decoration-solid">http://localhost:8080</a></code></pre>
     </div>
-    <p>Gearberg is up and running and ready to use for testing. For actual deployment, see <a href="#docker-compose" class="link link-primary">Docker Compose</a>.</p>
+    <p>
+      Open <a href="http://localhost:8080" target="_blank" class="link decoration-dashed hover:decoration-solid">http://localhost:8080</a> in your browser.
+      If this is your first time, go to <a href="http://localhost:8080/signup" target="_blank" class="link decoration-dashed hover:decoration-solid">http://localhost:8080/signup</a> to create an account.
+      When you are done, switch back to the terminal and press <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">C</kbd> to stop the server.
+    </p>
   </div>
 </section>
 
-<section id="configuration" class="mb-16" aria-labelledby="configuration-heading">
-  <h2 id="configuration-heading" class="text-2xl font-bold mb-8">Configuration</h2>
+<section id="deployment" class="flex flex-col gap-8" aria-labelledby="deployment-heading">
+  <h2 id="deployment-heading" class="text-2xl font-bold">Deployment</h2>
 
-  <div id="configuration-overview" class="mb-12">
-    <h3 id="configuration-overview-heading" class="text-xl font-semibold mb-4">Overview</h3>
-    <p class="mb-4">
-      Gearberg is configured via command-line flags and environment variables. Flags take precedence over env vars.
-      All configuration errors are reported on startup and the server will not start with invalid or missing required values.
-    </p>
-    <p class="mb-4">
-      To check your configuration without starting the server, run:
-    </p>
-    <div class="mockup-code mb-6" role="region" aria-label="Check configuration">
-      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg check</code></pre>
-    </div>
-
-    <h4 class="text-base font-semibold mb-2">Flags</h4>
-    <p class="mb-4">Use flags for non-sensitive settings (e.g. log-level):</p>
-    <div class="mockup-code mb-6" role="region" aria-label="Flag example">
-      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve \</code></pre>
-      <pre data-prefix="" class="bg-info text-info-content"><code>  -log-level info</code></pre>
-    </div>
-    <h4 class="text-base font-semibold mb-2">Env vars</h4>
-    <p class="mb-4">Use environment variables for secrets because flags appear in process listings and shell history:</p>
-    <div class="mockup-code mb-6" role="region" aria-label="Env var example">
-      <pre data-prefix="$"><code>docker run -p 8080:8080 \</code></pre>
-      <pre data-prefix="" class="bg-info text-info-content"><code>  -e SMTP_PASSWORD=secret \</code></pre>
-      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
-      <pre data-prefix=""><code>  -base-url https://gearberg.example.com \</code></pre>
-      <pre data-prefix=""><code>  -smtp-host smtp.example.com \</code></pre>
-      <pre data-prefix=""><code>  -smtp-username gearberg@example.com \</code></pre>
-      <pre data-prefix=""><code>  -smtp-from gearberg@example.com</code></pre>
-    </div>
+  <div class="flex flex-col gap-2">
     <p>
-      See <a href="#flags-env-vars" class="link link-primary">All Flags &amp; Env Vars</a> for the complete reference.
+      Quick Start showed you how to run Gearberg temporarily. To keep it running in the background, choose one of these two approaches:
     </p>
+
+    <ol class="list-decimal list-inside">
+      <li><a href="#docker" class="link decoration-dashed hover:decoration-solid">Docker</a>: A single command to get started quickly.</li>
+      <li><a href="#docker-compose" class="link decoration-dashed hover:decoration-solid">Docker Compose</a>: Recommended for production; declarative, version-controlled, and easy to extend.</li>
+      <li><a href="#raspberry-pi" class="link decoration-dashed hover:decoration-solid">Raspberry Pi</a>: Run Gearberg on a low-cost, always-on device in your local network.</li>
+    </ol>
   </div>
 
-  <div id="oidc-sso" class="mb-12">
-    <h3 id="oidc-sso-heading" class="text-xl font-semibold mb-4">OIDC</h3>
+  <div id="docker" class="flex flex-col gap-2">
+    <h3 id="docker-heading" class="text-xl font-semibold">Docker</h3>
 
-    <p class="mb-4">
+    <p>Run Gearberg in the background with the <code class="badge badge-neutral font-mono">--detach</code> flag:</p>
+    <div class="mockup-code" role="region" aria-label="Start server detached">
+      <pre data-prefix="$"><code>docker run -d --restart unless-stopped -p 8080:8080 -v gearberg-data:/data ghcr.io/bit8bytes/gearberg serve</code></pre>
+    </div>
+  </div>
+
+  <div id="docker-compose" class="flex flex-col gap-2">
+    <h3 id="docker-compose-heading" class="text-xl font-semibold">Docker Compose</h3>
+
+    <p>Docker Compose is a tool for defining and running multi-container Docker applications using a single YAML configuration file. You declare your services, networks, and volumes in that file, then start everything with <code class="badge badge-neutral font-mono">docker compose up</code>.</p>
+
+    <p>A YAML file is a plain-text configuration file that's easy for humans to read and write. It uses indentation and simple key-value pairs (like <code class="badge badge-neutral font-mono">name: Gearberg</code>) to organize settings. No special symbols or code required.</p>
+
+    <p>Create <code class="badge badge-neutral font-mono">compose.yaml</code>:</p>
+    
+    <h4 class="text-base font-semibold">compose.yaml</h4>
+    <div class="mockup-code" role="region" aria-label="Production docker compose example">
+      <pre data-prefix=""><code>services:</code></pre>
+      <pre data-prefix=""><code>  gearberg:</code></pre>
+      <pre data-prefix=""><code>    image: ghcr.io/bit8bytes/gearberg</code></pre>
+      <pre data-prefix=""><code>    command:</code></pre>
+      <pre data-prefix=""><code>      - serve</code></pre>
+      <pre data-prefix=""><code>    restart: unless-stopped</code></pre>
+      <pre data-prefix=""><code>    ports:</code></pre>
+      <pre data-prefix=""><code>      - "8080:8080"</code></pre>
+      <pre data-prefix=""><code>    volumes:</code></pre>
+      <pre data-prefix=""><code>      - gearberg-data:/data</code></pre>
+      <pre data-prefix=""><code></code></pre>
+      <pre data-prefix=""><code>volumes:</code></pre>
+      <pre data-prefix=""><code>  gearberg-data:</code></pre>
+    </div>
+
+    <p>In the same folder, run the following command to start the server:</p>
+    <div class="mockup-code" role="region" aria-label="Start docker compose">
+      <pre data-prefix="$"><code>docker compose up -d</code></pre>
+    </div>
+
+    <p>To stop the server, run:</p>
+    <div class="mockup-code" role="region" aria-label="Stop docker compose">
+      <pre data-prefix="$"><code>docker compose down</code></pre>
+    </div>
+  </div>
+
+  <div id="raspberry-pi" class="flex flex-col gap-2">
+    <h3 id="raspberry-pi-heading" class="text-xl font-semibold">Raspberry Pi</h3>
+
+    <p>A <a href="https://www.raspberrypi.com" target="_blank" class="link">Raspberry Pi</a> running Raspberry Pi OS is a great way to host Gearberg on a low-cost, always-on device in your local network. The setup uses the same <code class="badge badge-neutral font-mono">compose.yaml</code> as above.</p>
+
+    <p>SSH into your Raspberry Pi and run the official Docker install script:</p>
+    <div class="mockup-code" role="region" aria-label="Install Docker on Raspberry Pi">
+      <pre data-prefix="$"><code>curl -fsSL https://get.docker.com | sh</code></pre>
+    </div>
+    <p>Then add your user to the <code class="badge badge-neutral font-mono">docker</code> group so you can run Docker without <code class="badge badge-neutral font-mono">sudo</code>:</p>
+    <div class="mockup-code" role="region" aria-label="Add user to docker group">
+      <pre data-prefix="$"><code>sudo usermod -aG docker $USER</code></pre>
+    </div>
+    <p>Log out and back in for the change to take effect. Then create the <code class="badge badge-neutral font-mono">compose.yaml</code> file on your Raspberry Pi (see the <a href="#docker-compose" class="link link-primary">Docker Compose</a> section above for the contents) and run:</p>
+    <div class="mockup-code" role="region" aria-label="Start Gearberg on Raspberry Pi">
+      <pre data-prefix="$"><code>docker compose up -d</code></pre>
+    </div>
+    <p>Gearberg is now running and will restart automatically whenever the Pi reboots. Open a browser on any device in your local network and go to <code class="badge badge-neutral font-mono">http://&lt;raspberry-pi-ip&gt;:8080</code>.</p>
+  </div>
+</section>
+
+<section id="configuration" class="flex flex-col gap-8" aria-labelledby="configuration-heading">
+  <h2 id="configuration-heading" class="text-2xl font-bold">Configuration</h2>
+
+  <div id="configuration-overview" class="flex flex-col gap-2">
+    <h3 id="configuration-overview-heading" class="text-xl font-semibold">Overview</h3>
+    <p>
+      Gearberg is configured via command-line flags and environment variables. Flags take precedence over env vars.
+      All configuration errors are reported on startup and the server will not start with invalid or missing required values.
+      See <a href="#flags-env-vars" class="link link-primary">All Flags &amp; Env Vars</a> for the complete reference.
+    </p>
+
+    <p>
+      The examples below show how to configure Gearberg when starting it. Any change requires a restart with the updated command.
+    </p>
+
+    <h4 class="text-base font-semibold">Flags</h4>
+    <p>Use flags for non-sensitive settings (e.g. log-level):</p>
+    <div class="mockup-code" role="region" aria-label="Flag example">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve -log-level=info</code></pre>
+    </div>
+    <p>You can configure multiple flags (e.g. log-level and port) by separating them with spaces:</p>
+    <div class="mockup-code" role="region" aria-label="Flag example">
+      <pre data-prefix="$"><code>docker run -p 9090:9090 ghcr.io/bit8bytes/gearberg serve -log-level=error -port=9090</code></pre>
+    </div>
+
+    <h4 class="text-base font-semibold">Env vars</h4>
+    <p>Use environment variables for secrets (e.g. SMTP password):</p>
+    <div class="mockup-code" role="region" aria-label="Env var example">
+      <pre data-prefix="$"><code>docker run -p 8080:8080 -e SMTP_PASSWORD=secret ghcr.io/bit8bytes/gearberg serve</code></pre>
+    </div>
+    <p>Avoid using secrets as flags because flags appear in process listings and shell history.</p>
+  </div>
+
+  <div id="oidc-sso" class="flex flex-col gap-4">
+    <h3 id="oidc-sso-heading" class="text-xl font-semibold">OIDC</h3>
+
+    <p>
       By default, Gearberg uses email/password login which does not require any configuration. To extend it with SSO, configure one or more OIDC providers.
       Currently, only the <a href="https://goauthentik.io/" target="_blank" rel="noopener noreferrer" class="link">Authentik</a> provider is supported.
       <code class="badge badge-neutral font-mono">-base-url</code> is required when OIDC is enabled. It is used as the redirect URI sent to the identity provider.
     </p>
 
-    <h4 class="text-base font-semibold mb-2">Env var format</h4>
-    <div class="mockup-code mb-4" role="region" aria-label="OIDC env var format">
+    <h4 class="text-base font-semibold">Env var format</h4>
+    <div class="mockup-code" role="region" aria-label="OIDC env var format">
       <pre data-prefix=""><code>OIDC_&lt;NAME&gt;_PROVIDER=name,issuer=URL,client-id=ID,client-secret=SECRET</code></pre>
     </div>
-    <p class="mb-8">
+    <p>
       <code class="badge badge-neutral font-mono">&lt;NAME&gt;</code> becomes the provider name.
       Repeat the variable for multiple providers. Flags take precedence over env vars. 
       For authentik, the env var would look like this: <code class="badge font-mono">OIDC_AUTHENTIK_PROVIDER</code>.
     </p>
   </div>
 
-  <div id="smtp">
-    <h3 id="smtp-heading" class="text-xl font-semibold mb-4">SMTP</h3>
-    <p class="mb-4">
+  <div id="smtp" class="flex flex-col gap-2">
+    <h3 id="smtp-heading" class="text-xl font-semibold">SMTP</h3>
+    <p>
       Gearberg uses SMTP to send transactional emails such as password reset links and invitations.
       SMTP is optional. When <code class="badge badge-neutral font-mono">-smtp-host</code> is omitted,
       emails are silently discarded and no mail is sent.
       <code class="badge badge-neutral font-mono">-base-url</code> is required when SMTP is enabled. It is used to build the links inside emails.
     </p>
-    <p class="mb-6">
+    <p>
       Pass the password via the <code class="badge font-mono">SMTP_PASSWORD</code> env var and not the flag.
     </p>
-    <h4 class="text-base font-semibold mb-2">Docker run example</h4>
-    <div class="mockup-code mb-4" role="region" aria-label="SMTP docker run example">
+
+    <h4 class="text-base font-semibold">Docker run example</h4>
+    <div class="mockup-code" role="region" aria-label="SMTP docker run example">
       <pre data-prefix="$"><code>docker run -p 8080:8080 \</code></pre>
       <pre data-prefix=""><code>  -v gearberg-data:/data \</code></pre>
       <pre data-prefix=""><code>  -e SMTP_PASSWORD=secret \</code></pre>
@@ -126,55 +203,6 @@
     <p>
       <code class="badge badge-neutral font-mono">-smtp-port</code> defaults to <code class="badge badge-neutral font-mono">587</code>.
     </p>
-  </div>
-</section>
-
-<section id="deployment" class="mb-16" aria-labelledby="deployment-heading">
-  <h2 id="deployment-heading" class="text-2xl font-bold mb-8">Deployment</h2>
-
-  <p class="mb-4">
-    The recommended way to run Gearberg in production is via the official Docker image using Docker Compose.
-  </p>
-
-  <div id="docker-compose">
-    <h3 id="docker-compose-heading" class="text-xl font-semibold mb-4">Docker Compose</h3>
-
-    <p class="mb-4">Then create <code class="badge badge-neutral font-mono">compose.yaml</code>, replacing the highlighted line with your domain:</p>
-    <h4 class="text-base font-semibold mb-2">compose.yaml</h4>
-    <div class="mockup-code" role="region" aria-label="Production docker compose example">
-      <pre data-prefix=""><code>services:</code></pre>
-      <pre data-prefix=""><code>  gearberg:</code></pre>
-      <pre data-prefix=""><code>    image: ghcr.io/bit8bytes/gearberg</code></pre>
-      <pre data-prefix=""><code>    command:</code></pre>
-      <pre data-prefix=""><code>      - serve</code></pre>
-      <pre data-prefix="" class="bg-info text-info-content"><code>      - -base-url=https://gearberg.example.com</code></pre>
-      <pre data-prefix=""><code>    restart: unless-stopped</code></pre>
-      <pre data-prefix=""><code>    ports:</code></pre>
-      <pre data-prefix=""><code>      - "8080:8080"</code></pre>
-      <pre data-prefix=""><code>    volumes:</code></pre>
-      <pre data-prefix=""><code>      - gearberg-data:/data</code></pre>
-      <pre data-prefix=""><code></code></pre>
-      <pre data-prefix=""><code>volumes:</code></pre>
-      <pre data-prefix=""><code>  gearberg-data:</code></pre>
-    </div>
-
-    <p class="mt-6 mb-4">Start Gearberg in the background:</p>
-    <div class="mockup-code mb-6" role="region" aria-label="Start docker compose">
-      <pre data-prefix="$"><code>docker compose up -d</code></pre>
-    </div>
-
-    <div class="alert alert-info">
-      {{ template "info-icon" . }}
-      <div>
-        <p class="font-semibold mb-1">Add a reverse proxy for HTTPS</p>
-        <p>For production, place a reverse proxy in front of Gearberg to terminate TLS. Popular options include
-          <a href="https://caddyserver.com/" target="_blank" rel="noopener noreferrer" class="link">Caddy</a> (automatic HTTPS with zero config),
-          <a href="https://traefik.io/" target="_blank" rel="noopener noreferrer" class="link">Traefik</a> (Docker-native with Let's Encrypt), and
-          <a href="https://nginx.org/" target="_blank" rel="noopener noreferrer" class="link">nginx</a> (battle-tested, manual cert management).
-          Point whichever you choose at <code class="font-mono">localhost:8080</code>.
-        </p>
-      </div>
-    </div>
   </div>
 </section>
 
