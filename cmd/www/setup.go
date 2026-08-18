@@ -52,7 +52,7 @@ func templateFuncs() template.FuncMap {
 }
 
 func parseTemplates() (*template.Template, map[string]*template.Template, error) {
-	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/landing.tmpl", "components/*.tmpl")
+	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/root.tmpl", "components/*.tmpl")
 	if err != nil {
 		return nil, nil, fmt.Errorf("base template: %w", err)
 	}
