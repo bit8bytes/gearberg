@@ -124,14 +124,14 @@
 {{/* Pricing */}}
 <section id="pricing" class="py-24" aria-labelledby="pricing-heading">
   <div class="container mx-auto px-6 max-w-3xl text-center">
-    <h2 id="pricing-heading" class="text-4xl font-bold mb-4">Pricing</h2>
+    <h2 id="pricing-heading" class="text-3xl font-bold mb-4">Pricing</h2>
     <p class="text-base-content/80 mb-12">Self-host for free with all features included. Managed, worry-free cloud on request.</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <div class="card bg-primary/10 shadow border border-primary">
+      <div class="card bg-base-100 shadow border border-base-300">
         <div class="card-body text-left">
-          <h3 class="card-title text-2xl font-bold">Self-host</h3>
-          <p class="text-4xl font-bold mt-2 underline text-primary">Free</p>
+          <h3 class="card-title font-bold">Self-host</h3>
+          <p class="text-2xl font-bold mt-2 underline">Free</p>
           <p class="text-base-content/80 text-sm mb-4">Run on your own server with Docker</p>
           <ul class="space-y-2 text-sm flex-1">
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
@@ -146,8 +146,8 @@
 
       <div class="card bg-base-100 shadow border border-base-300">
         <div class="card-body text-left">
-          <h3 class="card-title text-2xl font-bold">Cloud</h3>
-          <p class="text-4xl font-bold mt-2">By request</p>
+          <h3 class="card-title font-bold">Cloud</h3>
+          <p class="text-2xl font-bold mt-2 underline">By request</p>
           <p class="text-base-content/80 text-sm mb-4">The software is free. You pay for the convenience of not running it yourself</p>
           <ul class="space-y-2 text-sm flex-1">
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
@@ -165,75 +165,10 @@
   </div>
 </section>
 
-{{/* Roadmap */}}
-<section id="roadmap" class="py-24" aria-labelledby="roadmap-heading">
-  <div class="container mx-auto px-6 max-w-3xl">
-    <h2 id="roadmap-heading" class="text-4xl font-bold text-center mb-4">Roadmap</h2>
-    <p class="text-center mb-10">Gearberg is in active development. Here is what is done and what is coming next. Read the <a href="https://github.com/bit8bytes/gearberg/blob/main/wiki/SPECS.md" class="link link-primary" target="_blank" rel="noopener noreferrer">full specification</a> on GitHub.</p>
-    <ul class="timeline timeline-vertical mx-auto w-fit">
-
-      <li>
-        <div class="timeline-start timeline-box">M0: Settings</div>
-        <div class="timeline-middle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <hr class="bg-primary" />
-      </li>
-
-      <li>
-        <hr class="bg-primary"/>
-        <div class="timeline-middle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="timeline-end timeline-box">M1: Equipment</div>
-        <hr class="bg-primary"/>
-      </li>
-
-      <li>
-        <hr class="bg-primary"/>
-        <div class="timeline-start timeline-box">M2: Import &amp; Export</div>
-        <div class="timeline-middle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <hr class="bg-primary"/>
-      </li>
-
-      <li>
-        <hr class="bg-primary"/>
-        <div class="timeline-middle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="text-primary h-5 w-5">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="timeline-end timeline-box">M3: Login</div>
-        <hr />
-      </li>
-
-      <li>
-        <hr />
-        <div class="timeline-start timeline-box">M4: Rentals</div>
-        <div class="timeline-middle">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <hr />
-      </li>
-
-    </ul>
-  </div>
-</section>
-
 {{/* Quickstart */}}
 <section id="quickstart" class="py-24 bg-base-100" aria-labelledby="quickstart-heading">
   <div class="container mx-auto px-6 max-w-3xl">
-    <h2 id="quickstart-heading" class="text-4xl font-bold text-center mb-4">Quickstart</h2>
+    <h2 id="quickstart-heading" class="text-3xl font-bold text-center mb-4">Quickstart</h2>
     <p class="text-center mb-10">Try it with a single <a href="https://docker.com" class="link link-primary" target="_blank" rel="noopener noreferrer">Docker</a> command:</p>
 
     <div class="mockup-code relative" role="region" aria-label="Quickstart command">
@@ -258,7 +193,7 @@
 {{/* FAQ */}}
 <section id="faq" class="py-24 bg-base-100" aria-labelledby="faq-heading">
   <div class="container mx-auto px-6 max-w-3xl">
-    <h2 id="faq-heading" class="text-4xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+    <h2 id="faq-heading" class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
     <div class="space-y-3">
 
       <details class="collapse collapse-arrow bg-base-200">
@@ -329,8 +264,8 @@
 {{/* Closing CTA */}}
 <section class="py-24" aria-labelledby="cta-heading">
   <div class="container mx-auto px-6 max-w-xl text-center">
-    <h2 id="cta-heading" class="text-4xl font-bold mb-4">Ready to get started?</h2>
-    <p class="text-base-content/80 mb-8">Try the demo or run it yourself with a single Docker command.</p>
+    <h2 id="cta-heading" class="text-4xl font-bold mb-4">Ready to ditch the spreadsheet?</h2>
+    <p class="text-base-content/80 mb-8">Run Gearberg yourself in under a minute, or get in touch if you want us to run it for you.</p>
     <div class="flex flex-wrap gap-4 justify-center">
       <a href="#quickstart" class="btn btn-primary">Run with Docker</a>
       <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline">Get in touch</a>

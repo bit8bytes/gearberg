@@ -1,15 +1,19 @@
 {{ define "landing-header" }}
 <div class="navbar">
   <div class="flex-1">
-    <div class="wordmark text-2xl">
-      <a href="/">Gear<span class="text-primary">berg</span></a>
-    </div>
+      {{ template "logo-with-text" . }}
   </div>
   <div class="flex-none text-secondary-content">
     <ul class="menu menu-horizontal px-1 gap-2">
       <li>
-        <a href="https://docs.gearberg.org" class="btn btn-sm sm:btn-md" aria-label="Documentation" target="_blank" rel="noopener noreferrer">
-        {{ template "docs-icon" . }}Docs
+        <a 
+          href="https://docs.gearberg.org" 
+          class="btn btn-sm sm:btn-md tooltip tooltip-left" 
+          aria-label="Documentation" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          data-tip="Go to Gearberg Docs">
+        {{ template "docs-icon" . }}
         </a>
       </li>
       <li>
