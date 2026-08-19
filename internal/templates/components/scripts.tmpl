@@ -3,3 +3,12 @@
 <script src="/dist/index.js{{ if .Revision }}?revision={{ .Revision }}{{end}}" nonce="{{ .Nonce }}" defer></script>
 <script src="/dist/htmx.min.js{{ if .Revision }}?revision={{ .Revision }}{{end}}" nonce="{{ .Nonce }}"></script>
 {{ end }}
+
+{{ define "goatcounter-script" }}
+<script 
+  data-goatcounter="https://bit8bytes.goatcounter.com/count"
+  async src="https://gc.zgo.at/count.js"
+  nonce="{{ .Nonce }}"
+  >
+</script>
+{{ end }}

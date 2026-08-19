@@ -141,9 +141,9 @@ func withSecurityHeaders(next http.Handler) http.Handler {
 			"default-src 'self'; "+
 				"img-src 'self' data:;"+
 				"style-src 'nonce-%s'; "+
-				"script-src 'nonce-%s' 'strict-dynamic'; "+
+				"script-src 'nonce-%s' 'strict-dynamic' https://gc.zgo.at; "+
 				"font-src 'self'; "+
-				"connect-src 'self'; "+
+				"connect-src 'self' https://bit8bytes.goatcounter.com; "+
 				"form-action 'self'; "+
 				"frame-ancestors 'none'; "+
 				"object-src 'none'; "+
