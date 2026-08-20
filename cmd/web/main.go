@@ -28,6 +28,8 @@ import (
 	"time"
 
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
+	"github.com/bit8bytes/gearberg/internal/templates"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
 // application is the dependency container for the web server. Fields are
@@ -106,7 +108,8 @@ func runServe(args []string) error {
 
 	log := setupLogger(options.LogLevel.Level())
 
-	base, cache, err := parseTemplates()
+	templates := templates.New(templates.WithFuncs(templateFuncs()))
+	base, cache, err := templates.Parse(pages.All)
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}

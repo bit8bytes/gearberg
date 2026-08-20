@@ -23,6 +23,8 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/accounts"
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
+	"github.com/bit8bytes/gearberg/internal/templates"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	mailerpkg "github.com/bit8bytes/gearberg/pkg/mailer"
 )
 
@@ -106,7 +108,8 @@ func startTestServer() (*application, *testServer, func(), error) {
 	opts := testOptions(dir)
 	log := setupLogger(slog.LevelError)
 
-	base, cache, err := parseTemplates()
+	templates := templates.New(templates.WithFuncs(templateFuncs()))
+	base, cache, err := templates.Parse(pages.All)
 	if err != nil {
 		_ = os.RemoveAll(dir)
 		return nil, nil, nil, fmt.Errorf("startTestServer: parse templates: %w", err)

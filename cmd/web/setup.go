@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"io/fs"
 	"log"
 	"log/slog"
 	"net/http"
@@ -46,8 +45,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
-	"github.com/bit8bytes/gearberg/internal/templates"
-	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/internal/tokens"
 	mailerpkg "github.com/bit8bytes/gearberg/pkg/mailer"
 )
@@ -89,44 +86,6 @@ func templateFuncs() template.FuncMap {
 			return time.Unix(*v, 0).UTC().Format("2006-01-02")
 		},
 	}
-}
-
-func parseTemplates() (*template.Template, map[string]*template.Template, error) {
-	base, err := template.New("root").Funcs(templateFuncs()).ParseFS(templates.EmbedFS, "layouts/root.tmpl", "components/*.tmpl", "fragments/*.tmpl")
-	if err != nil {
-		return nil, nil, fmt.Errorf("base template: %w", err)
-	}
-
-	allPages := pages.All
-	tmpls := make(map[string]*template.Template, len(allPages))
-	for _, page := range allPages {
-		t, err := pageTemplate(templates.EmbedFS, base, page)
-		if err != nil {
-			return nil, nil, fmt.Errorf("page template %s: %w", page.File, err)
-		}
-		tmpls[page.File] = t
-	}
-	return base, tmpls, nil
-}
-
-func pageTemplate(fsys fs.FS, base *template.Template, page pages.Page) (*template.Template, error) {
-	t := template.Must(base.Clone())
-
-	patterns := []string{page.Layout.File, page.File}
-	if page.Layout.Partials != "" {
-		patterns = append(patterns, page.Layout.Partials)
-	}
-
-	t, err := t.ParseFS(fsys, patterns...)
-	if err != nil {
-		return nil, fmt.Errorf("parse: %w", err)
-	}
-
-	if t.Lookup("page") == nil {
-		return nil, fmt.Errorf("page block not defined: %s", page.File)
-	}
-
-	return t, nil
 }
 
 func setupDatabase(ctx context.Context, options *options) (*sql.DB, error) {
