@@ -48,8 +48,8 @@ jobs:
       - name: Push amd64 image
         run: |
           VERSION="${{ needs.version.outputs.version }}"
-          docker load < result
-          docker tag gearberg:$VERSION ghcr.io/${{ github.repository }}:$VERSION-amd64
+          IMAGE_TAG=$(docker load < result | grep -oP 'gearberg:\S+' | head -1)
+          docker tag "$IMAGE_TAG" ghcr.io/${{ github.repository }}:$VERSION-amd64
           docker push ghcr.io/${{ github.repository }}:$VERSION-amd64
 
   build-arm64:
@@ -85,8 +85,8 @@ jobs:
       - name: Push arm64 image
         run: |
           VERSION="${{ needs.version.outputs.version }}"
-          docker load < result
-          docker tag gearberg:$VERSION ghcr.io/${{ github.repository }}:$VERSION-arm64
+          IMAGE_TAG=$(docker load < result | grep -oP 'gearberg:\S+' | head -1)
+          docker tag "$IMAGE_TAG" ghcr.io/${{ github.repository }}:$VERSION-arm64
           docker push ghcr.io/${{ github.repository }}:$VERSION-arm64
 
   release:
