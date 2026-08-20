@@ -26,7 +26,7 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	genequip "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipment"
 	genbulk "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentbulkitems"
-	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcontentitems"
+	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcombinationitems"
 	genserialized "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentserializeditems"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/segmentio/ksuid"

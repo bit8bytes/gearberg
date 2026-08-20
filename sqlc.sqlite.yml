@@ -112,12 +112,12 @@ sql:
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/equipment_content_items.sql"
+    queries: "internal/database/queries/sqlite/equipment_combination_items.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
       go:
-        package: "equipmentcontentitems"
-        out: "internal/database/queries/gen/equipmentcontentitems"
+        package: "equipmentcombinationitems"
+        out: "internal/database/queries/gen/equipmentcombinationitems"
         emit_interface: true
         omit_unused_structs: true
 

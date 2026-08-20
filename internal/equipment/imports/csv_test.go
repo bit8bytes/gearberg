@@ -185,7 +185,7 @@ func TestParseCSV_legacyHasContentHeader(t *testing.T) {
 		{"FALSE", "Standard"},
 		{"1", "Kit"},
 		{"0", "Standard"},
-		{"", ""},      // blank → left as-is, resolves to Standard via TypeFromStringOrDefault
+		{"", ""},       // blank → left as-is, resolves to Standard via TypeFromStringOrDefault
 		{"Kit", "Kit"}, // already canonical
 	}
 
