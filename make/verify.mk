@@ -37,6 +37,16 @@ test:
 fix:
 	go fix ./...
 
+## goose/fix: renumber migration files into sequential order
+.PHONY: goose/fix
+goose/fix:
+	goose fix -dir internal/database/migrations/sqlite
+
+## goose/validate: check that migration files are in sequential order
+.PHONY: goose/validate
+goose/validate:
+	goose validate -dir internal/database/migrations/sqlite
+
 ## verify: run tests, linters, and verify dependencies
 .PHONY: verify
 verify: fix lint license addlicense test
