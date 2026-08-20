@@ -44,15 +44,23 @@ type SignInForm struct {
 	validator.Validator
 }
 
+// NewSignInForm returns a SignInForm with an initialized Errors map, safe for template rendering.
+func NewSignInForm() *SignInForm {
+	f := &SignInForm{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseSignInForm reads and parses the sign-in form fields from the request.
 func ParseSignInForm(r *http.Request) (SignInForm, error) {
+	f := SignInForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return SignInForm{}, fmt.Errorf("accounts.ParseSignInForm: %w", err)
+		return f, fmt.Errorf("accounts.ParseSignInForm: %w", err)
 	}
-	return SignInForm{
-		Email:    strings.TrimSpace(r.PostForm.Get("email")),
-		Password: r.PostForm.Get("password"),
-	}, nil
+	f.Email = strings.TrimSpace(r.PostForm.Get("email"))
+	f.Password = r.PostForm.Get("password")
+	return f, nil
 }
 
 // Validate checks that email and password are present and well-formed.
@@ -71,16 +79,24 @@ type SignUpForm struct {
 	validator.Validator
 }
 
+// NewSignUpForm returns a SignUpForm with an initialized Errors map, safe for template rendering.
+func NewSignUpForm() *SignUpForm {
+	f := &SignUpForm{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseSignUpForm reads and parses the sign-up form fields from the request.
 func ParseSignUpForm(r *http.Request) (SignUpForm, error) {
+	f := SignUpForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return SignUpForm{}, fmt.Errorf("accounts.ParseSignUpForm: %w", err)
+		return f, fmt.Errorf("accounts.ParseSignUpForm: %w", err)
 	}
-	return SignUpForm{
-		Email:          strings.TrimSpace(r.PostForm.Get("email")),
-		Password:       r.PostForm.Get("password"),
-		RepeatPassword: r.PostForm.Get("repeat_password"),
-	}, nil
+	f.Email = strings.TrimSpace(r.PostForm.Get("email"))
+	f.Password = r.PostForm.Get("password")
+	f.RepeatPassword = r.PostForm.Get("repeat_password")
+	return f, nil
 }
 
 // Validate checks email format, password strength, length, and confirmation match.
@@ -108,14 +124,22 @@ type ForgotPasswordForm struct {
 	validator.Validator
 }
 
+// NewForgotPasswordForm returns a ForgotPasswordForm with an initialized Errors map, safe for template rendering.
+func NewForgotPasswordForm() *ForgotPasswordForm {
+	f := &ForgotPasswordForm{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseForgotPasswordForm reads and parses the forgot-password form fields from the request.
 func ParseForgotPasswordForm(r *http.Request) (ForgotPasswordForm, error) {
+	f := ForgotPasswordForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return ForgotPasswordForm{}, fmt.Errorf("accounts.ParseForgotPasswordForm: %w", err)
+		return f, fmt.Errorf("accounts.ParseForgotPasswordForm: %w", err)
 	}
-	return ForgotPasswordForm{
-		Email: strings.TrimSpace(r.PostForm.Get("email")),
-	}, nil
+	f.Email = strings.TrimSpace(r.PostForm.Get("email"))
+	return f, nil
 }
 
 // Validate checks that email is present and well-formed.
@@ -141,16 +165,24 @@ type ResetPasswordForm struct {
 	validator.Validator
 }
 
+// NewResetPasswordForm returns a ResetPasswordForm with an initialized Errors map, safe for template rendering.
+func NewResetPasswordForm(token string) *ResetPasswordForm {
+	f := &ResetPasswordForm{Token: token}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseResetPasswordForm reads and parses the reset-password form fields from the request.
 func ParseResetPasswordForm(r *http.Request) (ResetPasswordForm, error) {
+	f := ResetPasswordForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return ResetPasswordForm{}, fmt.Errorf("accounts.ParseResetPasswordForm: %w", err)
+		return f, fmt.Errorf("accounts.ParseResetPasswordForm: %w", err)
 	}
-	return ResetPasswordForm{
-		Token:          r.PostForm.Get("token"),
-		Password:       r.PostForm.Get("password"),
-		RepeatPassword: r.PostForm.Get("repeat_password"),
-	}, nil
+	f.Token = r.PostForm.Get("token")
+	f.Password = r.PostForm.Get("password")
+	f.RepeatPassword = r.PostForm.Get("repeat_password")
+	return f, nil
 }
 
 // PasswordValidationForm is used by the HTMX inline password validation endpoint.
@@ -164,6 +196,7 @@ type PasswordValidationForm struct {
 // ValidatePassword validates a single password value and returns a form with any errors set.
 func ValidatePassword(password string) *PasswordValidationForm {
 	f := &PasswordValidationForm{Password: password}
+	f.Errors = make(map[string]string)
 	if password == "" {
 		return f
 	}

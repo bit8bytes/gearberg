@@ -176,7 +176,7 @@ type equipmentItemData struct {
 func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = &equipment.NewForm{}
+	data.Form = equipment.NewNewForm()
 	data.Data = equipmentItemData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentNew, data)
 }
@@ -795,7 +795,7 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &equipment.ContentForm{}
+	data.Form = equipment.NewContentForm()
 	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }

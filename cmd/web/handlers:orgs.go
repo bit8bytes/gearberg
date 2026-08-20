@@ -57,7 +57,7 @@ func (app *application) getOrgs(w http.ResponseWriter, r *http.Request) *httperr
 
 func (app *application) getOrgsNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	data := app.html.TemplateData(r)
-	data.Form = &orgs.Form{}
+	data.Form = orgs.NewForm()
 	return app.html.Render(w, r, http.StatusOK, pages.OrgsNew, data)
 }
 

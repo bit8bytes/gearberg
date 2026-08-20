@@ -55,7 +55,7 @@ func (app *application) getLocations(w http.ResponseWriter, r *http.Request) *ht
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &locations.Form{}
+	data.Form = locations.NewForm()
 	data.Data = locationsData{
 		OrgID:        id,
 		Locations:    locs,
@@ -67,7 +67,7 @@ func (app *application) getLocations(w http.ResponseWriter, r *http.Request) *ht
 func (app *application) getLocationNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = &locations.Form{}
+	data.Form = locations.NewForm()
 	data.Data = locationData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.LocationsNew, data)
 }

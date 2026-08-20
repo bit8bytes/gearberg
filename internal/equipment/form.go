@@ -66,21 +66,21 @@ type PropertiesForm struct {
 
 // ParseDetails reads the details-tab form fields from r, including an optional image upload.
 func ParseDetails(r *http.Request) (DetailsForm, error) {
+	f := DetailsForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil { //nolint:gosec // maxUploadBytes is a bounded constant (10 MiB)
-		return DetailsForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	f := DetailsForm{
-		TypeID:           strings.TrimSpace(r.PostForm.Get("type_id")),
-		Name:             strings.TrimSpace(r.PostForm.Get("name")),
-		CategoryID:       strings.TrimSpace(r.PostForm.Get("category_id")),
-		CategoryName:     strings.TrimSpace(r.PostForm.Get("category_name")),
-		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
-		ManufacturerName: strings.TrimSpace(r.PostForm.Get("manufacturer_name")),
-		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
-		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
-		TotalStock:       ParseQuantity(r.PostForm.Get("total_stock")),
-		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
-	}
+	f.TypeID = strings.TrimSpace(r.PostForm.Get("type_id"))
+	f.Name = strings.TrimSpace(r.PostForm.Get("name"))
+	f.CategoryID = strings.TrimSpace(r.PostForm.Get("category_id"))
+	f.CategoryName = strings.TrimSpace(r.PostForm.Get("category_name"))
+	f.ManufacturerID = strings.TrimSpace(r.PostForm.Get("manufacturer_id"))
+	f.ManufacturerName = strings.TrimSpace(r.PostForm.Get("manufacturer_name"))
+	f.LocationID = strings.TrimSpace(r.PostForm.Get("location_id"))
+	f.LocationName = strings.TrimSpace(r.PostForm.Get("location_name"))
+	f.TotalStock = ParseQuantity(r.PostForm.Get("total_stock"))
+	f.Notes = strings.TrimSpace(r.PostForm.Get("notes"))
 	file, header, err := r.FormFile("image")
 	if err == nil {
 		f.Image = file
@@ -103,13 +103,14 @@ func (f *DetailsForm) Validate() bool {
 
 // ParsePricing reads the pricing-tab form fields from r.
 func ParsePricing(r *http.Request) (PricingForm, error) {
+	f := PricingForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return PricingForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return PricingForm{
-		PurchasePrice: strings.TrimSpace(r.PostForm.Get("purchase_price")),
-		RentalPrice:   strings.TrimSpace(r.PostForm.Get("rental_price")),
-	}, nil
+	f.PurchasePrice = strings.TrimSpace(r.PostForm.Get("purchase_price"))
+	f.RentalPrice = strings.TrimSpace(r.PostForm.Get("rental_price"))
+	return f, nil
 }
 
 // Validate checks PricingForm fields and returns true when all pass.
@@ -135,19 +136,20 @@ func (f *PricingForm) ParsedRentalPrice() *Cents { return ParseCents(f.RentalPri
 
 // ParseProperties reads the properties-tab form fields from r.
 func ParseProperties(r *http.Request) (PropertiesForm, error) {
+	f := PropertiesForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return PropertiesForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return PropertiesForm{
-		Weight:    strings.TrimSpace(r.PostForm.Get("weight_kg")),
-		Width:     strings.TrimSpace(r.PostForm.Get("width_cm")),
-		Height:    strings.TrimSpace(r.PostForm.Get("height_cm")),
-		Depth:     strings.TrimSpace(r.PostForm.Get("depth_cm")),
-		Power:     strings.TrimSpace(r.PostForm.Get("power_w")),
-		Current:   strings.TrimSpace(r.PostForm.Get("current_a")),
-		Voltage:   strings.TrimSpace(r.PostForm.Get("voltage_v")),
-		WireGauge: strings.TrimSpace(r.PostForm.Get("wire_gauge_mm2_x100")),
-	}, nil
+	f.Weight = strings.TrimSpace(r.PostForm.Get("weight_kg"))
+	f.Width = strings.TrimSpace(r.PostForm.Get("width_cm"))
+	f.Height = strings.TrimSpace(r.PostForm.Get("height_cm"))
+	f.Depth = strings.TrimSpace(r.PostForm.Get("depth_cm"))
+	f.Power = strings.TrimSpace(r.PostForm.Get("power_w"))
+	f.Current = strings.TrimSpace(r.PostForm.Get("current_a"))
+	f.Voltage = strings.TrimSpace(r.PostForm.Get("voltage_v"))
+	f.WireGauge = strings.TrimSpace(r.PostForm.Get("wire_gauge_mm2_x100"))
+	return f, nil
 }
 
 // Validate checks PropertiesForm fields and returns true when all pass.
@@ -223,7 +225,7 @@ func (f *PricingForm) ToPricing() Pricing {
 
 // DetailsFormFromEquipment pre-populates a DetailsForm from an existing Equipment's stored values.
 func DetailsFormFromEquipment(e *Equipment) DetailsForm {
-	return DetailsForm{
+	f := DetailsForm{
 		TypeID:         e.TrackingType.String(),
 		Name:           e.Name,
 		CategoryID:     e.CategoryID,
@@ -232,19 +234,23 @@ func DetailsFormFromEquipment(e *Equipment) DetailsForm {
 		TotalStock:     e.TotalStock,
 		Notes:          e.Notes,
 	}
+	f.Errors = make(map[string]string)
+	return f
 }
 
 // PricingFormFromEquipment pre-populates a PricingForm from an existing Equipment's stored values.
 func PricingFormFromEquipment(e *Equipment) PricingForm {
-	return PricingForm{
+	f := PricingForm{
 		PurchasePrice: e.Pricing.PurchasePrice.ToDecimal(),
 		RentalPrice:   e.Pricing.RentalPrice.ToDecimal(),
 	}
+	f.Errors = make(map[string]string)
+	return f
 }
 
 // PropertiesFormFromEquipment pre-populates a PropertiesForm from an existing Equipment's stored values.
 func PropertiesFormFromEquipment(e *Equipment) PropertiesForm {
-	return PropertiesForm{
+	f := PropertiesForm{
 		Weight:    e.Properties.Weight.ToKG(),
 		Width:     e.Properties.Width.ToCM(),
 		Height:    e.Properties.Height.ToCM(),
@@ -254,6 +260,8 @@ func PropertiesFormFromEquipment(e *Equipment) PropertiesForm {
 		Voltage:   e.Properties.Voltage.ToV(),
 		WireGauge: e.Properties.WireGauge.String(),
 	}
+	f.Errors = make(map[string]string)
+	return f
 }
 
 // UnitForm holds parsed input and validation state for adding or updating a serialized unit.
@@ -271,19 +279,20 @@ type UnitForm struct {
 
 // ParseUnit reads unit form fields from r.
 func ParseUnit(r *http.Request) (UnitForm, error) {
+	f := UnitForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return UnitForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return UnitForm{
-		SerialNumber:             strings.TrimSpace(r.PostForm.Get("unit_serial_number")),
-		ManufacturerSerialNumber: strings.TrimSpace(r.PostForm.Get("serial_number")),
-		Remark:                   strings.TrimSpace(r.PostForm.Get("remark")),
-		Quantity:                 ParseQuantity(r.PostForm.Get("quantity")),
-		PurchasePrice:            strings.TrimSpace(r.PostForm.Get("purchase_price")),
-		PurchasedAt:              ParseDate(r.PostForm.Get("purchased_at")),
-		NextInspectionAt:         ParseDate(r.PostForm.Get("next_inspection_at")),
-		StatusID:                 parseCheckbox(r.PostForm.Get("status_id")),
-	}, nil
+	f.SerialNumber = strings.TrimSpace(r.PostForm.Get("unit_serial_number"))
+	f.ManufacturerSerialNumber = strings.TrimSpace(r.PostForm.Get("serial_number"))
+	f.Remark = strings.TrimSpace(r.PostForm.Get("remark"))
+	f.Quantity = ParseQuantity(r.PostForm.Get("quantity"))
+	f.PurchasePrice = strings.TrimSpace(r.PostForm.Get("purchase_price"))
+	f.PurchasedAt = ParseDate(r.PostForm.Get("purchased_at"))
+	f.NextInspectionAt = ParseDate(r.PostForm.Get("next_inspection_at"))
+	f.StatusID = parseCheckbox(r.PostForm.Get("status_id"))
+	return f, nil
 }
 
 // Validate checks UnitForm fields. SerialNumber is required; all other fields are optional.
@@ -316,26 +325,33 @@ type NewForm struct {
 	validator.Validator
 }
 
+// NewNewForm returns a NewForm with an initialized Errors map, safe for template rendering.
+func NewNewForm() *NewForm {
+	f := &NewForm{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseNew reads the unified create form fields from r.
 func ParseNew(r *http.Request) (NewForm, error) {
+	f := NewForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil { //nolint:gosec // maxUploadBytes is a bounded constant (10 MiB)
-		return NewForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	f := NewForm{
-		TypeID:           strings.TrimSpace(r.PostForm.Get("type_id")),
-		UsageTypeID:      strings.TrimSpace(r.PostForm.Get("usage_type_id")),
-		Name:             strings.TrimSpace(r.PostForm.Get("equipment_name")),
-		CategoryID:       strings.TrimSpace(r.PostForm.Get("category_id")),
-		CategoryName:     strings.TrimSpace(r.PostForm.Get("category_name")),
-		ManufacturerID:   strings.TrimSpace(r.PostForm.Get("manufacturer_id")),
-		ManufacturerName: strings.TrimSpace(r.PostForm.Get("manufacturer_name")),
-		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
-		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
-		Count:            ParseQuantity(r.PostForm.Get("count")),
-		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
-		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
-		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
-	}
+	f.TypeID = strings.TrimSpace(r.PostForm.Get("type_id"))
+	f.UsageTypeID = strings.TrimSpace(r.PostForm.Get("usage_type_id"))
+	f.Name = strings.TrimSpace(r.PostForm.Get("equipment_name"))
+	f.CategoryID = strings.TrimSpace(r.PostForm.Get("category_id"))
+	f.CategoryName = strings.TrimSpace(r.PostForm.Get("category_name"))
+	f.ManufacturerID = strings.TrimSpace(r.PostForm.Get("manufacturer_id"))
+	f.ManufacturerName = strings.TrimSpace(r.PostForm.Get("manufacturer_name"))
+	f.LocationID = strings.TrimSpace(r.PostForm.Get("location_id"))
+	f.LocationName = strings.TrimSpace(r.PostForm.Get("location_name"))
+	f.Count = ParseQuantity(r.PostForm.Get("count"))
+	f.PurchasePrice = strings.TrimSpace(r.PostForm.Get("purchase_price"))
+	f.RentalPrice = strings.TrimSpace(r.PostForm.Get("rental_price"))
+	f.Notes = strings.TrimSpace(r.PostForm.Get("notes"))
 	file, header, err := r.FormFile("image")
 	if err == nil {
 		f.Image = file
@@ -385,15 +401,23 @@ type ContentForm struct {
 	validator.Validator
 }
 
+// NewContentForm returns a ContentForm with an initialized Errors map, safe for template rendering.
+func NewContentForm() *ContentForm {
+	f := &ContentForm{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // ParseContent reads the content assign form fields from r.
 func ParseContent(r *http.Request) (ContentForm, error) {
+	f := ContentForm{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return ContentForm{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return ContentForm{
-		MemberName: strings.TrimSpace(r.PostForm.Get("member_name")),
-		Quantity:   ParseQuantity(r.PostForm.Get("quantity")),
-	}, nil
+	f.MemberName = strings.TrimSpace(r.PostForm.Get("member_name"))
+	f.Quantity = ParseQuantity(r.PostForm.Get("quantity"))
+	return f, nil
 }
 
 // Validate checks ContentForm fields and returns true when all checks pass.

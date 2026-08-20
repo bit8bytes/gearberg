@@ -61,7 +61,7 @@ func New(opts ...Option) *Templates {
 // (for full-page rendering) so both render paths share one compiled template set.
 func (t *Templates) Parse(pages []pages.Page) (*template.Template, map[string]*template.Template, error) {
 	// missingkey=error surfaces missing map keys at render time instead of silently emitting "".
-	base, err := template.New("root").Funcs(t.funcMap).ParseFS(EmbedFS, "layouts/root.tmpl", "components/*.tmpl", "fragments/*.tmpl")
+	base, err := template.New("root").Funcs(t.funcMap).Option("missingkey=error").ParseFS(EmbedFS, "layouts/root.tmpl", "components/*.tmpl", "fragments/*.tmpl")
 	if err != nil {
 		return nil, nil, fmt.Errorf("base template: %w", err)
 	}

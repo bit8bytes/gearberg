@@ -16,15 +16,15 @@
               id="email"
               name="email"
               type="email"
-              class="input w-full {{ with .Form.Errors.email }}input-error{{ end }}"
+              class="input w-full {{ with index .Form.Errors "email" }}input-error{{ end }}"
               placeholder="Email"
               value="{{ .Form.Email }}"
               autocomplete="email"
-              {{ if .Form.Errors.email }}aria-describedby="email-error" aria-invalid="true"{{ end }}
+              {{ if index .Form.Errors "email" }}aria-describedby="email-error" aria-invalid="true"{{ end }}
             />
             <span>Email</span>
           </label>
-          {{ with .Form.Errors.email }}
+          {{ with index .Form.Errors "email" }}
           <div class="label">
             <span id="email-error" class="label-text-alt text-error">{{ . }}</span>
           </div>
@@ -39,14 +39,14 @@
               id="repeat_password"
               name="repeat_password"
               type="password"
-              class="input w-full {{ with .Form.Errors.repeat_password }}input-error{{ end }}"
+              class="input w-full {{ with index .Form.Errors "repeat_password" }}input-error{{ end }}"
               placeholder="Repeat Password"
               autocomplete="new-password"
-              {{ if .Form.Errors.repeat_password }}aria-describedby="repeat-password-error" aria-invalid="true"{{ end }}
+              {{ if index .Form.Errors "repeat_password" }}aria-describedby="repeat-password-error" aria-invalid="true"{{ end }}
             />
             <span>Repeat Password</span>
           </label>
-          {{ with .Form.Errors.repeat_password }}
+          {{ with index .Form.Errors "repeat_password" }}
           <div class="label">
             <span id="repeat-password-error" class="label-text-alt text-error">{{ . }}</span>
           </div>

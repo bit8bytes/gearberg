@@ -55,7 +55,7 @@ func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request)
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &manufacturers.Form{}
+	data.Form = manufacturers.NewForm()
 	data.Data = manufacturersData{
 		OrgID:            id,
 		Manufacturers:    mfrs,
@@ -67,7 +67,7 @@ func (app *application) getManufacturers(w http.ResponseWriter, r *http.Request)
 func (app *application) getManufacturerNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = &manufacturers.Form{}
+	data.Form = manufacturers.NewForm()
 	data.Data = manufacturerData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.ManufacturersNew, data)
 }

@@ -55,7 +55,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 	}
 
 	data := app.html.TemplateData(r)
-	data.Form = &categories.Form{}
+	data.Form = categories.NewForm()
 	data.Data = equipmentCategoriesData{
 		OrgID:         id,
 		Categories:    cats,
@@ -67,7 +67,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 func (app *application) getEquipmentCategoryNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = &categories.Form{}
+	data.Form = categories.NewForm()
 	data.Data = equipmentCategoryData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesNew, data)
 }

@@ -16,15 +16,15 @@
               id="email"
               name="email"
               type="email"
-              class="input w-full {{ with .Form.Errors.email }}input-error{{ end }}"
+              class="input w-full {{ with index .Form.Errors "email" }}input-error{{ end }}"
               placeholder="Email"
               value="{{ .Form.Email }}"
               autocomplete="email"
-              {{ if .Form.Errors.email }}aria-describedby="email-error" aria-invalid="true"{{ end }}
+              {{ if index .Form.Errors "email" }}aria-describedby="email-error" aria-invalid="true"{{ end }}
             />
             <span>Email</span>
           </label>
-          {{ with .Form.Errors.email }}
+          {{ with index .Form.Errors "email" }}
           <div class="label">
             <span id="email-error" class="label-text-alt text-error">{{ . }}</span>
           </div>
@@ -38,10 +38,10 @@
                 id="password"
                 name="password"
                 type="password"
-                class="input w-full {{ with .Form.Errors.password }}input-error{{ end }}"
+                class="input w-full {{ with index .Form.Errors "password" }}input-error{{ end }}"
                 placeholder="Password"
                 autocomplete="current-password"
-                {{ if .Form.Errors.password }}aria-describedby="password-error" aria-invalid="true"{{ end }}
+                {{ if index .Form.Errors "password" }}aria-describedby="password-error" aria-invalid="true"{{ end }}
               />
               <span>Password</span>
             </label>
@@ -53,7 +53,7 @@
               aria-pressed="false"
             >Show</button>
           </div>
-          {{ with .Form.Errors.password }}
+          {{ with index .Form.Errors "password" }}
           <div class="label">
             <span id="password-error" class="label-text-alt text-error">{{ . }}</span>
           </div>

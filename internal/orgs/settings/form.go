@@ -35,16 +35,24 @@ type Form struct {
 	validator.Validator
 }
 
+// NewForm returns a Form with an initialized Errors map, safe for template rendering.
+func NewForm() *Form {
+	f := &Form{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // Parse reads the org settings form fields from r.
 func Parse(r *http.Request) (Form, error) {
+	f := Form{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return Form{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return Form{
-		Currency: strings.TrimSpace(r.PostForm.Get("currency")),
-		VatRate:  strings.TrimSpace(r.PostForm.Get("vat_rate")),
-		Timezone: strings.TrimSpace(r.PostForm.Get("timezone")),
-	}, nil
+	f.Currency = strings.TrimSpace(r.PostForm.Get("currency"))
+	f.VatRate = strings.TrimSpace(r.PostForm.Get("vat_rate"))
+	f.Timezone = strings.TrimSpace(r.PostForm.Get("timezone"))
+	return f, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.
@@ -63,14 +71,15 @@ func (f *Form) Validate() bool {
 
 // FormFromOrgSettings pre-populates a Form from stored OrgSettings.
 func FormFromOrgSettings(s *OrgSettings) Form {
+	f := Form{}
+	f.Errors = make(map[string]string)
 	if s == nil {
-		return Form{}
+		return f
 	}
-	return Form{
-		Currency: s.Currency.String(),
-		VatRate:  s.VatRate.Percent(),
-		Timezone: s.Timezone.String(),
-	}
+	f.Currency = s.Currency.String()
+	f.VatRate = s.VatRate.Percent()
+	f.Timezone = s.Timezone.String()
+	return f
 }
 
 // ParsedVatRate converts the entered percentage string to a VatRate (basis points).

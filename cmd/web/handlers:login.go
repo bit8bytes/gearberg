@@ -43,7 +43,7 @@ func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseW
 
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
-	tmplData.Form = &accounts.SignInForm{}
+	tmplData.Form = accounts.NewSignInForm()
 	tmplData.Data = app.loginData()
 	return app.html.Render(w, r, http.StatusOK, pages.SignIn, tmplData)
 }
@@ -86,7 +86,7 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 
 func (app *application) getSignUp(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
-	tmplData.Form = &accounts.SignUpForm{}
+	tmplData.Form = accounts.NewSignUpForm()
 	return app.html.Render(w, r, http.StatusOK, pages.SignUp, tmplData)
 }
 
@@ -135,7 +135,7 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *http
 
 func (app *application) getForgotPassword(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
-	tmplData.Form = &accounts.ForgotPasswordForm{}
+	tmplData.Form = accounts.NewForgotPasswordForm()
 	return app.html.Render(w, r, http.StatusOK, pages.ForgotPassword, tmplData)
 }
 
@@ -181,13 +181,13 @@ func (app *application) postForgotPassword(w http.ResponseWriter, r *http.Reques
 
 func (app *application) getForgotPasswordSuccess(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
-	tmplData.Form = &accounts.ForgotPasswordForm{}
+	tmplData.Form = accounts.NewForgotPasswordForm()
 	return app.html.Render(w, r, http.StatusOK, pages.ForgotPasswordSuccess, tmplData)
 }
 
 func (app *application) getResetPassword(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	tmplData := app.html.TemplateData(r)
-	tmplData.Form = &accounts.ResetPasswordForm{Token: r.URL.Query().Get("token")}
+	tmplData.Form = accounts.NewResetPasswordForm(r.URL.Query().Get("token"))
 	return app.html.Render(w, r, http.StatusOK, pages.ResetPassword, tmplData)
 }
 

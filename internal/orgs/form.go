@@ -30,14 +30,22 @@ type Form struct {
 	validator.Validator
 }
 
+// NewForm returns a Form with an initialized Errors map, safe for template rendering.
+func NewForm() *Form {
+	f := &Form{}
+	f.Errors = make(map[string]string)
+	return f
+}
+
 // Parse reads the org form fields from r.
 func Parse(r *http.Request) (Form, error) {
+	f := Form{}
+	f.Errors = make(map[string]string)
 	if err := r.ParseForm(); err != nil {
-		return Form{}, fmt.Errorf("parse form: %w", err)
+		return f, fmt.Errorf("parse form: %w", err)
 	}
-	return Form{
-		DisplayName: strings.TrimSpace(r.PostForm.Get("name")),
-	}, nil
+	f.DisplayName = strings.TrimSpace(r.PostForm.Get("name"))
+	return f, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.
