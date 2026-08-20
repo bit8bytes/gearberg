@@ -298,7 +298,7 @@ func (f *UnitForm) ParsedPurchasePrice() *Cents { return ParseCents(f.PurchasePr
 
 // NewForm holds the parsed form input and validation state for inventory creation (both types).
 type NewForm struct {
-	TypeID           string // "bulk" or "serialized"
+	TypeID           string // "bulk", "serialized", or "kit"
 	UsageTypeID      string // "rental" or "sale"
 	Name             string
 	CategoryID       string
@@ -307,8 +307,7 @@ type NewForm struct {
 	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
 	LocationID       string
 	LocationName     string // set when user typed a new location name not yet in the DB
-	Count            int64  // total_stock for bulk; number of units to generate for serialized
-	HasContent       bool
+	Count            int64  // total_stock for bulk; number of units to generate for serialized/kit
 	PurchasePrice    string
 	RentalPrice      string
 	Notes            string
@@ -333,7 +332,6 @@ func ParseNew(r *http.Request) (NewForm, error) {
 		LocationID:       strings.TrimSpace(r.PostForm.Get("location_id")),
 		LocationName:     strings.TrimSpace(r.PostForm.Get("location_name")),
 		Count:            ParseQuantity(r.PostForm.Get("count")),
-		HasContent:       r.PostForm.Get("has_content") == "1",
 		PurchasePrice:    strings.TrimSpace(r.PostForm.Get("purchase_price")),
 		RentalPrice:      strings.TrimSpace(r.PostForm.Get("rental_price")),
 		Notes:            strings.TrimSpace(r.PostForm.Get("notes")),
@@ -348,12 +346,28 @@ func ParseNew(r *http.Request) (NewForm, error) {
 
 // Validate checks NewForm fields and returns true when all checks pass.
 func (f *NewForm) Validate() bool {
-	f.Check(f.TypeID == "bulk" || f.TypeID == "serialized", "type_id", "Must be bulk or serialized")
+	f.Check(f.TypeID == "bulk" || f.TypeID == "serialized" || f.TypeID == "kit", "type_id", "Must be bulk, serialized, or kit")
 	f.Check(f.UsageTypeID == "rental" || f.UsageTypeID == "sale", "usage_type_id", "Must be rental or sale")
 	f.Check(validator.NotBlank(f.Name), "name", "This field cannot be blank")
 	f.Check(validator.MaxChars(f.Name, 200), "name", "This field cannot exceed 200 characters")
 	f.Check(f.Count >= 1, "count", "Must be at least 1")
 	return f.Valid()
+}
+
+// TrackingType resolves the tracking type: kit maps to Serialized, everything else is literal.
+func (f *NewForm) TrackingType() TrackingType {
+	if f.TypeID == "bulk" {
+		return Bulk
+	}
+	return Serialized
+}
+
+// EquipmentType resolves the equipment type: kit maps to Kit, everything else to Standard.
+func (f *NewForm) EquipmentType() Type {
+	if f.TypeID == "kit" {
+		return Kit
+	}
+	return Standard
 }
 
 // ToPricing converts the form's parsed values into a Pricing sub-struct.

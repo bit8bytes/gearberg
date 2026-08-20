@@ -45,7 +45,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 		PowerW:                 "12",
 		WireGaugeMM2X100:       "150",
 		Quantity:               "7",
-		HasContent:             "",
+		EquipmentTypeLabel:     "",
 		UnitSerialNumber:       "",
 		UnitManufacturerSerial: "",
 		UnitPurchasePrice:      "",
@@ -75,7 +75,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 		want.PowerW,
 		want.WireGaugeMM2X100,
 		want.Quantity,
-		want.HasContent,
+		want.EquipmentTypeLabel,
 		want.UnitSerialNumber,
 		want.UnitManufacturerSerial,
 		want.UnitPurchasePrice,
@@ -119,7 +119,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 	check("PowerW", want.PowerW, got.PowerW)
 	check("WireGaugeMM2X100", want.WireGaugeMM2X100, got.WireGaugeMM2X100)
 	check("Quantity", want.Quantity, got.Quantity)
-	check("HasContent", want.HasContent, got.HasContent)
+	check("EquipmentTypeLabel", want.EquipmentTypeLabel, got.EquipmentTypeLabel)
 	check("UnitSerialNumber", want.UnitSerialNumber, got.UnitSerialNumber)
 	check("UnitManufacturerSerial", want.UnitManufacturerSerial, got.UnitManufacturerSerial)
 	check("UnitPurchasePrice", want.UnitPurchasePrice, got.UnitPurchasePrice)
@@ -167,6 +167,42 @@ func TestParseCSV_templateValid(t *testing.T) {
 	}
 	if len(rows) == 0 {
 		t.Fatal("TemplateCSV has no data rows")
+	}
+}
+
+// TestParseCSV_legacyHasContentHeader verifies that old exports using "Has Content"
+// instead of "Equipment Type" are accepted and their boolean values normalised.
+func TestParseCSV_legacyHasContentHeader(t *testing.T) {
+	headers := make([]string, len(imports.ExpectedHeaders))
+	copy(headers, imports.ExpectedHeaders)
+	headers[18] = "Has Content" // old column name
+
+	cases := []struct {
+		hasContent        string
+		wantEquipmentType string
+	}{
+		{"TRUE", "Kit"},
+		{"FALSE", "Standard"},
+		{"1", "Kit"},
+		{"0", "Standard"},
+		{"", ""},      // blank → left as-is, resolves to Standard via TypeFromStringOrDefault
+		{"Kit", "Kit"}, // already canonical
+	}
+
+	for _, tc := range cases {
+		row := strings.Join([]string{
+			"Foo", "Bulk", "Rental", "Audio", "Shure", "WH",
+			"15", "99", "", "", "", "", "", "", "", "", "", "1",
+			tc.hasContent, "", "", "", "", "", "", "",
+		}, ",")
+		csv := strings.Join(headers, ",") + "\n" + row + "\n"
+		rows, err := imports.ParseCSV(strings.NewReader(csv))
+		if err != nil {
+			t.Fatalf("hasContent=%q: ParseCSV: %v", tc.hasContent, err)
+		}
+		if got := rows[0].EquipmentTypeLabel; got != tc.wantEquipmentType {
+			t.Errorf("hasContent=%q: EquipmentTypeLabel: want %q, got %q", tc.hasContent, tc.wantEquipmentType, got)
+		}
 	}
 }
 

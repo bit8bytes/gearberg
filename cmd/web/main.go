@@ -75,7 +75,7 @@ func run() error {
 	// serve starts the server and listens on the configured port via options
 	case "serve":
 		return runServe(args)
-		// check verifies the provided configuration and returns nothing if successfull.
+		// check verifies the provided configuration and returns nothing if successful.
 	case "check":
 		return runCheck(args)
 	case "version":

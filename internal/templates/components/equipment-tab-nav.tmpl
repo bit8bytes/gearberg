@@ -11,7 +11,7 @@
         <span class="badge badge-sm ml-1">{{ .Data.Item.TotalStock }}</span>
       </a>
       {{ end }}{{ end }}
-      {{ if .Data.Item }}{{ if or (eq .Data.Item.Kind 2) .Data.Item.HasContent }}
+      {{ if .Data.Item }}{{ if eq .Data.Item.Type.String "kit" }}
       <a href="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/content" role="tab" class="tab{{ if eq .Data.ActiveTab "content" }} tab-active{{ end }}">
         Content
         {{ if .Data.Item.ContentCount }}<span class="badge badge-sm ml-1">{{ .Data.Item.ContentCount }}</span>{{ end }}

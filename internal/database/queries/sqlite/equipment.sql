@@ -19,7 +19,6 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
-    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,
@@ -102,7 +101,6 @@ INSERT INTO equipment (
     usage_type_id,
     location_id,
     name,
-    has_content,
     is_archived,
     rental_price,
     resale_price,
@@ -125,7 +123,6 @@ INSERT INTO equipment (
     sqlc.arg(usage_type_id),
     sqlc.arg(location_id),
     sqlc.arg(name),
-    sqlc.arg(has_content),
     sqlc.arg(is_archived),
     sqlc.arg(rental_price),
     sqlc.arg(resale_price),
@@ -149,7 +146,6 @@ INSERT INTO equipment (
     location_id,
     storage_object_id,
     name,
-    has_content,
     is_archived,
     rental_price,
     resale_price,
@@ -178,7 +174,6 @@ SELECT
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.name,
-    e.has_content,
     e.is_archived,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)

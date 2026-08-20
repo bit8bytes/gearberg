@@ -46,16 +46,41 @@ func ParseCSV(r io.Reader) ([]RawRow, error) {
 	return readRows(cr)
 }
 
+// columnAliases maps legacy column names to their current canonical name.
+// Old exports that used a different name for a column are accepted transparently.
+var columnAliases = map[string]string{
+	// "Has Content" was a boolean column (TRUE/FALSE) replaced by "Equipment Type"
+	// (Standard/Kit). Values are normalised in readRows.
+	"Has Content": "Equipment Type",
+}
+
 func validateHeader(header []string) error {
 	if len(header) != len(ExpectedHeaders) {
 		return fmt.Errorf("expected %d columns, got %d", len(ExpectedHeaders), len(header))
 	}
 	for i, h := range header {
-		if h != ExpectedHeaders[i] {
+		canonical := h
+		if alias, ok := columnAliases[h]; ok {
+			canonical = alias
+		}
+		if canonical != ExpectedHeaders[i] {
 			return fmt.Errorf("column %d: expected %q, got %q", i+1, ExpectedHeaders[i], h)
 		}
 	}
 	return nil
+}
+
+// normalizeEquipmentTypeLabel maps legacy boolean values from the old "Has Content"
+// column to the current Equipment Type labels used by TypeFromString.
+func normalizeEquipmentTypeLabel(v string) string {
+	switch strings.ToUpper(strings.TrimSpace(v)) {
+	case "TRUE", "1":
+		return "Kit"
+	case "FALSE", "0":
+		return "Standard"
+	default:
+		return v
+	}
 }
 
 // readRows reads data rows after the header has been consumed.
@@ -94,7 +119,7 @@ func readRows(cr *csv.Reader) ([]RawRow, error) {
 			PowerW:                 strings.TrimSpace(record[15]),
 			WireGaugeMM2X100:       strings.TrimSpace(record[16]),
 			Quantity:               strings.TrimSpace(record[17]),
-			HasContent:             strings.TrimSpace(record[18]),
+			EquipmentTypeLabel:     normalizeEquipmentTypeLabel(record[18]),
 			UnitSerialNumber:       strings.TrimSpace(record[19]),
 			UnitManufacturerSerial: strings.TrimSpace(record[20]),
 			UnitPurchasePrice:      strings.TrimSpace(record[21]),

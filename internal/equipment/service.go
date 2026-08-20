@@ -90,9 +90,6 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	if err := s.resolveRefs(ctx, c.OrgID, &c.ManufacturerID, c.ManufacturerName, &c.LocationID, c.LocationName, &c.CategoryID, c.CategoryName); err != nil {
 		return nil, fmt.Errorf("Create: %w", err)
 	}
-	if c.TrackingType == Bulk {
-		c.HasContent = false
-	}
 	itemID := ksuid.New().String()
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
@@ -351,7 +348,7 @@ func (s *Service) GetContentContainer(ctx context.Context, id string) (*Equipmen
 	if err != nil {
 		return nil, fmt.Errorf("GetContentContainer: %w", err)
 	}
-	if item.TrackingType != Serialized && !item.HasContent {
+	if item.Type != Kit {
 		return nil, fmt.Errorf("GetContentContainer: %w", ErrNoContentTab)
 	}
 	return item, nil
@@ -375,7 +372,7 @@ func (s *Service) AssignContent(ctx context.Context, a AssignContent, member Equ
 	if member.ID == a.EquipmentID {
 		return nil, fmt.Errorf("AssignContent: %w: an item cannot contain itself", ErrInvalidContent)
 	}
-	if member.HasContent || member.TrackingType == Serialized {
+	if member.Type == Kit {
 		return nil, fmt.Errorf("AssignContent: %w: cannot add a container as content", ErrInvalidContent)
 	}
 	item, err := s.repo.AssignContent(ctx, a)

@@ -105,7 +105,7 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 			PowerMw:                raw.PowerW,
 			WireGaugeMM2X100:       raw.WireGaugeMM2X100,
 			Quantity:               raw.Quantity,
-			HasContent:             raw.HasContent,
+			EquipmentTypeLabel:     raw.EquipmentTypeLabel,
 			UnitSerialNumber:       raw.UnitSerialNumber,
 			UnitManufacturerSerial: raw.UnitManufacturerSerial,
 			UnitPurchasePrice:      raw.UnitPurchasePrice,
@@ -308,11 +308,11 @@ func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 		ManufacturerID: mfrID,
 		LocationID:     locID,
 		Notes:          row.Notes,
+		EquipmentType:  equipment.TypeFromStringOrDefault(strings.ToLower(strings.TrimSpace(row.EquipmentTypeLabel))),
 		Pricing: equipment.Pricing{
 			PurchasePrice: equipment.ParseCents(row.ResalePrice),
 			RentalPrice:   equipment.ParseCents(row.RentalPrice),
 		},
-		HasContent: strings.EqualFold(row.HasContent, "true") || row.HasContent == "1",
 		Properties: equipment.Properties{
 			Weight:    equipment.ParseGrams(row.WeightG),
 			Width:     equipment.ParseMillimeters(row.WidthMm),
@@ -391,9 +391,6 @@ func validateRow(raw RawRow) string {
 	}
 	if strings.TrimSpace(raw.CategoryName) == "" {
 		return "Category is required"
-	}
-	if (strings.EqualFold(raw.HasContent, "true") || raw.HasContent == "1") && !strings.EqualFold(tl, "serialized") {
-		return "Has Content is only supported for Serialized items"
 	}
 	return ""
 }

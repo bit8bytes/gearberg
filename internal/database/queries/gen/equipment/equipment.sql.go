@@ -33,7 +33,6 @@ INSERT INTO equipment (
     usage_type_id,
     location_id,
     name,
-    has_content,
     is_archived,
     rental_price,
     resale_price,
@@ -67,8 +66,7 @@ INSERT INTO equipment (
     ?18,
     ?19,
     ?20,
-    ?21,
-    ?22
+    ?21
 ) RETURNING
     id,
     org_id,
@@ -80,7 +78,6 @@ INSERT INTO equipment (
     location_id,
     storage_object_id,
     name,
-    has_content,
     is_archived,
     rental_price,
     resale_price,
@@ -106,7 +103,6 @@ type CreateParams struct {
 	UsageTypeID      int64
 	LocationID       sql.NullString
 	Name             string
-	HasContent       int64
 	IsArchived       int64
 	RentalPrice      sql.NullInt64
 	ResalePrice      sql.NullInt64
@@ -132,7 +128,6 @@ type CreateRow struct {
 	LocationID       sql.NullString
 	StorageObjectID  sql.NullString
 	Name             string
-	HasContent       int64
 	IsArchived       int64
 	RentalPrice      sql.NullInt64
 	ResalePrice      sql.NullInt64
@@ -159,7 +154,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		arg.UsageTypeID,
 		arg.LocationID,
 		arg.Name,
-		arg.HasContent,
 		arg.IsArchived,
 		arg.RentalPrice,
 		arg.ResalePrice,
@@ -185,7 +179,6 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (CreateRow, erro
 		&i.LocationID,
 		&i.StorageObjectID,
 		&i.Name,
-		&i.HasContent,
 		&i.IsArchived,
 		&i.RentalPrice,
 		&i.ResalePrice,
@@ -227,7 +220,6 @@ SELECT
     COALESCE(wl.name, '') AS location_name,
     e.storage_object_id,
     e.name,
-    e.has_content,
     e.is_archived,
     CASE
         WHEN tt.name = 'bulk'       THEN COALESCE((SELECT SUM(ebi.quantity) FROM equipment_bulk_items ebi WHERE ebi.equipment_id = e.id), 0)
@@ -268,7 +260,6 @@ type GetByIDRow struct {
 	LocationName      string
 	StorageObjectID   sql.NullString
 	Name              string
-	HasContent        int64
 	IsArchived        int64
 	TotalStock        int64
 	ContentCount      int64
@@ -303,7 +294,6 @@ func (q *Queries) GetByID(ctx context.Context, id string) (GetByIDRow, error) {
 		&i.LocationName,
 		&i.StorageObjectID,
 		&i.Name,
-		&i.HasContent,
 		&i.IsArchived,
 		&i.TotalStock,
 		&i.ContentCount,
@@ -345,7 +335,6 @@ SELECT
         WHEN tt.name = 'serialized' THEN (SELECT COUNT(*) FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id)
         ELSE 0
     END AS total_stock,
-    e.has_content,
     e.is_archived,
     e.rental_price,
     e.resale_price,
@@ -399,7 +388,6 @@ type ListRow struct {
 	TrackingTypeName  string
 	UsageTypeID       int64
 	TotalStock        int64
-	HasContent        int64
 	IsArchived        int64
 	RentalPrice       sql.NullInt64
 	ResalePrice       sql.NullInt64
@@ -449,7 +437,6 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.TrackingTypeName,
 			&i.UsageTypeID,
 			&i.TotalStock,
-			&i.HasContent,
 			&i.IsArchived,
 			&i.RentalPrice,
 			&i.ResalePrice,

@@ -29,7 +29,7 @@ INSERT INTO equipment_imports (
     power_mw,
     wire_gauge_mm2_x100,
     quantity,
-    has_content,
+    equipment_type_label,
     unit_serial_number,
     unit_manufacturer_serial,
     unit_purchase_price,

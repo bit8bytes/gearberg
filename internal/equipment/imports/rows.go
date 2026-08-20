@@ -27,10 +27,7 @@ import (
 // order defined by ExpectedHeaders.
 // Bulk items produce a single row; serialized items produce one row per unit.
 func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Unit) [][]string {
-	hasContent := ""
-	if item.HasContent {
-		hasContent = "TRUE"
-	}
+	equipmentTypeLabel := item.Type.Label()
 
 	base := []string{
 		item.Name,
@@ -56,7 +53,7 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 		row := make([]string, len(ExpectedHeaders))
 		copy(row, base)
 		row[17] = strconv.FormatInt(item.TotalStock, 10)
-		row[18] = hasContent
+		row[18] = equipmentTypeLabel
 		return [][]string{row}
 	}
 
@@ -64,7 +61,7 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 	for _, u := range units {
 		row := make([]string, len(ExpectedHeaders))
 		copy(row, base)
-		row[18] = hasContent
+		row[18] = equipmentTypeLabel
 		row[19] = u.SerialNumber
 		row[20] = u.ManufacturerSerialNumber
 		row[21] = u.PurchasePrice.ToDecimal()

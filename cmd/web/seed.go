@@ -70,10 +70,11 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 		}
 	}
 
-	for _, k := range []equipment.Kind{
-		equipment.Physical,
+	for _, t := range []equipment.Type{
+		equipment.Standard,
+		equipment.Kit,
 	} {
-		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO equipment_types (id, name) VALUES (?, ?)`, k.ID(), k.String()); err != nil {
+		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO equipment_types (id, name) VALUES (?, ?)`, t.ID(), t.String()); err != nil {
 			return fmt.Errorf("seed equipment_types: %w", err)
 		}
 	}

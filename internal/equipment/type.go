@@ -16,44 +16,59 @@
 // Package equipment provides equipment functionality.
 package equipment
 
-// Kind represents whether equipment is a physical item or a virtual combination.
+// Type represents the type of an equipment item.
 // The integer value matches the id stored in the equipment_types table,
 // which is seeded at startup rather than via migrations.
-type Kind int64
+type Type int64
 
-// Equipment kind identifiers seeded into the equipment_types table.
+// Equipment type identifiers seeded into the equipment_types table.
 const (
-	Physical Kind = 1
+	Standard Type = 1
+	Kit      Type = 2
 )
 
-// ID returns the database id for the equipment kind.
-func (k Kind) ID() int64 { return int64(k) }
+// ID returns the database id for the equipment type.
+func (t Type) ID() int64 { return int64(t) }
 
 // String returns the name stored in the equipment_types table.
-func (k Kind) String() string {
-	switch k {
-	case Physical:
-		return "physical"
+func (t Type) String() string {
+	switch t {
+	case Standard:
+		return "standard"
+	case Kit:
+		return "kit"
 	default:
 		return ""
 	}
 }
 
-// KindFromString returns the Kind matching name, or 0 when unknown.
-func KindFromString(name string) Kind {
+// TypeFromString returns the Type matching name, or 0 when unknown.
+func TypeFromString(name string) Type {
 	switch name {
-	case "physical":
-		return Physical
+	case "standard":
+		return Standard
+	case "kit":
+		return Kit
 	default:
 		return 0
 	}
 }
 
-// Label returns the human-friendly label for the equipment kind.
-func (k Kind) Label() string {
-	switch k {
-	case Physical:
-		return "Physical"
+// TypeFromStringOrDefault returns the Type matching name, or Standard when unknown.
+func TypeFromStringOrDefault(name string) Type {
+	if t := TypeFromString(name); t != 0 {
+		return t
+	}
+	return Standard
+}
+
+// Label returns the human-friendly label for the equipment type.
+func (t Type) Label() string {
+	switch t {
+	case Standard:
+		return "Standard"
+	case Kit:
+		return "Kit"
 	default:
 		return ""
 	}

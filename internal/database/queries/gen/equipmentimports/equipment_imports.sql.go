@@ -29,7 +29,7 @@ func (q *Queries) DeleteImportsByOrgID(ctx context.Context, orgID string) error 
 }
 
 const getImportRow = `-- name: GetImportRow :one
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE id = ?
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, equipment_type_label, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE id = ?
 `
 
 func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport, error) {
@@ -66,7 +66,7 @@ func (q *Queries) GetImportRow(ctx context.Context, id string) (EquipmentImport,
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
 		&i.Quantity,
-		&i.HasContent,
+		&i.EquipmentTypeLabel,
 		&i.UnitSerialNumber,
 		&i.UnitManufacturerSerial,
 		&i.UnitPurchasePrice,
@@ -109,7 +109,7 @@ INSERT INTO equipment_imports (
     power_mw,
     wire_gauge_mm2_x100,
     quantity,
-    has_content,
+    equipment_type_label,
     unit_serial_number,
     unit_manufacturer_serial,
     unit_purchase_price,
@@ -122,7 +122,7 @@ INSERT INTO equipment_imports (
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark
+) RETURNING id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, equipment_type_label, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark
 `
 
 type InsertImportRowParams struct {
@@ -155,7 +155,7 @@ type InsertImportRowParams struct {
 	PowerMw                string
 	WireGaugeMm2X100       string
 	Quantity               string
-	HasContent             string
+	EquipmentTypeLabel     string
 	UnitSerialNumber       string
 	UnitManufacturerSerial string
 	UnitPurchasePrice      string
@@ -196,7 +196,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		arg.PowerMw,
 		arg.WireGaugeMm2X100,
 		arg.Quantity,
-		arg.HasContent,
+		arg.EquipmentTypeLabel,
 		arg.UnitSerialNumber,
 		arg.UnitManufacturerSerial,
 		arg.UnitPurchasePrice,
@@ -237,7 +237,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 		&i.PowerMw,
 		&i.WireGaugeMm2X100,
 		&i.Quantity,
-		&i.HasContent,
+		&i.EquipmentTypeLabel,
 		&i.UnitSerialNumber,
 		&i.UnitManufacturerSerial,
 		&i.UnitPurchasePrice,
@@ -250,7 +250,7 @@ func (q *Queries) InsertImportRow(ctx context.Context, arg InsertImportRowParams
 }
 
 const listImportRowsByImportID = `-- name: ListImportRowsByImportID :many
-SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, has_content, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
+SELECT id, import_id, org_id, row_number, status, error_message, "action", existing_equipment_id, existing_item_id, created_at, name, type_label, tracking_label, usage_type_label, category_name, manufacturer_name, location_name, purchase_price, rental_price, resale_price, notes, weight_g, width_mm, height_mm, depth_mm, voltage_mv, current_ma, power_mw, wire_gauge_mm2_x100, quantity, equipment_type_label, unit_serial_number, unit_manufacturer_serial, unit_purchase_price, unit_purchased_at, next_inspection_at, unit_is_active, unit_remark FROM equipment_imports WHERE import_id = ? ORDER BY row_number ASC
 `
 
 func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string) ([]EquipmentImport, error) {
@@ -293,7 +293,7 @@ func (q *Queries) ListImportRowsByImportID(ctx context.Context, importID string)
 			&i.PowerMw,
 			&i.WireGaugeMm2X100,
 			&i.Quantity,
-			&i.HasContent,
+			&i.EquipmentTypeLabel,
 			&i.UnitSerialNumber,
 			&i.UnitManufacturerSerial,
 			&i.UnitPurchasePrice,

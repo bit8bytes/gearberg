@@ -203,6 +203,7 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 
 	base := equipment.Base{
 		OrgID:            id,
+		EquipmentType:    form.EquipmentType(),
 		UsageTypeID:      equipment.ParseUsage(form.UsageTypeID).ID(),
 		Name:             form.Name,
 		CategoryID:       form.CategoryID,
@@ -211,13 +212,12 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		ManufacturerName: form.ManufacturerName,
 		LocationID:       form.LocationID,
 		LocationName:     form.LocationName,
-		HasContent:       form.HasContent,
 		Notes:            form.Notes,
 		Pricing:          form.ToPricing(),
 	}
 
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
-		TrackingType: equipment.TypeFromString(form.TypeID),
+		TrackingType: form.TrackingType(),
 		Base:         base,
 		TotalStock:   form.Count,
 		UnitCount:    form.Count,
@@ -285,7 +285,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
 
-	itemType := equipment.TypeFromString(form.TypeID)
+	itemType := equipment.TrackingTypeFromString(form.TypeID)
 	if err := app.services.equipment.UpdateDetails(ctx, equipment.UpdateEquipmentDetails{
 		ID:               itemID,
 		OrgID:            orgID,

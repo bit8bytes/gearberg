@@ -84,7 +84,7 @@ func TestRoundTrip_bulk(t *testing.T) {
 	check("ResalePrice", "99.00", got.ResalePrice)
 	check("Notes", "Cardioid dynamic mic", got.Notes)
 	check("Quantity", "7", got.Quantity)
-	check("HasContent", "", got.HasContent)
+	check("EquipmentTypeLabel", "", got.EquipmentTypeLabel)
 	check("UnitSerialNumber", "", got.UnitSerialNumber)
 }
 
@@ -98,7 +98,6 @@ func TestRoundTrip_serialized(t *testing.T) {
 		UsageType:    equipment.Rental,
 		CategoryName: "Camera",
 		LocationName: "Main Warehouse",
-		HasContent:   false,
 		Notes:        "Full-frame mirrorless camera",
 		Pricing: equipment.Pricing{
 			RentalPrice:   equipment.ParseCents("80.00"),
@@ -151,7 +150,7 @@ func TestRoundTrip_serialized(t *testing.T) {
 		check("TypeLabel", "Serialized", got.TypeLabel)
 		check("UsageTypeLabel", "Rental", got.UsageTypeLabel)
 		check("Quantity", "", got.Quantity)
-		check("HasContent", "", got.HasContent)
+		check("EquipmentTypeLabel", "", got.EquipmentTypeLabel)
 		check("UnitIsActive", "TRUE", got.UnitIsActive)
 		check("UnitSerialNumber", units[i].SerialNumber, got.UnitSerialNumber)
 		check("UnitManufacturerSerial", units[i].ManufacturerSerialNumber, got.UnitManufacturerSerial)
@@ -161,14 +160,14 @@ func TestRoundTrip_serialized(t *testing.T) {
 	check("UnitRemark", "Minor scratch on top plate", rows[1].UnitRemark)
 }
 
-func TestRoundTrip_serializedHasContent(t *testing.T) {
+func TestRoundTrip_kit(t *testing.T) {
 	item := equipment.Equipment{
 		Name:         "Pelican 1510 Case",
+		Type:         equipment.Kit,
 		TrackingType: equipment.Serialized,
 		UsageType:    equipment.Rental,
 		CategoryName: "Case",
 		LocationName: "Main Warehouse",
-		HasContent:   true,
 		Pricing: equipment.Pricing{
 			RentalPrice:   equipment.ParseCents("10.00"),
 			PurchasePrice: equipment.ParseCents("120.00"),
@@ -186,8 +185,8 @@ func TestRoundTrip_serializedHasContent(t *testing.T) {
 	if len(rows) != 1 {
 		t.Fatalf("expected 1 row, got %d", len(rows))
 	}
-	if rows[0].HasContent != "TRUE" {
-		t.Errorf("HasContent: want %q, got %q", "TRUE", rows[0].HasContent)
+	if rows[0].EquipmentTypeLabel != "Kit" {
+		t.Errorf("EquipmentTypeLabel: want %q, got %q", "Kit", rows[0].EquipmentTypeLabel)
 	}
 	if rows[0].UnitSerialNumber != "PC-1510-001" {
 		t.Errorf("UnitSerialNumber: want %q, got %q", "PC-1510-001", rows[0].UnitSerialNumber)

@@ -43,27 +43,27 @@ type Row struct {
 	ExistingItemID      *string
 	CreatedAt           int64
 	// Equipment fields
-	Name             string
-	TypeLabel        string
-	TrackingLabel    string
-	UsageTypeLabel   string
-	CategoryName     string
-	ManufacturerName string
-	LocationName     string
-	PurchasePrice    string // equipment-level purchase price (reserved; not yet in CSV)
-	RentalPrice      string
-	ResalePrice      string
-	Notes            string
-	WeightG          string
-	WidthMm          string
-	HeightMm         string
-	DepthMm          string
-	VoltageMv        string
-	CurrentMa        string
-	PowerMw          string
-	WireGaugeMM2X100 string
-	Quantity         string
-	HasContent       string
+	Name               string
+	TypeLabel          string
+	TrackingLabel      string
+	UsageTypeLabel     string
+	CategoryName       string
+	ManufacturerName   string
+	LocationName       string
+	PurchasePrice      string // equipment-level purchase price (reserved; not yet in CSV)
+	RentalPrice        string
+	ResalePrice        string
+	Notes              string
+	WeightG            string
+	WidthMm            string
+	HeightMm           string
+	DepthMm            string
+	VoltageMv          string
+	CurrentMa          string
+	PowerMw            string
+	WireGaugeMM2X100   string
+	Quantity           string
+	EquipmentTypeLabel string
 	// Unit fields (serialized items only)
 	UnitSerialNumber       string
 	UnitManufacturerSerial string
@@ -77,25 +77,25 @@ type Row struct {
 // RawRow holds a parsed CSV data row before validation and staging.
 type RawRow struct {
 	// Equipment fields
-	Name             string
-	TypeLabel        string
-	UsageTypeLabel   string
-	CategoryName     string
-	ManufacturerName string
-	LocationName     string
-	RentalPrice      string
-	ResalePrice      string
-	Notes            string
-	WeightG          string
-	WidthMm          string
-	HeightMm         string
-	DepthMm          string
-	VoltageV         string
-	CurrentA         string
-	PowerW           string
-	WireGaugeMM2X100 string
-	Quantity         string
-	HasContent       string
+	Name               string
+	TypeLabel          string
+	UsageTypeLabel     string
+	CategoryName       string
+	ManufacturerName   string
+	LocationName       string
+	RentalPrice        string
+	ResalePrice        string
+	Notes              string
+	WeightG            string
+	WidthMm            string
+	HeightMm           string
+	DepthMm            string
+	VoltageV           string
+	CurrentA           string
+	PowerW             string
+	WireGaugeMM2X100   string
+	Quantity           string
+	EquipmentTypeLabel string
 	// Unit fields (serialized items only; blank for bulk)
 	UnitSerialNumber       string
 	UnitManufacturerSerial string
@@ -117,7 +117,7 @@ var ExpectedHeaders = []string{
 	"Rental Price", "Resale Price", "Notes",
 	"Weight (kg)", "Width (cm)", "Height (cm)", "Depth (cm)", "Voltage (V)", "Current (A)", "Power (W)",
 	"Wire Gauge (mm² ×100)",
-	"Quantity", "Has Content",
+	"Quantity", "Equipment Type",
 	"Unit Serial Number", "Unit Manufacturer Serial", "Unit Purchase Price",
 	"Unit Purchased At", "Next Inspection At", "Unit Active", "Unit Remark",
 }

@@ -29,7 +29,7 @@
         />
         <datalist id="members-datalist">
           {{ range .Data.AllEquipment }}
-            {{ if and (ne .ID $.Data.ID) (not .HasContent) (ne .Kind.String "virtual") }}
+            {{ if and (ne .ID $.Data.ID) (ne .Type.String "kit") }}
             <option value="{{ .Name }}"></option>
             {{ end }}
           {{ end }}

@@ -45,6 +45,7 @@ var (
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
 	OrgID            string
+	EquipmentType    Type
 	UsageTypeID      int64
 	Name             string
 	CategoryID       string
@@ -53,7 +54,6 @@ type Base struct {
 	ManufacturerName string
 	LocationID       string
 	LocationName     string
-	HasContent       bool
 	Notes            string
 	Pricing          Pricing
 	Properties       Properties
@@ -272,7 +272,7 @@ type Pricing struct {
 type Equipment struct {
 	ID                     string
 	OrgID                  string
-	Kind                   Kind
+	Type                   Type
 	TrackingType           TrackingType
 	UsageType              UsageType
 	Name                   string
@@ -285,7 +285,6 @@ type Equipment struct {
 	ImageURL               string
 	TotalStock             int64
 	ContentCount           int64
-	HasContent             bool
 	IsArchived             bool
 	Notes                  string
 	InspectionIntervalDays *int64

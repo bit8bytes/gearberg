@@ -39,7 +39,7 @@ type EquipmentImport struct {
 	PowerMw                string
 	WireGaugeMm2X100       string
 	Quantity               string
-	HasContent             string
+	EquipmentTypeLabel     string
 	UnitSerialNumber       string
 	UnitManufacturerSerial string
 	UnitPurchasePrice      string

@@ -42,8 +42,8 @@ func (k TrackingType) String() string {
 	}
 }
 
-// TypeFromString returns the Type matching name ("bulk" or "serialized"), or 0 when unknown.
-func TypeFromString(name string) TrackingType {
+// TrackingTypeFromString returns the TrackingType matching name ("bulk" or "serialized"), or 0 when unknown.
+func TrackingTypeFromString(name string) TrackingType {
 	switch name {
 	case "bulk":
 		return Bulk

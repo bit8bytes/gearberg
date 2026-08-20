@@ -34,8 +34,7 @@ CREATE TABLE equipment_imports (
   power_mw TEXT NOT NULL DEFAULT '',
   wire_gauge_mm2_x100 TEXT NOT NULL DEFAULT '',
   quantity TEXT NOT NULL DEFAULT '1',
-  -- Has content tab for serialized items
-  has_content TEXT NOT NULL DEFAULT '0',
+  equipment_type_label TEXT NOT NULL DEFAULT '',
   -- Units for serialized equipment items
   unit_serial_number TEXT NOT NULL DEFAULT '',
   unit_manufacturer_serial TEXT NOT NULL DEFAULT '',
