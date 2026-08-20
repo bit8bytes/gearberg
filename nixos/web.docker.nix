@@ -7,13 +7,14 @@
   # forbids <nixpkgs> lookups). Defaults to a Linux nixpkgs for standalone use.
   pkgsTarget ? import <nixpkgs> {},
   version ? "dev",
+  # Target image architecture (e.g. "amd64", "arm64"). Defaults to host arch.
+  architecture ? null,
 }: let
   gearberg = import ./web.nix {
     buildpkgs = pkgsTarget;
     inherit version;
   };
-in
-  pkgs.dockerTools.buildImage {
+  imageArgs = {
     name = "gearberg";
     tag = version;
     created = "now"; # If not value "now", the image shows date 1970.
@@ -52,4 +53,11 @@ in
       # When starting the image, you should mount a host directory to /data to persist the data.
       Volumes = {"/data" = {};};
     };
-  }
+  };
+in
+  pkgs.dockerTools.buildImage (imageArgs
+    // (
+      if architecture != null
+      then {inherit architecture;}
+      else {}
+    ))

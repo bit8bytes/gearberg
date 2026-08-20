@@ -4,20 +4,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  version:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
-
     steps:
       - uses: actions/checkout@v7
 
       - name: Generate version
         id: version
         run: echo "version=$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+  build-amd64:
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
@@ -28,25 +35,62 @@ jobs:
       - name: Cache Nix store
         uses: nix-community/cache-nix-action@v7
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix', '**/*.go') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
+          primary-key: nix-amd64-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix', '**/*.go') }}
+          restore-prefixes-first-match: nix-amd64-${{ runner.os }}-
           gc-max-store-size-linux: 5368709120  # 5 GB
 
       - name: Build Docker image
-        run: nix build .#docker
+        run: nix build .#docker-amd64
 
-      - name: Export Docker image as tar
-        run: cp --dereference result gearberg-docker.tar.gz
+      - name: Login to ghcr.io
+        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v7
+      - name: Push amd64 image
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          docker load < result
+          docker tag gearberg:$VERSION ghcr.io/${{ github.repository }}:$VERSION-amd64
+          docker push ghcr.io/${{ github.repository }}:$VERSION-amd64
+
+  build-arm64:
+    needs: version
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
         with:
-          name: gearberg-docker
-          path: gearberg-docker.tar.gz
-          retention-days: 1
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-arm64-${{ runner.os }}-${{ hashFiles('flake.lock', '**/*.nix', '**/*.go') }}
+          restore-prefixes-first-match: nix-arm64-${{ runner.os }}-
+          gc-max-store-size-linux: 5368709120  # 5 GB
+
+      - name: Build Docker image
+        run: nix build .#docker-arm64
+
+      - name: Login to ghcr.io
+        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push arm64 image
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          docker load < result
+          docker tag gearberg:$VERSION ghcr.io/${{ github.repository }}:$VERSION-arm64
+          docker push ghcr.io/${{ github.repository }}:$VERSION-arm64
 
   release:
-    needs: build
+    needs: [version, build-amd64, build-arm64]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -56,28 +100,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: gearberg-docker
-
       - name: Login to ghcr.io
         run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push Docker image to ghcr.io
+      - name: Create and push multi-arch manifest
         run: |
-          VERSION="${{ needs.build.outputs.version }}"
-          IMAGE_ID=$(docker load < gearberg-docker.tar.gz | grep "Loaded image" | awk '{print $NF}')
-          docker tag "$IMAGE_ID" ghcr.io/${{ github.repository }}:$VERSION
-          docker tag "$IMAGE_ID" ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:$VERSION
-          docker push ghcr.io/${{ github.repository }}:latest
+          VERSION="${{ needs.version.outputs.version }}"
+          docker buildx imagetools create \
+            --tag ghcr.io/${{ github.repository }}:$VERSION \
+            --tag ghcr.io/${{ github.repository }}:latest \
+            ghcr.io/${{ github.repository }}:$VERSION-amd64 \
+            ghcr.io/${{ github.repository }}:$VERSION-arm64
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${{ needs.build.outputs.version }}"
+          VERSION="${{ needs.version.outputs.version }}"
           gh release create "$VERSION" \
             --title "$VERSION" \
             --generate-notes

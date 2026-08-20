@@ -39,10 +39,17 @@
         };
       }
       // {
-        docker = import ./nixos/web.docker.nix {
+        docker-amd64 = import ./nixos/web.docker.nix {
           pkgs = nixpkgs-unstable.legacyPackages.${system};
-          pkgsTarget = nixpkgs-unstable.legacyPackages.${system};
+          pkgsTarget = nixpkgs-unstable.legacyPackages."x86_64-linux";
           version = self.rev or self.dirtyRev or "dev";
+          architecture = "amd64";
+        };
+        docker-arm64 = import ./nixos/web.docker.nix {
+          pkgs = nixpkgs-unstable.legacyPackages.${system};
+          pkgsTarget = nixpkgs-unstable.legacyPackages."aarch64-linux";
+          version = self.rev or self.dirtyRev or "dev";
+          architecture = "arm64";
         };
       });
   };
