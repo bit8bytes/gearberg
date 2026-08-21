@@ -88,6 +88,10 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
+	if err := cfg.SMTP.valid(); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
 }
 
@@ -249,9 +253,7 @@ type SMTP struct {
 	From     string
 }
 
-// Valid returns nil when SMTP is not configured (host empty), allowing log-only mode.
-// When host is set, all required fields must be present.
-func (s *SMTP) Valid() error {
+func (s *SMTP) valid() error {
 	if s.Host == "" {
 		return nil
 	}
