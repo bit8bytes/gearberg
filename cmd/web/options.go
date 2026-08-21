@@ -64,8 +64,8 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
-	if err := validatePort(cfg.Port); err != nil {
-		return nil, err
+	if cfg.Port < 0 || cfg.Port > 65535 {
+		return nil, fmt.Errorf("port is not in valid range of 0-65535")
 	}
 
 	if err := cfg.parseBaseURL(); err != nil {
@@ -80,7 +80,7 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
-	if err := cfg.TLS.validate(); err != nil {
+	if err := cfg.TLS.valid(); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
-	if err := cfg.Limits.validate(); err != nil {
+	if err := cfg.Limits.valid(); err != nil {
 		return nil, err
 	}
 
@@ -168,7 +168,7 @@ func (cfg *options) parseOIDC() error {
 	}
 
 	for name, provider := range cfg.OIDCProviders {
-		if err := provider.Valid(); err != nil {
+		if err := provider.valid(); err != nil {
 			return fmt.Errorf("oidc-provider %s: %w", name, err)
 		}
 	}
@@ -183,7 +183,7 @@ type Limits struct {
 	MaxStorageBytes     int64
 }
 
-func (limits *Limits) validate() error {
+func (limits *Limits) valid() error {
 	if limits.MaxOrgs <= 0 {
 		return fmt.Errorf("-max-orgs must be greater than 0")
 	}
@@ -198,13 +198,6 @@ func (limits *Limits) validate() error {
 	}
 	if limits.MaxStorageBytes < 0 {
 		return fmt.Errorf("-max-storage-bytes must be greater or equal than 0")
-	}
-	return nil
-}
-
-func validatePort(port int) error {
-	if port < 0 || port > 65535 {
-		return fmt.Errorf("port is not in valid range of 0-65535")
 	}
 	return nil
 }
@@ -326,9 +319,9 @@ func (m *OIDCProviderMap) Set(v string) error {
 	return nil
 }
 
-// Valid returns nil when the provider is not configured (issuer empty).
+// valid returns nil when the provider is not configured (issuer empty).
 // When issuer is set, client ID and secret must also be present.
-func (p *OIDCProvider) Valid() error {
+func (p *OIDCProvider) valid() error {
 	if p.IssuerURL != "" {
 		return nil
 	}
@@ -347,7 +340,7 @@ type TLS struct {
 	KeyPath  string // conditional SECRET
 }
 
-func (t *TLS) validate() error {
+func (t *TLS) valid() error {
 	switch t.Mode {
 	case "off":
 		return nil
