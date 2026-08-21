@@ -76,6 +76,10 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
+	if err := validateDbDSN(cfg.DbDsn); err != nil {
+		return nil, err
+	}
+
 	if err := cfg.TLS.validate(); err != nil {
 		return nil, err
 	}
@@ -127,6 +131,17 @@ func (cfg *options) parseStorageDSN() error {
 		return fmt.Errorf("-storage-dsn scheme %q is not supported (supported: file)", u.Scheme)
 	}
 
+	return nil
+}
+
+func validateDbDSN(dbDsn string) error {
+	if dbDsn == "" {
+		return fmt.Errorf("-db-dsn is required (e.g. -db-dsn file:gearberg.db)")
+	}
+	if !strings.HasPrefix(dbDsn, "file:") {
+		scheme, _, _ := strings.Cut(dbDsn, ":")
+		return fmt.Errorf("-db-dsn scheme %q is not supported (supported: file)", scheme)
+	}
 	return nil
 }
 
