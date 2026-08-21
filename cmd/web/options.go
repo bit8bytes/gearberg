@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -69,13 +70,6 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
-	// If base URL is not set, default to localhost with the configured port.
-	// This is useful to get the server running quickly. For production, it needs
-	// to be configured.
-	if cfg.BaseURL == "" {
-		cfg.BaseURL = fmt.Sprintf("http://localhost:%d", cfg.Port)
-	}
-
 	// Load OIDC providers from env vars matching OIDC_<NAME>_PROVIDER.
 	// Flags take precedence. Env vars only fill in providers not already set via flag.
 	for _, env := range os.Environ() {
@@ -97,6 +91,10 @@ func parseOptions(args []string) (*options, error) {
 		}
 	}
 
+	if err := cfg.parseBaseURL(); err != nil {
+		return nil, err
+	}
+
 	if err := cfg.validateTLS(); err != nil {
 		return nil, err
 	}
@@ -106,6 +104,24 @@ func parseOptions(args []string) (*options, error) {
 	}
 
 	return cfg, nil
+}
+
+func (cfg *options) parseBaseURL() error {
+	// If base URL is not set, default to localhost with the configured port.
+	// This is useful to get the server running quickly. For production, it needs
+	// to be configured.
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = fmt.Sprintf("http://localhost:%d", cfg.Port)
+	}
+
+	u, err := url.Parse(cfg.BaseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("-base-url must be a valid URL with scheme and host (e.g. https://example.com)")
+	}
+
+	cfg.BaseURL = u.Scheme + "://" + u.Host
+
+	return nil
 }
 
 func (cfg *options) validate() error {
