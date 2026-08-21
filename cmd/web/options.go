@@ -70,27 +70,6 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
-	// Load OIDC providers from env vars matching OIDC_<NAME>_PROVIDER.
-	// Flags take precedence. Env vars only fill in providers not already set via flag.
-	for _, env := range os.Environ() {
-		k, v, _ := strings.Cut(env, "=")
-		after, ok := strings.CutPrefix(k, "OIDC_")
-		if !ok {
-			continue
-		}
-		name, ok := strings.CutSuffix(after, "_PROVIDER")
-		if !ok {
-			continue
-		}
-		name = strings.ToLower(name)
-		if _, exists := cfg.OIDCProviders[name]; exists {
-			continue
-		}
-		if err := cfg.OIDCProviders.Set(v); err != nil {
-			return nil, fmt.Errorf("env %s: %w", k, err)
-		}
-	}
-
 	if err := cfg.parseBaseURL(); err != nil {
 		return nil, err
 	}
@@ -100,6 +79,10 @@ func parseOptions(args []string) (*options, error) {
 	}
 
 	if err := cfg.validateTLS(); err != nil {
+		return nil, err
+	}
+
+	if err := cfg.parseOIDC(); err != nil {
 		return nil, err
 	}
 
@@ -145,6 +128,36 @@ func (cfg *options) parseStorageDSN() error {
 	return nil
 }
 
+func (cfg *options) parseOIDC() error {
+	// Load OIDC providers from env vars matching OIDC_<NAME>_PROVIDER.
+	// Flags take precedence. Env vars only fill in providers not already set via flag.
+	for _, env := range os.Environ() {
+		k, v, _ := strings.Cut(env, "=")
+		after, ok := strings.CutPrefix(k, "OIDC_")
+		if !ok {
+			continue
+		}
+		name, ok := strings.CutSuffix(after, "_PROVIDER")
+		if !ok {
+			continue
+		}
+		name = strings.ToLower(name)
+		if _, exists := cfg.OIDCProviders[name]; exists {
+			continue
+		}
+		if err := cfg.OIDCProviders.Set(v); err != nil {
+			return fmt.Errorf("env %s: %w", k, err)
+		}
+	}
+
+	for name, provider := range cfg.OIDCProviders {
+		if err := provider.Valid(); err != nil {
+			return fmt.Errorf("oidc-provider %s: %w", name, err)
+		}
+	}
+	return nil
+}
+
 func (cfg *options) validate() error {
 	if cfg.MaxOrgs <= 0 {
 		return fmt.Errorf("-max-orgs must be greater than 0")
@@ -157,11 +170,6 @@ func (cfg *options) validate() error {
 	}
 	if cfg.MaxOrgLocations <= 0 {
 		return fmt.Errorf("-max-locations must be greater than 0")
-	}
-	for name, p := range cfg.OIDCProviders {
-		if err := p.Valid(); err != nil {
-			return fmt.Errorf("oidc-provider %s: %w", name, err)
-		}
 	}
 	return nil
 }
@@ -256,11 +264,6 @@ type OIDCProvider struct {
 	ClientSecret string // SECRET
 }
 
-// Configured reports whether this provider has been enabled via flags.
-func (p *OIDCProvider) Configured() bool {
-	return p.IssuerURL != ""
-}
-
 // OIDCProviderMap implements flag.Value to allow --oidc-provider to be repeated.
 // Each value has the form: name,issuer=URL,client-id=ID,client-secret=SECRET.
 type OIDCProviderMap map[string]OIDCProvider
@@ -300,7 +303,7 @@ func (m *OIDCProviderMap) Set(v string) error {
 // Valid returns nil when the provider is not configured (issuer empty).
 // When issuer is set, client ID and secret must also be present.
 func (p *OIDCProvider) Valid() error {
-	if !p.Configured() {
+	if p.IssuerURL != "" {
 		return nil
 	}
 	if p.ClientID == "" {

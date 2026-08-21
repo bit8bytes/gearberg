@@ -182,10 +182,6 @@ type oidcProvider struct {
 // setupOIDCProvider initialises the OIDC provider from the given config.
 // Returns nil when the provider is not configured so the caller can gate on it.
 func setupOIDCProvider(ctx context.Context, cfg OIDCProvider, redirectURL string) (*oidcProvider, error) {
-	if !cfg.Configured() {
-		return nil, nil
-	}
-
 	provider, err := gooidc.NewProvider(ctx, cfg.IssuerURL)
 	if err != nil {
 		return nil, fmt.Errorf("setupOIDCProvider: discover %s: %w", cfg.IssuerURL, err)
