@@ -16,7 +16,7 @@
   };
   imageArgs = {
     name = "gearberg";
-    tag = version;
+    tag = "latest";
     created = "now"; # If not value "now", the image shows date 1970.
     # Required for outbound TLS: OIDC discovery and JWKS calls will fail without it.
     copyToRoot = pkgs.buildEnv {

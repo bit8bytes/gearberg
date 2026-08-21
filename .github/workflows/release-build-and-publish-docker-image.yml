@@ -4,19 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Generate version
-        id: version
-        run: echo "version=$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
   build-amd64:
-    needs: version
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -47,13 +35,11 @@ jobs:
 
       - name: Push amd64 image
         run: |
-          VERSION="${{ needs.version.outputs.version }}"
-          IMAGE_TAG=$(docker load < result | grep -oP 'gearberg:\S+' | head -1)
-          docker tag "$IMAGE_TAG" ghcr.io/${{ github.repository }}:$VERSION-amd64
-          docker push ghcr.io/${{ github.repository }}:$VERSION-amd64
+          docker load < result
+          docker tag gearberg:latest ghcr.io/${{ github.repository }}:latest-amd64
+          docker push ghcr.io/${{ github.repository }}:latest-amd64
 
   build-arm64:
-    needs: version
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     permissions:
@@ -84,13 +70,12 @@ jobs:
 
       - name: Push arm64 image
         run: |
-          VERSION="${{ needs.version.outputs.version }}"
-          IMAGE_TAG=$(docker load < result | grep -oP 'gearberg:\S+' | head -1)
-          docker tag "$IMAGE_TAG" ghcr.io/${{ github.repository }}:$VERSION-arm64
-          docker push ghcr.io/${{ github.repository }}:$VERSION-arm64
+          docker load < result
+          docker tag gearberg:latest ghcr.io/${{ github.repository }}:latest-arm64
+          docker push ghcr.io/${{ github.repository }}:latest-arm64
 
   release:
-    needs: [version, build-amd64, build-arm64]
+    needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -105,18 +90,16 @@ jobs:
 
       - name: Create and push multi-arch manifest
         run: |
-          VERSION="${{ needs.version.outputs.version }}"
           docker buildx imagetools create \
-            --tag ghcr.io/${{ github.repository }}:$VERSION \
             --tag ghcr.io/${{ github.repository }}:latest \
-            ghcr.io/${{ github.repository }}:$VERSION-amd64 \
-            ghcr.io/${{ github.repository }}:$VERSION-arm64
+            ghcr.io/${{ github.repository }}:latest-amd64 \
+            ghcr.io/${{ github.repository }}:latest-arm64
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${{ needs.version.outputs.version }}"
+          VERSION="$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)"
           gh release create "$VERSION" \
             --title "$VERSION" \
             --generate-notes
