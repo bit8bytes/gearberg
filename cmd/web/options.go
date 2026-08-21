@@ -27,9 +27,7 @@ import (
 type options struct {
 	LogLevel      logLevel
 	Port          int
-	TLSMode       string
-	TLSCertPath   string
-	TLSKeyPath    string // conditional SECRET
+	TLS           TLS // conditional SECRET
 	BaseURL       string
 	DbDsn         string          // SECRET
 	StorageDSN    string          // conditional SECRET
@@ -46,9 +44,9 @@ func parseOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.DbDsn, "db-dsn", envOr("DB_DSN", "file:gearberg.db"), "database DSN")
 	fs.IntVar(&cfg.Port, "port", 8080, "port to listen on")
 	fs.StringVar(&cfg.BaseURL, "base-url", "", "base URL for link generation (e.g. https://example.com)")
-	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
-	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
-	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
+	fs.StringVar(&cfg.TLS.Mode, "tls-mode", "off", "TLS mode (off|local)")
+	fs.StringVar(&cfg.TLS.CertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
+	fs.StringVar(&cfg.TLS.KeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
 	fs.IntVar(&cfg.Limits.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
 	fs.IntVar(&cfg.Limits.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
 	fs.IntVar(&cfg.Limits.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
@@ -66,6 +64,10 @@ func parseOptions(args []string) (*options, error) {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
 	}
 
+	if err := validatePort(cfg.Port); err != nil {
+		return nil, err
+	}
+
 	if err := cfg.parseBaseURL(); err != nil {
 		return nil, err
 	}
@@ -74,7 +76,7 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
-	if err := cfg.validateTLS(); err != nil {
+	if err := cfg.TLS.validate(); err != nil {
 		return nil, err
 	}
 
@@ -322,27 +324,28 @@ func (p *OIDCProvider) Valid() error {
 	return nil
 }
 
-func (cfg *options) validateTLS() error {
-	switch cfg.TLSMode {
+type TLS struct {
+	Mode     string
+	CertPath string
+	KeyPath  string // conditional SECRET
+}
+
+func (t *TLS) validate() error {
+	switch t.Mode {
 	case "off":
-		if err := validatePort(cfg.Port); err != nil {
-			return fmt.Errorf("invalid port: %w", err)
-		}
+		return nil
 	case "local":
-		if cfg.TLSCertPath == "" {
+		if t.CertPath == "" {
 			return fmt.Errorf("-tls-cert-path is required with -tls-mode=local")
 		}
-		if cfg.TLSKeyPath == "" {
+		if t.KeyPath == "" {
 			return fmt.Errorf("-tls-key-path is required with -tls-mode=local")
 		}
-		if _, err := tls.LoadX509KeyPair(cfg.TLSCertPath, cfg.TLSKeyPath); err != nil {
+		if _, err := tls.LoadX509KeyPair(t.CertPath, t.KeyPath); err != nil {
 			return fmt.Errorf("invalid TLS cert/key pair: %w", err)
 		}
-		if err := validatePort(cfg.Port); err != nil {
-			return fmt.Errorf("invalid port: %w", err)
-		}
+		return nil
 	default:
 		return fmt.Errorf("-tls-mode must be one of: off, local")
 	}
-	return nil
 }

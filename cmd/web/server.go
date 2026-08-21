@@ -29,7 +29,7 @@ import (
 // serve selects the appropriate server implementation based on the TLS mode.
 // It runs either: An autocert-enabled server, a local server with manually provisioned TLS certificates, or in unsecure http mode.
 func (app *application) serve(ctx context.Context) error {
-	if app.options.TLSMode == "local" {
+	if app.options.TLS.Mode == "local" {
 		return app.serveCertAndKey(ctx)
 	}
 	return app.serveUnsecure(ctx)
@@ -102,7 +102,7 @@ func (app *application) serveCertAndKey(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		if err := srv.ListenAndServeTLS(app.options.TLSCertPath, app.options.TLSKeyPath); !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.ListenAndServeTLS(app.options.TLS.CertPath, app.options.TLS.KeyPath); !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("listen and serve tls: %w", err)
 		}
 		return nil
