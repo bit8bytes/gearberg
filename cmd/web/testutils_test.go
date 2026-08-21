@@ -32,13 +32,15 @@ import (
 // testOptions returns an *options configured for the test database at dir.
 func testOptions(dir string) *options {
 	return &options{
-		DbDsn:               "file:" + dir + "/test.db",
-		StorageDSN:          "file://" + dir,
-		MaxOrgs:             10,
-		MaxOrgCategories:    25,
-		MaxOrgManufacturers: 100,
-		MaxOrgLocations:     100,
-		MaxStorageBytes:     1 << 30,
+		DbDsn:      "file:" + dir + "/test.db",
+		StorageDSN: "file://" + dir,
+		Limits: Limits{
+			MaxOrgs:             10,
+			MaxOrgCategories:    25,
+			MaxOrgManufacturers: 100,
+			MaxOrgLocations:     100,
+			MaxStorageBytes:     1 << 30,
+		},
 	}
 }
 

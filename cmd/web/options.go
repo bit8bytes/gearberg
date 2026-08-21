@@ -25,21 +25,17 @@ import (
 )
 
 type options struct {
-	LogLevel            logLevel
-	Port                int
-	TLSMode             string
-	TLSCertPath         string
-	TLSKeyPath          string // conditional SECRET
-	BaseURL             string
-	DbDsn               string          // SECRET
-	StorageDSN          string          // conditional SECRET
-	SMTP                SMTP            // has SECRET
-	OIDCProviders       OIDCProviderMap // has SECRET
-	MaxOrgs             int
-	MaxOrgCategories    int
-	MaxOrgManufacturers int
-	MaxOrgLocations     int
-	MaxStorageBytes     int64
+	LogLevel      logLevel
+	Port          int
+	TLSMode       string
+	TLSCertPath   string
+	TLSKeyPath    string // conditional SECRET
+	BaseURL       string
+	DbDsn         string          // SECRET
+	StorageDSN    string          // conditional SECRET
+	SMTP          SMTP            // has SECRET
+	OIDCProviders OIDCProviderMap // has SECRET
+	Limits        Limits
 }
 
 func parseOptions(args []string) (*options, error) {
@@ -53,12 +49,12 @@ func parseOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.TLSMode, "tls-mode", "off", "TLS mode (off|local)")
 	fs.StringVar(&cfg.TLSCertPath, "tls-cert-path", "", "Path to TLS certificate file (required with -tls-mode=local)")
 	fs.StringVar(&cfg.TLSKeyPath, "tls-key-path", envOr("TLS_KEY_PATH", ""), "Path to TLS key file (required with -tls-mode=local)")
-	fs.IntVar(&cfg.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
-	fs.IntVar(&cfg.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
-	fs.IntVar(&cfg.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
-	fs.IntVar(&cfg.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
+	fs.IntVar(&cfg.Limits.MaxOrgs, "max-orgs", 1, "maximum number of orgs allowed")
+	fs.IntVar(&cfg.Limits.MaxOrgCategories, "max-categories", 25, "maximum number of equipment categories per org")
+	fs.IntVar(&cfg.Limits.MaxOrgManufacturers, "max-manufacturers", 100, "maximum number of manufacturers per org")
+	fs.IntVar(&cfg.Limits.MaxOrgLocations, "max-locations", 100, "maximum number of locations per org")
+	fs.Int64Var(&cfg.Limits.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 	fs.StringVar(&cfg.StorageDSN, "storage-dsn", envOr("STORAGE_DSN", "file://./uploads"), "storage backend DSN")
-	fs.Int64Var(&cfg.MaxStorageBytes, "max-storage-bytes", 1<<30, "maximum storage bytes per org (default 1 GiB)")
 	fs.Var(&cfg.OIDCProviders, "oidc-provider", "OIDC provider: name,issuer=URL,client-id=ID,client-secret=SECRET (repeatable)")
 	fs.StringVar(&cfg.SMTP.Host, "smtp-host", "", "SMTP server hostname (omit to log emails only)")
 	fs.IntVar(&cfg.SMTP.Port, "smtp-port", 587, "SMTP server port")
@@ -86,7 +82,7 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
-	if err := cfg.validate(); err != nil {
+	if err := cfg.Limits.validate(); err != nil {
 		return nil, err
 	}
 
@@ -158,18 +154,29 @@ func (cfg *options) parseOIDC() error {
 	return nil
 }
 
-func (cfg *options) validate() error {
-	if cfg.MaxOrgs <= 0 {
+type Limits struct {
+	MaxOrgs             int
+	MaxOrgCategories    int
+	MaxOrgManufacturers int
+	MaxOrgLocations     int
+	MaxStorageBytes     int64
+}
+
+func (limits *Limits) validate() error {
+	if limits.MaxOrgs <= 0 {
 		return fmt.Errorf("-max-orgs must be greater than 0")
 	}
-	if cfg.MaxOrgCategories <= 0 {
+	if limits.MaxOrgCategories <= 0 {
 		return fmt.Errorf("-max-categories must be greater than 0")
 	}
-	if cfg.MaxOrgManufacturers <= 0 {
+	if limits.MaxOrgManufacturers <= 0 {
 		return fmt.Errorf("-max-manufacturers must be greater than 0")
 	}
-	if cfg.MaxOrgLocations <= 0 {
+	if limits.MaxOrgLocations <= 0 {
 		return fmt.Errorf("-max-locations must be greater than 0")
+	}
+	if limits.MaxStorageBytes < 0 {
+		return fmt.Errorf("-max-storage-bytes must be greater or equal than 0")
 	}
 	return nil
 }

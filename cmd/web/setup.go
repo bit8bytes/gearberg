@@ -243,7 +243,7 @@ type mailer interface {
 }
 
 func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*services, error) {
-	orgRepo := orgs.NewRepository(db, int64(opts.MaxOrgs))
+	orgRepo := orgs.NewRepository(db, int64(opts.Limits.MaxOrgs))
 	orgSvc := orgs.NewService(db, orgRepo, orgRepo)
 
 	accountRepo := accounts.NewRepository(db)
@@ -257,13 +257,13 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	orgsettingsSvc := settings.NewService(orgsettingsRepo)
 
 	equipmentcategoriesRepo := categories.NewRepository(db)
-	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.MaxOrgCategories})
+	equipmentcategoriesSvc := categories.NewService(equipmentcategoriesRepo, categories.Options{MaxCategories: opts.Limits.MaxOrgCategories})
 
 	manufacturersRepo := manufacturers.NewRepository(db)
-	manufacturersSvc := manufacturers.NewService(manufacturersRepo, manufacturers.Options{MaxManufacturers: opts.MaxOrgManufacturers})
+	manufacturersSvc := manufacturers.NewService(manufacturersRepo, manufacturers.Options{MaxManufacturers: opts.Limits.MaxOrgManufacturers})
 
 	locationsRepo := locations.NewRepository(db)
-	locationsSvc := locations.NewService(locationsRepo, locations.Options{MaxLocations: opts.MaxOrgLocations})
+	locationsSvc := locations.NewService(locationsRepo, locations.Options{MaxLocations: opts.Limits.MaxOrgLocations})
 
 	inventoryRepo := equipment.NewRepository(db)
 	inventorySvc := equipment.NewService(inventoryRepo, db, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
@@ -278,7 +278,7 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	storageMgr := storage.NewManager(
 		map[string]*storage.Store{"local": store},
 		"local",
-		opts.MaxStorageBytes,
+		opts.Limits.MaxStorageBytes,
 		db,
 	)
 
