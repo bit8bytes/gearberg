@@ -95,6 +95,10 @@ func parseOptions(args []string) (*options, error) {
 		return nil, err
 	}
 
+	if err := cfg.parseStorageDSN(); err != nil {
+		return nil, err
+	}
+
 	if err := cfg.validateTLS(); err != nil {
 		return nil, err
 	}
@@ -124,10 +128,24 @@ func (cfg *options) parseBaseURL() error {
 	return nil
 }
 
-func (cfg *options) validate() error {
+func (cfg *options) parseStorageDSN() error {
 	if cfg.StorageDSN == "" {
 		return fmt.Errorf("-storage-dsn is required (e.g. -storage-dsn file:///data/uploads)")
 	}
+
+	u, err := url.Parse(cfg.StorageDSN)
+	if err != nil {
+		return fmt.Errorf("-storage-dsn is not a valid URL: %w", err)
+	}
+
+	if u.Scheme != "file" {
+		return fmt.Errorf("-storage-dsn scheme %q is not supported (supported: file)", u.Scheme)
+	}
+
+	return nil
+}
+
+func (cfg *options) validate() error {
 	if cfg.MaxOrgs <= 0 {
 		return fmt.Errorf("-max-orgs must be greater than 0")
 	}
