@@ -70,20 +70,6 @@
     </div>
   </td>
 </tr>
-<dialog id="delete-equipment-{{ .ID }}" class="modal">
-  <div class="modal-box">
-    <h3>Delete Equipment</h3>
-    <p class="py-4">Are you sure you want to permanently delete <strong>{{ .Name }}</strong>? This action cannot be undone.</p>
-    <div class="modal-action">
-      <form method="dialog">
-        <button class="btn">Cancel</button>
-      </form>
-      <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/delete">
-        <button type="submit" class="btn btn-error">Delete</button>
-      </form>
-    </div>
-  </div>
-</dialog>
 {{ end }}
 {{ else }}
 <tr>
@@ -103,6 +89,24 @@
     </tbody>
   </table>
 </div>
+{{ if .Data.Inventories }}
+{{ range .Data.Inventories }}
+<dialog id="delete-equipment-{{ .ID }}" class="modal">
+  <div class="modal-box">
+    <h3>Delete Equipment</h3>
+    <p class="py-4">Are you sure you want to permanently delete <strong>{{ .Name }}</strong>? This action cannot be undone.</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Cancel</button>
+      </form>
+      <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/delete">
+        <button type="submit" class="btn btn-error">Delete</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+{{ end }}
+{{ end }}
 {{ with .Data.Pagination }}
 {{ if gt .LastPage 1 }}
 <div class="px-6 py-3 border-t border-base-300 flex items-center justify-between gap-4">
