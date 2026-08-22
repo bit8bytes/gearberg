@@ -288,6 +288,25 @@ document.addEventListener("click", (e) => {
   });
 })();
 
+// Reposition dropdown-content as position:fixed when opened so it escapes overflow:auto ancestors.
+// Setting .style.* via JS is not subject to CSP style-src restrictions.
+document.addEventListener("focusin", (e) => {
+  const btn = e.target.closest(".dropdown [tabindex][role='button']");
+  if (!btn) return;
+  const menu = btn.parentElement?.querySelector(".dropdown-content");
+  if (!menu) return;
+  const rect = btn.getBoundingClientRect();
+  menu.style.position = "fixed";
+  menu.style.top = rect.bottom + 4 + "px";
+  if (btn.parentElement.classList.contains("dropdown-end")) {
+    menu.style.left = "auto";
+    menu.style.right = window.innerWidth - rect.right + "px";
+  } else {
+    menu.style.right = "auto";
+    menu.style.left = rect.left + "px";
+  }
+});
+
 // Password show/hide toggle
 // Trigger: <button data-pw-toggle="<input-id>">
 document.addEventListener("click", (e) => {
