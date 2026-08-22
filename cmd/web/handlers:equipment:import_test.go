@@ -66,7 +66,7 @@ func assertRoundTrip(t *testing.T, body []byte) {
 	assertSonySerials(t, rows)
 }
 
-func parseExportCSV(t *testing.T, body []byte) []equipmentimports.RawRow {
+func parseExportCSV(t *testing.T, body []byte) []equipmentimports.ProcessedRow {
 	t.Helper()
 	// Strip the UTF-8 BOM the handler prepends so ParseCSV sees clean bytes.
 	if len(body) >= 3 && body[0] == 0xEF && body[1] == 0xBB && body[2] == 0xBF {
@@ -79,11 +79,11 @@ func parseExportCSV(t *testing.T, body []byte) []equipmentimports.RawRow {
 	return rows
 }
 
-func assertExportCounts(t *testing.T, rows []equipmentimports.RawRow) {
+func assertExportCounts(t *testing.T, rows []equipmentimports.ProcessedRow) {
 	t.Helper()
 	counts := make(map[string]int)
 	for _, r := range rows {
-		counts[r.Name]++
+		counts[r.Data.Name]++
 	}
 	if counts["Shure SM58"] != 1 {
 		t.Errorf("Shure SM58: want 1 export row, got %d", counts["Shure SM58"])
@@ -96,21 +96,21 @@ func assertExportCounts(t *testing.T, rows []equipmentimports.RawRow) {
 	}
 }
 
-func assertShureQuantity(t *testing.T, rows []equipmentimports.RawRow) {
+func assertShureQuantity(t *testing.T, rows []equipmentimports.ProcessedRow) {
 	t.Helper()
 	for _, r := range rows {
-		if r.Name == "Shure SM58" && r.Quantity != "7" {
-			t.Errorf("Shure SM58: want quantity 7, got %q", r.Quantity)
+		if r.Data.Name == "Shure SM58" && r.Data.Quantity != "7" {
+			t.Errorf("Shure SM58: want quantity 7, got %q", r.Data.Quantity)
 		}
 	}
 }
 
-func assertSonySerials(t *testing.T, rows []equipmentimports.RawRow) {
+func assertSonySerials(t *testing.T, rows []equipmentimports.ProcessedRow) {
 	t.Helper()
 	serials := make(map[string]bool)
 	for _, r := range rows {
-		if r.Name == "Sony A7 IV" {
-			serials[r.UnitSerialNumber] = true
+		if r.Data.Name == "Sony A7 IV" {
+			serials[r.Data.UnitSerialNumber] = true
 		}
 	}
 	for _, want := range []string{"SN-A7IV-001", "SN-A7IV-002"} {

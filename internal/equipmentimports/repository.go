@@ -35,8 +35,8 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{q: genimports.New(db)}
 }
 
-// Insert inserts a staged import row.
-func (r *Repository) Insert(ctx context.Context, row Row) (*Row, error) {
+// Create inserts a staged import row.
+func (r *Repository) Create(ctx context.Context, row Row) (*Row, error) {
 	rec, err := r.q.InsertImportRow(ctx, genimports.InsertImportRowParams{
 		ID:                     row.ID,
 		ImportID:               row.ImportID,
@@ -77,17 +77,17 @@ func (r *Repository) Insert(ctx context.Context, row Row) (*Row, error) {
 		UnitRemark:             row.UnitRemark,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Insert: %w", err)
+		return nil, fmt.Errorf("Create: %w", err)
 	}
 	out := fromRecord(rec)
 	return &out, nil
 }
 
-// GetByID returns a single staged import row.
-func (r *Repository) GetByID(ctx context.Context, id string) (*Row, error) {
+// Get returns a single staged import row.
+func (r *Repository) Get(ctx context.Context, id string) (*Row, error) {
 	rec, err := r.q.GetImportRow(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("GetByID: %w", err)
+		return nil, fmt.Errorf("Get: %w", err)
 	}
 	out := fromRecord(rec)
 	return &out, nil
@@ -112,19 +112,19 @@ func (r *Repository) DeleteByOrgID(ctx context.Context, orgID string) error {
 	return nil
 }
 
-// DeleteByImportID deletes all staging rows for a specific import.
-func (r *Repository) DeleteByImportID(ctx context.Context, importID string) error {
+// Delete deletes all staging rows for a specific import.
+func (r *Repository) Delete(ctx context.Context, importID string) error {
 	if err := r.q.DeleteImportsByImportID(ctx, importID); err != nil {
-		return fmt.Errorf("DeleteByImportID: %w", err)
+		return fmt.Errorf("Delete: %w", err)
 	}
 	return nil
 }
 
-// ListByImportID returns all staged rows for an import, ordered by row_number.
-func (r *Repository) ListByImportID(ctx context.Context, importID string) ([]Row, error) {
+// List returns all staged rows for an import, ordered by row_number.
+func (r *Repository) List(ctx context.Context, importID string) ([]Row, error) {
 	recs, err := r.q.ListImportRowsByImportID(ctx, importID)
 	if err != nil {
-		return nil, fmt.Errorf("ListByImportID: %w", err)
+		return nil, fmt.Errorf("List: %w", err)
 	}
 	rows := make([]Row, len(recs))
 	for i, rec := range recs {
