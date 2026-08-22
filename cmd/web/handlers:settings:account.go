@@ -56,6 +56,7 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) *http
 type accountHeaderData struct {
 	Email    string
 	Initials string
+	OrgName  string
 }
 
 func accountInitials(email string) string {
@@ -83,11 +84,19 @@ func (app *application) getAccountHeaderFragment(w http.ResponseWriter, r *http.
 		return httperr.InternalServerError(fmt.Errorf("getAccountHeaderFragment: %w", err))
 	}
 
-	tmplData := app.html.TemplateData(r)
-	tmplData.Data = accountHeaderData{
+	data := accountHeaderData{
 		Email:    record.Email,
 		Initials: accountInitials(record.Email),
 	}
+
+	if orgID := r.URL.Query().Get("org_id"); orgID != "" {
+		if org, err := app.services.orgs.Get(r.Context(), orgID); err == nil {
+			data.OrgName = org.DisplayName
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = data
 	return app.html.RenderFragment(w, r, http.StatusOK, fragments.AccountHeader, tmplData)
 }
 

@@ -5,7 +5,10 @@
       <span>{{ .Data.Initials }}</span>
     </div>
   </div>
-  <span class="truncate">{{ .Data.Email }}</span>
+  <div class="flex flex-col min-w-0">
+    {{ if .Data.OrgName }}<span class="text-xs font-semibold truncate">{{ .Data.OrgName }}</span>{{ end }}
+    <span class="truncate text-xs text-base-content/60">{{ .Data.Email }}</span>
+  </div>
 </div>
 {{ end }}
 

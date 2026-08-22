@@ -18,7 +18,7 @@
           <ul
             tabindex="-1"
             class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 gap-1 shadow">
-            <span hx-get="/account/header" hx-trigger="load" hx-swap="outerHTML">
+            <span hx-get="/account/header?org_id={{ .OrgID }}" hx-trigger="load" hx-swap="outerHTML">
               {{ template "account-header-skeleton" . }}
             </span>
             <div class="border-b border-base-200"></div>
