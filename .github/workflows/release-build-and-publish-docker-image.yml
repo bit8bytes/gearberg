@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)"
+          VERSION="$(date +%Y.%m.%d)-${{ github.run_number }}-$(git rev-parse --short HEAD)-alpha"
           gh release create "$VERSION" \
             --title "$VERSION" \
             --generate-notes
