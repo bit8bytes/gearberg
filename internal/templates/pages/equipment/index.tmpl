@@ -7,16 +7,47 @@
   <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
     {{/* Header block */}}
-    <div class="px-6 pt-6 pb-4 border-b border-base-300">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <span class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">Your Gear</span>
-          <p class="text-3xl font-bold leading-tight">All Items</p>
+    <div class="px-6 py-4 border-b border-base-300">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label class="input w-full sm:w-64">
+            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
+            <input
+              type="search"
+              name="q"
+              placeholder="Search name or serial number…"
+              {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
+              hx-get="/orgs/{{ .Data.OrgID }}/equipment"
+              hx-trigger="input changed delay:300ms"
+              hx-target="#equipment-rows"
+              hx-swap="innerHTML"
+              hx-include="[name='category']"
+              hx-indicator="#search-indicator"
+              hx-push-url="true"
+            />
+          </label>
+          <select
+            name="category"
+            class="select w-full sm:w-auto"
+            hx-get="/orgs/{{ .Data.OrgID }}/equipment"
+            hx-trigger="change"
+            hx-target="#equipment-rows"
+            hx-swap="innerHTML"
+            hx-include="[name='q']"
+            hx-indicator="#search-indicator"
+            hx-push-url="true"
+          >
+            <option value="">All categories</option>
+            {{ range .Data.Categories }}
+            <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
+            {{ end }}
+          </select>
+          <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
         </div>
-        <div class="flex items-center gap-2 shrink-0 pt-1">
+        <div class="hidden sm:flex sm:flex-row items-center gap-2">
           <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-ghost border border-base-300">
-              <span class="hidden sm:inline">More</span>
+            <div tabindex="0" role="button" class="btn btn-ghost border border-base-300 w-full">
+              <span>More</span>
               <span class="size-6">{{ template "chevron-down" . }}</span>
             </div>
             <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
@@ -48,48 +79,11 @@
           </div>
           <a class="btn btn-primary" href="/orgs/{{ .Data.OrgID }}/equipment/new">
             <span class="size-6">{{ template "add-icon" . }}</span>
-            <span class="hidden sm:inline">Add Item</span>
+            <span>Add Item</span>
           </a>
         </div>
       </div>
 
-    </div>
-
-    {{/* Toolbar */}}
-    <div class="px-6 py-3 border-b border-base-300 flex flex-wrap items-center gap-2">
-      <label class="input input-sm w-full sm:w-64 flex-none">
-        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
-        <input
-          type="search"
-          name="q"
-          placeholder="Search name or serial number…"
-          {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
-          hx-get="/orgs/{{ .Data.OrgID }}/equipment"
-          hx-trigger="input changed delay:300ms"
-          hx-target="#equipment-rows"
-          hx-swap="innerHTML"
-          hx-include="[name='category']"
-          hx-indicator="#search-indicator"
-          hx-push-url="true"
-        />
-      </label>
-      <select
-        name="category"
-        class="select select-sm w-full sm:w-auto"
-        hx-get="/orgs/{{ .Data.OrgID }}/equipment"
-        hx-trigger="change"
-        hx-target="#equipment-rows"
-        hx-swap="innerHTML"
-        hx-include="[name='q']"
-        hx-indicator="#search-indicator"
-        hx-push-url="true"
-      >
-        <option value="">All categories</option>
-        {{ range .Data.Categories }}
-        <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
-        {{ end }}
-      </select>
-<span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
     </div>
 
     {{/* Table */}}
@@ -100,7 +94,7 @@
             <th class="w-20"></th>
             <th>Name</th>
             <th>Category</th>
-<th class="text-right">Stock</th>
+            <th class="text-right">Stock</th>
             <th class="text-right">Actions</th>
           </tr>
         </thead>
@@ -163,4 +157,24 @@
 </dialog>
 
 {{ template "photo-viewer-dialog" . }}
+
+{{/* FAB: Mobile only */}}
+<div class="fab fab-flower sm:hidden">
+  <div tabindex="0" role="button" class="btn btn-circle btn-lg">
+    <span class="size-6">{{ template "dot-menu-icon" . }}</span>
+  </div>
+  <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="btn btn-circle btn-lg btn-primary">
+    <span class="size-6">{{ template "add-icon" . }}</span>
+  </a>
+  <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="btn btn-circle btn-lg">
+    <span class="size-6">{{ template "import-icon" . }}</span>
+  </a>
+  <button data-modal-target="export-dialog" class="btn btn-circle btn-lg">
+    <span class="size-6">{{ template "export-icon" . }}</span>
+  </button>
+  <a href="{{ .Data.PrintURL }}" target="_blank" class="btn btn-circle btn-lg">
+    <span class="size-6">{{ template "print-icon" . }}</span>
+  </a>
+</div>
+
 {{ end }}
