@@ -12,21 +12,21 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package imports_test
+package equipmentimports_test
 
 import (
 	"bytes"
 	"strings"
 	"testing"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipmentimports"
 )
 
 // TestParseCSV_roundtrip verifies that every column in ExpectedHeaders maps to
 // the correct RawRow field. If ExpectedHeaders is reordered or readRows is not
 // updated in step, this test breaks before any real data is affected.
 func TestParseCSV_roundtrip(t *testing.T) {
-	want := imports.RawRow{
+	want := equipmentimports.RawRow{
 		Name:                   "Shure SM58",
 		TypeLabel:              "Bulk",
 		UsageTypeLabel:         "Rental",
@@ -55,7 +55,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 		UnitRemark:             "",
 	}
 
-	header := strings.Join(imports.ExpectedHeaders, ",")
+	header := strings.Join(equipmentimports.ExpectedHeaders, ",")
 	dataRow := strings.Join([]string{
 		want.Name,
 		want.TypeLabel,
@@ -86,7 +86,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 	}, ",")
 	csv := header + "\n" + dataRow + "\n"
 
-	rows, err := imports.ParseCSV(strings.NewReader(csv))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 	if err != nil {
 		t.Fatalf("ParseCSV: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestParseCSV_roundtrip(t *testing.T) {
 
 func TestParseCSV_wrongColumnCount(t *testing.T) {
 	csv := "Name,Type\nFoo,Bar\n"
-	_, err := imports.ParseCSV(strings.NewReader(csv))
+	_, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 	if err == nil {
 		t.Fatal("expected error for wrong column count, got nil")
 	}
@@ -139,19 +139,19 @@ func TestParseCSV_wrongColumnCount(t *testing.T) {
 
 func TestParseCSV_wrongColumnName(t *testing.T) {
 	// Replace the first header with something unexpected.
-	headers := make([]string, len(imports.ExpectedHeaders))
-	copy(headers, imports.ExpectedHeaders)
+	headers := make([]string, len(equipmentimports.ExpectedHeaders))
+	copy(headers, equipmentimports.ExpectedHeaders)
 	headers[0] = "ItemName" // was "Name"
 	csv := strings.Join(headers, ",") + "\nFoo,Bulk,Rental,Audio,Shure,WH,15,99,,,,,,,,,,1\n"
-	_, err := imports.ParseCSV(strings.NewReader(csv))
+	_, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 	if err == nil {
 		t.Fatal("expected error for wrong column name, got nil")
 	}
 }
 
 func TestParseCSV_noDataRows(t *testing.T) {
-	csv := strings.Join(imports.ExpectedHeaders, ",") + "\n"
-	_, err := imports.ParseCSV(strings.NewReader(csv))
+	csv := strings.Join(equipmentimports.ExpectedHeaders, ",") + "\n"
+	_, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 	if err == nil {
 		t.Fatal("expected error for empty data, got nil")
 	}
@@ -161,7 +161,7 @@ func TestParseCSV_noDataRows(t *testing.T) {
 // change to ExpectedHeaders that is not reflected in template.csv breaks the
 // build immediately rather than at runtime.
 func TestParseCSV_templateValid(t *testing.T) {
-	rows, err := imports.ParseCSV(bytes.NewReader(imports.TemplateCSV))
+	rows, err := equipmentimports.ParseCSV(bytes.NewReader(equipmentimports.TemplateCSV))
 	if err != nil {
 		t.Fatalf("TemplateCSV is not valid: %v", err)
 	}
@@ -173,8 +173,8 @@ func TestParseCSV_templateValid(t *testing.T) {
 // TestParseCSV_legacyHasContentHeader verifies that old exports using "Has Content"
 // instead of "Equipment Type" are accepted and their boolean values normalised.
 func TestParseCSV_legacyHasContentHeader(t *testing.T) {
-	headers := make([]string, len(imports.ExpectedHeaders))
-	copy(headers, imports.ExpectedHeaders)
+	headers := make([]string, len(equipmentimports.ExpectedHeaders))
+	copy(headers, equipmentimports.ExpectedHeaders)
 	headers[18] = "Has Content" // old column name
 
 	cases := []struct {
@@ -185,7 +185,7 @@ func TestParseCSV_legacyHasContentHeader(t *testing.T) {
 		{"FALSE", "Standard"},
 		{"1", "Kit"},
 		{"0", "Standard"},
-		{"", ""},       // blank → left as-is, resolves to Standard via TypeFromStringOrDefault
+		{"", ""},       // blank → left as-is, resolves to Standard via ParseOrDefault
 		{"Kit", "Kit"}, // already canonical
 	}
 
@@ -196,7 +196,7 @@ func TestParseCSV_legacyHasContentHeader(t *testing.T) {
 			tc.hasContent, "", "", "", "", "", "", "",
 		}, ",")
 		csv := strings.Join(headers, ",") + "\n" + row + "\n"
-		rows, err := imports.ParseCSV(strings.NewReader(csv))
+		rows, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 		if err != nil {
 			t.Fatalf("hasContent=%q: ParseCSV: %v", tc.hasContent, err)
 		}
@@ -207,9 +207,9 @@ func TestParseCSV_legacyHasContentHeader(t *testing.T) {
 }
 
 func TestParseCSV_stripsUTF8BOM(t *testing.T) {
-	header := strings.Join(imports.ExpectedHeaders, ",")
+	header := strings.Join(equipmentimports.ExpectedHeaders, ",")
 	csv := "\xEF\xBB\xBF" + header + "\nShure SM58,Bulk,Rental,Audio,Shure,WH,15,99,,,,,,,,,,1,,,,,,,,\n"
-	rows, err := imports.ParseCSV(strings.NewReader(csv))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(csv))
 	if err != nil {
 		t.Fatalf("ParseCSV with BOM: %v", err)
 	}

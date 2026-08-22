@@ -27,8 +27,8 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/tokens"
+	"github.com/bit8bytes/gearberg/internal/uid"
 	pkgtokens "github.com/bit8bytes/gearberg/pkg/tokens"
-	"github.com/segmentio/ksuid"
 )
 
 // Sentinel errors returned by account service operations.
@@ -154,7 +154,7 @@ func (s *Service) SignUp(ctx context.Context, params SignUpParams) (string, stri
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	accountID := ksuid.New().String()
+	accountID := uid.New()
 	if _, err := s.accounts.Create(ctx, tx, accountID, params.Email, nil); err != nil {
 		return fail(err)
 	}
@@ -163,7 +163,7 @@ func (s *Service) SignUp(ctx context.Context, params SignUpParams) (string, stri
 		return fail(err)
 	}
 
-	orgID := ksuid.New().String()
+	orgID := uid.New()
 	if _, err := s.organizations.Create(ctx, tx, accountID, orgID, "My Organization"); err != nil {
 		return fail(err)
 	}
@@ -356,12 +356,12 @@ func (s *Service) SignInOrCreateWithOIDC(ctx context.Context, providerID int64, 
 		emailVerifiedAt = &now
 	}
 
-	accountID = ksuid.New().String()
+	accountID = uid.New()
 	if _, err := s.accounts.Create(ctx, tx, accountID, email, emailVerifiedAt); err != nil {
 		return fail(err)
 	}
 
-	orgID := ksuid.New().String()
+	orgID := uid.New()
 	if _, err := s.organizations.Create(ctx, tx, accountID, orgID, "My Organization"); err != nil {
 		return fail(err)
 	}

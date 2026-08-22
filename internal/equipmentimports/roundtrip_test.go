@@ -12,7 +12,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-package imports_test
+package equipmentimports_test
 
 import (
 	"bytes"
@@ -21,7 +21,10 @@ import (
 	"testing"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	"github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
+	"github.com/bit8bytes/gearberg/internal/equipment/usage"
+	"github.com/bit8bytes/gearberg/internal/equipmentimports"
+	"github.com/bit8bytes/gearberg/internal/units"
 )
 
 // buildCSV writes ExpectedHeaders followed by the rows produced by RowsForItem,
@@ -29,8 +32,8 @@ import (
 func buildCSV(item equipment.Equipment, mfrName string, units []equipment.Unit) string {
 	var buf bytes.Buffer
 	cw := csv.NewWriter(&buf)
-	_ = cw.Write(imports.ExpectedHeaders)
-	for _, row := range imports.RowsForItem(item, mfrName, units) {
+	_ = cw.Write(equipmentimports.ExpectedHeaders)
+	for _, row := range equipmentimports.RowsForItem(item, mfrName, units) {
 		_ = cw.Write(row)
 	}
 	cw.Flush()
@@ -41,25 +44,25 @@ func TestRoundTrip_bulk(t *testing.T) {
 	stock := int64(7)
 	item := equipment.Equipment{
 		Name:         "Shure SM58",
-		TrackingType: equipment.Bulk,
-		UsageType:    equipment.Rental,
+		TrackingType: tracking.Bulk,
+		UsageType:    usage.Rental,
 		CategoryName: "Audio",
 		LocationName: "Main Warehouse",
 		TotalStock:   stock,
 		Notes:        "Cardioid dynamic mic",
 		Pricing: equipment.Pricing{
-			RentalPrice:   equipment.ParseCents("15.00"),
-			PurchasePrice: equipment.ParseCents("99.00"),
+			RentalPrice:   units.ParseCents("15.00"),
+			PurchasePrice: units.ParseCents("99.00"),
 		},
 		Properties: equipment.Properties{
-			Weight: equipment.ParseGrams("0.298"),
-			Width:  equipment.ParseMillimeters("4.7"),
-			Height: equipment.ParseMillimeters("4.7"),
-			Depth:  equipment.ParseMillimeters("16.2"),
+			Weight: units.ParseGrams("0.298"),
+			Width:  units.ParseMillimeters("4.7"),
+			Height: units.ParseMillimeters("4.7"),
+			Depth:  units.ParseMillimeters("16.2"),
 		},
 	}
 
-	rows, err := imports.ParseCSV(strings.NewReader(buildCSV(item, "Shure", nil)))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(buildCSV(item, "Shure", nil)))
 	if err != nil {
 		t.Fatalf("ParseCSV: %v", err)
 	}
@@ -94,20 +97,20 @@ func TestRoundTrip_serialized(t *testing.T) {
 
 	item := equipment.Equipment{
 		Name:         "Sony A7 IV",
-		TrackingType: equipment.Serialized,
-		UsageType:    equipment.Rental,
+		TrackingType: tracking.Serialized,
+		UsageType:    usage.Rental,
 		CategoryName: "Camera",
 		LocationName: "Main Warehouse",
 		Notes:        "Full-frame mirrorless camera",
 		Pricing: equipment.Pricing{
-			RentalPrice:   equipment.ParseCents("80.00"),
-			PurchasePrice: equipment.ParseCents("2800.00"),
+			RentalPrice:   units.ParseCents("80.00"),
+			PurchasePrice: units.ParseCents("2800.00"),
 		},
 		Properties: equipment.Properties{
-			Weight: equipment.ParseGrams("0.659"),
-			Width:  equipment.ParseMillimeters("13.1"),
-			Height: equipment.ParseMillimeters("9.6"),
-			Depth:  equipment.ParseMillimeters("8.0"),
+			Weight: units.ParseGrams("0.659"),
+			Width:  units.ParseMillimeters("13.1"),
+			Height: units.ParseMillimeters("9.6"),
+			Depth:  units.ParseMillimeters("8.0"),
 		},
 	}
 	units := []equipment.Unit{
@@ -115,7 +118,7 @@ func TestRoundTrip_serialized(t *testing.T) {
 			StatusID:                 1,
 			SerialNumber:             "SN-A7IV-001",
 			ManufacturerSerialNumber: "7-000001",
-			PurchasePrice:            equipment.ParseCents("2800.00"),
+			PurchasePrice:            units.ParseCents("2800.00"),
 			PurchasedAt:              &purchasedAt,
 			NextInspectionAt:         &inspectAt,
 		},
@@ -123,14 +126,14 @@ func TestRoundTrip_serialized(t *testing.T) {
 			StatusID:                 1,
 			SerialNumber:             "SN-A7IV-002",
 			ManufacturerSerialNumber: "7-000002",
-			PurchasePrice:            equipment.ParseCents("2800.00"),
+			PurchasePrice:            units.ParseCents("2800.00"),
 			PurchasedAt:              &purchasedAt,
 			NextInspectionAt:         &inspectAt,
 			Remark:                   "Minor scratch on top plate",
 		},
 	}
 
-	rows, err := imports.ParseCSV(strings.NewReader(buildCSV(item, "Sony", units)))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(buildCSV(item, "Sony", units)))
 	if err != nil {
 		t.Fatalf("ParseCSV: %v", err)
 	}
@@ -163,22 +166,22 @@ func TestRoundTrip_serialized(t *testing.T) {
 func TestRoundTrip_kit(t *testing.T) {
 	item := equipment.Equipment{
 		Name:         "Pelican 1510 Case",
-		Type:         equipment.Kit,
-		TrackingType: equipment.Serialized,
-		UsageType:    equipment.Rental,
+		Type:         equipment.KitType,
+		TrackingType: tracking.Serialized,
+		UsageType:    usage.Rental,
 		CategoryName: "Case",
 		LocationName: "Main Warehouse",
 		Pricing: equipment.Pricing{
-			RentalPrice:   equipment.ParseCents("10.00"),
-			PurchasePrice: equipment.ParseCents("120.00"),
+			RentalPrice:   units.ParseCents("10.00"),
+			PurchasePrice: units.ParseCents("120.00"),
 		},
 	}
 	purchasedAt := int64(1704844800) // 2024-01-10 UTC
 	units := []equipment.Unit{
-		{StatusID: 1, SerialNumber: "PC-1510-001", PurchasePrice: equipment.ParseCents("120.00"), PurchasedAt: &purchasedAt},
+		{StatusID: 1, SerialNumber: "PC-1510-001", PurchasePrice: units.ParseCents("120.00"), PurchasedAt: &purchasedAt},
 	}
 
-	rows, err := imports.ParseCSV(strings.NewReader(buildCSV(item, "Pelican", units)))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(buildCSV(item, "Pelican", units)))
 	if err != nil {
 		t.Fatalf("ParseCSV: %v", err)
 	}

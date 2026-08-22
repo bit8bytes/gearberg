@@ -91,31 +91,19 @@ func (rnd *HTML) Handle(fn httperr.HandlerFunc) http.HandlerFunc {
 func (rnd *HTML) Render(w http.ResponseWriter, _ *http.Request, status int, page pages.Page, data any) *httperr.Error {
 	tmpl, ok := rnd.cache[page.File]
 	if !ok {
-		return &httperr.Error{
-			Error:   fmt.Errorf("template not found: %v", page.File),
-			Message: "Template not found.",
-			Code:    http.StatusNotFound,
-		}
+		return httperr.InternalServerError(fmt.Errorf("template not found: %v", page.File))
 	}
 
 	buffer := new(bytes.Buffer)
 	if err := tmpl.ExecuteTemplate(buffer, "root", data); err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("render: %w", err),
-			Message: "Failed to render page.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("render: %w", err))
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
 
 	if _, err := buffer.WriteTo(w); err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to write response.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("render write: %w", err))
 	}
 	return nil
 }
@@ -125,22 +113,14 @@ func (rnd *HTML) Render(w http.ResponseWriter, _ *http.Request, status int, page
 func (rnd *HTML) RenderFragment(w http.ResponseWriter, _ *http.Request, status int, name string, data any) *httperr.Error {
 	buffer := new(bytes.Buffer)
 	if err := rnd.base.ExecuteTemplate(buffer, name, data); err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("render fragment %q: %w", name, err),
-			Message: "Failed to render fragment.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("render fragment %q: %w", name, err))
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
 
 	if _, err := buffer.WriteTo(w); err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to write response.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("render fragment write %q: %w", name, err))
 	}
 	return nil
 }

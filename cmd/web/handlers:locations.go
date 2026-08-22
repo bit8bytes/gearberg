@@ -20,12 +20,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/locations"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/locations"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
-	"github.com/segmentio/ksuid"
 )
 
 type locationsData struct {
@@ -45,13 +44,9 @@ func (app *application) getLocations(w http.ResponseWriter, r *http.Request) *ht
 	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	locs, err := app.services.locations.GetByOrgID(ctx, id)
+	locs, err := app.services.locations.List(ctx, id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve locations.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
@@ -59,7 +54,7 @@ func (app *application) getLocations(w http.ResponseWriter, r *http.Request) *ht
 	data.Data = locationsData{
 		OrgID:        id,
 		Locations:    locs,
-		MaxLocations: app.services.locations.MaxLocations(),
+		MaxLocations: app.options.Limits.MaxOrgLocations,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.LocationsIndex, data)
 }
@@ -78,10 +73,10 @@ func (app *application) postLocationNew(w http.ResponseWriter, r *http.Request) 
 
 	form, err := locations.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *locations.Form) *httperr.Error {
+	fail := func(f *locations.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = locationData{OrgID: id}
@@ -89,29 +84,24 @@ func (app *application) postLocationNew(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	_, err = app.services.locations.Create(ctx, locations.CreateLocation{
-		ID:    ksuid.New().String(),
 		OrgID: id,
 		Name:  form.Name,
 	})
 	if err != nil {
 		if errors.Is(err, locations.ErrConflict) {
 			form.AddError("name", "A location with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
 		if errors.Is(err, locations.ErrLimitExceeded) {
-			limit := app.services.locations.MaxLocations()
+			limit := app.options.Limits.MaxOrgLocations
 			form.AddError("name", fmt.Sprintf("Location limit reached. Only %d locations allowed per org.", limit))
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to create location.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	dest := "/orgs/" + url.PathEscape(id) + "/settings/locations"
@@ -127,18 +117,17 @@ func (app *application) getLocation(w http.ResponseWriter, r *http.Request) *htt
 	loc, err := app.services.locations.GetByID(ctx, locID)
 	if err != nil {
 		if errors.Is(err, locations.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Location not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve location.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &locations.Form{Name: loc.Name}
-	data.Data = locationData{OrgID: orgID, ID: locID}
+	data.Data = locationData{
+		OrgID: orgID,
+		ID:    locID,
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.LocationsDetail, data)
 }
 
@@ -148,26 +137,29 @@ func (app *application) postLocation(w http.ResponseWriter, r *http.Request) *ht
 
 	form, err := locations.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	loc, err := app.services.locations.GetByID(ctx, locID)
 	if err != nil {
 		if errors.Is(err, locations.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Location not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve location.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
-	reRender := func(f *locations.Form) *httperr.Error {
+	fail := func(f *locations.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = locationData{OrgID: loc.OrgID, ID: locID}
+		data.Data = locationData{
+			OrgID: loc.OrgID,
+			ID:    locID,
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.LocationsDetail, data)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	_, err = app.services.locations.Update(ctx, locations.UpdateLocation{
@@ -177,13 +169,9 @@ func (app *application) postLocation(w http.ResponseWriter, r *http.Request) *ht
 	if err != nil {
 		if errors.Is(err, locations.ErrConflict) {
 			form.AddError("name", "A location with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to update location.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	dest := "/orgs/" + loc.OrgID + "/settings/locations/" + loc.ID
@@ -197,11 +185,7 @@ func (app *application) postDeleteLocation(w http.ResponseWriter, r *http.Reques
 	locID := r.PathValue("id")
 
 	if err := app.services.locations.Delete(ctx, locID); err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to delete location.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	dest := "/orgs/" + url.PathEscape(orgID) + "/settings/locations"
@@ -221,16 +205,17 @@ func (app *application) getEquipmentLocationsFragment(w http.ResponseWriter, r *
 	selected := r.URL.Query().Get("selected")
 	selectedName := r.URL.Query().Get("selected_name")
 
-	locs, err := app.services.locations.GetByOrgID(ctx, orgID)
+	locs, err := app.services.locations.List(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("getEquipmentLocationsFragment: %w", err),
-			Message: "Failed to retrieve locations.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("getEquipmentLocationsFragment: %w", err))
 	}
 
 	tmplData := app.html.TemplateData(r)
-	tmplData.Data = locationsData{OrgID: orgID, Locations: locs, SelectedID: selected, SelectedName: selectedName}
+	tmplData.Data = locationsData{
+		OrgID:        orgID,
+		Locations:    locs,
+		SelectedID:   selected,
+		SelectedName: selectedName,
+	}
 	return app.html.RenderFragment(w, r, http.StatusOK, fragments.WarehouseLocations, tmplData)
 }

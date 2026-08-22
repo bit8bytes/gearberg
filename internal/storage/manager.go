@@ -27,7 +27,7 @@ import (
 	"io"
 
 	genstorage "github.com/bit8bytes/gearberg/internal/database/queries/gen/storage"
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/uid"
 )
 
 // ErrStorageQuotaExceeded is returned by CheckQuota when an upload would push
@@ -128,7 +128,7 @@ func (m *Manager) Put(ctx context.Context, orgID, key, filename string, r io.Rea
 		return nil, err
 	}
 	row, err := m.queries.Create(ctx, genstorage.CreateParams{
-		ID:              ksuid.New().String(),
+		ID:              uid.New(),
 		OrgID:           orgID,
 		Key:             key,
 		Backend:         s.Backend,

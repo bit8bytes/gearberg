@@ -21,15 +21,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"math"
 
 	"github.com/bit8bytes/gearberg/internal/database"
 	genequip "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipment"
 	genbulk "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentbulkitems"
 	gencontent "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentcombinationitems"
 	genserialized "github.com/bit8bytes/gearberg/internal/database/queries/gen/equipmentserializeditems"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
+	"github.com/bit8bytes/gearberg/internal/equipment/usage"
 	"github.com/bit8bytes/gearberg/internal/pagination"
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/units"
 )
 
 // Repository provides data access for inventory items.
@@ -90,9 +91,9 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 		items = append(items, Equipment{
 			ID:              row.ID,
 			OrgID:           row.OrgID,
-			Type:            TypeFromString(row.EquipmentTypeName),
-			TrackingType:    TrackingType(row.TrackingTypeID.Int64),
-			UsageType:       UsageType(row.UsageTypeID),
+			Type:            Parse(row.EquipmentTypeName),
+			TrackingType:    tracking.Type(row.TrackingTypeID.Int64),
+			UsageType:       usage.Type(row.UsageTypeID),
 			Name:            row.Name,
 			CategoryID:      database.String(row.CategoryID),
 			CategoryName:    row.CategoryName,
@@ -103,17 +104,29 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 			TotalStock:      row.TotalStock,
 			IsArchived:      row.IsArchived == 1,
 			Notes:           database.String(row.Notes),
-			Pricing:         pricingFromListRow(row),
-			Properties:      propertiesFromListRow(row),
-			UpdatedAt:       row.UpdatedAt,
-			CreatedAt:       row.CreatedAt,
+			Pricing: Pricing{
+				PurchasePrice: row.ResalePrice,
+				RentalPrice:   row.RentalPrice,
+			},
+			Properties: Properties{
+				Weight:    row.WeightG,
+				Width:     row.WidthMm,
+				Height:    row.HeightMm,
+				Depth:     row.DepthMm,
+				Power:     row.PowerMw,
+				Current:   row.CurrentMa,
+				Voltage:   row.VoltageMv,
+				WireGauge: row.WireGaugeMm2X100,
+			},
+			UpdatedAt: row.UpdatedAt,
+			CreatedAt: row.CreatedAt,
 		})
 	}
 	return items, int(totalRecords), nil
 }
 
-// GetByID returns the inventory item with id, or ErrNotFound when it does not exist.
-func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error) {
+// Get returns the inventory item with id, or ErrNotFound when it does not exist.
+func (r *Repository) Get(ctx context.Context, id string) (*Equipment, error) {
 	row, err := r.equipment.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -124,9 +137,9 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 	m := Equipment{
 		ID:              row.ID,
 		OrgID:           row.OrgID,
-		Type:            TypeFromString(row.EquipmentTypeName),
-		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
-		UsageType:       UsageType(row.UsageTypeID),
+		Type:            Parse(row.EquipmentTypeName),
+		TrackingType:    tracking.Type(row.TrackingTypeID.Int64),
+		UsageType:       usage.Type(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),
 		ManufacturerID:  database.String(row.ManufacturerID),
@@ -137,10 +150,22 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Equipment, error)
 		ContentCount:    row.ContentCount,
 		IsArchived:      row.IsArchived == 1,
 		Notes:           database.String(row.Notes),
-		Pricing:         pricingFromGetByIDRow(row),
-		Properties:      propertiesFromGetByIDRow(row),
-		CreatedAt:       row.CreatedAt,
-		UpdatedAt:       row.UpdatedAt,
+		Pricing: Pricing{
+			PurchasePrice: row.ResalePrice,
+			RentalPrice:   row.RentalPrice,
+		},
+		Properties: Properties{
+			Weight:    row.WeightG,
+			Width:     row.WidthMm,
+			Height:    row.HeightMm,
+			Depth:     row.DepthMm,
+			Power:     row.PowerMw,
+			Current:   row.CurrentMa,
+			Voltage:   row.VoltageMv,
+			WireGauge: row.WireGaugeMm2X100,
+		},
+		CreatedAt: row.CreatedAt,
+		UpdatedAt: row.UpdatedAt,
 	}
 	return &m, nil
 }
@@ -163,24 +188,24 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		ID:               c.ID,
 		OrgID:            c.OrgID,
 		EquipmentTypeID:  c.EquipmentType.ID(),
-		TrackingTypeID:   sql.NullInt64{Int64: Bulk.ID(), Valid: true},
+		TrackingTypeID:   sql.NullInt64{Int64: tracking.Bulk.ID(), Valid: true},
 		CategoryID:       database.NullString(database.StringOrNil(c.CategoryID)),
 		ManufacturerID:   database.NullString(database.StringOrNil(c.ManufacturerID)),
 		UsageTypeID:      c.UsageTypeID,
 		LocationID:       database.NullString(database.StringOrNil(c.LocationID)),
 		Name:             c.Name,
 		IsArchived:       0,
-		RentalPrice:      database.NullOf(c.Pricing.RentalPrice),
-		ResalePrice:      database.NullOf(c.Pricing.PurchasePrice),
+		RentalPrice:      c.Pricing.RentalPrice,
+		ResalePrice:      c.Pricing.PurchasePrice,
 		Notes:            database.NullString(database.StringOrNil(c.Notes)),
-		WeightG:          database.NullOf(c.Properties.Weight),
-		WidthMm:          database.NullOf(c.Properties.Width),
-		HeightMm:         database.NullOf(c.Properties.Height),
-		DepthMm:          database.NullOf(c.Properties.Depth),
-		CurrentMa:        database.NullOf(c.Properties.Current),
-		PowerMw:          database.NullOf(c.Properties.Power),
-		VoltageMv:        database.NullOf(c.Properties.Voltage),
-		WireGaugeMm2X100: database.NullOf(c.Properties.WireGauge),
+		WeightG:          c.Properties.Weight,
+		WidthMm:          c.Properties.Width,
+		HeightMm:         c.Properties.Height,
+		DepthMm:          c.Properties.Depth,
+		CurrentMa:        c.Properties.Current,
+		PowerMw:          c.Properties.Power,
+		VoltageMv:        c.Properties.Voltage,
+		WireGaugeMm2X100: c.Properties.WireGauge,
 	})
 	if err != nil {
 		normalized := database.NormalizeError(err)
@@ -190,7 +215,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		return nil, fmt.Errorf("createBulkWith: %w", normalized)
 	}
 	if _, err := bulkQ.Create(ctx, genbulk.CreateParams{
-		ID:          ksuid.New().String(),
+		ID:          c.BulkItemID,
 		EquipmentID: row.ID,
 		Quantity:    c.TotalStock,
 	}); err != nil {
@@ -200,8 +225,8 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		ID:              row.ID,
 		OrgID:           row.OrgID,
 		Type:            c.EquipmentType,
-		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
-		UsageType:       UsageType(row.UsageTypeID),
+		TrackingType:    tracking.Type(row.TrackingTypeID.Int64),
+		UsageType:       usage.Type(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),
 		ManufacturerID:  database.String(row.ManufacturerID),
@@ -209,9 +234,21 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
 		TotalStock:      c.TotalStock,
 		Notes:           database.String(row.Notes),
-		Pricing:         pricingFromCreateRow(row),
-		Properties:      propertiesFromCreateRow(row),
-		CreatedAt:       row.CreatedAt,
+		Pricing: Pricing{
+			PurchasePrice: row.ResalePrice,
+			RentalPrice:   row.RentalPrice,
+		},
+		Properties: Properties{
+			Weight:    row.WeightG,
+			Width:     row.WidthMm,
+			Height:    row.HeightMm,
+			Depth:     row.DepthMm,
+			Power:     row.PowerMw,
+			Current:   row.CurrentMa,
+			Voltage:   row.VoltageMv,
+			WireGauge: row.WireGaugeMm2X100,
+		},
+		CreatedAt: row.CreatedAt,
 	}
 	return &m, nil
 }
@@ -233,24 +270,24 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		ID:               c.ID,
 		OrgID:            c.OrgID,
 		EquipmentTypeID:  c.EquipmentType.ID(),
-		TrackingTypeID:   sql.NullInt64{Int64: Serialized.ID(), Valid: true},
+		TrackingTypeID:   sql.NullInt64{Int64: tracking.Serialized.ID(), Valid: true},
 		CategoryID:       database.NullString(database.StringOrNil(c.CategoryID)),
 		ManufacturerID:   database.NullString(database.StringOrNil(c.ManufacturerID)),
 		UsageTypeID:      c.UsageTypeID,
 		LocationID:       database.NullString(database.StringOrNil(c.LocationID)),
 		Name:             c.Name,
 		IsArchived:       0,
-		RentalPrice:      database.NullOf(c.Pricing.RentalPrice),
-		ResalePrice:      database.NullOf(c.Pricing.PurchasePrice),
+		RentalPrice:      c.Pricing.RentalPrice,
+		ResalePrice:      c.Pricing.PurchasePrice,
 		Notes:            database.NullString(database.StringOrNil(c.Notes)),
-		WeightG:          database.NullOf(c.Properties.Weight),
-		WidthMm:          database.NullOf(c.Properties.Width),
-		HeightMm:         database.NullOf(c.Properties.Height),
-		DepthMm:          database.NullOf(c.Properties.Depth),
-		CurrentMa:        database.NullOf(c.Properties.Current),
-		PowerMw:          database.NullOf(c.Properties.Power),
-		VoltageMv:        database.NullOf(c.Properties.Voltage),
-		WireGaugeMm2X100: database.NullOf(c.Properties.WireGauge),
+		WeightG:          c.Properties.Weight,
+		WidthMm:          c.Properties.Width,
+		HeightMm:         c.Properties.Height,
+		DepthMm:          c.Properties.Depth,
+		CurrentMa:        c.Properties.Current,
+		PowerMw:          c.Properties.Power,
+		VoltageMv:        c.Properties.Voltage,
+		WireGaugeMm2X100: c.Properties.WireGauge,
 	})
 	if err != nil {
 		normalized := database.NormalizeError(err)
@@ -281,8 +318,8 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		ID:              row.ID,
 		OrgID:           row.OrgID,
 		Type:            c.EquipmentType,
-		TrackingType:    TrackingType(row.TrackingTypeID.Int64),
-		UsageType:       UsageType(row.UsageTypeID),
+		TrackingType:    tracking.Type(row.TrackingTypeID.Int64),
+		UsageType:       usage.Type(row.UsageTypeID),
 		Name:            row.Name,
 		CategoryID:      database.String(row.CategoryID),
 		ManufacturerID:  database.String(row.ManufacturerID),
@@ -290,9 +327,21 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		StorageObjectID: database.StringPtr(row.StorageObjectID),
 		TotalStock:      int64(len(c.Units)),
 		Notes:           database.String(row.Notes),
-		Pricing:         pricingFromCreateRow(row),
-		Properties:      propertiesFromCreateRow(row),
-		CreatedAt:       row.CreatedAt,
+		Pricing: Pricing{
+			PurchasePrice: row.ResalePrice,
+			RentalPrice:   row.RentalPrice,
+		},
+		Properties: Properties{
+			Weight:    row.WeightG,
+			Width:     row.WidthMm,
+			Height:    row.HeightMm,
+			Depth:     row.DepthMm,
+			Power:     row.PowerMw,
+			Current:   row.CurrentMa,
+			Voltage:   row.VoltageMv,
+			WireGauge: row.WireGaugeMm2X100,
+		},
+		CreatedAt: row.CreatedAt,
 	}
 	return &m, nil
 }
@@ -349,8 +398,8 @@ func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateEquipmentDet
 func (r *Repository) UpdatePricing(ctx context.Context, u UpdateEquipmentPricing) error {
 	if err := r.equipment.UpdatePricing(ctx, genequip.UpdatePricingParams{
 		ID:          u.ID,
-		ResalePrice: database.NullOf(u.Pricing.PurchasePrice),
-		RentalPrice: database.NullOf(u.Pricing.RentalPrice),
+		ResalePrice: u.Pricing.PurchasePrice,
+		RentalPrice: u.Pricing.RentalPrice,
 	}); err != nil {
 		return fmt.Errorf("UpdatePricing: %w", database.NormalizeError(err))
 	}
@@ -361,14 +410,14 @@ func (r *Repository) UpdatePricing(ctx context.Context, u UpdateEquipmentPricing
 func (r *Repository) UpdateProperties(ctx context.Context, u UpdateEquipmentProperties) error {
 	if err := r.equipment.UpdateProperties(ctx, genequip.UpdatePropertiesParams{
 		ID:               u.ID,
-		WeightG:          database.NullOf(u.Properties.Weight),
-		WidthMm:          database.NullOf(u.Properties.Width),
-		HeightMm:         database.NullOf(u.Properties.Height),
-		DepthMm:          database.NullOf(u.Properties.Depth),
-		VoltageMv:        database.NullOf(u.Properties.Voltage),
-		CurrentMa:        database.NullOf(u.Properties.Current),
-		PowerMw:          database.NullOf(u.Properties.Power),
-		WireGaugeMm2X100: database.NullOf(u.Properties.WireGauge),
+		WeightG:          u.Properties.Weight,
+		WidthMm:          u.Properties.Width,
+		HeightMm:         u.Properties.Height,
+		DepthMm:          u.Properties.Depth,
+		VoltageMv:        u.Properties.Voltage,
+		CurrentMa:        u.Properties.Current,
+		PowerMw:          u.Properties.Power,
+		WireGaugeMm2X100: u.Properties.WireGauge,
 	}); err != nil {
 		return fmt.Errorf("UpdateProperties: %w", database.NormalizeError(err))
 	}
@@ -390,7 +439,7 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 			SerialNumber:             row.SerialNumber,
 			ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 			Remark:                   database.String(row.Remark),
-			PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
+			PurchasePrice:            database.NullAs[units.Cents](row.PurchasePrice),
 			PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 			NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
 			CreatedAt:                row.CreatedAt,
@@ -398,35 +447,6 @@ func (r *Repository) ListUnits(ctx context.Context, equipmentID string) ([]Unit,
 		})
 	}
 	return us, nil
-}
-
-// ListAll returns all inventory items for orgID ordered by name, with no pagination.
-// Passes -1 as the is_archived sentinel to skip the archived filter and return all items.
-func (r *Repository) ListAll(ctx context.Context, orgID string) ([]Equipment, error) {
-	rows, err := r.equipment.List(ctx, genequip.ListParams{
-		OrgID:      orgID,
-		NameQuery:  "",
-		Category:   "",
-		IsArchived: -1,
-		PageOffset: 0,
-		PageLimit:  math.MaxInt32,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("ListAll: %w", err)
-	}
-	items, _, err := listRowsToEquipment(rows)
-	return items, err
-}
-
-// Archive sets the is_archived flag on an inventory item.
-func (r *Repository) Archive(ctx context.Context, a ArchiveEquipment) error {
-	if err := r.equipment.UpdateArchived(ctx, genequip.UpdateArchivedParams{
-		ID:         a.ID,
-		IsArchived: database.Bool(a.IsArchived),
-	}); err != nil {
-		return fmt.Errorf("Archive: %w", database.NormalizeError(err))
-	}
-	return nil
 }
 
 // Delete removes the inventory item. Returns ErrInUse when active rental line items reference it.
@@ -457,7 +477,7 @@ func (r *Repository) GetUnit(ctx context.Context, id string) (*Unit, error) {
 		SerialNumber:             row.SerialNumber,
 		ManufacturerSerialNumber: database.String(row.ManufacturerSerial),
 		Remark:                   database.String(row.Remark),
-		PurchasePrice:            database.NullAs[Cents](row.PurchasePrice),
+		PurchasePrice:            database.NullAs[units.Cents](row.PurchasePrice),
 		PurchasedAt:              database.Int64Ptr(row.PurchasedAt),
 		NextInspectionAt:         database.Int64Ptr(row.NextInspectionAt),
 		CreatedAt:                row.CreatedAt,
@@ -547,7 +567,7 @@ func (r *Repository) ListContent(ctx context.Context, equipmentID string) ([]Con
 			EquipmentID: row.EquipmentID,
 			MemberID:    row.MemberEquipmentID,
 			MemberName:  row.MemberName,
-			MemberType:  TrackingType(row.MemberTrackingTypeID.Int64),
+			MemberType:  tracking.Type(row.MemberTrackingTypeID.Int64),
 			Quantity:    row.Quantity,
 		})
 	}

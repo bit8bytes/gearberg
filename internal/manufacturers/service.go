@@ -22,7 +22,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/uid"
+)
+
+var (
+	// ErrNotFound is returned when a manufacturer does not exist.
+	ErrNotFound = errors.New("manufacturer not found")
+	// ErrConflict is returned when a unique constraint is violated.
+	ErrConflict = errors.New("manufacturer already exists")
+	// ErrLimitExceeded is returned when an org's manufacturer limit is reached.
+	ErrLimitExceeded = errors.New("manufacturer limit exceeded")
+	// ErrInUse is returned when a manufacturer cannot be deleted due to assigned inventory items.
+	ErrInUse = errors.New("manufacturer is in use and cannot be deleted")
 )
 
 // Options holds configuration for the manufacturer service.
@@ -41,27 +52,37 @@ func NewService(repo *Repository, opts Options) *Service {
 	return &Service{repo: repo, opts: opts}
 }
 
-// MaxManufacturers returns the configured maximum number of manufacturers per org.
-func (s *Service) MaxManufacturers() int {
-	return s.opts.MaxManufacturers
+// Manufacturer represents a manufacturer belonging to an org.
+type Manufacturer struct {
+	ID        string
+	OrgID     string
+	Name      string
+	UpdatedAt int64
+	CreatedAt int64
 }
 
 // List returns all manufacturers belonging to orgID.
 func (s *Service) List(ctx context.Context, orgID string) ([]Manufacturer, error) {
-	manufacturers, err := s.repo.GetByOrgID(ctx, orgID)
+	manufacturers, err := s.repo.List(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get manufacturers: %w", err)
 	}
 	return manufacturers, nil
 }
 
-// GetByID returns the manufacturer with id.
-func (s *Service) GetByID(ctx context.Context, id string) (*Manufacturer, error) {
-	manufacturer, err := s.repo.GetByID(ctx, id)
+// Get returns the manufacturer with id.
+func (s *Service) Get(ctx context.Context, id string) (*Manufacturer, error) {
+	manufacturer, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get manufacturer: %w", err)
 	}
 	return manufacturer, nil
+}
+
+// CreateManufacturer holds the data required to create a new manufacturer.
+type CreateManufacturer struct {
+	OrgID string
+	Name  string
 }
 
 // Create creates a new manufacturer, enforcing the configured MaxManufacturers limit per org.
@@ -74,11 +95,21 @@ func (s *Service) Create(ctx context.Context, c CreateManufacturer) (*Manufactur
 		return nil, ErrLimitExceeded
 	}
 
-	manufacturer, err := s.repo.Create(ctx, c)
+	manufacturer, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
+		OrgID: c.OrgID,
+		Name:  c.Name,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manufacturer: %w", err)
 	}
 	return manufacturer, nil
+}
+
+// UpdateManufacturer holds the data required to update a manufacturer.
+type UpdateManufacturer struct {
+	ID   string
+	Name string
 }
 
 // Update updates the name of a manufacturer.
@@ -98,8 +129,8 @@ func (s *Service) Upsert(ctx context.Context, orgID, name string) (string, error
 	if name == "" {
 		return "", fmt.Errorf("Upsert: name is blank")
 	}
-	_, err := s.repo.Create(ctx, CreateManufacturer{
-		ID:    ksuid.New().String(),
+	_, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
 		OrgID: orgID,
 		Name:  name,
 	})

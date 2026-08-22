@@ -26,20 +26,12 @@ func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *httper
 
 	obj, err := app.services.storageManager.Get(r.Context(), id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Media not found.",
-			Code:    http.StatusNotFound,
-		}
+		return httperr.NotFound(err)
 	}
 
 	rc, err := app.services.storageManager.Open(r.Context(), id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to open media.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 	defer func(rc io.ReadCloser) {
 		if err := rc.Close(); err != nil {
@@ -49,11 +41,7 @@ func (app *application) getMedia(w http.ResponseWriter, r *http.Request) *httper
 
 	w.Header().Set("Content-Type", obj.ContentType)
 	if _, err := io.Copy(w, rc); err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to serve media.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	return nil

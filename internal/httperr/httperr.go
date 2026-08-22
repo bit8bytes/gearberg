@@ -31,3 +31,32 @@ type Error struct {
 // HandlerFunc is an http.HandlerFunc variant that returns an *Error instead of writing error
 // responses directly. Handlers return nil on success; a non-nil value is handled by the renderer.
 type HandlerFunc func(http.ResponseWriter, *http.Request) *Error
+
+// BadRequest returns a 400 error with a generic "Bad request." message.
+func BadRequest(err error) *Error {
+	return &Error{
+		Error:   err,
+		Message: "Bad request.",
+		Code:    http.StatusBadRequest,
+	}
+}
+
+// InternalServerError returns a 500 error with a generic "Something went wrong." message.
+// Do not expose detail in the message. Log it via the Error field instead.
+func InternalServerError(err error) *Error {
+	return &Error{
+		Error:   err,
+		Message: "Something went wrong.",
+		Code:    http.StatusInternalServerError,
+	}
+}
+
+// NotFound returns a 404 error with a generic  "Not found." message.
+// Do not expose deail in message. Log it via the Error field instead.
+func NotFound(err error) *Error {
+	return &Error{
+		Error:   err,
+		Message: "Not found.",
+		Code:    http.StatusNotFound,
+	}
+}

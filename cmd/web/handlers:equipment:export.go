@@ -16,11 +16,14 @@ package main
 
 import (
 	"encoding/csv"
+	"math"
 	"net/http"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	"github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
+	"github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/pagination"
 )
 
 // exportColumnCount must equal len(imports.ExpectedHeaders). This line fails to
@@ -28,20 +31,20 @@ import (
 // versa), catching column-count drift at build time.
 const exportColumnCount = 26
 
-var _ = [1]struct{}{}[exportColumnCount-len(imports.ExpectedHeaders)]
+var _ = [1]struct{}{}[exportColumnCount-len(equipmentimports.ExpectedHeaders)]
 
 func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 
-	items, err := app.services.equipment.ListAll(ctx, orgID)
+	items, _, err := app.services.equipment.List(ctx, equipment.ListParams{OrgID: orgID, Filters: pagination.Filters{Page: 1, PageSize: math.MaxInt32}})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	mfrs, err := app.services.manufacturers.List(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve manufacturers.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	mfrByID := make(map[string]string, len(mfrs))
 	for _, m := range mfrs {
@@ -54,7 +57,7 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 	_, _ = w.Write([]byte{0xEF, 0xBB, 0xBF})
 
 	cw := csv.NewWriter(w)
-	_ = cw.Write(imports.ExpectedHeaders)
+	_ = cw.Write(equipmentimports.ExpectedHeaders)
 
 	for _, item := range items {
 		if item.IsArchived || item.TotalStock == 0 {
@@ -62,14 +65,14 @@ func (app *application) getEquipmentExport(w http.ResponseWriter, r *http.Reques
 		}
 
 		var units []equipment.Unit
-		if item.TrackingType == equipment.Serialized {
+		if item.TrackingType == tracking.Serialized {
 			units, err = app.services.equipment.ListUnits(ctx, item.ID)
 			if err != nil {
-				return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
+				return httperr.InternalServerError(err)
 			}
 		}
 
-		for _, row := range imports.RowsForItem(item, mfrByID[item.ManufacturerID], units) {
+		for _, row := range equipmentimports.RowsForItem(item, mfrByID[item.ManufacturerID], units) {
 			_ = cw.Write(row)
 		}
 	}

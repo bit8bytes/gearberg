@@ -21,6 +21,10 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
+	"github.com/bit8bytes/gearberg/internal/equipment/usage"
+	"github.com/bit8bytes/gearberg/internal/units"
 )
 
 var (
@@ -44,19 +48,16 @@ var (
 
 // Base holds fields shared between bulk and serialized creation.
 type Base struct {
-	OrgID            string
-	EquipmentType    Type
-	UsageTypeID      int64
-	Name             string
-	CategoryID       string
-	CategoryName     string
-	ManufacturerID   string
-	ManufacturerName string
-	LocationID       string
-	LocationName     string
-	Notes            string
-	Pricing          Pricing
-	Properties       Properties
+	OrgID          string
+	EquipmentType  Type
+	UsageTypeID    int64
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	LocationID     string
+	Notes          string
+	Pricing        Pricing
+	Properties     Properties
 }
 
 // CreateEquipment holds the data required to create a new inventory item of any type.
@@ -64,14 +65,15 @@ type Base struct {
 // how many units are generated.
 type CreateEquipment struct {
 	Base
-	TrackingType TrackingType
-	TotalStock   int64
-	UnitCount    int64
+	ItemType   string // "bulk", "serialized", or "kit" — maps to both equipment_type_id and tracking_type_id
+	TotalStock int64
+	UnitCount  int64
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
 type CreateBulkEquipment struct {
-	ID string
+	ID         string
+	BulkItemID string
 	Base
 	TotalStock int64
 }
@@ -91,7 +93,7 @@ type CreateUnit struct {
 	SerialNumber             string
 	ManufacturerSerialNumber string
 	Remark                   string
-	PurchasePrice            *Cents
+	PurchasePrice            *units.Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
 	IsActive                 bool
@@ -107,18 +109,15 @@ type AddUnit struct {
 
 // UpdateEquipmentDetails holds the data required to update the details tab fields.
 type UpdateEquipmentDetails struct {
-	ID               string
-	OrgID            string
-	Type             TrackingType
-	Name             string
-	CategoryID       string
-	CategoryName     string
-	ManufacturerID   string
-	ManufacturerName string
-	LocationID       string
-	LocationName     string
-	Notes            string
-	TotalStock       int64 // TotalStock is only applied for bulk inventory items.
+	ID             string
+	OrgID          string
+	Type           tracking.Type
+	Name           string
+	CategoryID     string
+	ManufacturerID string
+	LocationID     string
+	Notes          string
+	TotalStock     int64 // TotalStock is only applied for bulk inventory items.
 }
 
 // UpdateEquipmentPricing holds the data required to update the pricing tab fields.
@@ -140,7 +139,7 @@ type UpdateUnit struct {
 	IsActive                 int64
 	ManufacturerSerialNumber string
 	Remark                   string
-	PurchasePrice            *Cents
+	PurchasePrice            *units.Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
 }
@@ -153,119 +152,29 @@ type AssignContent struct {
 	Quantity    int64
 }
 
-// RemoveContent holds the data required to remove a content entry.
-type RemoveContent struct {
-	ID string
-}
-
-// ArchiveEquipment holds the data required to archive or unarchive an equipment item.
-type ArchiveEquipment struct {
-	ID         string
-	IsArchived bool
-}
-
 // SetImage links or unlinks a storage object from an inventory item.
 type SetImage struct {
 	ID              string
 	StorageObjectID *string
 }
 
-// Cents is a monetary amount in the smallest currency unit (e.g. 1999 = €19.99).
-type Cents int64
-
-// ToDecimal formats the amount as a decimal string for form inputs (e.g. 1999 → "19.99").
-// Returns "" when nil.
-func (c *Cents) ToDecimal() string {
-	if c == nil {
-		return ""
-	}
-	return fmt.Sprintf("%.2f", float64(*c)/100)
-}
-
-// Grams is a weight stored in grams; users enter and see kilograms.
-type Grams int64
-
-// ToKG returns the weight in kg as a string for form inputs (e.g. 1500 → "1.5"). Returns "" when nil.
-func (g *Grams) ToKG() string {
-	if g == nil {
-		return ""
-	}
-	return fmt.Sprintf("%g", float64(*g)/1000)
-}
-
-// Millimeters is a length stored in millimetres; users enter and see centimetres.
-type Millimeters int64
-
-// ToCM returns the length in cm as a string for form inputs (e.g. 100 → "10"). Returns "" when nil.
-func (m *Millimeters) ToCM() string {
-	if m == nil {
-		return ""
-	}
-	return fmt.Sprintf("%g", float64(*m)/10)
-}
-
-// Milliwatts is power stored in milliwatts; users enter and see watts.
-type Milliwatts int64
-
-// ToW returns the power in W as a string for form inputs (e.g. 1500 → "1.5"). Returns "" when nil.
-func (m *Milliwatts) ToW() string {
-	if m == nil {
-		return ""
-	}
-	return fmt.Sprintf("%g", float64(*m)/1000)
-}
-
-// Milliamps is current stored in milliamps; users enter and see amps.
-type Milliamps int64
-
-// ToA returns the current in A as a string for form inputs (e.g. 500 → "0.5"). Returns "" when nil.
-func (m *Milliamps) ToA() string {
-	if m == nil {
-		return ""
-	}
-	return fmt.Sprintf("%g", float64(*m)/1000)
-}
-
-// Millivolts is voltage stored and displayed as whole volts.
-type Millivolts int64
-
-// ToV returns the voltage as a string for form inputs. Returns "" when nil.
-func (v *Millivolts) ToV() string {
-	if v == nil {
-		return ""
-	}
-	return fmt.Sprintf("%g", float64(*v)/1000)
-}
-
-// WireGauge stores wire cross-section area as mm²×100 (e.g. 150 = 1.5 mm²); displayed as-is.
-type WireGauge int64
-
-// String returns the raw mm²×100 value as a string for form inputs. Returns "" when nil.
-func (w *WireGauge) String() string {
-	if w == nil {
-		return ""
-	}
-	return fmt.Sprintf("%d", *w)
-}
-
 // Properties holds the physical specification fields shown on the Properties tab.
-// Adding a new physical property field only requires updating this struct,
-// the mapper functions in mapping.go, and PropertiesForm in form.go.
+// Adding a new physical property field only requires updating this struct and PropertiesForm in form.go.
 type Properties struct {
-	Weight    *Grams
-	Width     *Millimeters
-	Height    *Millimeters
-	Depth     *Millimeters
-	Power     *Milliwatts
-	Current   *Milliamps
-	Voltage   *Millivolts
-	WireGauge *WireGauge
+	Weight    *units.Grams
+	Width     *units.Millimeters
+	Height    *units.Millimeters
+	Depth     *units.Millimeters
+	Power     *units.Milliwatts
+	Current   *units.Milliamps
+	Voltage   *units.Millivolts
+	WireGauge *units.WireGauge
 }
 
 // Pricing holds the price fields shown on the Pricing tab.
 type Pricing struct {
-	PurchasePrice *Cents
-	RentalPrice   *Cents
+	PurchasePrice *units.Cents
+	RentalPrice   *units.Cents
 }
 
 // Equipment represents a single inventory item.
@@ -273,8 +182,8 @@ type Equipment struct {
 	ID                     string
 	OrgID                  string
 	Type                   Type
-	TrackingType           TrackingType
-	UsageType              UsageType
+	TrackingType           tracking.Type
+	UsageType              usage.Type
 	Name                   string
 	CategoryID             string
 	CategoryName           string
@@ -300,7 +209,7 @@ type ContentItem struct {
 	EquipmentID string
 	MemberID    string
 	MemberName  string
-	MemberType  TrackingType
+	MemberType  tracking.Type
 	Quantity    int64
 }
 
@@ -318,7 +227,7 @@ type Unit struct {
 	SerialNumber             string
 	ManufacturerSerialNumber string
 	Remark                   string
-	PurchasePrice            *Cents
+	PurchasePrice            *units.Cents
 	PurchasedAt              *int64
 	NextInspectionAt         *int64
 	CreatedAt                int64

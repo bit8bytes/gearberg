@@ -53,7 +53,7 @@
 
           <div class="flex flex-col gap-1 md:col-span-2">
             <label class="label">Tracking Type</label>
-            <input type="text" value="{{ if eq .Form.TypeID "bulk" }}Bulk{{ else }}Serialized{{ end }}" class="input w-full" disabled />
+            <input type="text" value="{{ if eq .Form.Type.String "bulk" }}Bulk{{ else }}Serialized{{ end }}" class="input w-full" disabled />
           </div>
           
           <div class="flex flex-col gap-1 md:col-span-2">
@@ -89,7 +89,7 @@
             </div>
           </div>
 
-          {{ if eq .Form.TypeID "bulk" }}
+          {{ if eq .Form.Type.String "bulk" }}
           <div class="flex flex-col gap-1 md:col-span-2">
             <label for="total_stock" class="label">Total Stock</label>
             <input
@@ -115,6 +115,7 @@
 
       </div>
 
+      <input type="hidden" name="type_id" value="{{ .Form.Type }}" />
       <div id="save" class="flex gap-2">
         <button type="submit" formaction="/orgs/{{ .Data.OrgID }}/equipment/{{ .Data.ID }}/details" class="btn btn-primary" data-loading-trigger>
           {{ template "loading-spinner" . }}

@@ -19,7 +19,6 @@ package settings
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/money"
@@ -29,9 +28,9 @@ import (
 
 // Form holds the parsed form input and validation state for org settings requests.
 type Form struct {
-	Currency string
-	VatRate  string // entered as a percentage e.g. "19" or "19,5"
-	Timezone string
+	Currency money.Currency
+	VatRate  money.VatRate
+	Timezone timezone.Timezone
 	validator.Validator
 }
 
@@ -49,42 +48,29 @@ func Parse(r *http.Request) (Form, error) {
 	if err := r.ParseForm(); err != nil {
 		return f, fmt.Errorf("parse form: %w", err)
 	}
-	f.Currency = strings.TrimSpace(r.PostForm.Get("currency"))
-	f.VatRate = strings.TrimSpace(r.PostForm.Get("vat_rate"))
-	f.Timezone = strings.TrimSpace(r.PostForm.Get("timezone"))
+	f.Currency = money.Currency(strings.TrimSpace(r.PostForm.Get("currency")))
+	f.VatRate = money.ParseVatRate(strings.TrimSpace(r.PostForm.Get("vat_rate")))
+	f.Timezone = timezone.Timezone(strings.TrimSpace(r.PostForm.Get("timezone")))
 	return f, nil
 }
 
 // Validate checks form fields and returns true when all checks pass.
 func (f *Form) Validate() bool {
-	f.Check(validator.PermittedValue(f.Currency, money.ISO4217...), "currency", "Must be a valid ISO-4217 currency code")
-	if validator.NotBlank(f.VatRate) {
-		v, err := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
-		f.Check(err == nil, "vat_rate", "Must be a valid number")
-		f.Check(err != nil || (v >= 0 && v <= 100), "vat_rate", "Must be between 0 and 100")
-	} else {
-		f.AddError("vat_rate", "This field cannot be blank")
-	}
-	f.Check(validator.PermittedValue(f.Timezone, timezone.IANA...), "timezone", "Must be a valid IANA timezone")
+	f.Check(validator.PermittedValue(string(f.Currency), money.ISO4217...), "currency", "Must be a valid ISO-4217 currency code")
+	f.Check(f.VatRate >= 0 && f.VatRate <= 10000, "vat_rate", "Must be between 0 and 100")
+	f.Check(validator.PermittedValue(string(f.Timezone), timezone.IANA...), "timezone", "Must be a valid IANA timezone")
 	return f.Valid()
 }
 
-// FormFromOrgSettings pre-populates a Form from stored OrgSettings.
-func FormFromOrgSettings(s *OrgSettings) Form {
+// Form pre-populates a Form from the stored OrgSettings. Safe to call on a nil receiver.
+func (s *OrgSettings) Form() Form {
 	f := Form{}
 	f.Errors = make(map[string]string)
 	if s == nil {
 		return f
 	}
-	f.Currency = s.Currency.String()
-	f.VatRate = s.VatRate.Percent()
-	f.Timezone = s.Timezone.String()
+	f.Currency = s.Currency
+	f.VatRate = s.VatRate
+	f.Timezone = s.Timezone
 	return f
-}
-
-// ParsedVatRate converts the entered percentage string to a VatRate (basis points).
-// Call only after Validate() returns true.
-func (f *Form) ParsedVatRate() money.VatRate {
-	v, _ := strconv.ParseFloat(strings.ReplaceAll(f.VatRate, ",", "."), 64)
-	return money.Round(v)
 }

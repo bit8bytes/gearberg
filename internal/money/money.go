@@ -19,6 +19,7 @@ package money
 import (
 	"math"
 	"strconv"
+	"strings"
 )
 
 // ISO4217 lists the ISO-4217 codes exposed in the UI.
@@ -37,14 +38,26 @@ func (c Currency) String() string { return string(c) }
 // VatRate is a VAT rate stored as basis points (e.g. 1900 = 19%).
 type VatRate int64
 
-// Percent converts the stored basis-point value back to a human-readable
+// String converts the stored basis-point value back to a human-readable
 // percentage string suitable for pre-filling the settings form (e.g. 1900 → "19").
-func (v VatRate) Percent() string {
+func (v VatRate) String() string {
 	f := float64(v) / 100
 	if f == math.Trunc(f) {
 		return strconv.FormatFloat(f, 'f', 0, 64)
 	}
 	return strconv.FormatFloat(f, 'f', 2, 64)
+}
+
+// Percent is an alias for String, kept for backwards compatibility.
+func (v VatRate) Percent() string { return v.String() }
+
+// ParseVatRate converts a percentage string (e.g. "19" or "19,5") to a VatRate in basis points.
+func ParseVatRate(s string) VatRate {
+	v, err := strconv.ParseFloat(strings.ReplaceAll(s, ",", "."), 64)
+	if err != nil {
+		return 0
+	}
+	return Round(v)
 }
 
 // Display formats the VAT rate as a percentage string for display (e.g. 1900 → "19%").

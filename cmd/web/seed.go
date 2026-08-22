@@ -21,6 +21,8 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/credentials"
 	"github.com/bit8bytes/gearberg/internal/equipment"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
+	"github.com/bit8bytes/gearberg/internal/equipment/usage"
 	"github.com/bit8bytes/gearberg/internal/federated"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/tokens"
@@ -61,9 +63,9 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 		}
 	}
 
-	for _, t := range []equipment.TrackingType{
-		equipment.Bulk,
-		equipment.Serialized,
+	for _, t := range []tracking.Type{
+		tracking.Bulk,
+		tracking.Serialized,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO tracking_types (id, name) VALUES (?, ?)`, t.ID(), t.String()); err != nil {
 			return fmt.Errorf("seed tracking_types: %w", err)
@@ -71,16 +73,16 @@ func seedReferenceData(ctx context.Context, db *sql.DB) error { //nolint:cyclop 
 	}
 
 	for _, t := range []equipment.Type{
-		equipment.Standard,
-		equipment.Kit,
+		equipment.StandardType,
+		equipment.KitType,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO equipment_types (id, name) VALUES (?, ?)`, t.ID(), t.String()); err != nil {
 			return fmt.Errorf("seed equipment_types: %w", err)
 		}
 	}
 
-	for _, u := range []equipment.UsageType{
-		equipment.Rental,
+	for _, u := range []usage.Type{
+		usage.Rental,
 	} {
 		if _, err := db.ExecContext(ctx, `INSERT OR IGNORE INTO usage_types (id, name) VALUES (?, ?)`, u.ID(), u.String()); err != nil {
 			return fmt.Errorf("seed usage_types: %w", err)

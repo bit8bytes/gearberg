@@ -33,15 +33,15 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/bit8bytes/gearberg/internal/accounts"
+	"github.com/bit8bytes/gearberg/internal/categories"
 	"github.com/bit8bytes/gearberg/internal/credentials"
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	"github.com/bit8bytes/gearberg/internal/equipment/categories"
-	invimports "github.com/bit8bytes/gearberg/internal/equipment/imports"
-	"github.com/bit8bytes/gearberg/internal/equipment/locations"
-	"github.com/bit8bytes/gearberg/internal/equipment/manufacturers"
+	invimports "github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/federated"
+	"github.com/bit8bytes/gearberg/internal/locations"
+	"github.com/bit8bytes/gearberg/internal/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
 	"github.com/bit8bytes/gearberg/internal/storage"
@@ -266,10 +266,10 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	locationsSvc := locations.NewService(locationsRepo, locations.Options{MaxLocations: opts.Limits.MaxOrgLocations})
 
 	inventoryRepo := equipment.NewRepository(db)
-	inventorySvc := equipment.NewService(inventoryRepo, db, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
+	inventorySvc := equipment.NewService(inventoryRepo, db)
 
 	equipmentImportsRepo := invimports.NewRepository(db)
-	equipmentImportsSvc := invimports.NewService(equipmentImportsRepo, db, inventorySvc, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
+	equipmentImportsSvc := invimports.NewService(equipmentImportsRepo, db, inventoryRepo, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
 
 	store, err := storage.Open("local", opts.StorageDSN, logger)
 	if err != nil {

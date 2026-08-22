@@ -22,7 +22,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/uid"
+)
+
+var (
+	// ErrNotFound is returned when a location does not exist.
+	ErrNotFound = errors.New("location not found")
+	// ErrConflict is returned when a unique constraint is violated.
+	ErrConflict = errors.New("location already exists")
+	// ErrLimitExceeded is returned when an org's location limit is reached.
+	ErrLimitExceeded = errors.New("location limit exceeded")
 )
 
 // Options holds configuration for the location service.
@@ -41,14 +50,17 @@ func NewService(repo *Repository, opts Options) *Service {
 	return &Service{repo: repo, opts: opts}
 }
 
-// MaxLocations returns the configured maximum number of locations per org.
-func (s *Service) MaxLocations() int {
-	return s.opts.MaxLocations
+// Location represents a storage location belonging to an org.
+type Location struct {
+	ID                        string
+	ParentWarehouseLocationID *string
+	OrgID                     string
+	Name                      string
 }
 
-// GetByOrgID returns all locations belonging to orgID.
-func (s *Service) GetByOrgID(ctx context.Context, orgID string) ([]Location, error) {
-	locs, err := s.repo.GetByOrgID(ctx, orgID)
+// List returns all locations belonging to orgID.
+func (s *Service) List(ctx context.Context, orgID string) ([]Location, error) {
+	locs, err := s.repo.List(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("GetByOrgID: %w", err)
 	}
@@ -57,11 +69,18 @@ func (s *Service) GetByOrgID(ctx context.Context, orgID string) ([]Location, err
 
 // GetByID returns the location with id.
 func (s *Service) GetByID(ctx context.Context, id string) (*Location, error) {
-	loc, err := s.repo.GetByID(ctx, id)
+	loc, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetByID: %w", err)
 	}
 	return loc, nil
+}
+
+// CreateLocation holds the data required to create a new location.
+type CreateLocation struct {
+	ParentWarehouseLocationID *string
+	OrgID                     string
+	Name                      string
 }
 
 // Create creates a new location, enforcing the configured MaxLocations limit per org.
@@ -74,15 +93,22 @@ func (s *Service) Create(ctx context.Context, c CreateLocation) (*Location, erro
 		return nil, ErrLimitExceeded
 	}
 
-	if c.ID == "" {
-		c.ID = ksuid.New().String()
-	}
-
-	loc, err := s.repo.Create(ctx, c)
+	loc, err := s.repo.Create(ctx, createParams{
+		ID:                        uid.New(),
+		ParentWarehouseLocationID: c.ParentWarehouseLocationID,
+		OrgID:                     c.OrgID,
+		Name:                      c.Name,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("Create: %w", err)
 	}
 	return loc, nil
+}
+
+// UpdateLocation holds the data required to update a location.
+type UpdateLocation struct {
+	ID   string
+	Name string
 }
 
 // Update updates the name of a location.
@@ -110,8 +136,8 @@ func (s *Service) Upsert(ctx context.Context, orgID, name string) (string, error
 	if name == "" {
 		return "", fmt.Errorf("Upsert: name is blank")
 	}
-	_, err := s.repo.Create(ctx, CreateLocation{
-		ID:    ksuid.New().String(),
+	_, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
 		OrgID: orgID,
 		Name:  name,
 	})

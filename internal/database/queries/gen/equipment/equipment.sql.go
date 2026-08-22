@@ -8,6 +8,8 @@ package equipment
 import (
 	"context"
 	"database/sql"
+
+	units "github.com/bit8bytes/gearberg/internal/units"
 )
 
 const countByOrgID = `-- name: CountByOrgID :one
@@ -104,17 +106,17 @@ type CreateParams struct {
 	LocationID       sql.NullString
 	Name             string
 	IsArchived       int64
-	RentalPrice      sql.NullInt64
-	ResalePrice      sql.NullInt64
+	RentalPrice      *units.Cents
+	ResalePrice      *units.Cents
 	Notes            sql.NullString
-	WeightG          sql.NullInt64
-	WidthMm          sql.NullInt64
-	HeightMm         sql.NullInt64
-	DepthMm          sql.NullInt64
-	VoltageMv        sql.NullInt64
-	CurrentMa        sql.NullInt64
-	PowerMw          sql.NullInt64
-	WireGaugeMm2X100 sql.NullInt64
+	WeightG          *units.Grams
+	WidthMm          *units.Millimeters
+	HeightMm         *units.Millimeters
+	DepthMm          *units.Millimeters
+	VoltageMv        *units.Millivolts
+	CurrentMa        *units.Milliamps
+	PowerMw          *units.Milliwatts
+	WireGaugeMm2X100 *units.WireGauge
 }
 
 type CreateRow struct {
@@ -129,17 +131,17 @@ type CreateRow struct {
 	StorageObjectID  sql.NullString
 	Name             string
 	IsArchived       int64
-	RentalPrice      sql.NullInt64
-	ResalePrice      sql.NullInt64
+	RentalPrice      *units.Cents
+	ResalePrice      *units.Cents
 	Notes            sql.NullString
-	WeightG          sql.NullInt64
-	WidthMm          sql.NullInt64
-	HeightMm         sql.NullInt64
-	DepthMm          sql.NullInt64
-	VoltageMv        sql.NullInt64
-	CurrentMa        sql.NullInt64
-	PowerMw          sql.NullInt64
-	WireGaugeMm2X100 sql.NullInt64
+	WeightG          *units.Grams
+	WidthMm          *units.Millimeters
+	HeightMm         *units.Millimeters
+	DepthMm          *units.Millimeters
+	VoltageMv        *units.Millivolts
+	CurrentMa        *units.Milliamps
+	PowerMw          *units.Milliwatts
+	WireGaugeMm2X100 *units.WireGauge
 	CreatedAt        int64
 }
 
@@ -263,17 +265,17 @@ type GetByIDRow struct {
 	IsArchived        int64
 	TotalStock        int64
 	ContentCount      int64
-	RentalPrice       sql.NullInt64
-	ResalePrice       sql.NullInt64
+	RentalPrice       *units.Cents
+	ResalePrice       *units.Cents
 	Notes             sql.NullString
-	WeightG           sql.NullInt64
-	WidthMm           sql.NullInt64
-	HeightMm          sql.NullInt64
-	DepthMm           sql.NullInt64
-	VoltageMv         sql.NullInt64
-	CurrentMa         sql.NullInt64
-	PowerMw           sql.NullInt64
-	WireGaugeMm2X100  sql.NullInt64
+	WeightG           *units.Grams
+	WidthMm           *units.Millimeters
+	HeightMm          *units.Millimeters
+	DepthMm           *units.Millimeters
+	VoltageMv         *units.Millivolts
+	CurrentMa         *units.Milliamps
+	PowerMw           *units.Milliwatts
+	WireGaugeMm2X100  *units.WireGauge
 	UpdatedAt         int64
 	CreatedAt         int64
 }
@@ -389,17 +391,17 @@ type ListRow struct {
 	UsageTypeID       int64
 	TotalStock        int64
 	IsArchived        int64
-	RentalPrice       sql.NullInt64
-	ResalePrice       sql.NullInt64
+	RentalPrice       *units.Cents
+	ResalePrice       *units.Cents
 	Notes             sql.NullString
-	WeightG           sql.NullInt64
-	WidthMm           sql.NullInt64
-	HeightMm          sql.NullInt64
-	DepthMm           sql.NullInt64
-	VoltageMv         sql.NullInt64
-	CurrentMa         sql.NullInt64
-	PowerMw           sql.NullInt64
-	WireGaugeMm2X100  sql.NullInt64
+	WeightG           *units.Grams
+	WidthMm           *units.Millimeters
+	HeightMm          *units.Millimeters
+	DepthMm           *units.Millimeters
+	VoltageMv         *units.Millivolts
+	CurrentMa         *units.Milliamps
+	PowerMw           *units.Milliwatts
+	WireGaugeMm2X100  *units.WireGauge
 	UpdatedAt         int64
 	CreatedAt         int64
 	TotalRecords      int64
@@ -533,8 +535,8 @@ type ListBySerialNumberRow struct {
 	UsageTypeID       int64
 	TotalStock        int64
 	IsArchived        int64
-	RentalPrice       sql.NullInt64
-	ResalePrice       sql.NullInt64
+	RentalPrice       *units.Cents
+	ResalePrice       *units.Cents
 	Notes             sql.NullString
 	UpdatedAt         int64
 	CreatedAt         int64
@@ -655,8 +657,8 @@ WHERE id = ?3
 `
 
 type UpdatePricingParams struct {
-	RentalPrice sql.NullInt64
-	ResalePrice sql.NullInt64
+	RentalPrice *units.Cents
+	ResalePrice *units.Cents
 	ID          string
 }
 
@@ -681,14 +683,14 @@ WHERE id = ?9
 `
 
 type UpdatePropertiesParams struct {
-	WeightG          sql.NullInt64
-	WidthMm          sql.NullInt64
-	HeightMm         sql.NullInt64
-	DepthMm          sql.NullInt64
-	VoltageMv        sql.NullInt64
-	CurrentMa        sql.NullInt64
-	PowerMw          sql.NullInt64
-	WireGaugeMm2X100 sql.NullInt64
+	WeightG          *units.Grams
+	WidthMm          *units.Millimeters
+	HeightMm         *units.Millimeters
+	DepthMm          *units.Millimeters
+	VoltageMv        *units.Millivolts
+	CurrentMa        *units.Milliamps
+	PowerMw          *units.Milliwatts
+	WireGaugeMm2X100 *units.WireGauge
 	ID               string
 }
 

@@ -27,7 +27,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
 	pkgtokens "github.com/bit8bytes/gearberg/pkg/tokens"
-	"github.com/segmentio/ksuid"
 )
 
 // redirectAfterLogin sends the user to their single org's equipment page if they
@@ -51,7 +50,7 @@ func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httpe
 func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 
-	reRender := func(formWithErrors *accounts.SignInForm) *httperr.Error {
+	fail := func(formWithErrors *accounts.SignInForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
 		data.Data = app.loginData()
@@ -60,11 +59,11 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 
 	form, err := accounts.ParseSignInForm(r)
 	if err != nil {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -76,7 +75,7 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 	})
 	if err != nil {
 		form.AddError("email", "Invalid email or password.")
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
@@ -91,7 +90,7 @@ func (app *application) getSignUp(w http.ResponseWriter, r *http.Request) *httpe
 }
 
 func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	reRender := func(formWithErrors *accounts.SignUpForm) *httperr.Error {
+	fail := func(formWithErrors *accounts.SignUpForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.SignUp, data)
@@ -99,11 +98,11 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *http
 
 	form, err := accounts.ParseSignUpForm(r)
 	if err != nil {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -122,12 +121,12 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) *http
 			app.logger.ErrorContext(ctx, "sign up failed", "error", err)
 			form.AddError("email", "Invalid email or password.")
 		}
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
 
-	_, _ = app.services.orgsettings.Create(ctx, ksuid.New().String(), orgID)
+	_, _ = app.services.orgsettings.Create(ctx, orgID)
 
 	http.Redirect(w, r, "/orgs/"+orgID+"/equipment", http.StatusSeeOther)
 	return nil
@@ -140,7 +139,7 @@ func (app *application) getForgotPassword(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) postForgotPassword(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	reRender := func(formWithErrors *accounts.ForgotPasswordForm) *httperr.Error {
+	fail := func(formWithErrors *accounts.ForgotPasswordForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ForgotPassword, data)
@@ -148,11 +147,11 @@ func (app *application) postForgotPassword(w http.ResponseWriter, r *http.Reques
 
 	form, err := accounts.ParseForgotPasswordForm(r)
 	if err != nil {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -192,7 +191,7 @@ func (app *application) getResetPassword(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) postResetPassword(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	reRender := func(formWithErrors *accounts.ResetPasswordForm) *httperr.Error {
+	fail := func(formWithErrors *accounts.ResetPasswordForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.ResetPassword, data)
@@ -200,11 +199,11 @@ func (app *application) postResetPassword(w http.ResponseWriter, r *http.Request
 
 	form, err := accounts.ParseResetPasswordForm(r)
 	if err != nil {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -218,7 +217,7 @@ func (app *application) postResetPassword(w http.ResponseWriter, r *http.Request
 		default:
 			form.AddError("password", "Invalid or expired reset link.")
 		}
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	if err := app.services.accounts.SendPasswordChangedNotification(ctx, email); err != nil {
