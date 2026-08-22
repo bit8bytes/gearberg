@@ -13,9 +13,6 @@
   </td>
   <td class="py-3">
     <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
-    <div class="flex items-center gap-1.5 mt-0.5">
-      <span class="badge badge-sm badge-ghost border border-base-300 text-xs">{{ .TrackingType.Label }}</span>
-    </div>
   </td>
   <td class="py-3">
     {{ if .CategoryName }}
@@ -29,6 +26,11 @@
   </td>
   <td class="py-3 text-right pr-4">
     <div class="flex items-center justify-end gap-1">
+      {{ if eq .Type.String "kit" }}
+      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/content" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View content">
+        <span class="w-4 h-4">{{ template "kit-icon" . }}</span>
+      </a>
+      {{ end }}
       {{ if eq .TrackingType.String "serialized" }}
       <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View units">
         <span class="w-4 h-4">{{ template "units-icon" . }}</span>
