@@ -1,10 +1,10 @@
-{{ define "title" }}Equipment – Print{{ end }}
+{{ define "title" }}Equipment Catalogue{{ end }}
 
 {{ define "page" }}
 <div class="print-page">
   <div class="print-header">
     <div class="print-header-left">
-      <h1>Equipment List</h1>
+      <h1>Equipment Catalogue</h1>
       <div class="meta">
         <span>{{ .Data.OrgDisplayName }}</span>
         <span>{{ .Data.PrintDate }}</span>
@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="print-logo">
-      {{ template "logo" . }}
+      {{ template "logo-with-text" . }}
       <span class="print-logo-sub">by bit8bytes</span>
     </div>
   </div>
@@ -28,7 +28,6 @@
         <th class="print-img-cell"></th>
         <th>Name</th>
         <th>Category</th>
-        <th class="print-col-stock">Stock</th>
         <th class="print-col-price">Rental Price</th>
       </tr>
     </thead>
@@ -47,7 +46,6 @@
           <div class="print-item-type">{{ .TrackingType.Label }}</div>
         </td>
         <td>{{ .CategoryName }}</td>
-        <td class="print-col-stock">{{ .TotalStock }}</td>
         <td class="print-col-price">{{ .Pricing.RentalPrice }}</td>
       </tr>
       {{ end }}
