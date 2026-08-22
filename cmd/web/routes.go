@@ -112,6 +112,9 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs/{org_id}/equipment-manufacturers", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentManufacturersFragment))))
 	mux.Handle("GET /orgs/{org_id}/warehouse-locations", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentLocationsFragment))))
 
+	// Account fragments
+	mux.Handle("GET /account/header", app.withLogin(app.html.Handle(app.getAccountHeaderFragment)))
+
 	// Account Settings
 	mux.Handle("GET /settings/account", app.withLogin(app.html.Handle(app.getAccount)))
 	mux.Handle("DELETE /settings/account", app.withLogin(app.html.Handle(app.deleteAccount)))

@@ -17,15 +17,10 @@
           </div>
           <ul
             tabindex="-1"
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
-            <div class="flex items-center gap-1">
-              <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
-                <div class="bg-neutral text-neutral-content w-24 rounded-full">
-                  <span>gb</span>
-                </div>
-              </div>
-              Gearberg
-            </div>
+            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-64 p-2 gap-1 shadow">
+            <span hx-get="/account/header" hx-trigger="load" hx-swap="outerHTML">
+              {{ template "account-header-skeleton" . }}
+            </span>
             <div class="border-b border-base-200"></div>
             <li>
               <a href="/orgs/{{ .OrgID }}/equipment" class="{{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .OrgID) }}text-primary{{ end }}">

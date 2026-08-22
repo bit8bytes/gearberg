@@ -1,0 +1,17 @@
+{{ define "account-header" }}
+<div class="flex items-center gap-1">
+  <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
+    <div class="bg-neutral text-neutral-content w-24 rounded-full">
+      <span>{{ .Data.Initials }}</span>
+    </div>
+  </div>
+  <span class="truncate">{{ .Data.Email }}</span>
+</div>
+{{ end }}
+
+{{ define "account-header-skeleton" }}
+<div class="flex items-center gap-1">
+  <div class="skeleton btn-circle w-10 h-10 rounded-full"></div>
+  <div class="skeleton h-4 w-32 rounded"></div>
+</div>
+{{ end }}
