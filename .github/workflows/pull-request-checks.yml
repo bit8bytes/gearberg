@@ -40,4 +40,8 @@ jobs:
         run: nix build .#default
 
       - name: Build Docker image
-        run: nix build .#docker
+        run: nix build .#docker-amd64
+        
+      - name: Build Docker image
+        run: nix build .#docker-arm64
+
