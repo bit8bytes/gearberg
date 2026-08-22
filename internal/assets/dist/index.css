@@ -20,6 +20,7 @@
     --color-white: #fff;
     --spacing: 0.25rem;
     --container-xs: 20rem;
+    --container-sm: 24rem;
     --container-md: 28rem;
     --container-lg: 32rem;
     --container-xl: 36rem;
@@ -5681,9 +5682,6 @@
       gap: calc(0.25rem * 2);
     }
   }
-  .mt-0\.5 {
-    margin-top: calc(var(--spacing) * 0.5);
-  }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
   }
@@ -5816,6 +5814,9 @@
   }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
+  }
+  .ml-auto {
+    margin-left: auto;
   }
   .carousel-item {
     @layer daisyui.l1.l2.l3 {
@@ -6513,6 +6514,10 @@
     width: calc(var(--spacing) * 4);
     height: calc(var(--spacing) * 4);
   }
+  .size-5 {
+    width: calc(var(--spacing) * 5);
+    height: calc(var(--spacing) * 5);
+  }
   .size-6 {
     width: calc(var(--spacing) * 6);
     height: calc(var(--spacing) * 6);
@@ -6747,6 +6752,9 @@
   .w-6 {
     width: calc(var(--spacing) * 6);
   }
+  .w-10 {
+    width: calc(var(--spacing) * 10);
+  }
   .w-14 {
     width: calc(var(--spacing) * 14);
   }
@@ -6758,6 +6766,12 @@
   }
   .w-28 {
     width: calc(var(--spacing) * 28);
+  }
+  .w-32 {
+    width: calc(var(--spacing) * 32);
+  }
+  .w-36 {
+    width: calc(var(--spacing) * 36);
   }
   .w-40 {
     width: calc(var(--spacing) * 40);
@@ -6779,6 +6793,9 @@
   }
   .w-full {
     width: 100%;
+  }
+  .w-sm {
+    width: var(--container-sm);
   }
   .w-xs {
     width: var(--container-xs);
@@ -7096,9 +7113,6 @@
   }
   .gap-1 {
     gap: calc(var(--spacing) * 1);
-  }
-  .gap-1\.5 {
-    gap: calc(var(--spacing) * 1.5);
   }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
@@ -10077,14 +10091,14 @@
       line-height: var(--tw-leading, var(--text-3xl--line-height));
     }
   }
+  .sm\:flex {
+    @media (width >= 40rem) {
+      display: flex;
+    }
+  }
   .sm\:hidden {
     @media (width >= 40rem) {
       display: none;
-    }
-  }
-  .sm\:inline {
-    @media (width >= 40rem) {
-      display: inline;
     }
   }
   .sm\:w-64 {
@@ -10124,6 +10138,11 @@
   .sm\:flex-row {
     @media (width >= 40rem) {
       flex-direction: row;
+    }
+  }
+  .sm\:items-center {
+    @media (width >= 40rem) {
+      align-items: center;
     }
   }
   .sm\:items-start {

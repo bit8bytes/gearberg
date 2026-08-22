@@ -327,6 +327,7 @@ func (s *Service) commitBulkRow(ctx context.Context, tx *sql.Tx, row Row, lk com
 	base := buildBase(row, catID, mfrID, locID)
 	if _, err := s.equipment.CreateBulk(ctx, tx, equipment.CreateBulkEquipment{
 		ID:         uid.New(),
+		BulkItemID: uid.New(),
 		Base:       base,
 		TotalStock: equipment.ParseQuantity(row.Quantity),
 	}); err != nil {

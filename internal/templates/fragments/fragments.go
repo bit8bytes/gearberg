@@ -19,6 +19,7 @@ package fragments
 
 // Fragment name constants for the HTMX partial templates.
 const (
+	AccountHeader          = "account-header"
 	EquipmentCategories    = "equipment-categories"
 	EquipmentManufacturers = "equipment-manufacturers"
 	EquipmentPartOf        = "equipment-part-of"

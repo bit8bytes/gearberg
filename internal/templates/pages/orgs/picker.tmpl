@@ -1,0 +1,26 @@
+{{ define "title" }}Select Organization{{ end }}
+{{ define "notes" }}Pick an organization to work in{{ end }}
+
+{{ define "page" }}
+<div class="flex flex-col items-center justify-center p-8 h-screen overflow-y-auto">
+  <div class="fieldset bg-base-100 border-base-300 rounded-box w-sm border p-6 flex flex-col gap-4">
+    <div class="flex justify-center mb-2">{{ template "logo" . }}</div>
+    <h1 class="text-xl font-bold text-center">Select Organization</h1>
+    <p class="text-center text-sm text-base-content/60 mb-2">Choose the organization you want to work in.</p>
+
+    <div class="flex flex-col gap-2">
+      {{ range .Data.Orgs }}
+      <a href="/orgs/{{ .ID }}/equipment" class="flex items-center gap-3 p-3 rounded-lg border border-base-300 hover:bg-base-200 transition-colors">
+        <span class="size-5">{{ template "orgs-icon" . }}</span>
+        <span class="font-medium">{{ .DisplayName }}</span>
+        <span class="ml-auto size-4">{{ template "arrow-right-icon" . }}</span>
+      </a>
+      {{ end }}
+    </div>
+
+    {{ if lt (len .Data.Orgs) .Data.Max }}
+    <a href="/orgs/new" class="btn btn-outline btn-block">+ New Organization</a>
+    {{ end }}
+  </div>
+</div>
+{{ end }}

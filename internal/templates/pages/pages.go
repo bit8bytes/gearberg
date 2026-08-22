@@ -51,6 +51,8 @@ var Docs = newPage("pages/docs.tmpl", layouts.Docs)
 var (
 	// Orgs is the org selector page.
 	Orgs = newPage("pages/orgs/index.tmpl", layouts.Center)
+	// OrgPicker is the full-screen org selection page shown after login with multiple orgs.
+	OrgPicker = newPage("pages/orgs/picker.tmpl", layouts.Login)
 	// OrgsNew is the create-org form page.
 	OrgsNew = newPage("pages/orgs/new.tmpl", layouts.Center)
 	// OrgSettingsDetails is the General settings page — edit org name.

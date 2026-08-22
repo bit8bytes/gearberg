@@ -37,7 +37,7 @@ func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseW
 		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther) //nolint:gosec
 		return
 	}
-	http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/pick", http.StatusSeeOther)
 }
 
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {

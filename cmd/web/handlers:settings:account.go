@@ -16,12 +16,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bit8bytes/gearberg/internal/accounts"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/sessions"
+	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
 )
@@ -48,6 +51,53 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) *http
 	}
 	tmplData.Form = &accounts.Form{Email: record.Email}
 	return app.html.Render(w, r, http.StatusOK, pages.SettingsAccount, tmplData)
+}
+
+type accountHeaderData struct {
+	Email    string
+	Initials string
+	OrgName  string
+}
+
+func accountInitials(email string) string {
+	local, _, _ := strings.Cut(email, "@")
+	runes := []rune(local)
+	switch len(runes) {
+	case 0:
+		return "?"
+	case 1:
+		return strings.ToUpper(string(runes[0]))
+	default:
+		return strings.ToUpper(string(runes[0]) + string(runes[1]))
+	}
+}
+
+func (app *application) getAccountHeaderFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	if !htmx.IsRequest(r) {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return nil
+	}
+
+	session := sessions.MustFromRequest(r)
+	record, err := app.services.accounts.Get(r.Context(), session.AccountID)
+	if err != nil {
+		return httperr.InternalServerError(fmt.Errorf("getAccountHeaderFragment: %w", err))
+	}
+
+	data := accountHeaderData{
+		Email:    record.Email,
+		Initials: accountInitials(record.Email),
+	}
+
+	if orgID := r.URL.Query().Get("org_id"); orgID != "" {
+		if org, err := app.services.orgs.Get(r.Context(), orgID); err == nil {
+			data.OrgName = org.DisplayName
+		}
+	}
+
+	tmplData := app.html.TemplateData(r)
+	tmplData.Data = data
+	return app.html.RenderFragment(w, r, http.StatusOK, fragments.AccountHeader, tmplData)
 }
 
 func (app *application) deleteAccount(w http.ResponseWriter, r *http.Request) *httperr.Error {

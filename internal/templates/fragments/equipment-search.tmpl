@@ -1,4 +1,16 @@
 {{ define "equipment-search" }}
+<div class="overflow-x-auto">
+  <table class="table w-full">
+    <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+      <tr>
+        <th class="w-20"></th>
+        <th>Name</th>
+        <th>Category</th>
+        <th class="text-right">Stock</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
 {{ if .Data.Inventories }}
 {{ range .Data.Inventories }}
 <tr class="border-b border-base-200 last:border-0">
@@ -13,9 +25,6 @@
   </td>
   <td class="py-3">
     <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
-    <div class="flex items-center gap-1.5 mt-0.5">
-      <span class="badge badge-sm badge-ghost border border-base-300 text-xs">{{ .TrackingType.Label }}</span>
-    </div>
   </td>
   <td class="py-3">
     {{ if .CategoryName }}
@@ -29,17 +38,52 @@
   </td>
   <td class="py-3 text-right pr-4">
     <div class="flex items-center justify-end gap-1">
+      {{ if eq .Type.String "kit" }}
+      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/content" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View content">
+        <span class="w-4 h-4">{{ template "kit-icon" . }}</span>
+      </a>
+      {{ end }}
       {{ if eq .TrackingType.String "serialized" }}
       <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="View units">
         <span class="w-4 h-4">{{ template "units-icon" . }}</span>
       </a>
       {{ end }}
-      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left" data-tip="Edit">
-        <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
-      </a>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
+          <span class="w-4 h-4">{{ template "dot-menu-icon" . }}</span>
+        </div>
+        <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-1 w-36 p-2 gap-1 shadow border border-base-300">
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
+              Edit
+            </a>
+          </li>
+          <li>
+            <button type="button" data-modal-target="delete-equipment-{{ .ID }}" class="flex items-center gap-2 text-error">
+              <span class="w-4 h-4">{{ template "delete-icon" }}</span>
+              Delete
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
   </td>
 </tr>
+<dialog id="delete-equipment-{{ .ID }}" class="modal">
+  <div class="modal-box">
+    <h3>Delete Equipment</h3>
+    <p class="py-4">Are you sure you want to permanently delete <strong>{{ .Name }}</strong>? This action cannot be undone.</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Cancel</button>
+      </form>
+      <form method="POST" action="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/delete">
+        <button type="submit" class="btn btn-error">Delete</button>
+      </form>
+    </div>
+  </div>
+</dialog>
 {{ end }}
 {{ else }}
 <tr>
@@ -55,5 +99,29 @@
     </div>
   </td>
 </tr>
+{{ end }}
+    </tbody>
+  </table>
+</div>
+{{ with .Data.Pagination }}
+{{ if gt .LastPage 1 }}
+<div class="px-6 py-3 border-t border-base-300 flex items-center justify-between gap-4">
+  <span class="text-sm text-base-content/60">
+    Page {{ .CurrentPage }} of {{ .LastPage }}
+  </span>
+  <div class="join">
+    <a
+      href="{{ $.Data.PageBaseURL }}page={{ .PrevPage }}"
+      class="join-item btn btn-sm{{ if eq .CurrentPage .FirstPage }} btn-disabled{{ end }}"
+      {{ if eq .CurrentPage .FirstPage }}aria-disabled="true"{{ end }}
+    >«</a>
+    <a
+      href="{{ $.Data.PageBaseURL }}page={{ .NextPage }}"
+      class="join-item btn btn-sm{{ if eq .CurrentPage .LastPage }} btn-disabled{{ end }}"
+      {{ if eq .CurrentPage .LastPage }}aria-disabled="true"{{ end }}
+    >»</a>
+  </div>
+</div>
+{{ end }}
 {{ end }}
 {{ end }}

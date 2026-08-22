@@ -43,7 +43,7 @@ WHERE e.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%'))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
   AND (sqlc.arg(is_archived) = -1 OR e.is_archived = sqlc.arg(is_archived))
-ORDER BY e.name ASC
+ORDER BY category_name ASC, e.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListBySerialNumber :many

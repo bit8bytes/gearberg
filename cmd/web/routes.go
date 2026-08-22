@@ -32,7 +32,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("/", app.html.Handle(app.getNotFound))
 	mux.Handle("GET /forbidden", app.html.Handle(app.getForbidden))
 
-	mux.Handle("GET /{$}", http.RedirectHandler("/settings/organizations", http.StatusSeeOther))
+	mux.Handle("GET /{$}", http.RedirectHandler("/orgs/pick", http.StatusSeeOther))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
@@ -71,6 +71,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs", app.withLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
 	})))
+	mux.Handle("GET /orgs/pick", app.withLogin(app.html.Handle(app.getOrgPicker)))
 	mux.Handle("GET /orgs/new", app.withLogin(app.html.Handle(app.getOrgsNew)))
 	mux.Handle("POST /orgs/new", app.withLogin(app.html.Handle(app.postOrgsNew)))
 
@@ -106,12 +107,14 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/content", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentContent))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/content", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentAssignContent))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/content/{content_id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentRemoveContent))))
-	mux.Handle("GET /orgs/{org_id}/equipment/search", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentSearchFragment))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/part-of", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentPartOfFragment))))
 	mux.Handle("GET /orgs/{org_id}/currency", app.withLogin(app.withPermission(app.html.Handle(app.getOrgCurrencyFragment))))
 	mux.Handle("GET /orgs/{org_id}/equipment-categories", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentCategoriesFragment))))
 	mux.Handle("GET /orgs/{org_id}/equipment-manufacturers", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentManufacturersFragment))))
 	mux.Handle("GET /orgs/{org_id}/warehouse-locations", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentLocationsFragment))))
+
+	// Account fragments
+	mux.Handle("GET /account/header", app.withLogin(app.html.Handle(app.getAccountHeaderFragment)))
 
 	// Account Settings
 	mux.Handle("GET /settings/account", app.withLogin(app.html.Handle(app.getAccount)))
