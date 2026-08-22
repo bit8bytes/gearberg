@@ -19,7 +19,7 @@
               {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
               hx-get="/orgs/{{ .Data.OrgID }}/equipment"
               hx-trigger="input changed delay:300ms"
-              hx-target="#equipment-rows"
+              hx-target="#equipment-results"
               hx-swap="innerHTML"
               hx-include="[name='category']"
               hx-indicator="#search-indicator"
@@ -31,7 +31,7 @@
             class="select w-full sm:w-auto"
             hx-get="/orgs/{{ .Data.OrgID }}/equipment"
             hx-trigger="change"
-            hx-target="#equipment-rows"
+            hx-target="#equipment-results"
             hx-swap="innerHTML"
             hx-include="[name='q']"
             hx-indicator="#search-indicator"
@@ -86,46 +86,10 @@
 
     </div>
 
-    {{/* Table */}}
-    <div class="overflow-x-auto">
-      <table class="table w-full">
-        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
-          <tr>
-            <th class="w-20"></th>
-            <th>Name</th>
-            <th>Category</th>
-            <th class="text-right">Stock</th>
-            <th class="text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="equipment-rows">
-          {{ template "equipment-search" . }}
-        </tbody>
-      </table>
+    {{/* Table + Pagination */}}
+    <div id="equipment-results">
+      {{ template "equipment-search" . }}
     </div>
-
-    {{/* Pagination */}}
-    {{ with .Data.Pagination }}
-    {{ if gt .LastPage 1 }}
-    <div class="px-6 py-3 border-t border-base-300 flex items-center justify-between gap-4">
-      <span class="text-sm text-base-content/60">
-        Page {{ .CurrentPage }} of {{ .LastPage }}
-      </span>
-      <div class="join">
-        <a
-          href="{{ $.Data.PageBaseURL }}page={{ .PrevPage }}"
-          class="join-item btn btn-sm{{ if eq .CurrentPage .FirstPage }} btn-disabled{{ end }}"
-          {{ if eq .CurrentPage .FirstPage }}aria-disabled="true"{{ end }}
-        >«</a>
-        <a
-          href="{{ $.Data.PageBaseURL }}page={{ .NextPage }}"
-          class="join-item btn btn-sm{{ if eq .CurrentPage .LastPage }} btn-disabled{{ end }}"
-          {{ if eq .CurrentPage .LastPage }}aria-disabled="true"{{ end }}
-        >»</a>
-      </div>
-    </div>
-    {{ end }}
-    {{ end }}
 
   </div>{{/* end card */}}
 </div>

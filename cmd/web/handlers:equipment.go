@@ -112,27 +112,13 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 
 	app.resolveEquipmentURLs(items)
 
-	// HTMX live-search: return only the table rows fragment so the page URL
-	// update (hx-push-url) reflects the current filters without a full reload.
-	if htmx.IsRequest(r) {
-		data := app.html.TemplateData(r)
-		data.Data = equipmentData{
-			OrgID:       id,
-			Inventories: items,
-			Filtered:    query != "" || category != "",
-			Query:       query,
-			Category:    category,
-		}
-		return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentSearch, data)
-	}
-
 	cats, err := app.services.equipmentcategories.List(ctx, id)
 	if err != nil {
 		return httperr.InternalServerError(err)
 	}
 
-	data := app.html.TemplateData(r)
-	data.Data = equipmentData{
+	tmpl := app.html.TemplateData(r)
+	tmpl.Data = equipmentData{
 		OrgID:       id,
 		Categories:  cats,
 		Inventories: items,
@@ -144,7 +130,13 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PrintURL:    template.URL(equipmentPrintURL(id, query, category, sort)), // #nosec G203
 		Pagination:  meta,
 	}
-	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
+
+	// HTMX live-search: return only the results fragment so the page URL
+	// update (hx-push-url) reflects the current filters without a full reload.
+	if htmx.IsRequest(r) {
+		return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentSearch, tmpl)
+	}
+	return app.html.Render(w, r, http.StatusOK, pages.Equipment, tmpl)
 }
 
 type equipmentItemData struct {
