@@ -7,42 +7,12 @@
   <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
     {{/* Header block */}}
-    <div class="p-4 border-b border-base-300">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-          <label class="input w-full sm:w-64">
-            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
-            <input
-              type="search"
-              name="q"
-              placeholder="Search name or serial number…"
-              {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
-              hx-get="/orgs/{{ .Data.OrgID }}/equipment"
-              hx-trigger="input changed delay:300ms"
-              hx-target="#equipment-results"
-              hx-swap="innerHTML"
-              hx-include="[name='category']"
-              hx-indicator="#search-indicator"
-              hx-push-url="true"
-            />
-          </label>
-          <select
-            name="category"
-            class="select w-full sm:w-auto"
-            hx-get="/orgs/{{ .Data.OrgID }}/equipment"
-            hx-trigger="change"
-            hx-target="#equipment-results"
-            hx-swap="innerHTML"
-            hx-include="[name='q']"
-            hx-indicator="#search-indicator"
-            hx-push-url="true"
-          >
-            <option value="">All categories</option>
-            {{ range .Data.Categories }}
-            <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
-            {{ end }}
-          </select>
-          <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      {{/* Row 1: title + actions */}}
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <span class="text-xs font-semibold tracking-widest text-primary uppercase mb-1">All Items</span>
+          <p class="text-3xl font-bold leading-tight">All Items</p>
         </div>
         <div class="hidden sm:flex sm:flex-row items-center gap-2">
           <div class="dropdown dropdown-end">
@@ -83,7 +53,43 @@
           </a>
         </div>
       </div>
-
+      <div class="border-b border-base-300 -mx-6"></div>
+      {{/* Row 2: search + filter */}}
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-4">
+        <label class="input w-full sm:w-64">
+          <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
+          <input
+            type="search"
+            name="q"
+            placeholder="Search name or serial number…"
+            {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
+            hx-get="/orgs/{{ .Data.OrgID }}/equipment"
+            hx-trigger="input changed delay:300ms"
+            hx-target="#equipment-results"
+            hx-swap="innerHTML"
+            hx-include="[name='category']"
+            hx-indicator="#search-indicator"
+            hx-push-url="true"
+          />
+        </label>
+        <select
+          name="category"
+          class="select w-full sm:w-auto"
+          hx-get="/orgs/{{ .Data.OrgID }}/equipment"
+          hx-trigger="change"
+          hx-target="#equipment-results"
+          hx-swap="innerHTML"
+          hx-include="[name='q']"
+          hx-indicator="#search-indicator"
+          hx-push-url="true"
+        >
+          <option value="">All categories</option>
+          {{ range .Data.Categories }}
+          <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
+          {{ end }}
+        </select>
+        <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
+      </div>
     </div>
 
     {{/* Table + Pagination */}}

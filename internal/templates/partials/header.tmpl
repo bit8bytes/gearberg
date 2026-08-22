@@ -1,8 +1,8 @@
 {{ define "header" }}
-<header>
-  <div class="navbar">
-    <div class="max-w-6xl mx-auto px-4 w-full flex flex-row items-center">
-      <div class="flex-1 flex flex-row items-center gap-6">
+<header class="border-b border-base-300">
+  <div class="navbar bg-gray-950">
+    <div class="max-w-7xl mx-auto px-4 w-full flex flex-row items-center">
+      <div class="flex-1 flex flex-row items-center gap-6 text-white">
         {{ template "logo-with-text" . }}
         <ul class="">
           <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .OrgID) }}text-primary{{ end }}" href="/orgs/{{ .OrgID }}/equipment">Equipment</a></li>

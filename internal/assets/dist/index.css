@@ -5328,6 +5328,9 @@
   .m-2 {
     margin: calc(var(--spacing) * 2);
   }
+  .m-6 {
+    margin: calc(var(--spacing) * 6);
+  }
   .filter {
     @layer daisyui.l1.l2.l3 {
       display: flex;
@@ -5372,6 +5375,9 @@
         }
       }
     }
+  }
+  .-mx-6 {
+    margin-inline: calc(var(--spacing) * -6);
   }
   .mx-2 {
     margin-inline: calc(var(--spacing) * 2);
@@ -5702,9 +5708,6 @@
   }
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
-  }
-  .mt-16 {
-    margin-top: calc(var(--spacing) * 16);
   }
   .breadcrumbs {
     @layer daisyui.l1.l2.l3 {
@@ -6787,9 +6790,6 @@
   }
   .w-80 {
     width: calc(var(--spacing) * 80);
-  }
-  .w-fit {
-    width: fit-content;
   }
   .w-full {
     width: 100%;
