@@ -15,10 +15,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -30,89 +28,12 @@ type equipmentImportData struct {
 	Error string
 }
 
-// importPreviewRow is a display-oriented view of a staged import row.
-// Serialized rows with the same name are collapsed into a single entry;
-// Stock holds the unit count for serialized items and quantity for bulk.
-type importPreviewRow struct {
-	RowNumber    int64
-	Name         string
-	TypeLabel    string
-	CategoryName string
-	Stock        string
-	Status       string
-	ErrorMessage string
-}
-
 type equipmentImportPreviewData struct {
 	OrgID      string
 	ImportID   string
-	Rows       []importPreviewRow
+	Rows       []equipmentimports.GroupedRow
 	CountNew   int
 	CountError int
-}
-
-// groupImportRows collapses serialized staging rows that share a name into one
-// preview row and returns per-item counts for new and error items.
-func groupImportRows(staged []equipmentimports.Row) (rows []importPreviewRow, cntNew, cntError int) {
-	type group struct {
-		row    importPreviewRow
-		total  int
-		hasErr bool
-	}
-	seen := make(map[string]*group)
-	var order []string
-
-	for _, r := range staged {
-		if !strings.EqualFold(r.TypeLabel, "serialized") {
-			pr := importPreviewRow{
-				RowNumber:    r.RowNumber,
-				Name:         r.Name,
-				TypeLabel:    r.TypeLabel,
-				CategoryName: r.CategoryName,
-				Stock:        r.Quantity,
-				Status:       r.Status,
-				ErrorMessage: r.ErrorMessage,
-			}
-			rows = append(rows, pr)
-			if r.Status == equipmentimports.StatusNew {
-				cntNew++
-			} else {
-				cntError++
-			}
-			continue
-		}
-
-		key := strings.ToLower(r.Name)
-		if _, ok := seen[key]; !ok {
-			seen[key] = &group{row: importPreviewRow{
-				RowNumber:    r.RowNumber,
-				Name:         r.Name,
-				TypeLabel:    r.TypeLabel,
-				CategoryName: r.CategoryName,
-				Status:       equipmentimports.StatusNew,
-			}}
-			order = append(order, key)
-		}
-		g := seen[key]
-		g.total++
-		if r.Status == equipmentimports.StatusError && !g.hasErr {
-			g.hasErr = true
-			g.row.Status = equipmentimports.StatusError
-			g.row.ErrorMessage = r.ErrorMessage
-		}
-	}
-
-	for _, key := range order {
-		g := seen[key]
-		g.row.Stock = fmt.Sprintf("%d", g.total)
-		rows = append(rows, g.row)
-		if g.hasErr {
-			cntError++
-		} else {
-			cntNew++
-		}
-	}
-	return
 }
 
 // getEquipmentImport serves the upload form when no ?id= param is present,
@@ -171,7 +92,7 @@ func (app *application) renderImportPreview(w http.ResponseWriter, r *http.Reque
 		return httperr.InternalServerError(err)
 	}
 
-	previewRows, cntNew, cntError := groupImportRows(staged)
+	previewRows, cntNew, cntError := equipmentimports.GroupRows(staged)
 
 	data := app.html.TemplateData(r)
 	data.Data = equipmentImportPreviewData{

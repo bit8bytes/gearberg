@@ -24,67 +24,78 @@ import (
 	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
 )
 
+// headerIndex maps each ExpectedHeaders column name to its position.
+// Built once at package init so RowsForItem can write by name, not by magic number.
+var headerIndex = func() map[string]int {
+	m := make(map[string]int, len(ExpectedHeaders))
+	for i, name := range ExpectedHeaders {
+		m[name] = i
+	}
+	return m
+}()
+
+func newRow(base []string) []string {
+	row := make([]string, len(ExpectedHeaders))
+	copy(row, base)
+	return row
+}
+
 // RowsForItem returns the CSV data rows for one equipment item using the column
 // order defined by ExpectedHeaders.
 // Bulk items produce a single row; serialized items produce one row per unit.
 func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Unit) [][]string {
-	equipmentTypeLabel := item.Type.Label()
-
-	base := []string{
-		item.Name,
-		item.TrackingType.Label(),
-		item.UsageType.Label(),
-		item.CategoryName,
-		mfrName,
-		item.LocationName,
-		item.Pricing.RentalPrice.String(),
-		item.Pricing.PurchasePrice.String(),
-		item.Notes,
-		item.Properties.Weight.String(),
-		item.Properties.Width.String(),
-		item.Properties.Height.String(),
-		item.Properties.Depth.String(),
-		item.Properties.Voltage.String(),
-		item.Properties.Current.String(),
-		item.Properties.Power.String(),
-		item.Properties.WireGauge.String(),
-	}
+	h := headerIndex
+	base := make([]string, len(ExpectedHeaders))
+	base[h["Name"]] = item.Name
+	base[h["Type"]] = item.TrackingType.Label()
+	base[h["Usage"]] = item.UsageType.Label()
+	base[h["Category"]] = item.CategoryName
+	base[h["Manufacturer"]] = mfrName
+	base[h["Location"]] = item.LocationName
+	base[h["Rental Price"]] = item.Pricing.RentalPrice.String()
+	base[h["Resale Price"]] = item.Pricing.PurchasePrice.String()
+	base[h["Notes"]] = item.Notes
+	base[h["Weight (kg)"]] = item.Properties.Weight.String()
+	base[h["Width (cm)"]] = item.Properties.Width.String()
+	base[h["Height (cm)"]] = item.Properties.Height.String()
+	base[h["Depth (cm)"]] = item.Properties.Depth.String()
+	base[h["Voltage (V)"]] = item.Properties.Voltage.String()
+	base[h["Current (A)"]] = item.Properties.Current.String()
+	base[h["Power (W)"]] = item.Properties.Power.String()
+	base[h["Wire Gauge (mm² ×100)"]] = item.Properties.WireGauge.String()
+	base[h["Equipment Type"]] = item.Type.Label()
 
 	if item.TrackingType != tracking.Serialized {
-		row := make([]string, len(ExpectedHeaders))
-		copy(row, base)
-		row[17] = strconv.FormatInt(item.TotalStock, 10)
-		row[18] = equipmentTypeLabel
+		row := newRow(base)
+		row[h["Quantity"]] = strconv.FormatInt(item.TotalStock, 10)
 		return [][]string{row}
 	}
 
 	rows := make([][]string, 0, len(units))
 	for _, u := range units {
-		row := make([]string, len(ExpectedHeaders))
-		copy(row, base)
-		row[18] = equipmentTypeLabel
-		row[19] = u.SerialNumber
-		row[20] = u.ManufacturerSerialNumber
-		row[21] = u.PurchasePrice.String()
-		row[22] = FormatExportDate(u.PurchasedAt)
-		row[23] = FormatExportDate(u.NextInspectionAt)
-		row[24] = FormatExportActive(u.IsActive())
-		row[25] = u.Remark
+		row := newRow(base)
+		row[h["Unit Serial Number"]] = u.SerialNumber
+		row[h["Unit Manufacturer Serial"]] = u.ManufacturerSerialNumber
+		row[h["Unit Purchase Price"]] = u.PurchasePrice.String()
+		row[h["Unit Purchased At"]] = formatExportDate(u.PurchasedAt)
+		row[h["Next Inspection At"]] = formatExportDate(u.NextInspectionAt)
+		row[h["Unit Active"]] = formatExportActive(u.IsActive())
+		row[h["Unit Remark"]] = u.Remark
 		rows = append(rows, row)
 	}
 	return rows
 }
 
-// FormatExportDate formats a Unix timestamp pointer as YYYY-MM-DD, or "" if nil.
-func FormatExportDate(ts *int64) string {
+// formatExportDate formats a Unix timestamp pointer as YYYY-MM-DD, or "" if nil.
+func formatExportDate(ts *int64) string {
 	if ts == nil {
 		return ""
 	}
 	return time.Unix(*ts, 0).UTC().Format("2006-01-02")
 }
 
-// FormatExportActive returns "TRUE" for active, "FALSE" for inactive.
-func FormatExportActive(active bool) string {
+// formatExportActive returns "TRUE" for active, "FALSE" for inactive.
+func formatExportActive(active bool) string {
 	if active {
 		return "TRUE"
 	}

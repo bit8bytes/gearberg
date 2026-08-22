@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
@@ -31,18 +32,8 @@ import (
 	"github.com/bit8bytes/gearberg/internal/units"
 )
 
-// CategoryEnsurer resolves or creates categories by name.
-type CategoryEnsurer interface {
-	Upsert(ctx context.Context, orgID, name string) (string, error)
-}
-
-// ManufacturerEnsurer resolves or creates manufacturers by name.
-type ManufacturerEnsurer interface {
-	Upsert(ctx context.Context, orgID, name string) (string, error)
-}
-
-// LocationEnsurer resolves or creates locations by name.
-type LocationEnsurer interface {
+// Upserter resolves or creates a named entity within an org.
+type Upserter interface {
 	Upsert(ctx context.Context, orgID, name string) (string, error)
 }
 
@@ -51,19 +42,46 @@ type Service struct {
 	repo          *Repository
 	db            *sql.DB
 	equipment     *equipment.Repository
-	categories    CategoryEnsurer
-	manufacturers ManufacturerEnsurer
-	locations     LocationEnsurer
+	categories    Upserter
+	manufacturers Upserter
+	locations     Upserter
+	steps         []Step
 }
 
-// NewService returns a new Service.
-func NewService(repo *Repository, db *sql.DB, equip *equipment.Repository, cats CategoryEnsurer, mfrs ManufacturerEnsurer, locs LocationEnsurer) *Service {
-	return &Service{repo: repo, db: db, equipment: equip, categories: cats, manufacturers: mfrs, locations: locs}
+// NewService returns a new Service with the default validation pipeline.
+func NewService(repo *Repository, db *sql.DB, equip *equipment.Repository, cats, mfrs, locs Upserter) *Service {
+	return &Service{
+		repo:          repo,
+		db:            db,
+		equipment:     equip,
+		categories:    cats,
+		manufacturers: mfrs,
+		locations:     locs,
+		steps:         []Step{validateStep},
+	}
 }
 
-// Stage deletes any existing staging rows for the org, then validates and stages
-// the provided rows. Returns the import_id grouping the new rows.
-func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (string, error) {
+// validateStep marks rows that fail field-level validation as StateInvalid.
+func validateStep(_ context.Context, rows []ProcessedRow) ([]ProcessedRow, error) {
+	for i, pr := range rows {
+		if pr.State == StateInvalid {
+			continue
+		}
+		if msg := validateRow(pr.Data); msg != "" {
+			rows[i].State = StateInvalid
+			rows[i].Errors = append(rows[i].Errors, ValidationError{
+				Line:   int(pr.Data.RowNumber),
+				Field:  "Name",
+				Reason: msg,
+			})
+		}
+	}
+	return rows, nil
+}
+
+// Stage deletes any existing staging rows for the org, runs the import pipeline,
+// and persists the results. Returns the import_id grouping the new rows.
+func (s *Service) Stage(ctx context.Context, orgID string, processed []ProcessedRow) (string, error) {
 	if err := s.repo.DeleteByOrgID(ctx, orgID); err != nil {
 		return "", fmt.Errorf("Stage: %w", err)
 	}
@@ -78,54 +96,26 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 	}
 
 	importID := uid.New()
-	for i, raw := range rawRows {
-		row := Row{
-			ID:                     uid.New(),
-			ImportID:               importID,
-			OrgID:                  orgID,
-			RowNumber:              int64(i + 1),
-			Name:                   raw.Name,
-			TypeLabel:              raw.TypeLabel,
-			UsageTypeLabel:         raw.UsageTypeLabel,
-			CategoryName:           raw.CategoryName,
-			ManufacturerName:       raw.ManufacturerName,
-			LocationName:           raw.LocationName,
-			RentalPrice:            raw.RentalPrice,
-			ResalePrice:            raw.ResalePrice,
-			Notes:                  raw.Notes,
-			WeightG:                raw.WeightG,
-			WidthMm:                raw.WidthMm,
-			HeightMm:               raw.HeightMm,
-			DepthMm:                raw.DepthMm,
-			VoltageMv:              raw.VoltageV,
-			CurrentMa:              raw.CurrentA,
-			PowerMw:                raw.PowerW,
-			WireGaugeMM2X100:       raw.WireGaugeMM2X100,
-			Quantity:               raw.Quantity,
-			EquipmentTypeLabel:     raw.EquipmentTypeLabel,
-			UnitSerialNumber:       raw.UnitSerialNumber,
-			UnitManufacturerSerial: raw.UnitManufacturerSerial,
-			UnitPurchasePrice:      raw.UnitPurchasePrice,
-			UnitPurchasedAt:        raw.UnitPurchasedAt,
-			NextInspectionAt:       raw.NextInspectionAt,
-			UnitIsActive:           raw.UnitIsActive,
-			UnitRemark:             raw.UnitRemark,
-		}
+	for i := range processed {
+		processed[i].Data.ID = uid.New()
+		processed[i].Data.ImportID = importID
+		processed[i].Data.OrgID = orgID
+		processed[i].Data.RowNumber = int64(i + 1)
+		processed[i].Data.Status = StatusNew
+		processed[i].Data.Action = ActionCreate
+	}
 
-		if errMsg := validateRow(raw); errMsg != "" {
-			row.Status = StatusError
-			row.ErrorMessage = errMsg
-			row.Action = ActionSkip
-		} else if _, conflict := existingByName[strings.ToLower(raw.Name)]; conflict {
-			row.Status = StatusError
-			row.ErrorMessage = "A gear item with this name already exists"
-			row.Action = ActionSkip
-		} else {
-			row.Status = StatusNew
-			row.Action = ActionCreate
-		}
+	pipeline := make([]Step, len(s.steps)+1)
+	copy(pipeline, s.steps)
+	pipeline[len(s.steps)] = conflictStep(existingByName)
+	processed, err = RunValidation(ctx, processed, pipeline)
+	if err != nil {
+		return "", fmt.Errorf("Stage: pipeline: %w", err)
+	}
 
-		if _, err := s.repo.Insert(ctx, row); err != nil {
+	rows := toRows(processed)
+	for i, row := range rows {
+		if _, err := s.repo.Create(ctx, row); err != nil {
 			return "", fmt.Errorf("Stage: row %d: %w", i+1, err)
 		}
 	}
@@ -133,9 +123,47 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 	return importID, nil
 }
 
+// toRows converts a validated []ProcessedRow back to []Row for storage,
+// mapping StateInvalid→StatusError and collecting the first error message.
+func toRows(processed []ProcessedRow) []Row {
+	rows := make([]Row, len(processed))
+	for i, pr := range processed {
+		row := pr.Data
+		if pr.State == StateInvalid {
+			row.Status = StatusError
+			row.Action = ActionSkip
+			if len(pr.Errors) > 0 {
+				row.ErrorMessage = pr.Errors[0].Reason
+			}
+		}
+		rows[i] = row
+	}
+	return rows
+}
+
+// conflictStep returns a Step that marks rows whose name already exists in inventory.
+func conflictStep(existingByName map[string]string) Step {
+	return func(_ context.Context, rows []ProcessedRow) ([]ProcessedRow, error) {
+		for i, pr := range rows {
+			if pr.State == StateInvalid {
+				continue
+			}
+			if _, conflict := existingByName[strings.ToLower(pr.Data.Name)]; conflict {
+				rows[i].State = StateInvalid
+				rows[i].Errors = append(rows[i].Errors, ValidationError{
+					Line:   int(pr.Data.RowNumber),
+					Field:  "Name",
+					Reason: "A gear item with this name already exists",
+				})
+			}
+		}
+		return rows, nil
+	}
+}
+
 // ListStaged returns all staged rows for an import.
 func (s *Service) ListStaged(ctx context.Context, importID string) ([]Row, error) {
-	rows, err := s.repo.ListByImportID(ctx, importID)
+	rows, err := s.repo.List(ctx, importID)
 	if err != nil {
 		return nil, fmt.Errorf("ListStaged: %w", err)
 	}
@@ -221,7 +249,7 @@ func (s *Service) ensureLocation(ctx context.Context, lk *commitLookups, orgID, 
 // then deletes the staging rows — all within a single transaction so no partial
 // write is possible.
 func (s *Service) Commit(ctx context.Context, importID string, orgID string) error {
-	rows, err := s.repo.ListByImportID(ctx, importID)
+	rows, err := s.repo.List(ctx, importID)
 	if err != nil {
 		return fmt.Errorf("Commit: %w", err)
 	}
@@ -247,7 +275,7 @@ func (s *Service) Commit(ctx context.Context, importID string, orgID string) err
 
 	// Staging rows are cleaned up after the inventory transaction commits.
 	// A failure here leaves stale rows that DeleteByOrgID will clear on the next import.
-	if err := s.repo.DeleteByImportID(ctx, importID); err != nil {
+	if err := s.repo.Delete(ctx, importID); err != nil {
 		return fmt.Errorf("Commit: %w", err)
 	}
 	return nil
@@ -295,6 +323,21 @@ func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID, locID
 	return
 }
 
+// parseInt64 parses a string as int64, returning 0 for blank or invalid input.
+func parseInt64(s string) int64 {
+	n, _ := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	return n
+}
+
+// ptrOf converts an int64 DB value to a typed pointer; returns nil when v is 0.
+func ptrOf[T ~int64](v int64) *T {
+	if v == 0 {
+		return nil
+	}
+	t := T(v)
+	return &t
+}
+
 func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 	return equipment.Base{
 		OrgID:          row.OrgID,
@@ -306,18 +349,18 @@ func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 		Notes:          row.Notes,
 		EquipmentType:  equipment.ParseOrDefault(strings.ToLower(strings.TrimSpace(row.EquipmentTypeLabel))),
 		Pricing: equipment.Pricing{
-			PurchasePrice: units.ParseCents(row.ResalePrice),
-			RentalPrice:   units.ParseCents(row.RentalPrice),
+			PurchasePrice: ptrOf[units.Cents](parseInt64(row.ResalePrice)),
+			RentalPrice:   ptrOf[units.Cents](parseInt64(row.RentalPrice)),
 		},
 		Properties: equipment.Properties{
-			Weight:    units.ParseGrams(row.WeightG),
-			Width:     units.ParseMillimeters(row.WidthMm),
-			Height:    units.ParseMillimeters(row.HeightMm),
-			Depth:     units.ParseMillimeters(row.DepthMm),
-			Power:     units.ParseMilliwatts(row.PowerMw),
-			Current:   units.ParseMilliamps(row.CurrentMa),
-			Voltage:   units.ParseVolts(row.VoltageMv),
-			WireGauge: units.ParseWireGauge(row.WireGaugeMM2X100),
+			Weight:    ptrOf[units.Grams](parseInt64(row.WeightG)),
+			Width:     ptrOf[units.Millimeters](parseInt64(row.WidthMm)),
+			Height:    ptrOf[units.Millimeters](parseInt64(row.HeightMm)),
+			Depth:     ptrOf[units.Millimeters](parseInt64(row.DepthMm)),
+			Power:     ptrOf[units.Milliwatts](parseInt64(row.PowerMw)),
+			Current:   ptrOf[units.Milliamps](parseInt64(row.CurrentMa)),
+			Voltage:   ptrOf[units.Millivolts](parseInt64(row.VoltageMv)),
+			WireGauge: ptrOf[units.WireGauge](parseInt64(row.WireGaugeMM2X100)),
 		},
 	}
 }
@@ -348,7 +391,7 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 		SerialNumber:             sn,
 		ManufacturerSerialNumber: row.UnitManufacturerSerial,
 		Remark:                   row.UnitRemark,
-		PurchasePrice:            units.ParseCents(row.UnitPurchasePrice),
+		PurchasePrice:            ptrOf[units.Cents](parseInt64(row.UnitPurchasePrice)),
 		PurchasedAt:              equipment.ParseDate(row.UnitPurchasedAt),
 		NextInspectionAt:         equipment.ParseDate(row.NextInspectionAt),
 		IsActive:                 isActive,
@@ -360,33 +403,33 @@ func (s *Service) commitSerializedGroup(ctx context.Context, tx *sql.Tx, first R
 	catID, mfrID, locID := s.resolveLookups(first, lk)
 	base := buildBase(first, catID, mfrID, locID)
 	itemID := uid.New()
-	units := make([]equipment.CreateUnit, 0, len(rows))
+	unitList := make([]equipment.CreateUnit, 0, len(rows))
 	for _, row := range rows {
-		units = append(units, buildUnit(row, itemID))
+		unitList = append(unitList, buildUnit(row, itemID))
 	}
 	if _, err := s.equipment.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
 		ID:    itemID,
 		Base:  base,
-		Units: units,
+		Units: unitList,
 	}); err != nil {
 		return fmt.Errorf("commitSerializedGroup: %w", err)
 	}
 	return nil
 }
 
-func validateRow(raw RawRow) string {
-	if strings.TrimSpace(raw.Name) == "" {
+func validateRow(row Row) string {
+	if strings.TrimSpace(row.Name) == "" {
 		return "Name is required"
 	}
-	tl := strings.TrimSpace(raw.TypeLabel)
+	tl := strings.TrimSpace(row.TypeLabel)
 	if !strings.EqualFold(tl, "bulk") && !strings.EqualFold(tl, "serialized") {
 		return fmt.Sprintf("Type must be Bulk or Serialized, got %q", tl)
 	}
-	ul := strings.TrimSpace(raw.UsageTypeLabel)
+	ul := strings.TrimSpace(row.UsageTypeLabel)
 	if !strings.EqualFold(ul, "rental") && !strings.EqualFold(ul, "sale") {
 		return fmt.Sprintf("Usage must be Rental or Sale, got %q", ul)
 	}
-	if strings.TrimSpace(raw.CategoryName) == "" {
+	if strings.TrimSpace(row.CategoryName) == "" {
 		return "Category is required"
 	}
 	return ""
