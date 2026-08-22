@@ -32,7 +32,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.HandleFunc("/", app.html.Handle(app.getNotFound))
 	mux.Handle("GET /forbidden", app.html.Handle(app.getForbidden))
 
-	mux.Handle("GET /{$}", http.RedirectHandler("/settings/organizations", http.StatusSeeOther))
+	mux.Handle("GET /{$}", http.RedirectHandler("/orgs/pick", http.StatusSeeOther))
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
 
@@ -71,6 +71,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs", app.withLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/settings/organizations", http.StatusSeeOther)
 	})))
+	mux.Handle("GET /orgs/pick", app.withLogin(app.html.Handle(app.getOrgPicker)))
 	mux.Handle("GET /orgs/new", app.withLogin(app.html.Handle(app.getOrgsNew)))
 	mux.Handle("POST /orgs/new", app.withLogin(app.html.Handle(app.postOrgsNew)))
 

@@ -51,6 +51,24 @@ func (app *application) getOrgs(w http.ResponseWriter, r *http.Request) *httperr
 	return app.html.Render(w, r, http.StatusOK, pages.SettingsOrganizations, data)
 }
 
+func (app *application) getOrgPicker(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	session := sessions.MustFromRequest(r)
+
+	allOrgs, err := app.services.orgs.List(ctx, session.AccountID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	data := app.html.TemplateData(r)
+	data.Data = orgsData{
+		Orgs: allOrgs,
+		Max:  app.options.Limits.MaxOrgs,
+	}
+
+	return app.html.Render(w, r, http.StatusOK, pages.OrgPicker, data)
+}
+
 func (app *application) getOrgsNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	data := app.html.TemplateData(r)
 	data.Form = orgs.NewForm()
