@@ -73,30 +73,32 @@
           name="q"
           placeholder="Search name or serial number…"
           {{ if $.Data.Query }}value="{{ $.Data.Query }}"{{ end }}
-          hx-get="/orgs/{{ .Data.OrgID }}/equipment/search"
+          hx-get="/orgs/{{ .Data.OrgID }}/equipment"
           hx-trigger="input changed delay:300ms"
           hx-target="#equipment-rows"
           hx-swap="innerHTML"
           hx-include="[name='category']"
           hx-indicator="#search-indicator"
+          hx-push-url="true"
         />
       </label>
       <select
         name="category"
         class="select select-sm w-full sm:w-auto"
-        hx-get="/orgs/{{ .Data.OrgID }}/equipment/search"
+        hx-get="/orgs/{{ .Data.OrgID }}/equipment"
         hx-trigger="change"
         hx-target="#equipment-rows"
         hx-swap="innerHTML"
         hx-include="[name='q']"
         hx-indicator="#search-indicator"
+        hx-push-url="true"
       >
         <option value="">All categories</option>
         {{ range .Data.Categories }}
         <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
         {{ end }}
       </select>
-      <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
+<span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
     </div>
 
     {{/* Table */}}
@@ -107,7 +109,7 @@
             <th class="w-20"></th>
             <th>Name</th>
             <th>Category</th>
-            <th class="text-right">Stock</th>
+<th class="text-right">Stock</th>
             <th class="text-right">Actions</th>
           </tr>
         </thead>

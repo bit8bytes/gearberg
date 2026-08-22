@@ -90,11 +90,6 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		return httperr.BadRequest(err)
 	}
 
-	cats, err := app.services.equipmentcategories.List(ctx, id)
-	if err != nil {
-		return httperr.InternalServerError(err)
-	}
-
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
@@ -105,22 +100,36 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		page = 1
 	}
 
-	f := pagination.Filters{
-		Page:     page,
-		PageSize: 25,
-	}
-
 	items, meta, err := app.services.equipment.List(ctx, equipment.ListParams{
 		OrgID:    id,
 		Query:    query,
 		Category: category,
-		Filters:  f,
+		Filters:  pagination.Filters{Page: page, PageSize: 25},
 	})
 	if err != nil {
 		return httperr.InternalServerError(err)
 	}
 
 	app.resolveEquipmentURLs(items)
+
+	// HTMX live-search: return only the table rows fragment so the page URL
+	// update (hx-push-url) reflects the current filters without a full reload.
+	if htmx.IsRequest(r) {
+		data := app.html.TemplateData(r)
+		data.Data = equipmentData{
+			OrgID:       id,
+			Inventories: items,
+			Filtered:    query != "" || category != "",
+			Query:       query,
+			Category:    category,
+		}
+		return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentSearch, data)
+	}
+
+	cats, err := app.services.equipmentcategories.List(ctx, id)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
 
 	data := app.html.TemplateData(r)
 	data.Data = equipmentData{
@@ -136,45 +145,6 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		Pagination:  meta,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Equipment, data)
-}
-
-func (app *application) getEquipmentSearchFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
-	id, err := uid.Parse(r.PathValue("org_id"))
-	if err != nil {
-		return httperr.BadRequest(err)
-	}
-
-	qs := r.URL.Query()
-	query := qs.Get("q")
-	category := qs.Get("category")
-
-	f := pagination.Filters{
-		Page:     1,
-		PageSize: 25,
-	}
-
-	items, _, err := app.services.equipment.List(ctx, equipment.ListParams{
-		OrgID:    id,
-		Query:    query,
-		Category: category,
-		Filters:  f,
-	})
-	if err != nil {
-		return httperr.InternalServerError(err)
-	}
-
-	app.resolveEquipmentURLs(items)
-
-	data := app.html.TemplateData(r)
-	data.Data = equipmentData{
-		OrgID:       id,
-		Inventories: items,
-		Filtered:    query != "" || category != "",
-		Query:       query,
-		Category:    category,
-	}
-	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentSearch, data)
 }
 
 type equipmentItemData struct {
