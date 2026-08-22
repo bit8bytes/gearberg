@@ -13,14 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Package imports provides imports functionality.
-package imports
+// Package equipmentimports provides imports functionality.
+package equipmentimports
 
 import (
 	"strconv"
 	"time"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
 )
 
 // RowsForItem returns the CSV data rows for one equipment item using the column
@@ -36,20 +37,20 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 		item.CategoryName,
 		mfrName,
 		item.LocationName,
-		item.Pricing.RentalPrice.ToDecimal(),
-		item.Pricing.PurchasePrice.ToDecimal(),
+		item.Pricing.RentalPrice.String(),
+		item.Pricing.PurchasePrice.String(),
 		item.Notes,
-		item.Properties.Weight.ToKG(),
-		item.Properties.Width.ToCM(),
-		item.Properties.Height.ToCM(),
-		item.Properties.Depth.ToCM(),
-		item.Properties.Voltage.ToV(),
-		item.Properties.Current.ToA(),
-		item.Properties.Power.ToW(),
+		item.Properties.Weight.String(),
+		item.Properties.Width.String(),
+		item.Properties.Height.String(),
+		item.Properties.Depth.String(),
+		item.Properties.Voltage.String(),
+		item.Properties.Current.String(),
+		item.Properties.Power.String(),
 		item.Properties.WireGauge.String(),
 	}
 
-	if item.TrackingType != equipment.Serialized {
+	if item.TrackingType != tracking.Serialized {
 		row := make([]string, len(ExpectedHeaders))
 		copy(row, base)
 		row[17] = strconv.FormatInt(item.TotalStock, 10)
@@ -64,7 +65,7 @@ func RowsForItem(item equipment.Equipment, mfrName string, units []equipment.Uni
 		row[18] = equipmentTypeLabel
 		row[19] = u.SerialNumber
 		row[20] = u.ManufacturerSerialNumber
-		row[21] = u.PurchasePrice.ToDecimal()
+		row[21] = u.PurchasePrice.String()
 		row[22] = FormatExportDate(u.PurchasedAt)
 		row[23] = FormatExportDate(u.NextInspectionAt)
 		row[24] = FormatExportActive(u.IsActive())

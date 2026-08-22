@@ -49,21 +49,21 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 	return n, nil
 }
 
-// GetByOrgID returns all equipmentCategories belonging to orgID.
-func (r *Repository) GetByOrgID(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
+// List returns all equipmentCategories belonging to orgID.
+func (r *Repository) List(ctx context.Context, orgID string) ([]Category, error) {
 	rows, err := r.equipmentCategories.GetByOrgID(ctx, sql.NullString{String: orgID, Valid: orgID != ""})
 	if err != nil {
 		return nil, fmt.Errorf("GetByOrgID: %w", err)
 	}
-	result := make([]EquipmentCategory, len(rows))
+	result := make([]Category, len(rows))
 	for i, row := range rows {
 		result[i] = toModel(row)
 	}
 	return result, nil
 }
 
-// GetByID returns the category with id, or ErrNotFound when it does not exist.
-func (r *Repository) GetByID(ctx context.Context, id string) (*EquipmentCategory, error) {
+// Get returns the category with id, or ErrNotFound when it does not exist.
+func (r *Repository) Get(ctx context.Context, id string) (*Category, error) {
 	row, err := r.equipmentCategories.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -75,8 +75,14 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*EquipmentCategory
 	return &m, nil
 }
 
+type createParams struct {
+	ID    string
+	OrgID string
+	Name  string
+}
+
 // Create inserts a new equipment category.
-func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*EquipmentCategory, error) {
+func (r *Repository) Create(ctx context.Context, c createParams) (*Category, error) {
 	row, err := r.equipmentCategories.Create(ctx, genec.CreateParams{
 		ID:    c.ID,
 		OrgID: sql.NullString{String: c.OrgID, Valid: c.OrgID != ""},
@@ -92,7 +98,7 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 		}
 		return nil, fmt.Errorf("Create: %w", normalized)
 	}
-	m := EquipmentCategory{
+	m := Category{
 		ID:        row.ID,
 		OrgID:     row.OrgID.String,
 		Name:      row.Name,
@@ -102,7 +108,7 @@ func (r *Repository) Create(ctx context.Context, c CreateEquipmentCategory) (*Eq
 }
 
 // Update updates the name of the category identified by u.ID.
-func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*EquipmentCategory, error) {
+func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*Category, error) {
 	row, err := r.equipmentCategories.Update(ctx, genec.UpdateParams{
 		ID:   u.ID,
 		Name: u.Name,
@@ -120,7 +126,7 @@ func (r *Repository) Update(ctx context.Context, u UpdateEquipmentCategory) (*Eq
 
 // GetByName returns the category with the given name within orgID, or ErrNotFound
 // when it does not exist.
-func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*EquipmentCategory, error) {
+func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Category, error) {
 	row, err := r.equipmentCategories.GetByName(ctx, genec.GetByNameParams{
 		OrgID: sql.NullString{String: orgID, Valid: orgID != ""},
 		Name:  name,
@@ -147,8 +153,8 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func toModel(row genec.EquipmentCategory) EquipmentCategory {
-	return EquipmentCategory{
+func toModel(row genec.EquipmentCategory) Category {
+	return Category{
 		ID:        row.ID,
 		OrgID:     row.OrgID.String,
 		Name:      row.Name,

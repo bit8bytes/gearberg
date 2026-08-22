@@ -1,4 +1,78 @@
 version: "2"
+overrides:
+  go:
+    overrides:
+      - column: "equipment.resale_price"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Cents"
+          pointer: true
+      - column: "equipment.rental_price"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Cents"
+          pointer: true
+      - column: "equipment.weight_g"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Grams"
+          pointer: true
+      - column: "equipment.width_mm"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Millimeters"
+          pointer: true
+      - column: "equipment.height_mm"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Millimeters"
+          pointer: true
+      - column: "equipment.depth_mm"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Millimeters"
+          pointer: true
+      - column: "equipment.power_mw"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Milliwatts"
+          pointer: true
+      - column: "equipment.current_ma"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Milliamps"
+          pointer: true
+      - column: "equipment.voltage_mv"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "Millivolts"
+          pointer: true
+      - column: "equipment.wire_gauge_mm2_x100"
+        nullable: true
+        go_type:
+          import: "github.com/bit8bytes/gearberg/internal/units"
+          package: "units"
+          type: "WireGauge"
+          pointer: true
+
 
 sql:
   - engine: "sqlite"

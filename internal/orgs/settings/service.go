@@ -19,6 +19,8 @@ package settings
 import (
 	"context"
 	"fmt"
+
+	"github.com/bit8bytes/gearberg/internal/uid"
 )
 
 // Service implements business logic for org settings.
@@ -41,8 +43,11 @@ func (s *Service) Get(ctx context.Context, orgID string) (*OrgSettings, error) {
 }
 
 // Create inserts new settings for orgID using the migration defaults.
-func (s *Service) Create(ctx context.Context, id, orgID string) (*OrgSettings, error) {
-	settings, err := s.repo.Create(ctx, id, orgID)
+func (s *Service) Create(ctx context.Context, orgID string) (*OrgSettings, error) {
+	settings, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
+		OrgID: orgID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create org settings: %w", err)
 	}

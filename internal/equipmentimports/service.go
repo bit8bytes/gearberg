@@ -13,26 +13,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Package imports provides imports functionality.
-package imports
+// Package equipmentimports provides imports functionality.
+package equipmentimports
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
+	"github.com/bit8bytes/gearberg/internal/equipment/usage"
+	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/serial"
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/uid"
+	"github.com/bit8bytes/gearberg/internal/units"
 )
-
-// EquipmentWriter is the subset of inventory.Service used by the import service.
-type EquipmentWriter interface {
-	ListAll(ctx context.Context, orgID string) ([]equipment.Equipment, error)
-	CreateBulkTx(ctx context.Context, tx *sql.Tx, c equipment.CreateBulkEquipment) (*equipment.Equipment, error)
-	CreateSerialized(ctx context.Context, tx *sql.Tx, c equipment.CreateSerializedEquipment) (*equipment.Equipment, error)
-}
 
 // CategoryEnsurer resolves or creates categories by name.
 type CategoryEnsurer interface {
@@ -53,15 +50,15 @@ type LocationEnsurer interface {
 type Service struct {
 	repo          *Repository
 	db            *sql.DB
-	inventory     EquipmentWriter
+	equipment     *equipment.Repository
 	categories    CategoryEnsurer
 	manufacturers ManufacturerEnsurer
 	locations     LocationEnsurer
 }
 
 // NewService returns a new Service.
-func NewService(repo *Repository, db *sql.DB, inv EquipmentWriter, cats CategoryEnsurer, mfrs ManufacturerEnsurer, locs LocationEnsurer) *Service {
-	return &Service{repo: repo, db: db, inventory: inv, categories: cats, manufacturers: mfrs, locations: locs}
+func NewService(repo *Repository, db *sql.DB, equip *equipment.Repository, cats CategoryEnsurer, mfrs ManufacturerEnsurer, locs LocationEnsurer) *Service {
+	return &Service{repo: repo, db: db, equipment: equip, categories: cats, manufacturers: mfrs, locations: locs}
 }
 
 // Stage deletes any existing staging rows for the org, then validates and stages
@@ -71,7 +68,7 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 		return "", fmt.Errorf("Stage: %w", err)
 	}
 
-	existing, err := s.inventory.ListAll(ctx, orgID)
+	existing, _, err := s.equipment.List(ctx, orgID, "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
 	if err != nil {
 		return "", fmt.Errorf("Stage: %w", err)
 	}
@@ -80,10 +77,10 @@ func (s *Service) Stage(ctx context.Context, orgID string, rawRows []RawRow) (st
 		existingByName[strings.ToLower(item.Name)] = item.ID
 	}
 
-	importID := ksuid.New().String()
+	importID := uid.New()
 	for i, raw := range rawRows {
 		row := Row{
-			ID:                     ksuid.New().String(),
+			ID:                     uid.New(),
 			ImportID:               importID,
 			OrgID:                  orgID,
 			RowNumber:              int64(i + 1),
@@ -299,29 +296,28 @@ func (s *Service) resolveLookups(row Row, lk commitLookups) (catID, mfrID, locID
 }
 
 func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
-	usageType := equipment.Rental
 	return equipment.Base{
 		OrgID:          row.OrgID,
-		UsageTypeID:    usageType.ID(),
+		UsageTypeID:    usage.Rental.ID(),
 		Name:           row.Name,
 		CategoryID:     catID,
 		ManufacturerID: mfrID,
 		LocationID:     locID,
 		Notes:          row.Notes,
-		EquipmentType:  equipment.TypeFromStringOrDefault(strings.ToLower(strings.TrimSpace(row.EquipmentTypeLabel))),
+		EquipmentType:  equipment.ParseOrDefault(strings.ToLower(strings.TrimSpace(row.EquipmentTypeLabel))),
 		Pricing: equipment.Pricing{
-			PurchasePrice: equipment.ParseCents(row.ResalePrice),
-			RentalPrice:   equipment.ParseCents(row.RentalPrice),
+			PurchasePrice: units.ParseCents(row.ResalePrice),
+			RentalPrice:   units.ParseCents(row.RentalPrice),
 		},
 		Properties: equipment.Properties{
-			Weight:    equipment.ParseGrams(row.WeightG),
-			Width:     equipment.ParseMillimeters(row.WidthMm),
-			Height:    equipment.ParseMillimeters(row.HeightMm),
-			Depth:     equipment.ParseMillimeters(row.DepthMm),
-			Power:     equipment.ParseMilliwatts(row.PowerMw),
-			Current:   equipment.ParseMilliamps(row.CurrentMa),
-			Voltage:   equipment.ParseVolts(row.VoltageMv),
-			WireGauge: equipment.ParseWireGauge(row.WireGaugeMM2X100),
+			Weight:    units.ParseGrams(row.WeightG),
+			Width:     units.ParseMillimeters(row.WidthMm),
+			Height:    units.ParseMillimeters(row.HeightMm),
+			Depth:     units.ParseMillimeters(row.DepthMm),
+			Power:     units.ParseMilliwatts(row.PowerMw),
+			Current:   units.ParseMilliamps(row.CurrentMa),
+			Voltage:   units.ParseVolts(row.VoltageMv),
+			WireGauge: units.ParseWireGauge(row.WireGaugeMM2X100),
 		},
 	}
 }
@@ -329,8 +325,8 @@ func buildBase(row Row, catID, mfrID, locID string) equipment.Base {
 func (s *Service) commitBulkRow(ctx context.Context, tx *sql.Tx, row Row, lk commitLookups) error {
 	catID, mfrID, locID := s.resolveLookups(row, lk)
 	base := buildBase(row, catID, mfrID, locID)
-	if _, err := s.inventory.CreateBulkTx(ctx, tx, equipment.CreateBulkEquipment{
-		ID:         ksuid.New().String(),
+	if _, err := s.equipment.CreateBulk(ctx, tx, equipment.CreateBulkEquipment{
+		ID:         uid.New(),
 		Base:       base,
 		TotalStock: equipment.ParseQuantity(row.Quantity),
 	}); err != nil {
@@ -346,12 +342,12 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 	}
 	isActive := !strings.EqualFold(row.UnitIsActive, "false") && row.UnitIsActive != "0"
 	return equipment.CreateUnit{
-		ID:                       ksuid.New().String(),
+		ID:                       uid.New(),
 		EquipmentID:              equipmentID,
 		SerialNumber:             sn,
 		ManufacturerSerialNumber: row.UnitManufacturerSerial,
 		Remark:                   row.UnitRemark,
-		PurchasePrice:            equipment.ParseCents(row.UnitPurchasePrice),
+		PurchasePrice:            units.ParseCents(row.UnitPurchasePrice),
 		PurchasedAt:              equipment.ParseDate(row.UnitPurchasedAt),
 		NextInspectionAt:         equipment.ParseDate(row.NextInspectionAt),
 		IsActive:                 isActive,
@@ -362,12 +358,12 @@ func buildUnit(row Row, equipmentID string) equipment.CreateUnit {
 func (s *Service) commitSerializedGroup(ctx context.Context, tx *sql.Tx, first Row, rows []Row, lk commitLookups) error {
 	catID, mfrID, locID := s.resolveLookups(first, lk)
 	base := buildBase(first, catID, mfrID, locID)
-	itemID := ksuid.New().String()
+	itemID := uid.New()
 	units := make([]equipment.CreateUnit, 0, len(rows))
 	for _, row := range rows {
 		units = append(units, buildUnit(row, itemID))
 	}
-	if _, err := s.inventory.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
+	if _, err := s.equipment.CreateSerialized(ctx, tx, equipment.CreateSerializedEquipment{
 		ID:    itemID,
 		Base:  base,
 		Units: units,

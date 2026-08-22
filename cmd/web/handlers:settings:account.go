@@ -38,11 +38,7 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) *http
 	accountID := sessionAccountID(ctx, app.session)
 	record, err := app.services.accounts.Get(ctx, accountID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to load account.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	tmplData := app.html.TemplateData(r)

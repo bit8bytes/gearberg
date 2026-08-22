@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipmentimports"
 )
 
 func TestEquipmentImportExportRoundTrip(t *testing.T) {
@@ -34,7 +34,7 @@ func TestEquipmentImportExportRoundTrip(t *testing.T) {
 
 func roundTripUpload(t *testing.T) string {
 	t.Helper()
-	code, header, _ := ts.postFile(t, "/orgs/"+alice.orgID+"/equipment/import", "file", "template.csv", imports.TemplateCSV)
+	code, header, _ := ts.postFile(t, "/orgs/"+alice.orgID+"/equipment/import", "file", "template.csv", equipmentimports.TemplateCSV)
 	if code != http.StatusSeeOther {
 		t.Fatalf("upload: want 303, got %d", code)
 	}
@@ -66,20 +66,20 @@ func assertRoundTrip(t *testing.T, body []byte) {
 	assertSonySerials(t, rows)
 }
 
-func parseExportCSV(t *testing.T, body []byte) []imports.RawRow {
+func parseExportCSV(t *testing.T, body []byte) []equipmentimports.RawRow {
 	t.Helper()
 	// Strip the UTF-8 BOM the handler prepends so ParseCSV sees clean bytes.
 	if len(body) >= 3 && body[0] == 0xEF && body[1] == 0xBB && body[2] == 0xBF {
 		body = body[3:]
 	}
-	rows, err := imports.ParseCSV(strings.NewReader(string(body)))
+	rows, err := equipmentimports.ParseCSV(strings.NewReader(string(body)))
 	if err != nil {
 		t.Fatalf("ParseCSV on export: %v", err)
 	}
 	return rows
 }
 
-func assertExportCounts(t *testing.T, rows []imports.RawRow) {
+func assertExportCounts(t *testing.T, rows []equipmentimports.RawRow) {
 	t.Helper()
 	counts := make(map[string]int)
 	for _, r := range rows {
@@ -96,7 +96,7 @@ func assertExportCounts(t *testing.T, rows []imports.RawRow) {
 	}
 }
 
-func assertShureQuantity(t *testing.T, rows []imports.RawRow) {
+func assertShureQuantity(t *testing.T, rows []equipmentimports.RawRow) {
 	t.Helper()
 	for _, r := range rows {
 		if r.Name == "Shure SM58" && r.Quantity != "7" {
@@ -105,7 +105,7 @@ func assertShureQuantity(t *testing.T, rows []imports.RawRow) {
 	}
 }
 
-func assertSonySerials(t *testing.T, rows []imports.RawRow) {
+func assertSonySerials(t *testing.T, rows []equipmentimports.RawRow) {
 	t.Helper()
 	serials := make(map[string]bool)
 	for _, r := range rows {

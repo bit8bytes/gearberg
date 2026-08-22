@@ -49,8 +49,8 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 	return n, nil
 }
 
-// GetByOrgID returns all locations belonging to orgID, ordered by name.
-func (r *Repository) GetByOrgID(ctx context.Context, orgID string) ([]Location, error) {
+// List returns all locations belonging to orgID, ordered by name.
+func (r *Repository) List(ctx context.Context, orgID string) ([]Location, error) {
 	rows, err := r.locations.GetByOrgID(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("GetByOrgID: %w", err)
@@ -62,8 +62,8 @@ func (r *Repository) GetByOrgID(ctx context.Context, orgID string) ([]Location, 
 	return result, nil
 }
 
-// GetByID returns the location with id, or ErrNotFound when it does not exist.
-func (r *Repository) GetByID(ctx context.Context, id string) (*Location, error) {
+// Get returns the location with id, or ErrNotFound when it does not exist.
+func (r *Repository) Get(ctx context.Context, id string) (*Location, error) {
 	row, err := r.locations.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -88,8 +88,15 @@ func (r *Repository) GetByName(ctx context.Context, orgID, name string) (*Locati
 	return &m, nil
 }
 
+type createParams struct {
+	ID                        string
+	ParentWarehouseLocationID *string
+	OrgID                     string
+	Name                      string
+}
+
 // Create inserts a new location.
-func (r *Repository) Create(ctx context.Context, c CreateLocation) (*Location, error) {
+func (r *Repository) Create(ctx context.Context, c createParams) (*Location, error) {
 	var parentID sql.NullString
 	if c.ParentWarehouseLocationID != nil {
 		parentID = sql.NullString{String: *c.ParentWarehouseLocationID, Valid: true}

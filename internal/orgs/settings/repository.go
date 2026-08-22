@@ -53,11 +53,16 @@ func (r *Repository) GetByOrgID(ctx context.Context, orgID string) (*OrgSettings
 	return toModel(row), nil
 }
 
+type createParams struct {
+	ID    string
+	OrgID string
+}
+
 // Create inserts a new settings row with migration defaults for currency, vat_rate, and timezone.
-func (r *Repository) Create(ctx context.Context, id, orgID string) (*OrgSettings, error) {
+func (r *Repository) Create(ctx context.Context, params createParams) (*OrgSettings, error) {
 	row, err := r.settings.Create(ctx, gencs.CreateParams{
-		ID:    id,
-		OrgID: orgID,
+		ID:    params.ID,
+		OrgID: params.OrgID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Create: %w", err)

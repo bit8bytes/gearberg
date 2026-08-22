@@ -13,25 +13,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Package equipment provides equipment functionality.
-package equipment
+// Package tracking defines how equipment inventory is tracked (bulk or serialized).
+package tracking
 
-// TrackingType represents an inventory type (Bulk or Serialized).
+// Type represents an inventory type (Bulk or Serialized).
 // The integer value matches the id stored in the inventory_types table,
 // which is seeded at startup rather than via migrations.
-type TrackingType int64
+type Type int64
 
 // Equipment type identifiers seeded into the inventory_types table.
 const (
-	Bulk       TrackingType = 1
-	Serialized TrackingType = 2
+	Bulk       Type = 1
+	Serialized Type = 2
 )
 
 // ID returns the database id for the inventory type.
-func (k TrackingType) ID() int64 { return int64(k) }
+func (k Type) ID() int64 { return int64(k) }
 
 // String returns the name stored in the inventory_types table.
-func (k TrackingType) String() string {
+func (k Type) String() string {
 	switch k {
 	case Bulk:
 		return "bulk"
@@ -42,8 +42,8 @@ func (k TrackingType) String() string {
 	}
 }
 
-// TrackingTypeFromString returns the TrackingType matching name ("bulk" or "serialized"), or 0 when unknown.
-func TrackingTypeFromString(name string) TrackingType {
+// Parse returns the [Type] matching name ("bulk" or "serialized"), or 0 when unknown.
+func Parse(name string) Type {
 	switch name {
 	case "bulk":
 		return Bulk
@@ -55,7 +55,7 @@ func TrackingTypeFromString(name string) TrackingType {
 }
 
 // Label returns the human-friendly label for the inventory type.
-func (k TrackingType) Label() string {
+func (k Type) Label() string {
 	switch k {
 	case Bulk:
 		return "Bulk"

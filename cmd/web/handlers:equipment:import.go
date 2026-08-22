@@ -20,7 +20,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/imports"
+	"github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
@@ -53,7 +53,7 @@ type equipmentImportPreviewData struct {
 
 // groupImportRows collapses serialized staging rows that share a name into one
 // preview row and returns per-item counts for new and error items.
-func groupImportRows(staged []imports.Row) (rows []importPreviewRow, cntNew, cntError int) {
+func groupImportRows(staged []equipmentimports.Row) (rows []importPreviewRow, cntNew, cntError int) {
 	type group struct {
 		row    importPreviewRow
 		total  int
@@ -74,7 +74,7 @@ func groupImportRows(staged []imports.Row) (rows []importPreviewRow, cntNew, cnt
 				ErrorMessage: r.ErrorMessage,
 			}
 			rows = append(rows, pr)
-			if r.Status == imports.StatusNew {
+			if r.Status == equipmentimports.StatusNew {
 				cntNew++
 			} else {
 				cntError++
@@ -89,15 +89,15 @@ func groupImportRows(staged []imports.Row) (rows []importPreviewRow, cntNew, cnt
 				Name:         r.Name,
 				TypeLabel:    r.TypeLabel,
 				CategoryName: r.CategoryName,
-				Status:       imports.StatusNew,
+				Status:       equipmentimports.StatusNew,
 			}}
 			order = append(order, key)
 		}
 		g := seen[key]
 		g.total++
-		if r.Status == imports.StatusError && !g.hasErr {
+		if r.Status == equipmentimports.StatusError && !g.hasErr {
 			g.hasErr = true
-			g.row.Status = imports.StatusError
+			g.row.Status = equipmentimports.StatusError
 			g.row.ErrorMessage = r.ErrorMessage
 		}
 	}
@@ -132,7 +132,7 @@ func (app *application) postEquipmentImport(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
 
-	reRender := func(msg string) *httperr.Error {
+	fail := func(msg string) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Data = equipmentImportData{OrgID: orgID, Error: msg}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentImport, data)
@@ -140,27 +140,23 @@ func (app *application) postEquipmentImport(w http.ResponseWriter, r *http.Reque
 
 	const maxImportBytes = 32 << 20                              // 32 MiB
 	if err := r.ParseMultipartForm(maxImportBytes); err != nil { //nolint:gosec // maxImportBytes is a bounded constant (32 MiB)
-		return reRender("Could not parse form.")
+		return fail("Could not parse form.")
 	}
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
-		return reRender("No file uploaded.")
+		return fail("No file uploaded.")
 	}
 	defer func() { _ = f.Close() }()
 
-	rawRows, parseErr := imports.ParseCSV(f)
+	rawRows, parseErr := equipmentimports.ParseCSV(f)
 	if parseErr != nil {
-		return reRender(parseErr.Error())
+		return fail(parseErr.Error())
 	}
 
 	importID, err := app.services.equipmentImports.Stage(ctx, orgID, rawRows)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to stage import.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/import?id="+url.QueryEscape(importID), http.StatusSeeOther)
@@ -172,7 +168,7 @@ func (app *application) renderImportPreview(w http.ResponseWriter, r *http.Reque
 
 	staged, err := app.services.equipmentImports.ListStaged(ctx, importID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to load import preview.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	previewRows, cntNew, cntError := groupImportRows(staged)
@@ -193,12 +189,12 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 	orgID := r.PathValue("org_id")
 
 	if err := r.ParseForm(); err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 	importID := r.FormValue("import_id")
 
 	if err := app.services.equipmentImports.Commit(ctx, importID, orgID); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to commit import.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
@@ -209,6 +205,6 @@ func (app *application) postEquipmentImportConfirm(w http.ResponseWriter, r *htt
 func (app *application) getEquipmentImportTemplate(w http.ResponseWriter, _ *http.Request) *httperr.Error {
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
-	_, _ = w.Write(imports.TemplateCSV)
+	_, _ = w.Write(equipmentimports.TemplateCSV)
 	return nil
 }

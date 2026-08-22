@@ -23,8 +23,8 @@ type Type int64
 
 // Equipment type identifiers seeded into the equipment_types table.
 const (
-	Standard Type = 1
-	Kit      Type = 2
+	StandardType Type = 1
+	KitType      Type = 2
 )
 
 // ID returns the database id for the equipment type.
@@ -33,41 +33,41 @@ func (t Type) ID() int64 { return int64(t) }
 // String returns the name stored in the equipment_types table.
 func (t Type) String() string {
 	switch t {
-	case Standard:
+	case StandardType:
 		return "standard"
-	case Kit:
+	case KitType:
 		return "kit"
 	default:
 		return ""
 	}
 }
 
-// TypeFromString returns the Type matching name, or 0 when unknown.
-func TypeFromString(name string) Type {
+// Parse returns the Type matching name, or 0 when unknown.
+func Parse(name string) Type {
 	switch name {
 	case "standard":
-		return Standard
+		return StandardType
 	case "kit":
-		return Kit
+		return KitType
 	default:
 		return 0
 	}
 }
 
-// TypeFromStringOrDefault returns the Type matching name, or Standard when unknown.
-func TypeFromStringOrDefault(name string) Type {
-	if t := TypeFromString(name); t != 0 {
+// ParseOrDefault returns the Type matching name, or Standard when unknown.
+func ParseOrDefault(name string) Type {
+	if t := Parse(name); t != 0 {
 		return t
 	}
-	return Standard
+	return StandardType
 }
 
 // Label returns the human-friendly label for the equipment type.
 func (t Type) Label() string {
 	switch t {
-	case Standard:
+	case StandardType:
 		return "Standard"
-	case Kit:
+	case KitType:
 		return "Kit"
 	default:
 		return ""

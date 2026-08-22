@@ -22,7 +22,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/segmentio/ksuid"
+	"github.com/bit8bytes/gearberg/internal/uid"
+)
+
+var (
+	// ErrNotFound is returned when an equipment category does not exist.
+	ErrNotFound = errors.New("equipment category not found")
+	// ErrConflict is returned when a unique constraint is violated.
+	ErrConflict = errors.New("equipment category already exists")
+	// ErrLimitExceeded is returned when an org's category limit is reached.
+	ErrLimitExceeded = errors.New("equipment category limit exceeded")
+	// ErrInUse is returned when a category cannot be deleted due to assigned inventory items.
+	ErrInUse = errors.New("equipment category is in use and cannot be deleted")
 )
 
 // Options holds configuration for the equipment category service.
@@ -41,31 +52,41 @@ func NewService(repo *Repository, opts Options) *Service {
 	return &Service{repo: repo, opts: opts}
 }
 
-// MaxCategories returns the configured maximum number of categories per org.
-func (s *Service) MaxCategories() int {
-	return s.opts.MaxCategories
+// Category represents an equipment category belonging to a org.
+type Category struct {
+	ID        string
+	OrgID     string
+	Name      string
+	UpdatedAt int64
+	CreatedAt int64
 }
 
 // List returns all equipmentCategories belonging to orgID.
-func (s *Service) List(ctx context.Context, orgID string) ([]EquipmentCategory, error) {
-	equipmentCategories, err := s.repo.GetByOrgID(ctx, orgID)
+func (s *Service) List(ctx context.Context, orgID string) ([]Category, error) {
+	equipmentCategories, err := s.repo.List(ctx, orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get equipment equipmentCategories: %w", err)
 	}
 	return equipmentCategories, nil
 }
 
-// GetByID returns the category with id.
-func (s *Service) GetByID(ctx context.Context, id string) (*EquipmentCategory, error) {
-	category, err := s.repo.GetByID(ctx, id)
+// Get returns the category with id.
+func (s *Service) Get(ctx context.Context, id string) (*Category, error) {
+	category, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get equipment category: %w", err)
 	}
 	return category, nil
 }
 
+// CreateEquipmentCategory holds the data required to create a new equipment category.
+type CreateEquipmentCategory struct {
+	OrgID string
+	Name  string
+}
+
 // Create creates a new equipment category, enforcing the configured MaxCategories limit per org.
-func (s *Service) Create(ctx context.Context, c CreateEquipmentCategory) (*EquipmentCategory, error) {
+func (s *Service) Create(ctx context.Context, c CreateEquipmentCategory) (*Category, error) {
 	count, err := s.repo.Count(ctx, c.OrgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create equipment category: %w", err)
@@ -74,15 +95,25 @@ func (s *Service) Create(ctx context.Context, c CreateEquipmentCategory) (*Equip
 		return nil, ErrLimitExceeded
 	}
 
-	category, err := s.repo.Create(ctx, c)
+	category, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
+		OrgID: c.OrgID,
+		Name:  c.Name,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create equipment category: %w", err)
 	}
 	return category, nil
 }
 
+// UpdateEquipmentCategory holds the data required to update an equipment category.
+type UpdateEquipmentCategory struct {
+	ID   string
+	Name string
+}
+
 // Update updates the name of an equipment category.
-func (s *Service) Update(ctx context.Context, u UpdateEquipmentCategory) (*EquipmentCategory, error) {
+func (s *Service) Update(ctx context.Context, u UpdateEquipmentCategory) (*Category, error) {
 	category, err := s.repo.Update(ctx, u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update equipment category: %w", err)
@@ -98,8 +129,8 @@ func (s *Service) Upsert(ctx context.Context, orgID, name string) (string, error
 	if name == "" {
 		return "", fmt.Errorf("Upsert: name is blank")
 	}
-	_, err := s.repo.Create(ctx, CreateEquipmentCategory{
-		ID:    ksuid.New().String(),
+	_, err := s.repo.Create(ctx, createParams{
+		ID:    uid.New(),
 		OrgID: orgID,
 		Name:  name,
 	})

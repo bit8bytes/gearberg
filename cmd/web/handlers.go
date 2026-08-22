@@ -21,6 +21,7 @@ import (
 	"time"
 
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
+	"github.com/bit8bytes/gearberg/internal/equipment"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/pagination"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -47,7 +48,7 @@ func (app *application) ListEquipment(ctx context.Context, params gen.ListEquipm
 	page := params.Page.Or(1)
 	f := pagination.Filters{Page: page, PageSize: 25}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, params.OrgID, params.Q.Or(""), "", f)
+	items, meta, err := app.services.equipment.List(ctx, equipment.ListParams{OrgID: params.OrgID, Query: params.Q.Or(""), Filters: f})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch equipment: %w", err)
 	}

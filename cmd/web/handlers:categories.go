@@ -20,17 +20,16 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bit8bytes/gearberg/internal/equipment/categories"
+	"github.com/bit8bytes/gearberg/internal/categories"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/pkg/htmx"
-	"github.com/segmentio/ksuid"
 )
 
 type equipmentCategoriesData struct {
 	OrgID         string
-	Categories    []categories.EquipmentCategory
+	Categories    []categories.Category
 	MaxCategories int
 	SelectedID    string
 	SelectedName  string
@@ -47,11 +46,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 
 	cats, err := app.services.equipmentcategories.List(ctx, id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve equipment categories.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
@@ -59,7 +54,7 @@ func (app *application) getEquipmentCategories(w http.ResponseWriter, r *http.Re
 	data.Data = equipmentCategoriesData{
 		OrgID:         id,
 		Categories:    cats,
-		MaxCategories: app.services.equipmentcategories.MaxCategories(),
+		MaxCategories: app.options.Limits.MaxOrgCategories,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesIndex, data)
 }
@@ -78,10 +73,10 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 
 	form, err := categories.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *categories.Form) *httperr.Error {
+	fail := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = equipmentCategoryData{OrgID: id}
@@ -89,29 +84,24 @@ func (app *application) postEquipmentCategoryNew(w http.ResponseWriter, r *http.
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	_, err = app.services.equipmentcategories.Create(ctx, categories.CreateEquipmentCategory{
-		ID:    ksuid.New().String(),
 		OrgID: id,
 		Name:  form.Name,
 	})
 	if err != nil {
 		if errors.Is(err, categories.ErrConflict) {
 			form.AddError("name", "A category with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
 		if errors.Is(err, categories.ErrLimitExceeded) {
-			limit := app.services.equipmentcategories.MaxCategories()
+			limit := app.options.Limits.MaxOrgCategories
 			form.AddError("name", fmt.Sprintf("Category limit reached. Only %d categories allowed per org.", limit))
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to create equipment category.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/settings/equipment-categories", http.StatusSeeOther)
@@ -123,21 +113,20 @@ func (app *application) getEquipmentCategory(w http.ResponseWriter, r *http.Requ
 	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
 
-	category, err := app.services.equipmentcategories.GetByID(ctx, catID)
+	category, err := app.services.equipmentcategories.Get(ctx, catID)
 	if err != nil {
 		if errors.Is(err, categories.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment category not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve equipment category.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &categories.Form{Name: category.Name}
-	data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
+	data.Data = equipmentCategoryData{
+		OrgID: orgID,
+		ID:    catID,
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentCategoriesDetail, data)
 }
 
@@ -148,18 +137,21 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 
 	form, err := categories.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *categories.Form) *httperr.Error {
+	fail := func(f *categories.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
+		data.Data = equipmentCategoryData{
+			OrgID: orgID,
+			ID:    catID,
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	_, err = app.services.equipmentcategories.Update(ctx, categories.UpdateEquipmentCategory{
@@ -169,13 +161,9 @@ func (app *application) postEquipmentCategory(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		if errors.Is(err, categories.ErrConflict) {
 			form.AddError("name", "A category with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to update equipment category.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories/"+url.PathEscape(catID), http.StatusSeeOther)
@@ -187,27 +175,26 @@ func (app *application) postDeleteEquipmentCategory(w http.ResponseWriter, r *ht
 	orgID := r.PathValue("org_id")
 	catID := r.PathValue("id")
 
-	if err := app.services.equipmentcategories.Delete(ctx, catID); err != nil {
-		if errors.Is(err, categories.ErrInUse) {
-			category, fetchErr := app.services.equipmentcategories.GetByID(ctx, catID)
-			if fetchErr != nil {
-				if errors.Is(fetchErr, categories.ErrNotFound) {
-					return &httperr.Error{Error: fetchErr, Message: "Equipment category not found.", Code: http.StatusNotFound}
-				}
-				return &httperr.Error{Error: fetchErr, Message: "Failed to retrieve equipment category.", Code: http.StatusInternalServerError}
-			}
-			f := &categories.Form{Name: category.Name}
-			f.AddError("delete", "Cannot delete: this category is assigned to one or more equipment items.")
-			data := app.html.TemplateData(r)
-			data.Form = f
-			data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
-			return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
+	err := app.services.equipmentcategories.Delete(ctx, catID)
+	if err != nil {
+		if !errors.Is(err, categories.ErrInUse) {
+			return httperr.InternalServerError(err)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to delete equipment category.",
-			Code:    http.StatusInternalServerError,
+
+		category, fetchErr := app.services.equipmentcategories.Get(ctx, catID)
+		if errors.Is(fetchErr, categories.ErrNotFound) {
+			return httperr.NotFound(err)
 		}
+		if fetchErr != nil {
+			return httperr.InternalServerError(fetchErr)
+		}
+
+		f := &categories.Form{Name: category.Name}
+		f.AddError("delete", "Cannot delete: this category is assigned to one or more equipment items.")
+		data := app.html.TemplateData(r)
+		data.Form = f
+		data.Data = equipmentCategoryData{OrgID: orgID, ID: catID}
+		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentCategoriesDetail, data)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings/equipment-categories", http.StatusSeeOther)
@@ -228,14 +215,15 @@ func (app *application) getEquipmentCategoriesFragment(w http.ResponseWriter, r 
 
 	cats, err := app.services.equipmentcategories.List(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("getEquipmentCategoriesFragment: %w", err),
-			Message: "Failed to retrieve categories.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("getEquipmentCategoriesFragment: %w", err))
 	}
 
 	tmplData := app.html.TemplateData(r)
-	tmplData.Data = equipmentCategoriesData{OrgID: orgID, Categories: cats, SelectedID: selected, SelectedName: selectedName}
+	tmplData.Data = equipmentCategoriesData{
+		OrgID:        orgID,
+		Categories:   cats,
+		SelectedID:   selected,
+		SelectedName: selectedName,
+	}
 	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentCategories, tmplData)
 }

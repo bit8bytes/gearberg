@@ -13,24 +13,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Package equipment provides equipment functionality.
-package equipment
+// Package usage defines equipment usage classifications (rental, sale, etc.).
+package usage
 
-// UsageType represents how an inventory item is used (rental or sale).
+// Type represents how an inventory item is used (rental or sale).
 // The integer value matches the id stored in the usage_types table,
 // which is seeded at startup rather than via migrations.
-type UsageType int64
+type Type int64
 
 // Usage type identifiers seeded into the usage_types table.
 const (
-	Rental UsageType = 1
+	Rental Type = 1
 )
 
 // ID returns the database id for the usage type.
-func (u UsageType) ID() int64 { return int64(u) }
+func (u Type) ID() int64 { return int64(u) }
 
-// ParseUsage returns the Usage matching name, or 0 when unknown.
-func ParseUsage(name string) UsageType {
+// Parse returns the Usage matching name, or 0 when unknown.
+func Parse(name string) Type {
 	switch name {
 	case "rental":
 		return Rental
@@ -40,7 +40,7 @@ func ParseUsage(name string) UsageType {
 }
 
 // Label returns the human-friendly label for the usage type.
-func (u UsageType) Label() string {
+func (u Type) Label() string {
 	switch u {
 	case Rental:
 		return "Rental"
@@ -50,7 +50,7 @@ func (u UsageType) Label() string {
 }
 
 // String returns the name stored in the usage_types table.
-func (u UsageType) String() string {
+func (u Type) String() string {
 	switch u {
 	case Rental:
 		return "rental"

@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -27,8 +28,9 @@ import (
 	"time"
 
 	"github.com/bit8bytes/gearberg/internal/barcodes"
+	"github.com/bit8bytes/gearberg/internal/categories"
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	"github.com/bit8bytes/gearberg/internal/equipment/categories"
+	"github.com/bit8bytes/gearberg/internal/equipment/tracking"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imgpkg "github.com/bit8bytes/gearberg/internal/image"
 	"github.com/bit8bytes/gearberg/internal/money"
@@ -57,21 +59,20 @@ func (app *application) getEquipmentPartOfFragment(w http.ResponseWriter, r *htt
 
 	partOf, err := app.services.equipment.ListContainers(ctx, itemID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("getEquipmentPartOfFragment: %w", err),
-			Message: "Failed to load container memberships.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("getEquipmentPartOfFragment: %w", err))
 	}
 
 	tmplData := app.html.TemplateData(r)
-	tmplData.Data = equipmentPartOfData{OrgID: orgID, PartOf: partOf}
+	tmplData.Data = equipmentPartOfData{
+		OrgID:  orgID,
+		PartOf: partOf,
+	}
 	return app.html.RenderFragment(w, r, http.StatusOK, fragments.EquipmentPartOf, tmplData)
 }
 
 type equipmentData struct {
 	OrgID       string
-	Categories  []categories.EquipmentCategory
+	Categories  []categories.Category
 	Inventories []equipment.Equipment
 	Filtered    bool
 	Query       string
@@ -86,12 +87,12 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	ctx := r.Context()
 	id, err := uid.Parse(r.PathValue("org_id"))
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Invalid organization ID.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	cats, err := app.services.equipmentcategories.List(ctx, id)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve categories.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	qs := r.URL.Query()
@@ -109,9 +110,14 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		PageSize: 25,
 	}
 
-	items, meta, err := app.services.equipment.GetFiltered(ctx, id, query, category, f)
+	items, meta, err := app.services.equipment.List(ctx, equipment.ListParams{
+		OrgID:    id,
+		Query:    query,
+		Category: category,
+		Filters:  f,
+	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveEquipmentURLs(items)
@@ -136,7 +142,7 @@ func (app *application) getEquipmentSearchFragment(w http.ResponseWriter, r *htt
 	ctx := r.Context()
 	id, err := uid.Parse(r.PathValue("org_id"))
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Invalid organization ID.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	qs := r.URL.Query()
@@ -148,9 +154,14 @@ func (app *application) getEquipmentSearchFragment(w http.ResponseWriter, r *htt
 		PageSize: 25,
 	}
 
-	items, _, err := app.services.equipment.GetFiltered(ctx, id, query, category, f)
+	items, _, err := app.services.equipment.List(ctx, equipment.ListParams{
+		OrgID:    id,
+		Query:    query,
+		Category: category,
+		Filters:  f,
+	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveEquipmentURLs(items)
@@ -176,21 +187,22 @@ type equipmentItemData struct {
 func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	id := r.PathValue("org_id")
 	data := app.html.TemplateData(r)
-	data.Form = equipment.NewNewForm()
+	data.Form = equipment.NewCreateForm()
 	data.Data = equipmentItemData{OrgID: id}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentNew, data)
 }
 
+//nolint:cyclop
 func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("org_id")
 
-	form, err := equipment.ParseNew(r)
+	form, err := equipment.ParseForm(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *equipment.NewForm) *httperr.Error {
+	fail := func(f *equipment.NewForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = equipmentItemData{OrgID: id}
@@ -198,42 +210,68 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
+	}
+
+	catID := form.CategoryID
+	if catID == "" && form.CategoryName != "" {
+		catID, err = app.services.equipmentcategories.Upsert(ctx, id, form.CategoryName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+	}
+	mfrID := form.ManufacturerID
+	if mfrID == "" && form.ManufacturerName != "" {
+		mfrID, err = app.services.manufacturers.Upsert(ctx, id, form.ManufacturerName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+	}
+	locID := form.LocationID
+	if locID == "" && form.LocationName != "" {
+		locID, err = app.services.locations.Upsert(ctx, id, form.LocationName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
 	}
 
 	base := equipment.Base{
-		OrgID:            id,
-		EquipmentType:    form.EquipmentType(),
-		UsageTypeID:      equipment.ParseUsage(form.UsageTypeID).ID(),
-		Name:             form.Name,
-		CategoryID:       form.CategoryID,
-		CategoryName:     form.CategoryName,
-		ManufacturerID:   form.ManufacturerID,
-		ManufacturerName: form.ManufacturerName,
-		LocationID:       form.LocationID,
-		LocationName:     form.LocationName,
-		Notes:            form.Notes,
-		Pricing:          form.ToPricing(),
+		OrgID:          id,
+		UsageTypeID:    form.UsageType.ID(),
+		Name:           form.Name,
+		CategoryID:     catID,
+		ManufacturerID: mfrID,
+		LocationID:     locID,
+		Notes:          form.Notes,
+		Pricing: equipment.Pricing{
+			PurchasePrice: form.PurchasePrice,
+			RentalPrice:   form.RentalPrice,
+		},
 	}
 
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
-		TrackingType: form.TrackingType(),
-		Base:         base,
-		TotalStock:   form.Count,
-		UnitCount:    form.Count,
+		ItemType:   form.ItemType,
+		Base:       base,
+		TotalStock: form.Count,
+		UnitCount:  form.Count,
 	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to create inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	if appErr := app.processEquipmentImage(r, id, eq.ID, form.Image, form.ImageHeader); appErr != nil {
 		return appErr
 	}
 
-	if eq.TrackingType == equipment.Bulk {
+	switch eq.TrackingType {
+	case tracking.Bulk:
 		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment", http.StatusSeeOther)
-	} else {
-		http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(eq.ID)+"/units", http.StatusSeeOther)
+	case tracking.Serialized:
+		if eq.Type == equipment.KitType {
+			http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(eq.ID)+"/content", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/orgs/"+url.PathEscape(id)+"/equipment/"+url.PathEscape(eq.ID)+"/units", http.StatusSeeOther)
+		}
 	}
 	return nil
 }
@@ -243,23 +281,29 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.Get(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveItemURLs(item)
 
 	data := app.html.TemplateData(r)
-	f := equipment.DetailsFormFromEquipment(item)
+	f := item.DetailsForm()
 	data.Form = &f
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "details"}
+	data.Data = equipmentItemData{
+		OrgID:     orgID,
+		Item:      item,
+		ID:        itemID,
+		ActiveTab: "details",
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
 
+//nolint:cyclop
 func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
@@ -267,40 +311,67 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 
 	form, err := equipment.ParseDetails(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	if appErr := app.processEquipmentImage(r, orgID, itemID, form.Image, form.ImageHeader); appErr != nil {
 		return appErr
 	}
 
-	if !form.Validate() {
-		item, err := app.services.equipment.GetByID(ctx, itemID)
+	fail := func(f *equipment.DetailsForm) *httperr.Error {
+		item, err := app.services.equipment.Get(ctx, itemID)
 		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+			return httperr.InternalServerError(err)
 		}
 		data := app.html.TemplateData(r)
-		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "details"}
+		data.Form = f
+		data.Data = equipmentItemData{
+			OrgID:     orgID,
+			Item:      item,
+			ID:        itemID,
+			ActiveTab: "details",
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
 
-	itemType := equipment.TrackingTypeFromString(form.TypeID)
+	if !form.Validate() {
+		return fail(&form)
+	}
+
+	catID := form.CategoryID
+	if catID == "" && form.CategoryName != "" {
+		catID, err = app.services.equipmentcategories.Upsert(ctx, orgID, form.CategoryName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+	}
+	mfrID := form.ManufacturerID
+	if mfrID == "" && form.ManufacturerName != "" {
+		mfrID, err = app.services.manufacturers.Upsert(ctx, orgID, form.ManufacturerName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+	}
+	locID := form.LocationID
+	if locID == "" && form.LocationName != "" {
+		locID, err = app.services.locations.Upsert(ctx, orgID, form.LocationName)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+	}
+
 	if err := app.services.equipment.UpdateDetails(ctx, equipment.UpdateEquipmentDetails{
-		ID:               itemID,
-		OrgID:            orgID,
-		Type:             itemType,
-		Name:             form.Name,
-		CategoryID:       form.CategoryID,
-		CategoryName:     form.CategoryName,
-		ManufacturerID:   form.ManufacturerID,
-		ManufacturerName: form.ManufacturerName,
-		LocationID:       form.LocationID,
-		LocationName:     form.LocationName,
-		Notes:            form.Notes,
-		TotalStock:       form.TotalStock,
+		ID:             itemID,
+		OrgID:          orgID,
+		Type:           form.Type,
+		Name:           form.Name,
+		CategoryID:     catID,
+		ManufacturerID: mfrID,
+		LocationID:     locID,
+		Notes:          form.Notes,
+		TotalStock:     form.TotalStock,
 	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"#save", http.StatusSeeOther)
@@ -314,20 +385,25 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 
 	form, err := equipment.ParseProperties(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	if !form.Validate() {
-		item, err := app.services.equipment.GetByID(ctx, itemID)
+		item, err := app.services.equipment.Get(ctx, itemID)
 		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+			return httperr.InternalServerError(err)
 		}
 
 		app.resolveItemURLs(item)
 
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "properties"}
+		data.Data = equipmentItemData{
+			OrgID:     orgID,
+			Item:      item,
+			ID:        itemID,
+			ActiveTab: "properties",
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentProperties, data)
 	}
 
@@ -335,7 +411,7 @@ func (app *application) postEquipmentItemProperties(w http.ResponseWriter, r *ht
 		ID:         itemID,
 		Properties: form.ToProperties(),
 	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/properties#save", http.StatusSeeOther)
@@ -347,20 +423,25 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.Get(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveItemURLs(item)
 
 	data := app.html.TemplateData(r)
-	f := equipment.PricingFormFromEquipment(item)
+	f := item.PricingForm()
 	data.Form = &f
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "pricing"}
+	data.Data = equipmentItemData{
+		OrgID:     orgID,
+		Item:      item,
+		ID:        itemID,
+		ActiveTab: "pricing",
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPricing, data)
 }
 
@@ -371,18 +452,23 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 
 	form, err := equipment.ParsePricing(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	if !form.Validate() {
-		item, err := app.services.equipment.GetByID(ctx, itemID)
+		item, err := app.services.equipment.Get(ctx, itemID)
 		if err != nil {
-			return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+			return httperr.InternalServerError(err)
 		}
 
 		data := app.html.TemplateData(r)
 		data.Form = &form
-		data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "pricing"}
+		data.Data = equipmentItemData{
+			OrgID:     orgID,
+			Item:      item,
+			ID:        itemID,
+			ActiveTab: "pricing",
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentPricing, data)
 	}
 
@@ -390,7 +476,7 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 		ID:      itemID,
 		Pricing: form.ToPricing(),
 	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to update inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/pricing#save", http.StatusSeeOther)
@@ -402,20 +488,25 @@ func (app *application) getEquipmentItemProperties(w http.ResponseWriter, r *htt
 	orgID := r.PathValue("org_id")
 	itemID := r.PathValue("id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.Get(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveItemURLs(item)
 
 	data := app.html.TemplateData(r)
-	f := equipment.PropertiesFormFromEquipment(item)
+	f := item.PropertiesForm()
 	data.Form = &f
-	data.Data = equipmentItemData{OrgID: orgID, Item: item, ID: itemID, ActiveTab: "properties"}
+	data.Data = equipmentItemData{
+		OrgID:     orgID,
+		Item:      item,
+		ID:        itemID,
+		ActiveTab: "properties",
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentProperties, data)
 }
 
@@ -429,9 +520,13 @@ func (app *application) postEquipmentAddUnit(w http.ResponseWriter, r *http.Requ
 		EquipmentID: itemID,
 	}); err != nil {
 		if errors.Is(err, equipment.ErrNotSerializedUnit) {
-			return &httperr.Error{Error: err, Message: "Units can only be added to serialized equipment.", Code: http.StatusBadRequest}
+			return &httperr.Error{
+				Error:   err,
+				Message: "Units can only be added to serialized equipment.",
+				Code:    http.StatusBadRequest,
+			}
 		}
-		return &httperr.Error{Error: err, Message: "Failed to add unit.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
@@ -446,7 +541,7 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 
 	form, err := equipment.ParseUnit(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	if !form.Validate() {
@@ -459,14 +554,14 @@ func (app *application) postEquipmentUpdateUnit(w http.ResponseWriter, r *http.R
 		IsActive:                 form.StatusID,
 		ManufacturerSerialNumber: form.ManufacturerSerialNumber,
 		Remark:                   form.Remark,
-		PurchasePrice:            form.ParsedPurchasePrice(),
+		PurchasePrice:            form.PurchasePrice,
 		PurchasedAt:              form.PurchasedAt,
 		NextInspectionAt:         form.NextInspectionAt,
 	}); err != nil {
 		if errors.Is(err, equipment.ErrConflict) {
 			return app.renderEquipmentUnits(w, r, orgID, itemID)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to update unit.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
@@ -479,7 +574,7 @@ func (app *application) postEquipmentBulkUpdateInspection(w http.ResponseWriter,
 	itemID := r.PathValue("id")
 
 	if err := r.ParseForm(); err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	unitIDs := r.PostForm["unit_ids"]
@@ -497,7 +592,7 @@ func (app *application) postEquipmentBulkUpdateInspection(w http.ResponseWriter,
 	}
 
 	if err := app.services.equipment.BulkUpdateNextInspection(ctx, unitIDs, nextInspectionAt); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to update units.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
@@ -511,7 +606,7 @@ func (app *application) postDeleteEquipmentUnit(w http.ResponseWriter, r *http.R
 	unitID := r.PathValue("unit_id")
 
 	if err := app.services.equipment.DeleteUnit(ctx, unitID); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to delete unit.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/units", http.StatusSeeOther)
@@ -536,20 +631,20 @@ func (app *application) getEquipmentUnits(w http.ResponseWriter, r *http.Request
 	item, err := app.services.equipment.GetUnitsContainer(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
 		if errors.Is(err, equipment.ErrNoUnitsTab) {
 			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
 			return nil
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveItemURLs(item)
 
 	units, err := app.services.equipment.ListUnits(ctx, itemID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve units.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
@@ -569,25 +664,25 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 	itemID := r.PathValue("id")
 	unitID := r.PathValue("unit_id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.Get(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	unit, err := app.services.equipment.GetUnit(ctx, unitID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	png, err := barcodes.QR(unit.SerialNumber)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to generate QR code.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	filename := unitQRFilename(item.Name, unit.SerialNumber)
@@ -595,7 +690,7 @@ func (app *application) getEquipmentUnitQR(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.Header().Set("Cache-Control", "no-store")
 	if _, err := w.Write(png); err != nil { //nolint:gosec // png bytes are generated internally, not from user input
-		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	return nil
 }
@@ -605,25 +700,25 @@ func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.R
 	itemID := r.PathValue("id")
 	unitID := r.PathValue("unit_id")
 
-	item, err := app.services.equipment.GetByID(ctx, itemID)
+	item, err := app.services.equipment.Get(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	unit, err := app.services.equipment.GetUnit(ctx, unitID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Unit not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve unit.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	png, err := barcodes.Code128(unit.SerialNumber)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to generate barcode.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	filename := unitQRFilename(item.Name, unit.SerialNumber)
@@ -631,7 +726,7 @@ func (app *application) getEquipmentUnitBarcode(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.Header().Set("Cache-Control", "no-store")
 	if _, err := w.Write(png); err != nil { //nolint:gosec // png bytes are generated internally, not from user input
-		return &httperr.Error{Error: err, Message: "Failed to write response.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	return nil
 }
@@ -666,7 +761,11 @@ func (app *application) processEquipmentImage(r *http.Request, orgID, itemID str
 
 	result, err := imgpkg.Process(file)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Invalid image file.", Code: http.StatusUnprocessableEntity}
+		return &httperr.Error{
+			Error:   err,
+			Message: "Invalid image file.",
+			Code:    http.StatusUnprocessableEntity,
+		}
 	}
 
 	key := fmt.Sprintf("orgs/%s/equipment/%s", orgID, itemID)
@@ -675,14 +774,14 @@ func (app *application) processEquipmentImage(r *http.Request, orgID, itemID str
 		ContentType: result.ContentType,
 	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to store image.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	if err := app.services.equipment.SetImage(ctx, equipment.SetImage{
 		ID:              itemID,
 		StorageObjectID: &record.ID,
 	}); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to link image.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	return nil
 }
@@ -747,11 +846,7 @@ func (app *application) postDeleteEquipmentItem(w http.ResponseWriter, r *http.R
 				Code:    http.StatusConflict,
 			}
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to delete inventory item.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
@@ -775,28 +870,41 @@ func (app *application) getEquipmentContent(w http.ResponseWriter, r *http.Reque
 	item, err := app.services.equipment.GetContentContainer(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
 		if errors.Is(err, equipment.ErrNoContentTab) {
 			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
 			return nil
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	app.resolveItemURLs(item)
 
 	content, err := app.services.equipment.ListContent(ctx, itemID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
-	all, err := app.services.equipment.ListAll(ctx, orgID)
+	all, _, err := app.services.equipment.List(ctx, equipment.ListParams{
+		OrgID: orgID,
+		Filters: pagination.Filters{
+			Page:     1,
+			PageSize: math.MaxInt32,
+		},
+	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = equipment.NewContentForm()
-	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
+	data.Data = equipmentContentData{
+		OrgID:        orgID,
+		ID:           itemID,
+		Item:         item,
+		Content:      content,
+		AllEquipment: all,
+		ActiveTab:    "content",
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentContent, data)
 }
 
@@ -805,29 +913,42 @@ func (app *application) renderEquipmentContentForm(w http.ResponseWriter, r *htt
 	item, err := app.services.equipment.GetContentContainer(ctx, itemID)
 	if err != nil {
 		if errors.Is(err, equipment.ErrNotFound) {
-			return &httperr.Error{Error: err, Message: "Equipment item not found.", Code: http.StatusNotFound}
+			return httperr.NotFound(err)
 		}
 		if errors.Is(err, equipment.ErrNoContentTab) {
 			http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID), http.StatusSeeOther)
 			return nil
 		}
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	app.resolveItemURLs(item)
 	content, err := app.services.equipment.ListContent(ctx, itemID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve content.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
-	all, err := app.services.equipment.ListAll(ctx, orgID)
+	all, _, err := app.services.equipment.List(ctx, equipment.ListParams{
+		OrgID: orgID,
+		Filters: pagination.Filters{
+			Page:     1,
+			PageSize: math.MaxInt32,
+		},
+	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve equipment list.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 	if extraErr != "" {
 		f.AddError("assign", extraErr)
 	}
 	data := app.html.TemplateData(r)
 	data.Form = f
-	data.Data = equipmentContentData{OrgID: orgID, ID: itemID, Item: item, Content: content, AllEquipment: all, ActiveTab: "content"}
+	data.Data = equipmentContentData{
+		OrgID:        orgID,
+		ID:           itemID,
+		Item:         item,
+		Content:      content,
+		AllEquipment: all,
+		ActiveTab:    "content",
+	}
 	return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentContent, data)
 }
 
@@ -838,7 +959,7 @@ func (app *application) postEquipmentAssignContent(w http.ResponseWriter, r *htt
 
 	form, err := equipment.ParseContent(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	if !form.Validate() {
@@ -873,7 +994,7 @@ func (app *application) postEquipmentRemoveContent(w http.ResponseWriter, r *htt
 	contentID := r.PathValue("content_id")
 
 	if err := app.services.equipment.RemoveContent(ctx, contentID); err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to remove content item.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment/"+url.PathEscape(itemID)+"/content", http.StatusSeeOther)
@@ -898,24 +1019,30 @@ func (app *application) getEquipmentPrint(w http.ResponseWriter, r *http.Request
 
 	org, err := app.services.orgs.Get(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve organization.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
-	showArchived := qs.Get("archived") == "true"
-
-	filtered, err := app.services.equipment.ListAllFiltered(ctx, orgID, query, category, showArchived)
+	filtered, _, err := app.services.equipment.List(ctx, equipment.ListParams{
+		OrgID:    orgID,
+		Query:    query,
+		Category: category,
+		Filters: pagination.Filters{
+			Page:     1,
+			PageSize: math.MaxInt32,
+		},
+	})
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve inventory.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	app.resolveEquipmentURLs(filtered)
 
 	orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Failed to retrieve organization settings.", Code: http.StatusInternalServerError}
+		return httperr.InternalServerError(err)
 	}
 
 	var currency money.Currency

@@ -39,11 +39,7 @@ func (app *application) getOrgs(w http.ResponseWriter, r *http.Request) *httperr
 
 	allOrgs, err := app.services.orgs.List(ctx, session.AccountID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve orgs.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
@@ -72,25 +68,20 @@ func (app *application) getSettingsOrg(w http.ResponseWriter, r *http.Request) *
 
 	org, err := app.services.orgs.Get(ctx, id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve org.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	usage, err := app.services.storageManager.Info(ctx, id)
 	if err != nil {
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to retrieve storage info.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	data := app.html.TemplateData(r)
 	data.Form = &orgs.Form{DisplayName: org.DisplayName}
-	data.Data = settingsOrgData{OrgID: id, StorageUsage: usage}
+	data.Data = settingsOrgData{
+		OrgID:        id,
+		StorageUsage: usage,
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.OrgSettingsDetails, data)
 }
 
@@ -119,15 +110,15 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	id, err := uid.Parse(r.PathValue("org_id"))
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Invalid org ID.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
 	form, err := orgs.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *orgs.Form) *httperr.Error {
+	fail := func(f *orgs.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
 		data.Data = settingsOrgData{OrgID: id}
@@ -135,7 +126,7 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	err = app.services.orgs.Update(ctx, orgs.UpdateParams{
@@ -145,13 +136,9 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		if errors.Is(err, orgs.ErrConflict) {
 			form.AddError("name", "A org with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to update org.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+id, http.StatusSeeOther) //nolint:gosec // id is a parsed and validated KSUID, not an open redirect
@@ -163,17 +150,17 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 
 	form, err := orgs.Parse(r)
 	if err != nil {
-		return &httperr.Error{Error: err, Message: "Bad request.", Code: http.StatusBadRequest}
+		return httperr.BadRequest(err)
 	}
 
-	reRender := func(f *orgs.Form) *httperr.Error {
+	fail := func(f *orgs.Form) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.OrgsNew, data)
 	}
 
 	if !form.Validate() {
-		return reRender(&form)
+		return fail(&form)
 	}
 
 	session := sessions.MustFromRequest(r)
@@ -185,26 +172,18 @@ func (app *application) postOrgsNew(w http.ResponseWriter, r *http.Request) *htt
 	if err != nil {
 		if errors.Is(err, orgs.ErrConflict) {
 			form.AddError("name", "A org with this name already exists.")
-			return reRender(&form)
+			return fail(&form)
 		}
 		if errors.Is(err, orgs.ErrLimitExceeded) {
 			form.AddError("name", fmt.Sprintf("Org limit reached. Only %d orgs allowed.", app.options.Limits.MaxOrgs))
-			return reRender(&form)
+			return fail(&form)
 		}
-		return &httperr.Error{
-			Error:   err,
-			Message: "Failed to create org.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(err)
 	}
 
-	_, err = app.services.orgsettings.Create(ctx, uid.New(), orgID)
+	_, err = app.services.orgsettings.Create(ctx, orgID)
 	if err != nil {
-		return &httperr.Error{
-			Error:   fmt.Errorf("postOrgsNew: seed default settings: %w", err),
-			Message: "Failed to initialise org settings.",
-			Code:    http.StatusInternalServerError,
-		}
+		return httperr.InternalServerError(fmt.Errorf("postOrgsNew: seed default settings: %w", err))
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/orgs/%s/equipment", orgID), http.StatusSeeOther)
