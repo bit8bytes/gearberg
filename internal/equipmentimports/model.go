@@ -162,7 +162,10 @@ type Mapping map[string]string
 type RowState string
 
 const (
-	StateValid   RowState = "valid"
+	// StateValid marks a row that passed all validation checks and is safe to commit.
+	StateValid RowState = "valid"
+
+	// StateInvalid marks a row that failed one or more validation checks and must not be committed.
 	StateInvalid RowState = "invalid"
 )
 
