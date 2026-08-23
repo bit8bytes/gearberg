@@ -19,19 +19,19 @@ erDiagram
 
   import_data {
     text id PK
-    text session_id "REFRENCES import_sessions(id) ON DELETE CASCADE"
-    integer row_number
-    blob data "JSON blob of raw source columns"
-    text status "new | error | skipped"
-    text error_message
-    text action "create | skip"
+    text session_id "REFERENCES import_sessions(id) ON DELETE CASCADE"
+    integer row_number "NOT NULL CHECK row_number > 0 UNIQUE session_id+row_number"
+    text data "NOT NULL DEFAULT {} JSON blob of raw source columns"
+    text status "NOT NULL DEFAULT new | error | needs_review"
+    text error_message "NOT NULL DEFAULT empty"
+    text action "NOT NULL DEFAULT pending | create | skip"
   }
 
   import_mappings {
     text id PK
-    text session_id "REFRENCES import_sessions(id) ON DELETE CASCADE"
-    text source_col "user column name e.g. Bezeichnung"
-    text target_field "internal field name e.g. name"
+    text session_id "REFERENCES import_sessions(id) ON DELETE CASCADE"
+    text source_col "NOT NULL UNIQUE per session e.g. Bezeichnung"
+    text target_field "NOT NULL e.g. name"
   }
 
   import_sessions ||--o{ import_data : "has rows"
