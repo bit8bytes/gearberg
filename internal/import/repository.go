@@ -1,0 +1,164 @@
+// Copyright (C) 2026 Tobias Gleiter
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+package imports
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+
+	gendata "github.com/bit8bytes/gearberg/internal/database/queries/gen/importdata"
+	genmappings "github.com/bit8bytes/gearberg/internal/database/queries/gen/importmappings"
+	gensessions "github.com/bit8bytes/gearberg/internal/database/queries/gen/importsessions"
+)
+
+// Repository provides data access for import sessions, rows, and mappings.
+type Repository struct {
+	db       *sql.DB
+	sessions *gensessions.Queries
+	data     *gendata.Queries
+	mappings *genmappings.Queries
+}
+
+// NewRepository returns a new Repository.
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{
+		db:       db,
+		sessions: gensessions.New(db),
+		data:     gendata.New(db),
+		mappings: genmappings.New(db),
+	}
+}
+
+func (r *Repository) InsertSessionTx(ctx context.Context, tx *sql.Tx, s Session) (Session, error) {
+	row, err := r.sessions.WithTx(tx).InsertSession(ctx, gensessions.InsertSessionParams{
+		ID:           s.ID,
+		OrgID:        s.OrgID,
+		Format:       string(s.Format),
+		Status:       string(s.Status),
+		TargetEntity: s.TargetEntity,
+	})
+	if err != nil {
+		return Session{}, fmt.Errorf("InsertSessionTx: %w", err)
+	}
+	return sessionFromRecord(row), nil
+}
+
+func (r *Repository) GetSession(ctx context.Context, id string) (Session, error) {
+	row, err := r.sessions.GetSession(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Session{}, ErrNotFound
+		}
+		return Session{}, fmt.Errorf("GetSession: %w", err)
+	}
+	return sessionFromRecord(row), nil
+}
+
+func (r *Repository) UpdateSessionStatus(ctx context.Context, id string, status Status) (Session, error) {
+	row, err := r.sessions.UpdateSessionStatus(ctx, gensessions.UpdateSessionStatusParams{
+		Status: string(status),
+		ID:     id,
+	})
+	if err != nil {
+		return Session{}, fmt.Errorf("UpdateSessionStatus: %w", err)
+	}
+	return sessionFromRecord(row), nil
+}
+
+func (r *Repository) InsertDataTx(ctx context.Context, tx *sql.Tx, row Row) (Row, error) {
+	rec, err := r.data.WithTx(tx).InsertData(ctx, gendata.InsertDataParams{
+		ID:        row.ID,
+		SessionID: row.SessionID,
+		RowNumber: row.RowNumber,
+		Data:      row.Data,
+	})
+	if err != nil {
+		return Row{}, fmt.Errorf("InsertDataTx: %w", err)
+	}
+	return dataFromRecord(rec), nil
+}
+
+func (r *Repository) ListDataByAction(ctx context.Context, sessionID string, action Action) ([]Row, error) {
+	recs, err := r.data.ListDataByAction(ctx, gendata.ListDataByActionParams{
+		SessionID: sessionID,
+		Action:    string(action),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ListDataByAction: %w", err)
+	}
+	rows := make([]Row, len(recs))
+	for i, rec := range recs {
+		rows[i] = dataFromRecord(rec)
+	}
+	return rows, nil
+}
+
+func (r *Repository) UpdateDataAction(ctx context.Context, id string, action Action) (Row, error) {
+	rec, err := r.data.UpdateDataAction(ctx, gendata.UpdateDataActionParams{
+		Action: string(action),
+		ID:     id,
+	})
+	if err != nil {
+		return Row{}, fmt.Errorf("UpdateDataAction: %w", err)
+	}
+	return dataFromRecord(rec), nil
+}
+
+func (r *Repository) ListMappings(ctx context.Context, sessionID string) ([]Mapping, error) {
+	recs, err := r.mappings.ListMappings(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("ListMappings: %w", err)
+	}
+	ms := make([]Mapping, len(recs))
+	for i, rec := range recs {
+		ms[i] = mappingFromRecord(rec)
+	}
+	return ms, nil
+}
+
+func sessionFromRecord(r gensessions.ImportSession) Session {
+	return Session{
+		ID:           r.ID,
+		OrgID:        r.OrgID,
+		Format:       Format(r.Format),
+		Status:       Status(r.Status),
+		TargetEntity: r.TargetEntity,
+		CreatedAt:    r.CreatedAt,
+	}
+}
+
+func dataFromRecord(r gendata.ImportDatum) Row {
+	return Row{
+		ID:           r.ID,
+		SessionID:    r.SessionID,
+		RowNumber:    r.RowNumber,
+		Data:         r.Data,
+		Status:       RowStatus(r.Status),
+		ErrorMessage: r.ErrorMessage,
+		Action:       Action(r.Action),
+	}
+}
+
+func mappingFromRecord(r genmappings.ImportMapping) Mapping {
+	return Mapping{
+		ID:          r.ID,
+		SessionID:   r.SessionID,
+		SourceCol:   r.SourceCol,
+		TargetField: r.TargetField,
+	}
+}

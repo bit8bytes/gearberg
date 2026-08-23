@@ -12,7 +12,7 @@ erDiagram
     text id PK
     text org_id FK
     text format "csv | json | excel"
-    text status "uploading | mapping | staged | committed"
+    text status "pending | mapped | staged | committed"
     text target_entity "equipment"
     integer created_at "NOT NULL DEFAULT unixepoch()"
   }
