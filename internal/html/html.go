@@ -19,12 +19,14 @@ package html
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
 
+	"github.com/bit8bytes/gearberg/internal/flash"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -49,7 +51,24 @@ type TemplateData struct {
 	// OrgID is the active organisation from the URL path, populated on org-scoped pages.
 	// Empty on user-level pages (e.g. /settings/account). Used by the header partial.
 	OrgID string
+	// Flash is a one-shot notification popped from the session and rendered as a toast.
+	Flash *flash.Flash
 }
+
+// Option configures an HTML renderer.
+type Option func(*HTML)
+
+// WithFlashManager wires a flash.Manager so that TemplateData automatically
+// pops any pending notification into the Flash field.
+func WithFlashManager(fm flash.Manager) Option {
+	return func(h *HTML) { h.flash = fm }
+}
+
+// noopFlash is used when no flash manager is configured.
+type noopFlash struct{}
+
+func (noopFlash) Put(_ context.Context, _ string, _ flash.Type) {}
+func (noopFlash) Pop(_ context.Context) *flash.Flash            { return nil }
 
 // HTML renders HTML responses and adapts httperr.HandlerFunc into standard http.HandlerFunc.
 type HTML struct {
@@ -57,11 +76,16 @@ type HTML struct {
 	base     *template.Template
 	cache    map[string]*template.Template
 	revision string
+	flash    flash.Manager
 }
 
 // New returns a Renderer backed by the given logger, template cache, and revision string.
-func New(logger *slog.Logger, base *template.Template, cache map[string]*template.Template, revision string) *HTML {
-	return &HTML{logger: logger, base: base, cache: cache, revision: revision}
+func New(logger *slog.Logger, base *template.Template, cache map[string]*template.Template, revision string, opts ...Option) *HTML {
+	h := &HTML{logger: logger, base: base, cache: cache, revision: revision, flash: noopFlash{}}
+	for _, o := range opts {
+		o(h)
+	}
+	return h
 }
 
 // Handle adapts an httperr.HandlerFunc into a standard http.HandlerFunc. When the handler
@@ -132,5 +156,6 @@ func (rnd *HTML) TemplateData(r *http.Request) *TemplateData {
 		Nonce:    nonce.From(r.Context()),
 		Revision: rnd.revision,
 		OrgID:    r.PathValue("org_id"),
+		Flash:    rnd.flash.Pop(r.Context()),
 	}
 }

@@ -98,6 +98,9 @@ var (
 	// EquipmentPrint is the bare print view of the equipment list.
 	EquipmentPrint = newPage("pages/equipment/print.tmpl", layouts.Print)
 
+	// ImportReview is the staged-row review and confirm page.
+	ImportReview = newPage("pages/import/review.tmpl", layouts.Center)
+
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
 	// Privacy is the privacy policy page.

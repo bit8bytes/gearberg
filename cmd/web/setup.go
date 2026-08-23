@@ -38,8 +38,8 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	invimports "github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/federated"
+	imports "github.com/bit8bytes/gearberg/internal/import"
 	"github.com/bit8bytes/gearberg/internal/locations"
 	"github.com/bit8bytes/gearberg/internal/manufacturers"
 	"github.com/bit8bytes/gearberg/internal/orgs"
@@ -122,6 +122,7 @@ func setupSCS(db *sql.DB) (*scs.SessionManager, error) {
 // sessionManager abstracts the SCS session store for testing and dependency inversion.
 type sessionManager interface {
 	GetString(ctx context.Context, key string) string
+	PopString(ctx context.Context, key string) string
 	Put(ctx context.Context, key string, val any)
 	Destroy(ctx context.Context) error
 	LoadAndSave(next http.Handler) http.Handler
@@ -138,6 +139,10 @@ type scsSession struct {
 
 func (s scsSession) GetString(ctx context.Context, key string) string {
 	return s.mgr.GetString(ctx, key)
+}
+
+func (s scsSession) PopString(ctx context.Context, key string) string {
+	return s.mgr.PopString(ctx, key)
 }
 
 func (s scsSession) Put(ctx context.Context, key string, val any) {
@@ -233,7 +238,7 @@ type services struct {
 	manufacturers       *manufacturers.Service
 	locations           *locations.Service
 	equipment           *equipment.Service
-	equipmentImports    *invimports.Service
+	equipmentImports    *imports.Service
 	storageManager      *storage.Manager
 }
 
@@ -268,8 +273,10 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	inventoryRepo := equipment.NewRepository(db)
 	inventorySvc := equipment.NewService(inventoryRepo, db)
 
-	equipmentImportsRepo := invimports.NewRepository(db)
-	equipmentImportsSvc := invimports.NewService(equipmentImportsRepo, db, inventoryRepo, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
+	equipmentImportPipeline := equipment.NewImportPipeline(inventorySvc, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
+
+	importsRepo := imports.NewRepository(db)
+	equipmentImportsSvc := imports.NewService(db, importsRepo, equipmentImportPipeline, equipmentImportPipeline, "equipment")
 
 	store, err := storage.Open("local", opts.StorageDSN, logger)
 	if err != nil {

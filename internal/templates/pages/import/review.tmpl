@@ -1,0 +1,93 @@
+{{ define "title" }}Review Import{{ end }}
+
+{{ define "page" }}
+<div class="max-w-6xl mx-auto m-6 w-full">
+
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <span class="text-xs font-semibold tracking-widest text-primary uppercase">Equipment</span>
+          <p class="text-3xl font-bold leading-tight mt-1">Review Import</p>
+        </div>
+        <div class="flex items-center gap-3 pt-1">
+          <span class="badge badge-success badge-outline">{{ .Data.CountReady }} ready</span>
+          {{ if gt .Data.CountPending 0 }}<span class="badge badge-warning badge-outline">{{ .Data.CountPending }} pending</span>{{ end }}
+          {{ if gt .Data.CountError 0 }}<span class="badge badge-error badge-outline">{{ .Data.CountError }} error</span>{{ end }}
+        </div>
+      </div>
+      <ul class="steps w-full text-xs">
+        <li class="step step-primary">Upload</li>
+        <li class="step step-primary">Validate</li>
+        <li class="step step-primary">Review</li>
+        <li class="step">Confirm</li>
+      </ul>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th class="text-xs w-10">#</th>
+            <th class="text-xs">Name</th>
+            <th class="text-xs">Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Data.Rows }}
+          <tr class="{{ if eq .Status "error" }}opacity-40{{ end }}">
+            <td class="text-base-content/40 text-xs tabular-nums">{{ .RowNumber }}</td>
+            <td class="font-medium">{{ .Name }}</td>
+            <td>
+              {{ if eq .Status "error" }}
+                <span class="badge badge-error badge-sm badge-outline">{{ .ErrorMessage }}</span>
+              {{ else if and (eq .Status "needs_review") (ne .Action "skip") }}
+                <span class="badge badge-warning badge-sm badge-outline">Needs review</span>
+              {{ else if eq .Action "skip" }}
+                <span class="badge badge-ghost badge-sm">Skipped</span>
+              {{ else }}
+                <span class="badge badge-success badge-sm badge-outline">Ready</span>
+              {{ end }}
+            </td>
+            <td class="text-right">
+              {{ if ne .Status "error" }}
+                <form method="POST" action="/orgs/{{ $.Data.OrgID }}/import/{{ $.Data.SessionID }}/review">
+                  <input type="hidden" name="row_id" value="{{ .ID }}" />
+                  {{ if eq .Action "skip" }}
+                    <input type="hidden" name="action" value="create" />
+                    <button class="btn btn-xs btn-ghost">Undo</button>
+                  {{ else }}
+                    <input type="hidden" name="action" value="skip" />
+                    <button class="btn btn-xs btn-ghost text-error">Skip</button>
+                  {{ end }}
+                </form>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-6 py-4 border-t border-base-300 flex items-center justify-between gap-4">
+      {{ if gt .Data.CountReady 0 }}
+        <form method="POST" action="/orgs/{{ .Data.OrgID }}/import/{{ .Data.SessionID }}/confirm">
+          <button type="submit" class="btn btn-primary"
+            {{ if gt .Data.CountPending 0 }}disabled title="Resolve all pending rows first"{{ end }}>
+            Confirm Import
+          </button>
+        </form>
+      {{ else }}
+        <p class="text-sm text-base-content/40">Nothing to import — all rows have errors.</p>
+      {{ end }}
+      <form method="POST" action="/orgs/{{ .Data.OrgID }}/import/{{ .Data.SessionID }}/delete"
+        onsubmit="return confirm('Discard this import session?')">
+        <button type="submit" class="btn btn-ghost btn-sm text-error">Discard</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{{ end }}

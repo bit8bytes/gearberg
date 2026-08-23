@@ -2,4 +2,11 @@
   {{ template "header" . }}
   <main class="flex flex-col min-h-[calc(100vh-4rem)] w-full">{{template "page" .}}</main>
   {{ template "footer" . }}
+  {{ with .Flash }}
+  <div id="flash-toast" class="toast toast-end toast-bottom z-50" data-dismiss-after="4">
+    <div role="alert" class="alert alert-{{ .Type }}">
+      <span>{{ .Message }}</span>
+    </div>
+  </div>
+  {{ end }}
 {{end}}

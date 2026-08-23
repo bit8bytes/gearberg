@@ -1,0 +1,60 @@
+{{ define "title" }}Import{{ end }}
+
+{{ define "page" }}
+<div class="max-w-3xl mx-auto m-6 w-full">
+
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase hover:underline">&larr; Equipment</a>
+      <p class="text-3xl font-bold leading-tight mt-1">Import</p>
+    </div>
+
+    <div class="p-6">
+      <form id="import-form" method="POST" action="/orgs/{{ .Data.OrgID }}/import" enctype="multipart/form-data">
+        <label
+          id="drop-zone"
+          for="file-input"
+          class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-base-300 bg-base-200/40 hover:bg-base-200/80 hover:border-primary/40 transition-colors cursor-pointer min-h-52 px-8 text-center"
+        >
+          <span class="size-10 text-base-content/30">{{ template "import-icon" . }}</span>
+          <div>
+            <p class="font-medium text-base-content">Drop your CSV here</p>
+            <p class="text-sm text-base-content/50 mt-0.5">or click to browse</p>
+          </div>
+          <p class="text-xs text-base-content/40">
+            Use the <a href="/orgs/{{ .Data.OrgID }}/import/template" class="link link-primary" onclick="event.stopPropagation()">template CSV</a> to ensure columns match.
+          </p>
+        </label>
+        <input id="file-input" type="file" name="file" accept=".csv,text/csv" class="sr-only" required />
+
+        {{ with .Data.Error }}
+          <p class="text-error text-sm mt-3">{{ . }}</p>
+        {{ end }}
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script nonce="{{ .Nonce }}">
+  const input = document.getElementById('file-input');
+  const zone  = document.getElementById('drop-zone');
+  const form  = document.getElementById('import-form');
+
+  input.addEventListener('change', () => { if (input.files.length) form.submit(); });
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('border-primary', 'bg-base-200'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('border-primary', 'bg-base-200'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('border-primary', 'bg-base-200');
+    const files = e.dataTransfer.files;
+    if (!files.length) return;
+    const dt = new DataTransfer();
+    dt.items.add(files[0]);
+    input.files = dt.files;
+    form.submit();
+  });
+</script>
+{{ end }}

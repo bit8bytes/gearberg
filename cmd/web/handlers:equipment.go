@@ -71,16 +71,17 @@ func (app *application) getEquipmentPartOfFragment(w http.ResponseWriter, r *htt
 }
 
 type equipmentData struct {
-	OrgID       string
-	Categories  []categories.Category
-	Inventories []equipment.Equipment
-	Filtered    bool
-	Query       string
-	Category    string
-	Sort        string
-	PageBaseURL template.URL
-	PrintURL    template.URL
-	Pagination  pagination.Metadata
+	OrgID           string
+	Categories      []categories.Category
+	Inventories     []equipment.Equipment
+	Filtered        bool
+	Query           string
+	Category        string
+	Sort            string
+	PageBaseURL     template.URL
+	PrintURL        template.URL
+	Pagination      pagination.Metadata
+	ImportSessionID string
 }
 
 func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -117,18 +118,24 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		return httperr.InternalServerError(err)
 	}
 
+	var importSessionID string
+	if session, err := app.services.equipmentImports.GetStagedSession(ctx, id); err == nil {
+		importSessionID = session.ID
+	}
+
 	tmpl := app.html.TemplateData(r)
 	tmpl.Data = equipmentData{
-		OrgID:       id,
-		Categories:  cats,
-		Inventories: items,
-		Filtered:    query != "" || category != "",
-		Query:       query,
-		Category:    category,
-		Sort:        sort,
-		PageBaseURL: template.URL(equipmentPageURL(id, query, category, sort)),  // #nosec G203
-		PrintURL:    template.URL(equipmentPrintURL(id, query, category, sort)), // #nosec G203
-		Pagination:  meta,
+		OrgID:           id,
+		Categories:      cats,
+		Inventories:     items,
+		Filtered:        query != "" || category != "",
+		Query:           query,
+		Category:        category,
+		Sort:            sort,
+		PageBaseURL:     template.URL(equipmentPageURL(id, query, category, sort)),  // #nosec G203
+		PrintURL:        template.URL(equipmentPrintURL(id, query, category, sort)), // #nosec G203
+		Pagination:      meta,
+		ImportSessionID: importSessionID,
 	}
 
 	// HTMX live-search: return only the results fragment so the page URL

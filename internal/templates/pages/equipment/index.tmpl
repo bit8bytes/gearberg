@@ -22,12 +22,21 @@
             </div>
             <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
               <li>
-                <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="flex flex-col items-start py-2">
+                {{ if .Data.ImportSessionID }}
+                <a href="/orgs/{{ .Data.OrgID }}/import/{{ .Data.ImportSessionID }}" class="w-full flex flex-col items-start py-2">
+                  <span class="flex items-center gap-2 font-medium">
+                    <span class="size-6">{{ template "import-icon" . }}</span>
+                    Resume Import
+                  </span>
+                </a>
+                {{ else }}
+                <button data-modal-target="import-dialog" class="w-full flex flex-col items-start py-2">
                   <span class="flex items-center gap-2 font-medium">
                     <span class="size-6">{{ template "import-icon" . }}</span>
                     Import
                   </span>
-                </a>
+                </button>
+                {{ end }}
               </li>
               <li>
                 <button data-modal-target="export-dialog" class="w-full flex flex-col items-start py-2">
@@ -102,19 +111,24 @@
 
 {{/* Export dialog */}}
 <dialog id="export-dialog" class="modal">
-  <div class="modal-box">
-    <h3 class="text-xl font-bold">Export Equipment CSV</h3>
-    <div role="alert" class="alert text-sm mt-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <div>
-        <p class="font-medium">Not included in the export</p>
-        <ul class="mt-1 list-disc list-inside space-y-0.5 text-base-content/70">
-          <li>Images</li>
-          <li>The Content tab of serialized equipment</li>
-        </ul>
+  <div class="modal-box p-0 overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <h3 class="text-xl font-bold">Export Equipment CSV</h3>
+      <p class="text-sm text-base-content/50 mt-0.5">Download all equipment as a CSV file.</p>
+    </div>
+    <div class="p-6">
+      <div role="alert" class="alert text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div>
+          <p class="font-medium">Not included in the export</p>
+          <ul class="mt-1 list-disc list-inside space-y-0.5 text-base-content/70">
+            <li>Images</li>
+            <li>The Content tab of serialized equipment</li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="modal-action">
+    <div class="modal-action px-6 pb-6 mt-0">
       <form method="dialog">
         <button class="btn btn-ghost">Cancel</button>
       </form>
@@ -128,6 +142,66 @@
 
 {{ template "photo-viewer-dialog" . }}
 
+{{/* Import dialog */}}
+<dialog id="import-dialog" class="modal">
+  <div class="modal-box p-0 overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <h3 class="text-xl font-bold">Import Equipment</h3>
+      <p class="text-sm text-base-content/50 mt-0.5">Upload a CSV file to import equipment in bulk.</p>
+    </div>
+    <div class="p-6">
+      <form id="import-form" method="POST" action="/orgs/{{ .Data.OrgID }}/import" enctype="multipart/form-data">
+        <label
+          id="import-drop-zone"
+          for="import-file-input"
+          class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-base-300 bg-base-200/40 hover:bg-base-200/80 hover:border-primary/40 transition-colors cursor-pointer min-h-40 px-8 text-center"
+        >
+          <span class="size-8">{{ template "import-icon" . }}</span>
+          <div>
+            <p class="font-medium text-base-content">Drop your CSV here</p>
+            <p class="text-sm text-base-content/50 mt-0.5">or click to browse</p>
+          </div>
+        </label>
+        <input id="import-file-input" type="file" name="file" accept=".csv,text/csv" class="sr-only" required />
+        <p class="text-xs text-base-content/40 mt-3 text-center">
+          Use the <a href="/orgs/{{ .Data.OrgID }}/import/template" class="link link-primary">template CSV</a> to ensure columns match.
+        </p>
+      </form>
+    </div>
+    <div class="modal-action px-6 pb-6 mt-0">
+      <form method="dialog">
+        <button class="btn btn-ghost">Cancel</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+
+<script nonce="{{ .Nonce }}">
+  (function () {
+    const input = document.getElementById('import-file-input');
+    const zone  = document.getElementById('import-drop-zone');
+    const form  = document.getElementById('import-form');
+
+    input.addEventListener('change', () => { if (input.files.length) form.submit(); });
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('border-primary', 'bg-base-200'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('border-primary', 'bg-base-200'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('border-primary', 'bg-base-200');
+      const files = e.dataTransfer.files;
+      if (!files.length) return;
+      const dt = new DataTransfer();
+      dt.items.add(files[0]);
+      input.files = dt.files;
+      form.submit();
+    });
+  })();
+</script>
+
 {{/* FAB: Mobile only */}}
 <div class="fab fab-flower sm:hidden">
   <div tabindex="0" role="button" class="btn btn-circle btn-lg">
@@ -136,9 +210,15 @@
   <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="btn btn-circle btn-lg btn-primary">
     <span class="size-6">{{ template "add-icon" . }}</span>
   </a>
-  <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="btn btn-circle btn-lg">
+  {{ if .Data.ImportSessionID }}
+  <a href="/orgs/{{ .Data.OrgID }}/import/{{ .Data.ImportSessionID }}" class="btn btn-circle btn-lg">
     <span class="size-6">{{ template "import-icon" . }}</span>
   </a>
+  {{ else }}
+  <button data-modal-target="import-dialog" class="btn btn-circle btn-lg">
+    <span class="size-6">{{ template "import-icon" . }}</span>
+  </button>
+  {{ end }}
   <button data-modal-target="export-dialog" class="btn btn-circle btn-lg">
     <span class="size-6">{{ template "export-icon" . }}</span>
   </button>

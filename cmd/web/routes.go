@@ -80,14 +80,19 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs/{org_id}", app.withLogin(app.withPermission(app.html.Handle(app.getSettingsOrg))))
 	mux.Handle("POST /orgs/{org_id}", app.withLogin(app.withPermission(app.html.Handle(app.postSettingsOrg))))
 
+	// Import
+	mux.Handle("GET /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.getImport))))
+	mux.Handle("GET /orgs/{org_id}/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getImportTemplate))))
+	mux.Handle("POST /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.postImport))))
+	mux.Handle("GET /orgs/{org_id}/import/{id}", app.withLogin(app.withPermission(app.html.Handle(app.getImportReview))))
+	mux.Handle("POST /orgs/{org_id}/import/{id}/review", app.withLogin(app.withPermission(app.html.Handle(app.postImportReview))))
+	mux.Handle("POST /orgs/{org_id}/import/{id}/confirm", app.withLogin(app.withPermission(app.html.Handle(app.postImportConfirm))))
+	mux.Handle("POST /orgs/{org_id}/import/{id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postImportDelete))))
+
 	// Equipment
 	mux.Handle("GET /orgs/{org_id}/equipment", app.withLogin(app.withPermission(app.html.Handle(app.getEquipment))))
+	mux.Handle("GET /orgs/{org_id}/equipment/export", app.withLogin(app.withPermission(app.html.Handle(app.getExport))))
 	mux.Handle("GET /orgs/{org_id}/equipment/print", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentPrint))))
-	mux.Handle("GET /orgs/{org_id}/equipment/export", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentExport))))
-	mux.Handle("GET /orgs/{org_id}/equipment/import", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentImport))))
-	mux.Handle("GET /orgs/{org_id}/equipment/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentImportTemplate))))
-	mux.Handle("POST /orgs/{org_id}/equipment/import", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentImport))))
-	mux.Handle("POST /orgs/{org_id}/equipment/import/confirm", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentImportConfirm))))
 	mux.Handle("GET /orgs/{org_id}/equipment/new", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentNew))))
 	mux.Handle("POST /orgs/{org_id}/equipment/new", app.withLogin(app.withPermission(app.withCheckQuota(app.html.Handle(app.postEquipmentNew)))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentItem))))

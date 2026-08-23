@@ -554,6 +554,64 @@ func (r *Repository) DeleteUnit(ctx context.Context, id string) error {
 	return nil
 }
 
+// Export returns all non-archived equipment for orgID as a flat list of ExportRows,
+// one row per bulk item and one row per serialized unit.
+func (r *Repository) Export(ctx context.Context, orgID string) ([]ExportRow, error) {
+	rows, err := r.equipment.Export(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("Export: %w", err)
+	}
+	result := make([]ExportRow, 0, len(rows))
+	for _, row := range rows {
+		base := ExportRow{
+			Name:          row.Name,
+			EquipmentType: equipmentTypeLabel(row.EquipmentType),
+			TrackingType:  trackingLabel(row.TrackingType),
+			Usage:         usageLabel(row.UsageType),
+			Category:      row.Category,
+			Manufacturer:  row.Manufacturer,
+			Location:      row.Location,
+			RentalPrice:   row.RentalPrice.String(),
+			ResalePrice:   row.ResalePrice.String(),
+			Notes:         database.String(row.Notes),
+			WeightKg:      row.WeightG.String(),
+			WidthCm:       row.WidthMm.String(),
+			HeightCm:      row.HeightMm.String(),
+			DepthCm:       row.DepthMm.String(),
+			VoltageV:      row.VoltageMv.String(),
+			CurrentA:      row.CurrentMa.String(),
+			PowerW:        row.PowerMw.String(),
+			WireGauge:     row.WireGaugeMm2X100.String(),
+		}
+		switch tracking.Parse(row.TrackingType) {
+		case tracking.Bulk:
+			bulk, err := r.bulkItems.GetByEquipmentID(ctx, row.ID)
+			if err != nil {
+				return nil, fmt.Errorf("Export: bulk items for %s: %w", row.ID, err)
+			}
+			base.Quantity = formatQuantity(bulk.Quantity)
+			result = append(result, base)
+		case tracking.Serialized:
+			serialized, err := r.serializedItems.ListByEquipmentID(ctx, row.ID)
+			if err != nil {
+				return nil, fmt.Errorf("Export: serialized items for %s: %w", row.ID, err)
+			}
+			for _, u := range serialized {
+				r := base
+				r.UnitSerialNumber = u.SerialNumber
+				r.UnitManufacturerSerial = database.String(u.ManufacturerSerial)
+				r.UnitPurchasePrice = database.NullAs[units.Cents](u.PurchasePrice).String()
+				r.UnitPurchasedAt = formatUnixDate(database.Int64Ptr(u.PurchasedAt))
+				r.NextInspectionAt = formatUnixDate(database.Int64Ptr(u.NextInspectionAt))
+				r.UnitActive = formatActive(u.IsActive)
+				r.UnitRemark = database.String(u.Remark)
+				result = append(result, r)
+			}
+		}
+	}
+	return result, nil
+}
+
 // ListContent returns all content items for the equipment definition with equipmentID.
 func (r *Repository) ListContent(ctx context.Context, equipmentID string) ([]ContentItem, error) {
 	rows, err := r.content.ListByEquipmentID(ctx, equipmentID)
