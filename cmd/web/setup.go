@@ -38,7 +38,6 @@ import (
 	"github.com/bit8bytes/gearberg/internal/database"
 	"github.com/bit8bytes/gearberg/internal/database/migrations"
 	"github.com/bit8bytes/gearberg/internal/equipment"
-	invimports "github.com/bit8bytes/gearberg/internal/equipmentimports"
 	"github.com/bit8bytes/gearberg/internal/federated"
 	"github.com/bit8bytes/gearberg/internal/locations"
 	"github.com/bit8bytes/gearberg/internal/manufacturers"
@@ -233,7 +232,6 @@ type services struct {
 	manufacturers       *manufacturers.Service
 	locations           *locations.Service
 	equipment           *equipment.Service
-	equipmentImports    *invimports.Service
 	storageManager      *storage.Manager
 }
 
@@ -268,9 +266,6 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 	inventoryRepo := equipment.NewRepository(db)
 	inventorySvc := equipment.NewService(inventoryRepo, db)
 
-	equipmentImportsRepo := invimports.NewRepository(db)
-	equipmentImportsSvc := invimports.NewService(equipmentImportsRepo, db, inventoryRepo, equipmentcategoriesSvc, manufacturersSvc, locationsSvc)
-
 	store, err := storage.Open("local", opts.StorageDSN, logger)
 	if err != nil {
 		return nil, fmt.Errorf("setupServices: open storage: %w", err)
@@ -290,7 +285,6 @@ func setupServices(db *sql.DB, opts *options, logger *slog.Logger, m mailer) (*s
 		manufacturers:       manufacturersSvc,
 		locations:           locationsSvc,
 		equipment:           inventorySvc,
-		equipmentImports:    equipmentImportsSvc,
 		storageManager:      storageMgr,
 	}, nil
 }

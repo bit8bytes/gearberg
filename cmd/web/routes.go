@@ -83,11 +83,6 @@ func (app *application) routes() (http.Handler, error) {
 	// Equipment
 	mux.Handle("GET /orgs/{org_id}/equipment", app.withLogin(app.withPermission(app.html.Handle(app.getEquipment))))
 	mux.Handle("GET /orgs/{org_id}/equipment/print", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentPrint))))
-	mux.Handle("GET /orgs/{org_id}/equipment/export", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentExport))))
-	mux.Handle("GET /orgs/{org_id}/equipment/import", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentImport))))
-	mux.Handle("GET /orgs/{org_id}/equipment/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentImportTemplate))))
-	mux.Handle("POST /orgs/{org_id}/equipment/import", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentImport))))
-	mux.Handle("POST /orgs/{org_id}/equipment/import/confirm", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentImportConfirm))))
 	mux.Handle("GET /orgs/{org_id}/equipment/new", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentNew))))
 	mux.Handle("POST /orgs/{org_id}/equipment/new", app.withLogin(app.withPermission(app.withCheckQuota(app.html.Handle(app.postEquipmentNew)))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentItem))))

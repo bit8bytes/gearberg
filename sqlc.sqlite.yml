@@ -166,16 +166,6 @@ sql:
         omit_unused_structs: true
 
   - engine: "sqlite"
-    queries: "internal/database/queries/sqlite/equipment_imports.sql"
-    schema: "internal/database/migrations/sqlite/"
-    gen:
-      go:
-        package: "equipmentimports"
-        out: "internal/database/queries/gen/equipmentimports"
-        emit_interface: true
-        omit_unused_structs: true
-
-  - engine: "sqlite"
     queries: "internal/database/queries/sqlite/warehouse_locations.sql"
     schema: "internal/database/migrations/sqlite/"
     gen:
