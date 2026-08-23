@@ -71,13 +71,13 @@ func newTestServer(h http.Handler) *testServer {
 	return &testServer{ts}
 }
 
-func (ts *testServer) signout(t *testing.T) {
+func (ts *testServer) signout(t *testing.T) { //nolint:unused
 	if code, _, _ := ts.postForm(t, "/signout", url.Values{}); code != http.StatusSeeOther {
 		t.Fatalf("signout failed: expected redirect, got status %d", code)
 	}
 }
 
-func (ts *testServer) signin(t *testing.T, email, password string) {
+func (ts *testServer) signin(t *testing.T, email, password string) { //nolint:unused
 	form := url.Values{}
 	form.Add("email", email)
 	form.Add("password", password)
@@ -86,7 +86,7 @@ func (ts *testServer) signin(t *testing.T, email, password string) {
 	}
 }
 
-func (ts *testServer) get(t *testing.T, urlPath string) (code int, header http.Header, body []byte) {
+func (ts *testServer) get(t *testing.T, urlPath string) (code int, header http.Header, body []byte) { //nolint:unused
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ts.URL+urlPath, http.NoBody)
 	if err != nil {
 		t.Fatal(err)
@@ -106,7 +106,7 @@ func (ts *testServer) get(t *testing.T, urlPath string) (code int, header http.H
 	return rs.StatusCode, rs.Header, body
 }
 
-func (ts *testServer) postForm(tb testing.TB, urlPath string, form url.Values) (code int, header http.Header, body []byte) {
+func (ts *testServer) postForm(tb testing.TB, urlPath string, form url.Values) (code int, header http.Header, body []byte) { //nolint:unused
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, ts.URL+urlPath, strings.NewReader(form.Encode()))
 	if err != nil {
 		tb.Fatal(err)
@@ -135,7 +135,7 @@ type testUser struct {
 	ts       *testServer
 }
 
-func (u *testUser) signin(t *testing.T) {
+func (u *testUser) signin(t *testing.T) { //nolint:unused
 	t.Helper()
 	// Always clear any active session first. The /signin route is wrapped with
 	// the guest middleware, which silently redirects authenticated users to /home
@@ -145,13 +145,13 @@ func (u *testUser) signin(t *testing.T) {
 	u.ts.signin(t, u.email, u.password)
 }
 
-func (u *testUser) signout(t *testing.T) {
+func (u *testUser) signout(t *testing.T) { //nolint:unused
 	t.Helper()
 	u.ts.signout(t)
 }
 
 // postFile uploads a single file as a multipart/form-data POST request.
-func (ts *testServer) postFile(t *testing.T, urlPath, fieldName, fileName string, content []byte) (code int, header http.Header, body []byte) {
+func (ts *testServer) postFile(t *testing.T, urlPath, fieldName, fileName string, content []byte) (code int, header http.Header, body []byte) { //nolint:unused
 	t.Helper()
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)

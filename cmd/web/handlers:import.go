@@ -49,7 +49,7 @@ type importReviewData struct {
 }
 
 // getImportTemplate serves the template CSV for download.
-func (app *application) getImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
+func (app *application) getImportTemplate(w http.ResponseWriter, _ *http.Request) *httperr.Error {
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
 	w.WriteHeader(http.StatusOK)
@@ -85,7 +85,7 @@ func (app *application) postImport(w http.ResponseWriter, r *http.Request) *http
 		return httperr.BadRequest(fmt.Errorf("an import session is already in progress"))
 	}
 
-	if err := r.ParseMultipartForm(importMaxBytes); err != nil {
+	if err := r.ParseMultipartForm(importMaxBytes); err != nil { //nolint:gosec // bound is the importMaxBytes constant
 		return httperr.BadRequest(fmt.Errorf("file too large or malformed: %w", err))
 	}
 
@@ -93,7 +93,7 @@ func (app *application) postImport(w http.ResponseWriter, r *http.Request) *http
 	if err != nil {
 		return httperr.BadRequest(fmt.Errorf("missing file: %w", err))
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	session, err := app.services.equipmentImports.StartSession(ctx, orgID, imports.FormatCSV, file)
 	if err != nil {

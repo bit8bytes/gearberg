@@ -194,7 +194,7 @@ func persistRows(ctx context.Context, repo *Repository, rows []Row) error {
 func (s *Service) GetStagedSession(ctx context.Context, orgID string) (Session, error) {
 	session, err := s.repo.GetStagedSession(ctx, orgID)
 	if err != nil {
-		return Session{}, fmt.Errorf("Get: %w", err)
+		return Session{}, fmt.Errorf("get staged session: %w", err)
 	}
 	return session, nil
 }

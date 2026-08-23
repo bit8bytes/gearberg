@@ -44,6 +44,7 @@ func NewRepository(db *sql.DB) *Repository {
 	}
 }
 
+// InsertSessionTx inserts a new import session within an existing transaction.
 func (r *Repository) InsertSessionTx(ctx context.Context, tx *sql.Tx, s Session) (Session, error) {
 	row, err := r.sessions.WithTx(tx).InsertSession(ctx, gensessions.InsertSessionParams{
 		ID:           s.ID,
@@ -58,6 +59,7 @@ func (r *Repository) InsertSessionTx(ctx context.Context, tx *sql.Tx, s Session)
 	return sessionFromRecord(row), nil
 }
 
+// GetSession returns a session by ID, or ErrNotFound if none exists.
 func (r *Repository) GetSession(ctx context.Context, id string) (Session, error) {
 	row, err := r.sessions.GetSession(ctx, id)
 	if err != nil {
@@ -69,6 +71,7 @@ func (r *Repository) GetSession(ctx context.Context, id string) (Session, error)
 	return sessionFromRecord(row), nil
 }
 
+// GetStagedSession returns the active ready session for an org, or ErrNotFound if none exists.
 func (r *Repository) GetStagedSession(ctx context.Context, orgID string) (Session, error) {
 	row, err := r.sessions.GetStagedSession(ctx, gensessions.GetStagedSessionParams{
 		OrgID:  orgID,
@@ -83,6 +86,7 @@ func (r *Repository) GetStagedSession(ctx context.Context, orgID string) (Sessio
 	return sessionFromRecord(row), nil
 }
 
+// DeleteSession deletes a session and cascades to its rows and mappings.
 func (r *Repository) DeleteSession(ctx context.Context, id string) error {
 	if err := r.sessions.DeleteSession(ctx, id); err != nil {
 		return fmt.Errorf("DeleteSession: %w", err)
@@ -90,6 +94,7 @@ func (r *Repository) DeleteSession(ctx context.Context, id string) error {
 	return nil
 }
 
+// UpdateSessionStatus transitions a session to the given status and returns the updated record.
 func (r *Repository) UpdateSessionStatus(ctx context.Context, id string, status Status) (Session, error) {
 	row, err := r.sessions.UpdateSessionStatus(ctx, gensessions.UpdateSessionStatusParams{
 		Status: string(status),
@@ -101,6 +106,7 @@ func (r *Repository) UpdateSessionStatus(ctx context.Context, id string, status 
 	return sessionFromRecord(row), nil
 }
 
+// InsertDataTx inserts a staged import row within an existing transaction.
 func (r *Repository) InsertDataTx(ctx context.Context, tx *sql.Tx, row Row) (Row, error) {
 	rec, err := r.data.WithTx(tx).InsertData(ctx, gendata.InsertDataParams{
 		ID:        row.ID,
@@ -114,6 +120,7 @@ func (r *Repository) InsertDataTx(ctx context.Context, tx *sql.Tx, row Row) (Row
 	return dataFromRecord(rec), nil
 }
 
+// ListData returns all staged rows for a session.
 func (r *Repository) ListData(ctx context.Context, sessionID string) ([]Row, error) {
 	recs, err := r.data.ListData(ctx, sessionID)
 	if err != nil {
@@ -126,6 +133,7 @@ func (r *Repository) ListData(ctx context.Context, sessionID string) ([]Row, err
 	return rows, nil
 }
 
+// ListDataByAction returns staged rows filtered by the given action.
 func (r *Repository) ListDataByAction(ctx context.Context, sessionID string, action Action) ([]Row, error) {
 	recs, err := r.data.ListDataByAction(ctx, gendata.ListDataByActionParams{
 		SessionID: sessionID,
@@ -141,6 +149,7 @@ func (r *Repository) ListDataByAction(ctx context.Context, sessionID string, act
 	return rows, nil
 }
 
+// UpdateDataStatus sets the validation status and error message for a row.
 func (r *Repository) UpdateDataStatus(ctx context.Context, id string, status RowStatus, errMsg string) error {
 	_, err := r.data.UpdateDataStatus(ctx, gendata.UpdateDataStatusParams{
 		Status:       string(status),
@@ -153,6 +162,7 @@ func (r *Repository) UpdateDataStatus(ctx context.Context, id string, status Row
 	return nil
 }
 
+// UpdateDataAction sets the user-chosen action for a row and returns the updated record.
 func (r *Repository) UpdateDataAction(ctx context.Context, id string, action Action) (Row, error) {
 	rec, err := r.data.UpdateDataAction(ctx, gendata.UpdateDataActionParams{
 		Action: string(action),
@@ -164,6 +174,7 @@ func (r *Repository) UpdateDataAction(ctx context.Context, id string, action Act
 	return dataFromRecord(rec), nil
 }
 
+// InsertMappingTx inserts a column mapping within an existing transaction.
 func (r *Repository) InsertMappingTx(ctx context.Context, tx *sql.Tx, m Mapping) (Mapping, error) {
 	rec, err := r.mappings.WithTx(tx).InsertMapping(ctx, genmappings.InsertMappingParams{
 		ID:          m.ID,
@@ -177,6 +188,7 @@ func (r *Repository) InsertMappingTx(ctx context.Context, tx *sql.Tx, m Mapping)
 	return mappingFromRecord(rec), nil
 }
 
+// ListMappings returns all column mappings for a session.
 func (r *Repository) ListMappings(ctx context.Context, sessionID string) ([]Mapping, error) {
 	recs, err := r.mappings.ListMappings(ctx, sessionID)
 	if err != nil {

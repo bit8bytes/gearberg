@@ -29,25 +29,25 @@ import (
 
 // ExportRow is one CSV row matching the import template column order exactly.
 type ExportRow struct {
-	Name         string
+	Name          string
 	EquipmentType string // Standard or Kit
-	TrackingType string // Bulk or Serialized
-	Usage        string
-	Category     string
-	Manufacturer string
-	Location     string
-	RentalPrice  string
-	ResalePrice  string
-	Notes        string
-	WeightKg     string
-	WidthCm      string
-	HeightCm     string
-	DepthCm      string
-	VoltageV     string
-	CurrentA     string
-	PowerW       string
-	WireGauge    string
-	Quantity     string
+	TrackingType  string // Bulk or Serialized
+	Usage         string
+	Category      string
+	Manufacturer  string
+	Location      string
+	RentalPrice   string
+	ResalePrice   string
+	Notes         string
+	WeightKg      string
+	WidthCm       string
+	HeightCm      string
+	DepthCm       string
+	VoltageV      string
+	CurrentA      string
+	PowerW        string
+	WireGauge     string
+	Quantity      string
 	// unit fields (serialized only)
 	UnitSerialNumber       string
 	UnitManufacturerSerial string

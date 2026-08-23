@@ -21,11 +21,13 @@ import (
 	"fmt"
 )
 
+// ErrNotFound is returned when a session or row is not found.
 var ErrNotFound = errors.New("import: not found")
 
 // Format identifies the source file format.
 type Format string
 
+// Supported import file formats.
 const (
 	FormatCSV  Format = "csv"
 	FormatJSON Format = "json"
@@ -51,6 +53,7 @@ func readerFor(f Format) (Reader, error) {
 // Each value describes the state the session is in, not the action that caused it.
 type Status string
 
+// Import session lifecycle states.
 const (
 	StatusDraft     Status = "draft"     // uploaded, awaiting column mapping
 	StatusMapped    Status = "mapped"    // mappings saved, awaiting validation
@@ -61,6 +64,7 @@ const (
 // Action is the user's decision for a single row.
 type Action string
 
+// User decisions for a single import row.
 const (
 	ActionPending Action = "pending"
 	ActionCreate  Action = "create"
@@ -70,6 +74,7 @@ const (
 // RowStatus is the system's assessment of a single row.
 type RowStatus string
 
+// System assessments for a single import row.
 const (
 	RowStatusNew   RowStatus = "new"
 	RowStatusValid RowStatus = "valid"

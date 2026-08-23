@@ -24,6 +24,8 @@ import (
 	pkgcsv "github.com/bit8bytes/gearberg/pkg/csv"
 )
 
+// TemplateCSV is the downloadable CSV template for users to fill out before importing.
+//
 //go:embed template.csv
 var TemplateCSV []byte
 
@@ -56,6 +58,7 @@ func (c *CSVReader) Read(ctx context.Context, r io.Reader) ([]RawRecord, error) 
 	return out, nil
 }
 
+// InspectHeaders returns only the header row of the CSV without reading all records.
 func (c *CSVReader) InspectHeaders(ctx context.Context, r io.Reader) ([]string, error) {
 	headers, err := c.r.InspectHeaders(ctx, r)
 	if err != nil {
