@@ -111,19 +111,24 @@
 
 {{/* Export dialog */}}
 <dialog id="export-dialog" class="modal">
-  <div class="modal-box">
-    <h3 class="text-xl font-bold">Export Equipment CSV</h3>
-    <div role="alert" class="alert text-sm mt-4">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <div>
-        <p class="font-medium">Not included in the export</p>
-        <ul class="mt-1 list-disc list-inside space-y-0.5 text-base-content/70">
-          <li>Images</li>
-          <li>The Content tab of serialized equipment</li>
-        </ul>
+  <div class="modal-box p-0 overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <h3 class="text-xl font-bold">Export Equipment CSV</h3>
+      <p class="text-sm text-base-content/50 mt-0.5">Download all equipment as a CSV file.</p>
+    </div>
+    <div class="p-6">
+      <div role="alert" class="alert text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div>
+          <p class="font-medium">Not included in the export</p>
+          <ul class="mt-1 list-disc list-inside space-y-0.5 text-base-content/70">
+            <li>Images</li>
+            <li>The Content tab of serialized equipment</li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="modal-action">
+    <div class="modal-action px-6 pb-6 mt-0">
       <form method="dialog">
         <button class="btn btn-ghost">Cancel</button>
       </form>
