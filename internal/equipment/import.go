@@ -80,7 +80,7 @@ func (p *ImportPipeline) Commit(ctx context.Context, orgID string, rows []import
 		}
 		fields := applyMappings(raw, fieldFor)
 
-		typeLabel := strings.ToLower(strings.TrimSpace(fields["Type"]))
+		typeLabel := strings.ToLower(strings.TrimSpace(fields["Tracking Type"]))
 		if typeLabel == "serialized" {
 			key := strings.ToLower(strings.TrimSpace(fields["Name"]))
 			if _, ok := serializedByName[key]; !ok {
@@ -182,7 +182,7 @@ func (p *ImportPipeline) buildBase(ctx context.Context, orgID string, fields map
 		ManufacturerID: mfrID,
 		LocationID:     locID,
 		Notes:          fields["Notes"],
-		EquipmentType:  ParseOrDefault(strings.ToLower(strings.TrimSpace(fields["Equipment Type"]))),
+		EquipmentType:  ParseOrDefault(strings.ToLower(strings.TrimSpace(fields["Type"]))),
 		Pricing: Pricing{
 			RentalPrice: units.ParseCents(fields["Rental Price"]),
 		},

@@ -12,6 +12,7 @@ type Querier interface {
 	CountByOrgID(ctx context.Context, orgID string) (int64, error)
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
+	Export(ctx context.Context, orgID string) ([]ExportRow, error)
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)
 	List(ctx context.Context, arg ListParams) ([]ListRow, error)
 	ListBySerialNumber(ctx context.Context, arg ListBySerialNumberParams) ([]ListBySerialNumberRow, error)

@@ -208,6 +208,104 @@ func (q *Queries) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+const export = `-- name: Export :many
+SELECT
+    e.id,
+    e.name,
+    COALESCE(tt.name, '') AS tracking_type,
+    COALESCE(ut.name, '') AS usage_type,
+    COALESCE(ec.name, '') AS category,
+    COALESCE(em.name, '') AS manufacturer,
+    COALESCE(wl.name, '') AS location,
+    COALESCE(et.name, '') AS equipment_type,
+    e.rental_price,
+    e.resale_price,
+    e.notes,
+    e.weight_g,
+    e.width_mm,
+    e.height_mm,
+    e.depth_mm,
+    e.voltage_mv,
+    e.current_ma,
+    e.power_mw,
+    e.wire_gauge_mm2_x100
+FROM equipment e
+LEFT JOIN equipment_categories    ec ON ec.id = e.category_id
+LEFT JOIN equipment_manufacturers em ON em.id = e.manufacturer_id
+LEFT JOIN warehouse_locations     wl ON wl.id = e.location_id
+LEFT JOIN equipment_types         et ON et.id = e.equipment_type_id
+LEFT JOIN tracking_types          tt ON tt.id = e.tracking_type_id
+LEFT JOIN usage_types             ut ON ut.id = e.usage_type_id
+WHERE e.org_id = ?1
+  AND e.is_archived = 0
+ORDER BY ec.name ASC, e.name ASC
+`
+
+type ExportRow struct {
+	ID               string
+	Name             string
+	TrackingType     string
+	UsageType        string
+	Category         string
+	Manufacturer     string
+	Location         string
+	EquipmentType    string
+	RentalPrice      *units.Cents
+	ResalePrice      *units.Cents
+	Notes            sql.NullString
+	WeightG          *units.Grams
+	WidthMm          *units.Millimeters
+	HeightMm         *units.Millimeters
+	DepthMm          *units.Millimeters
+	VoltageMv        *units.Millivolts
+	CurrentMa        *units.Milliamps
+	PowerMw          *units.Milliwatts
+	WireGaugeMm2X100 *units.WireGauge
+}
+
+func (q *Queries) Export(ctx context.Context, orgID string) ([]ExportRow, error) {
+	rows, err := q.db.QueryContext(ctx, export, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ExportRow
+	for rows.Next() {
+		var i ExportRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.TrackingType,
+			&i.UsageType,
+			&i.Category,
+			&i.Manufacturer,
+			&i.Location,
+			&i.EquipmentType,
+			&i.RentalPrice,
+			&i.ResalePrice,
+			&i.Notes,
+			&i.WeightG,
+			&i.WidthMm,
+			&i.HeightMm,
+			&i.DepthMm,
+			&i.VoltageMv,
+			&i.CurrentMa,
+			&i.PowerMw,
+			&i.WireGaugeMm2X100,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getByID = `-- name: GetByID :one
 SELECT
     e.id,
