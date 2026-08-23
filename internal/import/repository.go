@@ -93,6 +93,18 @@ func (r *Repository) InsertDataTx(ctx context.Context, tx *sql.Tx, row Row) (Row
 	return dataFromRecord(rec), nil
 }
 
+func (r *Repository) ListData(ctx context.Context, sessionID string) ([]Row, error) {
+	recs, err := r.data.ListData(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("ListData: %w", err)
+	}
+	rows := make([]Row, len(recs))
+	for i, rec := range recs {
+		rows[i] = dataFromRecord(rec)
+	}
+	return rows, nil
+}
+
 func (r *Repository) ListDataByAction(ctx context.Context, sessionID string, action Action) ([]Row, error) {
 	recs, err := r.data.ListDataByAction(ctx, gendata.ListDataByActionParams{
 		SessionID: sessionID,

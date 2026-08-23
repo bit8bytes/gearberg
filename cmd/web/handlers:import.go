@@ -15,6 +15,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,12 +26,30 @@ import (
 	pkgcsv "github.com/bit8bytes/gearberg/pkg/csv"
 )
 
+const importMaxBytes = 32 << 20 // 32 MiB
+
 type importUploadData struct {
 	OrgID string
 	Error string
 }
 
-const importMaxBytes = 32 << 20 // 32 MiB
+type importReviewRow struct {
+	ID           string
+	RowNumber    int64
+	Name         string
+	Status       string
+	ErrorMessage string
+	Action       string
+}
+
+type importReviewData struct {
+	OrgID        string
+	SessionID    string
+	Rows         []importReviewRow
+	CountReady   int
+	CountPending int
+	CountError   int
+}
 
 // getImportTemplate serves the template CSV for download.
 func (app *application) getImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -50,7 +69,7 @@ func (app *application) getImport(w http.ResponseWriter, r *http.Request) *httpe
 }
 
 // postImport parses the uploaded file, creates an import session, and redirects
-// to the mapping step.
+// to the review page.
 func (app *application) postImport(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
@@ -71,6 +90,81 @@ func (app *application) postImport(w http.ResponseWriter, r *http.Request) *http
 		return httperr.InternalServerError(err)
 	}
 
-	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import/"+url.PathEscape(session.ID)+"/map", http.StatusSeeOther)
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import/"+url.PathEscape(session.ID), http.StatusSeeOther)
+	return nil
+}
+
+// getImportReview shows staged rows for user review.
+func (app *application) getImportReview(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	sessionID := r.PathValue("id")
+
+	rows, err := app.services.imports.ListData(ctx, sessionID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	data := importReviewData{
+		OrgID:     orgID,
+		SessionID: sessionID,
+		Rows:      make([]importReviewRow, 0, len(rows)),
+	}
+
+	for _, row := range rows {
+		var fields map[string]string
+		_ = json.Unmarshal([]byte(row.Data), &fields)
+		name := fields["Name"]
+
+		switch row.Status {
+		case imports.RowStatusError:
+			data.CountError++
+		case imports.RowStatusNeedsReview:
+			data.CountPending++
+		default:
+			if row.Action == imports.ActionSkip {
+				data.CountPending++
+			} else {
+				data.CountReady++
+			}
+		}
+
+		data.Rows = append(data.Rows, importReviewRow{
+			ID:           row.ID,
+			RowNumber:    row.RowNumber,
+			Name:         name,
+			Status:       string(row.Status),
+			ErrorMessage: row.ErrorMessage,
+			Action:       string(row.Action),
+		})
+	}
+
+	tmpl := app.html.TemplateData(r)
+	tmpl.Data = data
+	return app.html.Render(w, r, http.StatusOK, pages.ImportReview, tmpl)
+}
+
+// postImportReview applies a single row decision (create/skip) and redirects back.
+func (app *application) postImportReview(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	sessionID := r.PathValue("id")
+
+	rowID := r.FormValue("row_id")
+	action := imports.Action(r.FormValue("action"))
+
+	if err := app.services.imports.Review(ctx, []imports.Decision{{RowID: rowID, Action: action}}); err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import/"+url.PathEscape(sessionID), http.StatusSeeOther)
+	return nil
+}
+
+// postImportConfirm commits the import and redirects to the equipment list.
+func (app *application) postImportConfirm(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	// TODO: implement CommitHandler for equipment
+	orgID := r.PathValue("org_id")
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
 	return nil
 }

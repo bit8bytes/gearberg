@@ -84,6 +84,9 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.getImport))))
 	mux.Handle("GET /orgs/{org_id}/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getImportTemplate))))
 	mux.Handle("POST /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.postImport))))
+	mux.Handle("GET /orgs/{org_id}/import/{id}", app.withLogin(app.withPermission(app.html.Handle(app.getImportReview))))
+	mux.Handle("POST /orgs/{org_id}/import/{id}/review", app.withLogin(app.withPermission(app.html.Handle(app.postImportReview))))
+	mux.Handle("POST /orgs/{org_id}/import/{id}/confirm", app.withLogin(app.withPermission(app.html.Handle(app.postImportConfirm))))
 
 	// Equipment
 	mux.Handle("GET /orgs/{org_id}/equipment", app.withLogin(app.withPermission(app.html.Handle(app.getEquipment))))

@@ -131,6 +131,15 @@ func (s *Service) NewSession(ctx context.Context, orgID string, format Format, t
 	return session, nil
 }
 
+// ListData returns all staged rows for a session.
+func (s *Service) ListData(ctx context.Context, sessionID string) ([]Row, error) {
+	rows, err := s.repo.ListData(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("ListData: %w", err)
+	}
+	return rows, nil
+}
+
 // Review applies user decisions to staged rows.
 func (s *Service) Review(ctx context.Context, decisions []Decision) error {
 	for _, d := range decisions {

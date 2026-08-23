@@ -100,6 +100,8 @@ var (
 
 	// ImportUpload is the file upload page for the format-agnostic import pipeline.
 	ImportUpload = newPage("pages/import/upload.tmpl", layouts.Center)
+	// ImportReview is the staged-row review and confirm page.
+	ImportReview = newPage("pages/import/review.tmpl", layouts.Center)
 
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
