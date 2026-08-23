@@ -98,6 +98,9 @@ var (
 	// EquipmentPrint is the bare print view of the equipment list.
 	EquipmentPrint = newPage("pages/equipment/print.tmpl", layouts.Print)
 
+	// ImportUpload is the file upload page for the format-agnostic import pipeline.
+	ImportUpload = newPage("pages/import/upload.tmpl", layouts.Center)
+
 	// Imprint is the legal imprint page.
 	Imprint = newPage("pages/imprint.tmpl", layouts.Landing)
 	// Privacy is the privacy policy page.

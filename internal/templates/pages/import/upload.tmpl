@@ -1,0 +1,45 @@
+{{ define "title" }}Import{{ end }}
+
+{{ define "page" }}
+<div class="max-w-xl mx-auto px-4 py-12 flex flex-col gap-6">
+
+  <div>
+    <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">&larr; Equipment</a>
+    <p class="text-3xl font-bold leading-tight">Import</p>
+  </div>
+
+  <p class="text-sm text-base-content/60">
+    Upload a CSV file to import equipment in bulk. Columns must match the
+    <a href="/orgs/{{ .Data.OrgID }}/import/template" class="link link-primary">template CSV</a>.
+  </p>
+
+  <div role="alert" class="alert text-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <p class="font-medium underline">Limitations</p>
+      <ul class="mt-1 list-disc list-inside space-y-0.5 text-base-content">
+        <li>Images cannot be imported and must be added manually after import</li>
+        <li>The Content tab of serialized equipment cannot be imported</li>
+      </ul>
+    </div>
+  </div>
+
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/import" enctype="multipart/form-data" class="flex flex-col gap-4">
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">CSV file</legend>
+      <input type="file" name="file" accept=".csv,text/csv" class="file-input file-input-bordered w-full" required />
+      {{ with .Data.Error }}
+        <p class="text-error text-sm">{{ . }}</p>
+      {{ end }}
+    </fieldset>
+
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary">Upload</button>
+      <a href="/orgs/{{ .Data.OrgID }}/equipment" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+
+</div>
+{{ end }}

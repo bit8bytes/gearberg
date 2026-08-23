@@ -22,7 +22,7 @@
             </div>
             <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 gap-1 shadow">
               <li>
-                <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="flex flex-col items-start py-2">
+                <a href="/orgs/{{ .Data.OrgID }}/import" class="flex flex-col items-start py-2">
                   <span class="flex items-center gap-2 font-medium">
                     <span class="size-6">{{ template "import-icon" . }}</span>
                     Import
@@ -136,7 +136,7 @@
   <a href="/orgs/{{ .Data.OrgID }}/equipment/new" class="btn btn-circle btn-lg btn-primary">
     <span class="size-6">{{ template "add-icon" . }}</span>
   </a>
-  <a href="/orgs/{{ .Data.OrgID }}/equipment/import" class="btn btn-circle btn-lg">
+  <a href="/orgs/{{ .Data.OrgID }}/import" class="btn btn-circle btn-lg">
     <span class="size-6">{{ template "import-icon" . }}</span>
   </a>
   <button data-modal-target="export-dialog" class="btn btn-circle btn-lg">

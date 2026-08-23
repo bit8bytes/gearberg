@@ -21,15 +21,32 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imports "github.com/bit8bytes/gearberg/internal/import"
+	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	pkgcsv "github.com/bit8bytes/gearberg/pkg/csv"
 )
 
+type importUploadData struct {
+	OrgID string
+	Error string
+}
+
 const importMaxBytes = 32 << 20 // 32 MiB
+
+// getImportTemplate serves the template CSV for download.
+func (app *application) getImportTemplate(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="gearberg-import-template.csv"`)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(imports.TemplateCSV)
+	return nil
+}
 
 // getImport serves the upload form.
 func (app *application) getImport(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	// TODO: render upload page template
-	return nil
+	orgID := r.PathValue("org_id")
+	tmpl := app.html.TemplateData(r)
+	tmpl.Data = importUploadData{OrgID: orgID}
+	return app.html.Render(w, r, http.StatusOK, pages.ImportUpload, tmpl)
 }
 
 // postImport parses the uploaded file, creates an import session, and redirects

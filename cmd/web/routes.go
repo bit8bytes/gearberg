@@ -82,6 +82,7 @@ func (app *application) routes() (http.Handler, error) {
 
 	// Import
 	mux.Handle("GET /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.getImport))))
+	mux.Handle("GET /orgs/{org_id}/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getImportTemplate))))
 	mux.Handle("POST /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.postImport))))
 
 	// Equipment

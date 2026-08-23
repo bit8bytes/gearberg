@@ -17,11 +17,15 @@ package imports
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"io"
 
 	pkgcsv "github.com/bit8bytes/gearberg/pkg/csv"
 )
+
+//go:embed template.csv
+var TemplateCSV []byte
 
 // CSVReader adapts pkg/csv.Reader to the imports.Reader and imports.Inspector interfaces.
 type CSVReader struct {
