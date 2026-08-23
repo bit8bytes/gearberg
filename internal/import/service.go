@@ -79,6 +79,23 @@ func (s *Service) NewSession(ctx context.Context, orgID string, format Format, t
 		return Session{}, fmt.Errorf("NewSession: %w", err)
 	}
 
+	// Auto-map source col → target field using the first record's keys.
+	// The mapping UI is not implemented yet, so we assume the source columns
+	// already match the internal field names (e.g. via the Gearberg template CSV).
+	// When the mapping UI is added, this block is replaced by user-defined mappings.
+	if len(records) > 0 {
+		for col := range records[0].Fields {
+			if _, err := s.repo.InsertMappingTx(ctx, tx, Mapping{
+				ID:          uid.New(),
+				SessionID:   session.ID,
+				SourceCol:   col,
+				TargetField: col,
+			}); err != nil {
+				return Session{}, fmt.Errorf("NewSession: auto-map %q: %w", col, err)
+			}
+		}
+	}
+
 	rows := make([]Row, 0, len(records))
 	for _, rec := range records {
 		blob, err := json.Marshal(rec.Fields)

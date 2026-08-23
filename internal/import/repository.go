@@ -119,6 +119,19 @@ func (r *Repository) UpdateDataAction(ctx context.Context, id string, action Act
 	return dataFromRecord(rec), nil
 }
 
+func (r *Repository) InsertMappingTx(ctx context.Context, tx *sql.Tx, m Mapping) (Mapping, error) {
+	rec, err := r.mappings.WithTx(tx).InsertMapping(ctx, genmappings.InsertMappingParams{
+		ID:          m.ID,
+		SessionID:   m.SessionID,
+		SourceCol:   m.SourceCol,
+		TargetField: m.TargetField,
+	})
+	if err != nil {
+		return Mapping{}, fmt.Errorf("InsertMappingTx: %w", err)
+	}
+	return mappingFromRecord(rec), nil
+}
+
 func (r *Repository) ListMappings(ctx context.Context, sessionID string) ([]Mapping, error) {
 	recs, err := r.mappings.ListMappings(ctx, sessionID)
 	if err != nil {
