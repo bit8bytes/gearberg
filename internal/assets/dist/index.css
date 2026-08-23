@@ -6794,9 +6794,6 @@
   .w-full {
     width: 100%;
   }
-  .w-sm {
-    width: var(--container-sm);
-  }
   .w-xs {
     width: var(--container-xs);
   }
