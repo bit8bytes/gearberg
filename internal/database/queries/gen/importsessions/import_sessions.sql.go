@@ -20,7 +20,7 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, org_id, format, status, target_entity, created_at FROM import_sessions
+SELECT id, org_id, format, status, target_entity, updated_at, created_at FROM import_sessions
 WHERE id = ?
 `
 
@@ -33,6 +33,34 @@ func (q *Queries) GetSession(ctx context.Context, id string) (ImportSession, err
 		&i.Format,
 		&i.Status,
 		&i.TargetEntity,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getStagedSession = `-- name: GetStagedSession :one
+SELECT id, org_id, format, status, target_entity, updated_at, created_at FROM import_sessions
+WHERE org_id = ? AND status = ?
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+type GetStagedSessionParams struct {
+	OrgID  string
+	Status string
+}
+
+func (q *Queries) GetStagedSession(ctx context.Context, arg GetStagedSessionParams) (ImportSession, error) {
+	row := q.db.QueryRowContext(ctx, getStagedSession, arg.OrgID, arg.Status)
+	var i ImportSession
+	err := row.Scan(
+		&i.ID,
+		&i.OrgID,
+		&i.Format,
+		&i.Status,
+		&i.TargetEntity,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -41,7 +69,7 @@ func (q *Queries) GetSession(ctx context.Context, id string) (ImportSession, err
 const insertSession = `-- name: InsertSession :one
 INSERT INTO import_sessions (id, org_id, format, status, target_entity)
 VALUES (?, ?, ?, ?, ?)
-RETURNING id, org_id, format, status, target_entity, created_at
+RETURNING id, org_id, format, status, target_entity, updated_at, created_at
 `
 
 type InsertSessionParams struct {
@@ -67,6 +95,7 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (I
 		&i.Format,
 		&i.Status,
 		&i.TargetEntity,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -74,9 +103,9 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (I
 
 const updateSessionStatus = `-- name: UpdateSessionStatus :one
 UPDATE import_sessions
-SET status = ?
+SET status = ?, updated_at = unixepoch()
 WHERE id = ?
-RETURNING id, org_id, format, status, target_entity, created_at
+RETURNING id, org_id, format, status, target_entity, updated_at, created_at
 `
 
 type UpdateSessionStatusParams struct {
@@ -93,6 +122,7 @@ func (q *Queries) UpdateSessionStatus(ctx context.Context, arg UpdateSessionStat
 		&i.Format,
 		&i.Status,
 		&i.TargetEntity,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err

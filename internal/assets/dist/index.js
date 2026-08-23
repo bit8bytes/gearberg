@@ -320,3 +320,10 @@ document.addEventListener("click", (e) => {
   btn.setAttribute("aria-pressed", isPassword ? "true" : "false");
   btn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
 });
+
+// Auto-dismiss a toast after N seconds
+// Trigger: <div data-dismiss-after="4">
+document.querySelectorAll("[data-dismiss-after]").forEach((el) => {
+  const delay = (parseInt(el.dataset.dismissAfter, 10) || 4) * 1000;
+  setTimeout(() => el.remove(), delay);
+});

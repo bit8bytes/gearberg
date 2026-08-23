@@ -39,44 +39,88 @@ type Inspector interface {
 
 // Step is a single validation stage applied to a batch of rows.
 // A Step must never return early on a per-row error; it sets the row's
-// status and error message and continues.
-type Step func(ctx context.Context, repo *Repository, rows []Row) ([]Row, error)
+// status and error message and continues. Steps that need DB access close
+// over their own dependencies.
+type Step func(ctx context.Context, rows []Row) ([]Row, error)
+
+// CommitHandler writes committed rows to the target domain (e.g. equipment).
+type CommitHandler interface {
+	Commit(ctx context.Context, orgID string, rows []Row, mappings []Mapping) error
+}
+
+// StepProvider returns the validation steps for a given org.
+type StepProvider interface {
+	StepsFor(orgID string) []Step
+}
 
 // Service orchestrates the import pipeline.
 type Service struct {
-	db    *sql.DB
-	repo  *Repository
-	steps []Step
+	db      *sql.DB
+	repo    *Repository
+	steps   StepProvider
+	handler CommitHandler
+	entity  string
 }
 
-// NewService returns a new Service with the given validation steps.
-func NewService(db *sql.DB, repo *Repository, steps ...Step) *Service {
-	return &Service{db: db, repo: repo, steps: steps}
+// NewService returns a new Service.
+func NewService(db *sql.DB, repo *Repository, steps StepProvider, handler CommitHandler, entity string) *Service {
+	return &Service{db: db, repo: repo, steps: steps, handler: handler, entity: entity}
 }
 
-// NewSession parses the file, creates an import session, stores raw rows,
-// and runs validation. Returns the staged Session.
-func (s *Service) NewSession(ctx context.Context, orgID string, format Format, targetEntity string, r io.Reader, reader Reader) (Session, error) {
+// StartSession parses the file, creates an import session, stores raw rows,
+// runs validation steps, and returns the staged Session.
+func (s *Service) StartSession(ctx context.Context, orgID string, format Format, r io.Reader) (Session, error) {
+	reader, err := readerFor(format)
+	if err != nil {
+		return Session{}, fmt.Errorf("StartSession: %w", err)
+	}
 	records, err := reader.Read(ctx, r)
 	if err != nil {
-		return Session{}, fmt.Errorf("NewSession: read: %w", err)
+		return Session{}, fmt.Errorf("StartSession: read: %w", err)
 	}
 
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return Session{}, fmt.Errorf("NewSession: begin tx: %w", err)
+		return Session{}, fmt.Errorf("StartSession: begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	session, rows, err := s.stageSession(ctx, tx, orgID, format, records)
+	if err != nil {
+		return Session{}, fmt.Errorf("StartSession: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return Session{}, fmt.Errorf("StartSession: commit: %w", err)
+	}
+
+	rows, err = validateRows(ctx, s.steps.StepsFor(orgID), rows)
+	if err != nil {
+		return Session{}, fmt.Errorf("StartSession: %w", err)
+	}
+
+	if err := persistRows(ctx, s.repo, rows); err != nil {
+		return Session{}, fmt.Errorf("StartSession: %w", err)
+	}
+
+	session, err = s.repo.UpdateSessionStatus(ctx, session.ID, StatusReady)
+	if err != nil {
+		return Session{}, fmt.Errorf("StartSession: %w", err)
+	}
+
+	return session, nil
+}
+
+func (s *Service) stageSession(ctx context.Context, tx *sql.Tx, orgID string, format Format, records []RawRecord) (Session, []Row, error) {
 	session, err := s.repo.InsertSessionTx(ctx, tx, Session{
 		ID:           uid.New(),
 		OrgID:        orgID,
 		Format:       format,
-		Status:       StatusPending,
-		TargetEntity: targetEntity,
+		Status:       StatusDraft,
+		TargetEntity: s.entity,
 	})
 	if err != nil {
-		return Session{}, fmt.Errorf("NewSession: %w", err)
+		return Session{}, nil, fmt.Errorf("stageSession: %w", err)
 	}
 
 	// Auto-map source col → target field using the first record's keys.
@@ -91,7 +135,7 @@ func (s *Service) NewSession(ctx context.Context, orgID string, format Format, t
 				SourceCol:   col,
 				TargetField: col,
 			}); err != nil {
-				return Session{}, fmt.Errorf("NewSession: auto-map %q: %w", col, err)
+				return Session{}, nil, fmt.Errorf("stageSession: auto-map %q: %w", col, err)
 			}
 		}
 	}
@@ -100,7 +144,7 @@ func (s *Service) NewSession(ctx context.Context, orgID string, format Format, t
 	for _, rec := range records {
 		blob, err := json.Marshal(rec.Fields)
 		if err != nil {
-			return Session{}, fmt.Errorf("NewSession: marshal row %d: %w", rec.RowNumber, err)
+			return Session{}, nil, fmt.Errorf("stageSession: marshal row %d: %w", rec.RowNumber, err)
 		}
 		row, err := s.repo.InsertDataTx(ctx, tx, Row{
 			ID:        uid.New(),
@@ -109,26 +153,58 @@ func (s *Service) NewSession(ctx context.Context, orgID string, format Format, t
 			Data:      string(blob),
 		})
 		if err != nil {
-			return Session{}, fmt.Errorf("NewSession: insert row %d: %w", rec.RowNumber, err)
+			return Session{}, nil, fmt.Errorf("stageSession: insert row %d: %w", rec.RowNumber, err)
 		}
 		rows = append(rows, row)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return Session{}, fmt.Errorf("NewSession: commit: %w", err)
-	}
+	return session, rows, nil
+}
 
-	rows, err = s.runSteps(ctx, rows)
+// validateRows runs all steps against rows and assigns ActionCreate to rows
+// that passed all steps.
+func validateRows(ctx context.Context, steps []Step, rows []Row) ([]Row, error) {
+	rows, err := runSteps(ctx, rows, steps)
 	if err != nil {
-		return Session{}, fmt.Errorf("NewSession: validate: %w", err)
+		return nil, fmt.Errorf("ValidateRows: %w", err)
 	}
+	for i, row := range rows {
+		if row.Status == RowStatusNew {
+			rows[i].Status = RowStatusValid
+			rows[i].Action = ActionCreate
+		}
+	}
+	return rows, nil
+}
 
-	session, err = s.repo.UpdateSessionStatus(ctx, session.ID, StatusStaged)
+// persistRows writes the status and action of each row back to the database.
+func persistRows(ctx context.Context, repo *Repository, rows []Row) error {
+	for _, row := range rows {
+		if err := repo.UpdateDataStatus(ctx, row.ID, row.Status, row.ErrorMessage); err != nil {
+			return fmt.Errorf("PersistRows: row %s: %w", row.ID, err)
+		}
+		if _, err := repo.UpdateDataAction(ctx, row.ID, row.Action); err != nil {
+			return fmt.Errorf("PersistRows: action %s: %w", row.ID, err)
+		}
+	}
+	return nil
+}
+
+// GetStagedSession returns the active staged session for an org, or ErrNotFound if none exists.
+func (s *Service) GetStagedSession(ctx context.Context, orgID string) (Session, error) {
+	session, err := s.repo.GetStagedSession(ctx, orgID)
 	if err != nil {
-		return Session{}, fmt.Errorf("NewSession: %w", err)
+		return Session{}, fmt.Errorf("Get: %w", err)
 	}
-
 	return session, nil
+}
+
+// Delete removes a session and all its rows and mappings (via CASCADE).
+func (s *Service) Delete(ctx context.Context, sessionID string) error {
+	if err := s.repo.DeleteSession(ctx, sessionID); err != nil {
+		return fmt.Errorf("Delete: %w", err)
+	}
+	return nil
 }
 
 // ListData returns all staged rows for a session.
@@ -150,9 +226,14 @@ func (s *Service) Review(ctx context.Context, decisions []Decision) error {
 	return nil
 }
 
-// Commit finalises the import. Target-entity writes are delegated to the
-// caller via a CommitHandler so this package stays format- and domain-agnostic.
-func (s *Service) Commit(ctx context.Context, sessionID string, handler CommitHandler) error {
+// Commit finalises the import by delegating target-entity writes to the
+// CommitHandler provided at construction.
+func (s *Service) Commit(ctx context.Context, sessionID string) error {
+	session, err := s.repo.GetSession(ctx, sessionID)
+	if err != nil {
+		return fmt.Errorf("Commit: %w", err)
+	}
+
 	rows, err := s.repo.ListDataByAction(ctx, sessionID, ActionCreate)
 	if err != nil {
 		return fmt.Errorf("Commit: %w", err)
@@ -163,7 +244,7 @@ func (s *Service) Commit(ctx context.Context, sessionID string, handler CommitHa
 		return fmt.Errorf("Commit: %w", err)
 	}
 
-	if err := handler.Commit(ctx, rows, mappings); err != nil {
+	if err := s.handler.Commit(ctx, session.OrgID, rows, mappings); err != nil {
 		return fmt.Errorf("Commit: %w", err)
 	}
 
@@ -174,15 +255,10 @@ func (s *Service) Commit(ctx context.Context, sessionID string, handler CommitHa
 	return nil
 }
 
-// CommitHandler writes committed rows to the target domain (e.g. equipment).
-type CommitHandler interface {
-	Commit(ctx context.Context, rows []Row, mappings []Mapping) error
-}
-
-func (s *Service) runSteps(ctx context.Context, rows []Row) ([]Row, error) {
+func runSteps(ctx context.Context, rows []Row, steps []Step) ([]Row, error) {
 	var err error
-	for _, step := range s.steps {
-		rows, err = step(ctx, s.repo, rows)
+	for _, step := range steps {
+		rows, err = step(ctx, rows)
 		if err != nil {
 			return nil, err
 		}

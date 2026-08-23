@@ -10,5 +10,6 @@ type ImportSession struct {
 	Format       string
 	Status       string
 	TargetEntity string
+	UpdatedAt    int64
 	CreatedAt    int64
 }

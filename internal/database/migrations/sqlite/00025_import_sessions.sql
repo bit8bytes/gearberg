@@ -4,8 +4,15 @@ CREATE TABLE import_sessions (
   id            TEXT    NOT NULL PRIMARY KEY,
   org_id        TEXT    NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
   format        TEXT    NOT NULL, -- csv | json | excel
-  status        TEXT    NOT NULL, -- pending | mapped | staged | committed
-  target_entity TEXT    NOT NULL, -- equipment | ...
+  status        TEXT    NOT NULL DEFAULT 'draft'
+                        CHECK (status IN (
+                          'draft',     -- uploaded, awaiting column mapping
+                          'mapped',    -- mappings saved, awaiting validation
+                          'ready',     -- validated, awaiting user commit
+                          'committed'  -- import written to inventory
+                        )),
+  target_entity TEXT    NOT NULL, -- equipment
+  updated_at    INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at    INTEGER NOT NULL DEFAULT (unixepoch())
 ) STRICT;
 -- +goose StatementEnd

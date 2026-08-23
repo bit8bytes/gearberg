@@ -16,7 +16,10 @@
 // Package imports provides format-agnostic import functionality.
 package imports
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var ErrNotFound = errors.New("import: not found")
 
@@ -24,17 +27,34 @@ var ErrNotFound = errors.New("import: not found")
 type Format string
 
 const (
-	FormatCSV Format = "csv"
+	FormatCSV  Format = "csv"
+	FormatJSON Format = "json"
 )
+
+var readers = map[Format]Reader{}
+
+// RegisterFormat registers a Reader for the given Format.
+// Call from an init() function in the format's package.
+func RegisterFormat(f Format, r Reader) {
+	readers[f] = r
+}
+
+func readerFor(f Format) (Reader, error) {
+	r, ok := readers[f]
+	if !ok {
+		return nil, fmt.Errorf("import: no reader registered for format %q", f)
+	}
+	return r, nil
+}
 
 // Status tracks the lifecycle of an import session.
 // Each value describes the state the session is in, not the action that caused it.
 type Status string
 
 const (
-	StatusPending   Status = "pending"   // rows stored, awaiting column mapping
-	StatusMapped    Status = "mapped"    // column mappings saved, awaiting validation
-	StatusStaged    Status = "staged"    // validation ran, rows ready for review
+	StatusDraft     Status = "draft"     // uploaded, awaiting column mapping
+	StatusMapped    Status = "mapped"    // mappings saved, awaiting validation
+	StatusReady     Status = "ready"     // validated, awaiting user commit
 	StatusCommitted Status = "committed" // import written to inventory
 )
 
@@ -51,9 +71,9 @@ const (
 type RowStatus string
 
 const (
-	RowStatusNew        RowStatus = "new"
-	RowStatusError      RowStatus = "error"
-	RowStatusNeedsReview RowStatus = "needs_review"
+	RowStatusNew   RowStatus = "new"
+	RowStatusValid RowStatus = "valid"
+	RowStatusError RowStatus = "error"
 )
 
 // Session represents an import session.

@@ -12,4 +12,6 @@ type ImportDatum struct {
 	Status       string
 	ErrorMessage string
 	Action       string
+	UpdatedAt    int64
+	CreatedAt    int64
 }

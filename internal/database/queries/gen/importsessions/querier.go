@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	DeleteSession(ctx context.Context, id string) error
 	GetSession(ctx context.Context, id string) (ImportSession, error)
+	GetStagedSession(ctx context.Context, arg GetStagedSessionParams) (ImportSession, error)
 	InsertSession(ctx context.Context, arg InsertSessionParams) (ImportSession, error)
 	UpdateSessionStatus(ctx context.Context, arg UpdateSessionStatusParams) (ImportSession, error)
 }

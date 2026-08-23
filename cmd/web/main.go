@@ -27,6 +27,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bit8bytes/gearberg/internal/flash"
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -50,6 +51,8 @@ type application struct {
 	session sessionManager
 
 	services *services
+
+	flash flash.Manager
 
 	// oidcProviders is keyed by provider name. Providers are configured at
 	// startup because OIDC discovery is a network call that should not happen per-request.
@@ -114,8 +117,6 @@ func runServe(args []string) error {
 		return fmt.Errorf("load templates: %w", err)
 	}
 
-	html := htmlpkg.New(log, base, cache, revision)
-
 	db, err := setupDatabase(ctx, options)
 	if err != nil {
 		return fmt.Errorf("setup database: %w", err)
@@ -133,6 +134,9 @@ func runServe(args []string) error {
 		return fmt.Errorf("setup session manager: %w", err)
 	}
 	sessionManager := setupSessionManager(scsMgr)
+	flashManager := flash.NewSessionManager(sessionManager)
+
+	html := htmlpkg.New(log, base, cache, revision, htmlpkg.WithFlashManager(flashManager))
 
 	mailer := setupMailer(options, log)
 
@@ -156,6 +160,7 @@ func runServe(args []string) error {
 		html:          html,
 		db:            db,
 		session:       sessionManager,
+		flash:         flashManager,
 		services:      services,
 		oidcProviders: oidcProviders,
 	}

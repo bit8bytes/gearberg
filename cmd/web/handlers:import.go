@@ -16,22 +16,18 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 
+	"github.com/bit8bytes/gearberg/internal/flash"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	imports "github.com/bit8bytes/gearberg/internal/import"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
-	pkgcsv "github.com/bit8bytes/gearberg/pkg/csv"
 )
 
 const importMaxBytes = 32 << 20 // 32 MiB
-
-type importUploadData struct {
-	OrgID string
-	Error string
-}
 
 type importReviewRow struct {
 	ID           string
@@ -49,6 +45,7 @@ type importReviewData struct {
 	CountReady   int
 	CountPending int
 	CountError   int
+	Step         int
 }
 
 // getImportTemplate serves the template CSV for download.
@@ -60,12 +57,22 @@ func (app *application) getImportTemplate(w http.ResponseWriter, r *http.Request
 	return nil
 }
 
-// getImport serves the upload form.
+// getImport serves the upload form, or redirects to the review page if a staged session exists.
 func (app *application) getImport(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
 	orgID := r.PathValue("org_id")
-	tmpl := app.html.TemplateData(r)
-	tmpl.Data = importUploadData{OrgID: orgID}
-	return app.html.Render(w, r, http.StatusOK, pages.ImportUpload, tmpl)
+
+	session, err := app.services.equipmentImports.GetStagedSession(ctx, orgID)
+	if err == nil {
+		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import/"+url.PathEscape(session.ID), http.StatusSeeOther)
+		return nil
+	}
+	if !errors.Is(err, imports.ErrNotFound) {
+		return httperr.InternalServerError(err)
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
+	return nil
 }
 
 // postImport parses the uploaded file, creates an import session, and redirects
@@ -73,6 +80,10 @@ func (app *application) getImport(w http.ResponseWriter, r *http.Request) *httpe
 func (app *application) postImport(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	orgID := r.PathValue("org_id")
+
+	if _, err := app.services.equipmentImports.GetStagedSession(ctx, orgID); err == nil {
+		return httperr.BadRequest(fmt.Errorf("an import session is already in progress"))
+	}
 
 	if err := r.ParseMultipartForm(importMaxBytes); err != nil {
 		return httperr.BadRequest(fmt.Errorf("file too large or malformed: %w", err))
@@ -84,13 +95,26 @@ func (app *application) postImport(w http.ResponseWriter, r *http.Request) *http
 	}
 	defer file.Close()
 
-	reader := imports.NewCSVReader(pkgcsv.Reader{})
-	session, err := app.services.imports.NewSession(ctx, orgID, imports.FormatCSV, "equipment", file, reader)
+	session, err := app.services.equipmentImports.StartSession(ctx, orgID, imports.FormatCSV, file)
 	if err != nil {
 		return httperr.InternalServerError(err)
 	}
 
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import/"+url.PathEscape(session.ID), http.StatusSeeOther)
+	return nil
+}
+
+// postImportDelete deletes the current staged session and redirects to the upload form.
+func (app *application) postImportDelete(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
+	orgID := r.PathValue("org_id")
+	sessionID := r.PathValue("id")
+
+	if err := app.services.equipmentImports.Delete(ctx, sessionID); err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/import", http.StatusSeeOther)
 	return nil
 }
 
@@ -100,7 +124,7 @@ func (app *application) getImportReview(w http.ResponseWriter, r *http.Request) 
 	orgID := r.PathValue("org_id")
 	sessionID := r.PathValue("id")
 
-	rows, err := app.services.imports.ListData(ctx, sessionID)
+	rows, err := app.services.equipmentImports.ListData(ctx, sessionID)
 	if err != nil {
 		return httperr.InternalServerError(err)
 	}
@@ -109,6 +133,7 @@ func (app *application) getImportReview(w http.ResponseWriter, r *http.Request) 
 		OrgID:     orgID,
 		SessionID: sessionID,
 		Rows:      make([]importReviewRow, 0, len(rows)),
+		Step:      3,
 	}
 
 	for _, row := range rows {
@@ -119,14 +144,12 @@ func (app *application) getImportReview(w http.ResponseWriter, r *http.Request) 
 		switch row.Status {
 		case imports.RowStatusError:
 			data.CountError++
-		case imports.RowStatusNeedsReview:
-			data.CountPending++
-		default:
-			if row.Action == imports.ActionSkip {
-				data.CountPending++
-			} else {
+		case imports.RowStatusValid:
+			if row.Action != imports.ActionSkip {
 				data.CountReady++
 			}
+		default:
+			data.CountPending++
 		}
 
 		data.Rows = append(data.Rows, importReviewRow{
@@ -153,7 +176,7 @@ func (app *application) postImportReview(w http.ResponseWriter, r *http.Request)
 	rowID := r.FormValue("row_id")
 	action := imports.Action(r.FormValue("action"))
 
-	if err := app.services.imports.Review(ctx, []imports.Decision{{RowID: rowID, Action: action}}); err != nil {
+	if err := app.services.equipmentImports.Review(ctx, []imports.Decision{{RowID: rowID, Action: action}}); err != nil {
 		return httperr.InternalServerError(err)
 	}
 
@@ -163,8 +186,15 @@ func (app *application) postImportReview(w http.ResponseWriter, r *http.Request)
 
 // postImportConfirm commits the import and redirects to the equipment list.
 func (app *application) postImportConfirm(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	// TODO: implement CommitHandler for equipment
+	ctx := r.Context()
 	orgID := r.PathValue("org_id")
+	sessionID := r.PathValue("id")
+
+	if err := app.services.equipmentImports.Commit(ctx, sessionID); err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	app.flash.Put(ctx, "Equipment imported successfully.", flash.Success)
 	http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/equipment", http.StatusSeeOther)
 	return nil
 }

@@ -69,6 +69,27 @@ func (r *Repository) GetSession(ctx context.Context, id string) (Session, error)
 	return sessionFromRecord(row), nil
 }
 
+func (r *Repository) GetStagedSession(ctx context.Context, orgID string) (Session, error) {
+	row, err := r.sessions.GetStagedSession(ctx, gensessions.GetStagedSessionParams{
+		OrgID:  orgID,
+		Status: string(StatusReady),
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Session{}, ErrNotFound
+		}
+		return Session{}, fmt.Errorf("GetStagedSession: %w", err)
+	}
+	return sessionFromRecord(row), nil
+}
+
+func (r *Repository) DeleteSession(ctx context.Context, id string) error {
+	if err := r.sessions.DeleteSession(ctx, id); err != nil {
+		return fmt.Errorf("DeleteSession: %w", err)
+	}
+	return nil
+}
+
 func (r *Repository) UpdateSessionStatus(ctx context.Context, id string, status Status) (Session, error) {
 	row, err := r.sessions.UpdateSessionStatus(ctx, gensessions.UpdateSessionStatusParams{
 		Status: string(status),
@@ -118,6 +139,18 @@ func (r *Repository) ListDataByAction(ctx context.Context, sessionID string, act
 		rows[i] = dataFromRecord(rec)
 	}
 	return rows, nil
+}
+
+func (r *Repository) UpdateDataStatus(ctx context.Context, id string, status RowStatus, errMsg string) error {
+	_, err := r.data.UpdateDataStatus(ctx, gendata.UpdateDataStatusParams{
+		Status:       string(status),
+		ErrorMessage: errMsg,
+		ID:           id,
+	})
+	if err != nil {
+		return fmt.Errorf("UpdateDataStatus: %w", err)
+	}
+	return nil
 }
 
 func (r *Repository) UpdateDataAction(ctx context.Context, id string, action Action) (Row, error) {

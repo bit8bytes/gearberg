@@ -20,7 +20,7 @@ func (q *Queries) DeleteDataBySession(ctx context.Context, sessionID string) err
 }
 
 const getData = `-- name: GetData :one
-SELECT id, session_id, row_number, data, status, error_message, "action" FROM import_data
+SELECT id, session_id, row_number, data, status, error_message, "action", updated_at, created_at FROM import_data
 WHERE id = ?
 `
 
@@ -35,6 +35,8 @@ func (q *Queries) GetData(ctx context.Context, id string) (ImportDatum, error) {
 		&i.Status,
 		&i.ErrorMessage,
 		&i.Action,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -42,7 +44,7 @@ func (q *Queries) GetData(ctx context.Context, id string) (ImportDatum, error) {
 const insertData = `-- name: InsertData :one
 INSERT INTO import_data (id, session_id, row_number, data)
 VALUES (?, ?, ?, ?)
-RETURNING id, session_id, row_number, data, status, error_message, "action"
+RETURNING id, session_id, row_number, data, status, error_message, "action", updated_at, created_at
 `
 
 type InsertDataParams struct {
@@ -68,12 +70,14 @@ func (q *Queries) InsertData(ctx context.Context, arg InsertDataParams) (ImportD
 		&i.Status,
 		&i.ErrorMessage,
 		&i.Action,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listData = `-- name: ListData :many
-SELECT id, session_id, row_number, data, status, error_message, "action" FROM import_data
+SELECT id, session_id, row_number, data, status, error_message, "action", updated_at, created_at FROM import_data
 WHERE session_id = ?
 ORDER BY row_number ASC
 `
@@ -95,6 +99,8 @@ func (q *Queries) ListData(ctx context.Context, sessionID string) ([]ImportDatum
 			&i.Status,
 			&i.ErrorMessage,
 			&i.Action,
+			&i.UpdatedAt,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -110,7 +116,7 @@ func (q *Queries) ListData(ctx context.Context, sessionID string) ([]ImportDatum
 }
 
 const listDataByAction = `-- name: ListDataByAction :many
-SELECT id, session_id, row_number, data, status, error_message, "action" FROM import_data
+SELECT id, session_id, row_number, data, status, error_message, "action", updated_at, created_at FROM import_data
 WHERE session_id = ? AND action = ?
 ORDER BY row_number ASC
 `
@@ -137,6 +143,8 @@ func (q *Queries) ListDataByAction(ctx context.Context, arg ListDataByActionPara
 			&i.Status,
 			&i.ErrorMessage,
 			&i.Action,
+			&i.UpdatedAt,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -153,9 +161,9 @@ func (q *Queries) ListDataByAction(ctx context.Context, arg ListDataByActionPara
 
 const updateDataAction = `-- name: UpdateDataAction :one
 UPDATE import_data
-SET action = ?
+SET action = ?, updated_at = unixepoch()
 WHERE id = ?
-RETURNING id, session_id, row_number, data, status, error_message, "action"
+RETURNING id, session_id, row_number, data, status, error_message, "action", updated_at, created_at
 `
 
 type UpdateDataActionParams struct {
@@ -174,15 +182,17 @@ func (q *Queries) UpdateDataAction(ctx context.Context, arg UpdateDataActionPara
 		&i.Status,
 		&i.ErrorMessage,
 		&i.Action,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const updateDataStatus = `-- name: UpdateDataStatus :one
 UPDATE import_data
-SET status = ?, error_message = ?
+SET status = ?, error_message = ?, updated_at = unixepoch()
 WHERE id = ?
-RETURNING id, session_id, row_number, data, status, error_message, "action"
+RETURNING id, session_id, row_number, data, status, error_message, "action", updated_at, created_at
 `
 
 type UpdateDataStatusParams struct {
@@ -202,6 +212,8 @@ func (q *Queries) UpdateDataStatus(ctx context.Context, arg UpdateDataStatusPara
 		&i.Status,
 		&i.ErrorMessage,
 		&i.Action,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }

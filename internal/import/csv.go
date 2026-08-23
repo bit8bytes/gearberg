@@ -32,6 +32,10 @@ type CSVReader struct {
 	r pkgcsv.Reader
 }
 
+func init() {
+	RegisterFormat(FormatCSV, &CSVReader{r: pkgcsv.Reader{}})
+}
+
 // NewCSVReader returns a CSVReader wrapping a pkg/csv.Reader.
 func NewCSVReader(r pkgcsv.Reader) *CSVReader {
 	return &CSVReader{r: r}

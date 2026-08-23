@@ -19,13 +19,13 @@ ORDER BY row_number ASC;
 
 -- name: UpdateDataAction :one
 UPDATE import_data
-SET action = ?
+SET action = ?, updated_at = unixepoch()
 WHERE id = ?
 RETURNING *;
 
 -- name: UpdateDataStatus :one
 UPDATE import_data
-SET status = ?, error_message = ?
+SET status = ?, error_message = ?, updated_at = unixepoch()
 WHERE id = ?
 RETURNING *;
 

@@ -101,6 +101,32 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	return item, nil
 }
 
+// CreateWithUnits creates a serialized equipment item with explicitly provided
+// units, preserving serial numbers supplied by the caller (e.g. from import data).
+func (s *Service) CreateWithUnits(ctx context.Context, base Base, unitList []CreateUnit) (*Equipment, error) {
+	itemID := uid.New()
+	for i := range unitList {
+		unitList[i].EquipmentID = itemID
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("CreateWithUnits: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	item, err := s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{
+		ID:    itemID,
+		Base:  base,
+		Units: unitList,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("CreateWithUnits: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("CreateWithUnits: %w", err)
+	}
+	return item, nil
+}
+
 // ListParams holds the parameters for listing equipment.
 type ListParams struct {
 	OrgID    string
@@ -118,6 +144,20 @@ func (s *Service) List(ctx context.Context, p ListParams) ([]Equipment, paginati
 	}
 	meta := pagination.CalculateMetadata(total, p.Filters.Page, p.Filters.PageSize)
 	return items, meta, nil
+}
+
+// ListNames returns the names of all equipment items belonging to orgID.
+// Used by the import conflict-detection step.
+func (s *Service) ListNames(ctx context.Context, orgID string) ([]string, error) {
+	items, _, err := s.repo.List(ctx, orgID, "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
+	if err != nil {
+		return nil, fmt.Errorf("ListNames: %w", err)
+	}
+	names := make([]string, len(items))
+	for i, item := range items {
+		names[i] = item.Name
+	}
+	return names, nil
 }
 
 // findByName returns the first equipment item in items whose name matches name,

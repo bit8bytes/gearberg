@@ -1,91 +1,93 @@
 {{ define "title" }}Review Import{{ end }}
 
 {{ define "page" }}
-<div class="max-w-7xl mx-auto px-4 my-8 flex flex-col gap-6">
+<div class="max-w-6xl mx-auto m-6 w-full">
 
-  <div>
-    <a href="/orgs/{{ .Data.OrgID }}/import" class="text-xs font-semibold tracking-widest text-primary uppercase mb-1 hover:underline">&larr; Upload</a>
-    <p class="text-3xl font-bold leading-tight">Review Import</p>
-    <p class="text-sm text-base-content/60 mt-1">Review the rows below before confirming. Rows with errors are excluded automatically.</p>
-  </div>
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
 
-  <div class="flex gap-3 text-sm">
-    <span class="badge badge-success badge-outline">{{ .Data.CountReady }} ready</span>
-    <span class="badge badge-warning badge-outline">{{ .Data.CountPending }} pending</span>
-    <span class="badge badge-error badge-outline">{{ .Data.CountError }} error</span>
-  </div>
-
-  {{ if gt .Data.CountPending 0 }}
-  <div role="alert" class="alert alert-warning text-sm">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-    </svg>
-    <span>{{ .Data.CountPending }} row(s) need your decision before you can confirm.</span>
-  </div>
-  {{ end }}
-
-  <table class="table w-full">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Error</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{ range .Data.Rows }}
-      <tr class="{{ if eq .Status "error" }}opacity-40{{ end }}">
-        <td class="text-base-content/50 text-xs">{{ .RowNumber }}</td>
-        <td class="font-medium">{{ .Name }}</td>
-        <td>
-          {{ if eq .Status "error" }}
-            <span class="badge badge-error badge-sm">Error</span>
-          {{ else if eq .Status "needs_review" }}
-            <span class="badge badge-warning badge-sm">Review</span>
-          {{ else }}
-            <span class="badge badge-success badge-sm">Ready</span>
-          {{ end }}
-        </td>
-        <td class="text-xs text-error">{{ .ErrorMessage }}</td>
-        <td>
-          {{ if eq .Status "error" }}
-            <span class="text-xs text-base-content/40">Skipped</span>
-          {{ else }}
-            <form method="POST" action="/orgs/{{ $.Data.OrgID }}/import/{{ $.Data.SessionID }}/review">
-              <input type="hidden" name="row_id" value="{{ .ID }}" />
-              {{ if eq .Action "skip" }}
-                <input type="hidden" name="action" value="create" />
-                <button class="btn btn-xs btn-ghost">Skipped — undo</button>
-              {{ else }}
-                <input type="hidden" name="action" value="skip" />
-                <button class="btn btn-xs btn-ghost text-error">Skip</button>
-              {{ end }}
-            </form>
-          {{ end }}
-        </td>
-      </tr>
-      {{ end }}
-    </tbody>
-  </table>
-
-  {{ if gt .Data.CountReady 0 }}
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/import/{{ .Data.SessionID }}/confirm">
-    <div class="flex gap-2">
-      <button type="submit" class="btn btn-primary"
-        {{ if gt .Data.CountPending 0 }}disabled title="Resolve all pending rows first"{{ end }}>
-        Confirm Import
-      </button>
-      <a href="/orgs/{{ .Data.OrgID }}/equipment" class="btn btn-ghost">Cancel</a>
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <span class="text-xs font-semibold tracking-widest text-primary uppercase">Equipment</span>
+          <p class="text-3xl font-bold leading-tight mt-1">Review Import</p>
+        </div>
+        <div class="flex items-center gap-3 pt-1">
+          <span class="badge badge-success badge-outline">{{ .Data.CountReady }} ready</span>
+          {{ if gt .Data.CountPending 0 }}<span class="badge badge-warning badge-outline">{{ .Data.CountPending }} pending</span>{{ end }}
+          {{ if gt .Data.CountError 0 }}<span class="badge badge-error badge-outline">{{ .Data.CountError }} error</span>{{ end }}
+        </div>
+      </div>
+      <ul class="steps w-full text-xs">
+        <li class="step step-primary">Upload</li>
+        <li class="step step-primary">Validate</li>
+        <li class="step step-primary">Review</li>
+        <li class="step">Confirm</li>
+      </ul>
     </div>
-  </form>
-  {{ else }}
-  <div class="flex gap-2 items-center">
-    <p class="text-sm text-base-content/60">Nothing to import — all rows have errors.</p>
-    <a href="/orgs/{{ .Data.OrgID }}/import" class="btn btn-sm">Try again</a>
-  </div>
-  {{ end }}
 
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th class="text-xs w-10">#</th>
+            <th class="text-xs">Name</th>
+            <th class="text-xs">Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Data.Rows }}
+          <tr class="{{ if eq .Status "error" }}opacity-40{{ end }}">
+            <td class="text-base-content/40 text-xs tabular-nums">{{ .RowNumber }}</td>
+            <td class="font-medium">{{ .Name }}</td>
+            <td>
+              {{ if eq .Status "error" }}
+                <span class="badge badge-error badge-sm badge-outline">{{ .ErrorMessage }}</span>
+              {{ else if and (eq .Status "needs_review") (ne .Action "skip") }}
+                <span class="badge badge-warning badge-sm badge-outline">Needs review</span>
+              {{ else if eq .Action "skip" }}
+                <span class="badge badge-ghost badge-sm">Skipped</span>
+              {{ else }}
+                <span class="badge badge-success badge-sm badge-outline">Ready</span>
+              {{ end }}
+            </td>
+            <td class="text-right">
+              {{ if ne .Status "error" }}
+                <form method="POST" action="/orgs/{{ $.Data.OrgID }}/import/{{ $.Data.SessionID }}/review">
+                  <input type="hidden" name="row_id" value="{{ .ID }}" />
+                  {{ if eq .Action "skip" }}
+                    <input type="hidden" name="action" value="create" />
+                    <button class="btn btn-xs btn-ghost">Undo</button>
+                  {{ else }}
+                    <input type="hidden" name="action" value="skip" />
+                    <button class="btn btn-xs btn-ghost text-error">Skip</button>
+                  {{ end }}
+                </form>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-6 py-4 border-t border-base-300 flex items-center justify-between gap-4">
+      {{ if gt .Data.CountReady 0 }}
+        <form method="POST" action="/orgs/{{ .Data.OrgID }}/import/{{ .Data.SessionID }}/confirm">
+          <button type="submit" class="btn btn-primary"
+            {{ if gt .Data.CountPending 0 }}disabled title="Resolve all pending rows first"{{ end }}>
+            Confirm Import
+          </button>
+        </form>
+      {{ else }}
+        <p class="text-sm text-base-content/40">Nothing to import — all rows have errors.</p>
+      {{ end }}
+      <form method="POST" action="/orgs/{{ .Data.OrgID }}/import/{{ .Data.SessionID }}/delete"
+        onsubmit="return confirm('Discard this import session?')">
+        <button type="submit" class="btn btn-ghost btn-sm text-error">Discard</button>
+      </form>
+    </div>
+
+  </div>
 </div>
 {{ end }}
