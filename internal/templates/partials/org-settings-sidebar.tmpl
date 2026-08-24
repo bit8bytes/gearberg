@@ -1,13 +1,13 @@
 {{ define "org-settings-sidebar" }}
 <aside class="card bg-base-100 border border-base-300 shadow-sm w-56 shrink-0 p-4 flex flex-col gap-0.5">
   <p class="pb-2 text-xs font-medium text-base-content/40 uppercase tracking-wider">Org</p>
-  <a href="/orgs/{{ .Data.OrgID }}"
-     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+  <a href="/orgs/{{ .Data.OrgID }}/settings"
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
     <span class="size-4">{{ template "settings-icon" . }}</span>
      General
   </a>
-  <a href="/orgs/{{ .Data.OrgID }}/settings"
-     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
+  <a href="/orgs/{{ .Data.OrgID }}/settings/localization"
+     class="flex gap-2 items-center px-3 py-1.5 rounded text-sm {{ if eq $.URL.Path (printf "/orgs/%v/settings/localization" .Data.OrgID) }}bg-base-300 font-semibold{{ else }}hover:bg-base-200{{ end }}">
     <span class="size-4">{{ template "localization-icon" . }}</span>
      Localization
   </a>

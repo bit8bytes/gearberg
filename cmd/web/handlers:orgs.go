@@ -159,7 +159,7 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 		return httperr.InternalServerError(err)
 	}
 
-	http.Redirect(w, r, "/orgs/"+id, http.StatusSeeOther) //nolint:gosec // id is a parsed and validated KSUID, not an open redirect
+	http.Redirect(w, r, "/orgs/"+id+"/settings", http.StatusSeeOther) //nolint:gosec // id is a parsed and validated KSUID, not an open redirect
 	return nil
 }
 

@@ -4,8 +4,23 @@
     <div class="max-w-7xl mx-auto px-4 w-full flex flex-row items-center">
       <div class="flex-1 flex flex-row items-center gap-6 text-white">
         {{ template "logo-with-text" . }}
-        <ul class="">
-          <li><a class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .OrgID) }}text-primary{{ end }}" href="/orgs/{{ .OrgID }}/equipment">Equipment</a></li>
+        <ul class="flex gap-1">
+          <li>
+            <a 
+              class="btn btn-ghost hidden md:flex {{ if or (eq $.URL.Path (printf "/orgs/%v" .OrgID)) (eq $.URL.Path (printf "/orgs/%v/" .OrgID)) }}text-primary{{ end }}" 
+              href="/orgs/{{ .OrgID }}/"
+              >
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a 
+              class="btn btn-ghost hidden md:flex {{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .OrgID) }}text-primary{{ end }}" 
+              href="/orgs/{{ .OrgID }}/equipment"
+              >
+              Equipment
+            </a>
+          </li>
         </ul>
       </div>
       <div class="flex gap-2">
@@ -23,18 +38,24 @@
             </span>
             <div class="border-b border-base-200"></div>
             <li>
+              <a href="/orgs/{{ .OrgID }}" class="{{ if or (eq $.URL.Path (printf "/orgs/%v" .OrgID)) (eq $.URL.Path (printf "/orgs/%v/" .OrgID)) }}text-primary{{ end }}">
+                <span class="size-6">{{ template "dashboard-icon" . }}</span>
+                Dashboard
+              </a>
+            </li>
+            <li>
               <a href="/orgs/{{ .OrgID }}/equipment" class="{{ if inPath $.URL.Path (printf "/orgs/%v/equipment" .OrgID) }}text-primary{{ end }}">
                 <span class="size-6">{{ template "equipment-icon" . }}</span>
                 Equipment
               </a>
             </li>
+            <div class="border-b border-base-200"></div>
             <li>
               <a href="/settings/organizations" class="{{ if eq $.URL.Path "/settings/organizations" }}text-primary{{ end }}">
                 <span class="size-6">{{ template "orgs-icon" . }}</span>
                 Organizations
               </a>
             </li>
-            <div class="border-b border-base-200"></div>
             <li>
               <a href="/settings/account" class="{{ if inPath $.URL.Path "/settings" }}text-primary{{ end }}">
                 <span class="size-6">{{ template "settings-icon" . }}</span>
