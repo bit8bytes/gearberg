@@ -8,9 +8,9 @@
       <span class="text-xs font-semibold tracking-widest text-error uppercase mb-1">Action Required</span>
       <p class="text-2xl font-bold leading-tight">Inspections Overdue</p>
     </div>
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto h-65 overflow-y-auto">
       <table class="table w-full">
-        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60 sticky top-0">
           <tr>
             <th>Item</th>
             <th class="text-right">Overdue</th>
@@ -28,6 +28,9 @@
         </tbody>
       </table>
     </div>
+    <div class="px-6 py-3 border-t border-base-300 flex justify-end">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=overdue" class="btn btn-sm">See All <span class="w-4 h-4">{{ template "arrow-right-icon" }}</span></a>
+    </div>
   </div>
 
   {{/* Soon Inspections */}}
@@ -36,9 +39,9 @@
       <span class="text-xs font-semibold tracking-widest text-warning uppercase mb-1">Upcoming</span>
       <p class="text-2xl font-bold leading-tight">Inspections Due Within 30 Days</p>
     </div>
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto h-65 overflow-y-auto">
       <table class="table w-full">
-        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60 sticky top-0">
           <tr>
             <th>Item</th>
             <th class="text-right">Due In</th>
@@ -55,6 +58,9 @@
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="px-6 py-3 border-t border-base-300 flex justify-end">
+      <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=due-30d" class="btn btn-sm">See All <span class="w-4 h-4">{{ template "arrow-right-icon" }}</span></a>
     </div>
   </div>
 
