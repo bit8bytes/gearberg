@@ -378,3 +378,21 @@ func (s *Service) ListContainers(ctx context.Context, memberID string) ([]PartOf
 	}
 	return items, nil
 }
+
+// ListOverdueInspections returns up to 5 serialized units with a past inspection date.
+func (s *Service) ListOverdueInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
+	items, err := s.repo.ListOverdueInspections(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListOverdueInspections: %w", err)
+	}
+	return items, nil
+}
+
+// ListSoonInspections returns up to 5 serialized units with an inspection due within 30 days.
+func (s *Service) ListSoonInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
+	items, err := s.repo.ListSoonInspections(ctx, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("ListSoonInspections: %w", err)
+	}
+	return items, nil
+}

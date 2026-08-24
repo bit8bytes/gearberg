@@ -17,14 +17,16 @@
           </tr>
         </thead>
         <tbody>
+          {{ range .Data.OverdueInspections }}
           <tr>
-            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/1" class="hover:underline">ARRI Alexa 35</a></td>
-            <td class="text-right"><span class="badge badge-error badge-soft">12 days</span></td>
+            <td class="text-sm"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .EquipmentID }}/units" class="hover:underline">{{ .EquipmentName }}</a></td>
+            <td class="text-right"><span class="badge badge-error badge-soft">{{ .DaysOverdue }} days</span></td>
           </tr>
+          {{ else }}
           <tr>
-            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/2" class="hover:underline">Sachtler FSB 10</a></td>
-            <td class="text-right"><span class="badge badge-error badge-soft">52 days</span></td>
+            <td colspan="2" class="text-sm text-base-content/40 text-center py-6">No overdue inspections</td>
           </tr>
+          {{ end }}
         </tbody>
       </table>
     </div>
@@ -48,14 +50,16 @@
           </tr>
         </thead>
         <tbody>
+          {{ range .Data.SoonInspections }}
           <tr>
-            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/4" class="hover:underline">Sony FX6</a></td>
-            <td class="text-right"><span class="badge badge-warning badge-soft">12 days</span></td>
+            <td class="text-sm"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .EquipmentID }}/units" class="hover:underline">{{ .EquipmentName }}</a></td>
+            <td class="text-right"><span class="badge badge-warning badge-soft">{{ .DaysUntil }} days</span></td>
           </tr>
+          {{ else }}
           <tr>
-            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/5" class="hover:underline">Ronin 4D</a></td>
-            <td class="text-right"><span class="badge badge-warning badge-soft">22 days</span></td>
+            <td colspan="2" class="text-sm text-base-content/40 text-center py-6">No upcoming inspections</td>
           </tr>
+          {{ end }}
         </tbody>
       </table>
     </div>

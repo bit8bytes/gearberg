@@ -93,3 +93,32 @@ WHERE id = sqlc.arg(id);
 -- name: Delete :exec
 DELETE FROM equipment_serialized_items
 WHERE id = ?;
+
+-- name: ListOverdueInspections :many
+SELECT
+    esi.id AS unit_id,
+    esi.equipment_id,
+    e.name AS equipment_name,
+    esi.next_inspection_at
+FROM equipment_serialized_items esi
+JOIN equipment e ON e.id = esi.equipment_id
+WHERE esi.org_id = sqlc.arg(org_id)
+  AND esi.next_inspection_at IS NOT NULL
+  AND esi.next_inspection_at < unixepoch()
+ORDER BY esi.next_inspection_at ASC
+LIMIT 5;
+
+-- name: ListSoonInspections :many
+SELECT
+    esi.id AS unit_id,
+    esi.equipment_id,
+    e.name AS equipment_name,
+    esi.next_inspection_at
+FROM equipment_serialized_items esi
+JOIN equipment e ON e.id = esi.equipment_id
+WHERE esi.org_id = sqlc.arg(org_id)
+  AND esi.next_inspection_at IS NOT NULL
+  AND esi.next_inspection_at >= unixepoch()
+  AND esi.next_inspection_at <= unixepoch() + 30 * 86400
+ORDER BY esi.next_inspection_at ASC
+LIMIT 5;

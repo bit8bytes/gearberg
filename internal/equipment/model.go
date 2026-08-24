@@ -277,6 +277,33 @@ type UnitStatusEntry struct {
 	Name string
 }
 
+// InspectionSummary is a lightweight projection used in dashboard widgets,
+// joining a serialized unit with its parent equipment name.
+type InspectionSummary struct {
+	UnitID           string
+	EquipmentID      string
+	EquipmentName    string
+	NextInspectionAt int64
+}
+
+// DaysOverdue returns how many full days past the inspection date have elapsed.
+func (s *InspectionSummary) DaysOverdue() int64 {
+	d := (time.Now().Unix() - s.NextInspectionAt) / 86400
+	if d < 0 {
+		return 0
+	}
+	return d
+}
+
+// DaysUntil returns how many full days remain until the inspection date.
+func (s *InspectionSummary) DaysUntil() int64 {
+	d := (s.NextInspectionAt - time.Now().Unix()) / 86400
+	if d < 0 {
+		return 0
+	}
+	return d
+}
+
 // Label converts the snake_case Name to Title Case (e.g. "under_repair" → "Under Repair").
 func (u UnitStatusEntry) Label() string {
 	words := strings.Fields(strings.ReplaceAll(u.Name, "_", " "))
