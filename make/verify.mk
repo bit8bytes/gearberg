@@ -9,7 +9,6 @@ license:
 	go-licenses check ./... \
 		--allowed_licenses=MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC \
 		--ignore github.com/bit8bytes/gearberg \
-		--ignore github.com/bit8bytes/filmlet \
 		--ignore modernc.org/mathutil \
 		--ignore github.com/segmentio/asm
 

@@ -109,7 +109,7 @@ func setupDatabase(ctx context.Context, options *options) (*sql.DB, error) {
 func setupSCS(db *sql.DB) (*scs.SessionManager, error) {
 	mgr := scs.New()
 	mgr.Lifetime = 30 * 24 * time.Hour
-	mgr.Cookie.Name = "filmlet"
+	mgr.Cookie.Name = "gearberg"
 	store, err := database.SessionStore(db, time.Hour)
 	if err != nil {
 		return nil, fmt.Errorf("session store: %w", err)
