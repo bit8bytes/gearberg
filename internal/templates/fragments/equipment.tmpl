@@ -18,7 +18,13 @@
     <div class="w-14 h-14 bg-base-200 rounded-lg border-dashed border-2 border-base-300 overflow-hidden flex items-center justify-center shrink-0">
       {{ if .ImageURL }}
       <button type="button" class="cursor-pointer w-full h-full" data-modal-target="photo-viewer-dialog" data-photo-src="{{ .ImageURL }}">
-        <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
+        {{/* 
+          Loading "lazy" defers loading the image until it reaches a calculated distance from the viewport,
+          as defined by the browser. While explicit width and height attributes are recommended for all 
+          images to avoid layout shift, they are especially important for lazy-loaded ones. 
+          See: [https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/loading] for more information. 
+          */}}
+        <img loading="lazy" width="56" height="56" src="{{ .ImageURL }}" alt="{{ .Name }}" class="w-full h-full object-contain" />
       </button>
       {{ end }}
     </div>

@@ -4,7 +4,7 @@
   <div class="relative w-full aspect-square" data-image-preview>
     <button type="button" class="cursor-pointer w-full h-full rounded-md border-2 border-base-300 flex items-center justify-center overflow-hidden" data-modal-target="photo-picker-dialog">
       {{ if and .Data.Item .Data.Item.ImageURL }}
-      <img class="w-full h-full object-contain" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
+      <img loading="lazy" class="w-full h-full object-contain" src="{{ .Data.Item.ImageURL }}" data-image-preview-img alt="{{ .Data.Item.Name }}" />
       {{ else }}
       <span data-image-placeholder>{{ template "camera-icon" . }}</span>
       <img class="hidden w-full h-full object-contain" data-image-preview-img alt="Preview" />
