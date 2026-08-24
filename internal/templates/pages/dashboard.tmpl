@@ -1,5 +1,63 @@
 {{ define "page" }}
 <div class="max-w-6xl mx-auto px-4 py-8 w-full">
-  Dashboard
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  {{/* Overdue Inspections */}}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <span class="text-xs font-semibold tracking-widest text-error uppercase mb-1">Action Required</span>
+      <p class="text-2xl font-bold leading-tight">Inspections Overdue</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+          <tr>
+            <th>Item</th>
+            <th class="text-right">Overdue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/1" class="hover:underline">ARRI Alexa 35</a></td>
+            <td class="text-right"><span class="badge badge-error badge-soft">12 days</span></td>
+          </tr>
+          <tr>
+            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/2" class="hover:underline">Sachtler FSB 10</a></td>
+            <td class="text-right"><span class="badge badge-error badge-soft">52 days</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {{/* Soon Inspections */}}
+  <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-hidden">
+    <div class="px-6 pt-6 pb-4 border-b border-base-300">
+      <span class="text-xs font-semibold tracking-widest text-warning uppercase mb-1">Upcoming</span>
+      <p class="text-2xl font-bold leading-tight">Inspections Due Within 30 Days</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+          <tr>
+            <th>Item</th>
+            <th class="text-right">Due In</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/4" class="hover:underline">Sony FX6</a></td>
+            <td class="text-right"><span class="badge badge-warning badge-soft">12 days</span></td>
+          </tr>
+          <tr>
+            <td class="text-sm"><a href="/orgs/{{ .Data.OrgID }}/equipment/5" class="hover:underline">Ronin 4D</a></td>
+            <td class="text-right"><span class="badge badge-warning badge-soft">22 days</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </div>
 </div>
 {{ end }}
