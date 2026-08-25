@@ -319,6 +319,13 @@ type UnitStatusEntry struct {
 	Name string
 }
 
+// DashboardStats holds aggregate inventory metrics shown on the dashboard.
+type DashboardStats struct {
+	// TotalValue is the sum of purchase_price × quantity for all units, in cents.
+	TotalValue units.Cents
+	TotalStock int64
+}
+
 // InspectionSummary is a lightweight projection used in dashboard widgets,
 // joining a serialized unit with its parent equipment name.
 type InspectionSummary struct {

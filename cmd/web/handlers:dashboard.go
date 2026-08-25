@@ -15,6 +15,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/bit8bytes/gearberg/internal/equipment"
@@ -24,12 +25,26 @@ import (
 
 type dashboardData struct {
 	OrgID              string
+	TotalValue         string
+	TotalStock         int64
+	OverdueCount       int
+	SoonCount          int
 	OverdueInspections []equipment.InspectionSummary
 	SoonInspections    []equipment.InspectionSummary
 }
 
 func (app *application) getDashboard(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	orgID := r.PathValue("org_id")
+
+	orgSettings, err := app.services.orgsettings.Get(r.Context(), orgID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	stats, err := app.services.equipment.Stats(r.Context(), orgID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
 
 	overdue, err := app.services.equipment.ListOverdueInspections(r.Context(), orgID)
 	if err != nil {
@@ -41,9 +56,18 @@ func (app *application) getDashboard(w http.ResponseWriter, r *http.Request) *ht
 		return httperr.InternalServerError(err)
 	}
 
+	currency := ""
+	if orgSettings != nil {
+		currency = orgSettings.Currency.Symbol()
+	}
+
 	tmplData := app.html.TemplateData(r)
 	tmplData.Data = dashboardData{
 		OrgID:              orgID,
+		TotalValue:         fmt.Sprintf("%s %.2f", currency, float64(stats.TotalValue)/100),
+		TotalStock:         stats.TotalStock,
+		OverdueCount:       len(overdue),
+		SoonCount:          len(soon),
 		OverdueInspections: overdue,
 		SoonInspections:    soon,
 	}

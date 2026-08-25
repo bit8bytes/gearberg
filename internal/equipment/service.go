@@ -381,6 +381,10 @@ func (s *Service) ListContainers(ctx context.Context, memberID string) ([]PartOf
 }
 
 // ListOverdueInspections returns up to 5 serialized units with a past inspection date.
+func (s *Service) Stats(ctx context.Context, orgID string) (DashboardStats, error) {
+	return s.repo.Stats(ctx, orgID)
+}
+
 func (s *Service) ListOverdueInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
 	items, err := s.repo.ListOverdueInspections(ctx, orgID)
 	if err != nil {

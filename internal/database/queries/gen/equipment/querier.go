@@ -16,6 +16,7 @@ type Querier interface {
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)
 	List(ctx context.Context, arg ListParams) ([]ListRow, error)
 	ListBySerialNumber(ctx context.Context, arg ListBySerialNumberParams) ([]ListBySerialNumberRow, error)
+	Stats(ctx context.Context, orgID string) (StatsRow, error)
 	UpdateArchived(ctx context.Context, arg UpdateArchivedParams) error
 	UpdateDetails(ctx context.Context, arg UpdateDetailsParams) error
 	UpdatePricing(ctx context.Context, arg UpdatePricingParams) error

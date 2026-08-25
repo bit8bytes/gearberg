@@ -101,6 +101,35 @@ LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 SELECT COUNT(*) FROM equipment
 WHERE org_id = ?;
 
+-- name: Stats :one
+SELECT
+    COALESCE(
+        (SELECT SUM(ebi.purchase_price * ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = sqlc.arg(org_id) AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT SUM(esi.purchase_price)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)),
+        0
+    ) AS total_value,
+    COALESCE(
+        (SELECT SUM(ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = sqlc.arg(org_id) AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)),
+        0
+    ) AS total_stock;
+
 -- name: Create :one
 INSERT INTO equipment (
     id,

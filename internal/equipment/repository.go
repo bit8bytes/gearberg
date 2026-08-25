@@ -688,6 +688,17 @@ func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID stri
 
 // ListOverdueInspections returns up to 5 serialized units whose next_inspection_at
 // is in the past, ordered by most overdue first.
+func (r *Repository) Stats(ctx context.Context, orgID string) (DashboardStats, error) {
+	row, err := r.equipment.Stats(ctx, orgID)
+	if err != nil {
+		return DashboardStats{}, fmt.Errorf("Stats: %w", err)
+	}
+	return DashboardStats{
+		TotalValue: units.Cents(row.TotalValue),
+		TotalStock: row.TotalStock,
+	}, nil
+}
+
 func (r *Repository) ListOverdueInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
 	rows, err := r.serializedItems.ListOverdueInspections(ctx, orgID)
 	if err != nil {

@@ -709,6 +709,48 @@ func (q *Queries) ListBySerialNumber(ctx context.Context, arg ListBySerialNumber
 	return items, nil
 }
 
+const stats = `-- name: Stats :one
+SELECT
+    COALESCE(
+        (SELECT SUM(ebi.purchase_price * ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = ?1 AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT SUM(esi.purchase_price)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = ?1),
+        0
+    ) AS total_value,
+    COALESCE(
+        (SELECT SUM(ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = ?1 AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = ?1),
+        0
+    ) AS total_stock
+`
+
+type StatsRow struct {
+	TotalValue int64
+	TotalStock int64
+}
+
+func (q *Queries) Stats(ctx context.Context, orgID string) (StatsRow, error) {
+	row := q.db.QueryRowContext(ctx, stats, orgID)
+	var i StatsRow
+	err := row.Scan(&i.TotalValue, &i.TotalStock)
+	return i, err
+}
+
 const updateArchived = `-- name: UpdateArchived :exec
 UPDATE equipment
 SET
