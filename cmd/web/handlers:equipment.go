@@ -77,6 +77,7 @@ type equipmentData struct {
 	Filtered        bool
 	Query           string
 	Category        string
+	Inspection      string
 	Sort            string
 	PageBaseURL     template.URL
 	PrintURL        template.URL
@@ -94,6 +95,7 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	qs := r.URL.Query()
 	query := qs.Get("q")
 	category := qs.Get("category")
+	inspection := qs.Get("inspection")
 	sort := qs.Get("sort")
 
 	page, err := strconv.Atoi(qs.Get("page"))
@@ -102,10 +104,11 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 	}
 
 	items, meta, err := app.services.equipment.List(ctx, equipment.ListParams{
-		OrgID:    id,
-		Query:    query,
-		Category: category,
-		Filters:  pagination.Filters{Page: page, PageSize: 25},
+		OrgID:            id,
+		Query:            query,
+		Category:         category,
+		InspectionFilter: inspection,
+		Filters:          pagination.Filters{Page: page, PageSize: 25},
 	})
 	if err != nil {
 		return httperr.InternalServerError(err)
@@ -128,12 +131,13 @@ func (app *application) getEquipment(w http.ResponseWriter, r *http.Request) *ht
 		OrgID:           id,
 		Categories:      cats,
 		Inventories:     items,
-		Filtered:        query != "" || category != "",
+		Filtered:        query != "" || category != "" || inspection != "",
 		Query:           query,
 		Category:        category,
+		Inspection:      inspection,
 		Sort:            sort,
-		PageBaseURL:     template.URL(equipmentPageURL(id, query, category, sort)),  // #nosec G203
-		PrintURL:        template.URL(equipmentPrintURL(id, query, category, sort)), // #nosec G203
+		PageBaseURL:     template.URL(equipmentPageURL(id, query, category, inspection, sort)),  // #nosec G203
+		PrintURL:        template.URL(equipmentPrintURL(id, query, category, inspection, sort)), // #nosec G203
 		Pagination:      meta,
 		ImportSessionID: importSessionID,
 	}
@@ -756,13 +760,16 @@ func (app *application) processEquipmentImage(r *http.Request, orgID, itemID str
 }
 
 // equipmentPageURL builds the paginated base URL for the inventory list.
-func equipmentPageURL(orgID, query, category, sort string) string {
+func equipmentPageURL(orgID, query, category, inspection, sort string) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment?"
 	if category != "" {
 		base += "category=" + url.QueryEscape(category) + "&"
 	}
 	if query != "" {
 		base += "q=" + url.QueryEscape(query) + "&"
+	}
+	if inspection != "" {
+		base += "inspection=" + url.QueryEscape(inspection) + "&"
 	}
 	if sort != "" {
 		base += "sort=" + url.QueryEscape(sort) + "&"
@@ -771,7 +778,7 @@ func equipmentPageURL(orgID, query, category, sort string) string {
 }
 
 // equipmentPrintURL builds the print URL with optional filter params.
-func equipmentPrintURL(orgID, query, category, sort string) string {
+func equipmentPrintURL(orgID, query, category, inspection, sort string) string {
 	base := "/orgs/" + url.PathEscape(orgID) + "/equipment/print"
 	sep := "?"
 	if category != "" {
@@ -780,6 +787,10 @@ func equipmentPrintURL(orgID, query, category, sort string) string {
 	}
 	if query != "" {
 		base += sep + "q=" + url.QueryEscape(query)
+		sep = "&"
+	}
+	if inspection != "" {
+		base += sep + "inspection=" + url.QueryEscape(inspection)
 		sep = "&"
 	}
 	if sort != "" {

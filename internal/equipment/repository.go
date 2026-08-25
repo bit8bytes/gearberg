@@ -68,14 +68,15 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 // only archived items are returned; otherwise only active items are returned.
 // sortBy may be "code" to order by minimum unit code; otherwise orders by name.
 // Returns total matching count.
-func (r *Repository) List(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
+func (r *Repository) List(ctx context.Context, orgID, query, category, inspectionFilter string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
 	rows, err := r.equipment.List(ctx, genequip.ListParams{
-		OrgID:      orgID,
-		NameQuery:  query,
-		Category:   category,
-		IsArchived: database.Bool(showArchived),
-		PageOffset: int64(f.Offset()),
-		PageLimit:  int64(f.Limit()),
+		OrgID:            orgID,
+		NameQuery:        query,
+		Category:         category,
+		InspectionFilter: inspectionFilter,
+		IsArchived:       database.Bool(showArchived),
+		PageOffset:       int64(f.Offset()),
+		PageLimit:        int64(f.Limit()),
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("List: %w", err)

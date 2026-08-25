@@ -459,17 +459,21 @@ WHERE e.org_id = ?1
   AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || ?2 || '%'))
   AND (?3 = '' OR ec.name = ?3)
   AND (?4 = -1 OR e.is_archived = ?4)
+  AND (?5 = ''
+    OR (?5 = 'overdue'  AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at < unixepoch()))
+    OR (?5 = 'due-30d'  AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at >= unixepoch() AND esi.next_inspection_at <= unixepoch() + 30 * 86400)))
 ORDER BY category_name ASC, e.name ASC
-LIMIT ?6 OFFSET ?5
+LIMIT ?7 OFFSET ?6
 `
 
 type ListParams struct {
-	OrgID      string
-	NameQuery  interface{}
-	Category   interface{}
-	IsArchived interface{}
-	PageOffset int64
-	PageLimit  int64
+	OrgID            string
+	NameQuery        interface{}
+	Category         interface{}
+	IsArchived       interface{}
+	InspectionFilter interface{}
+	PageOffset       int64
+	PageLimit        int64
 }
 
 type ListRow struct {
@@ -511,6 +515,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 		arg.NameQuery,
 		arg.Category,
 		arg.IsArchived,
+		arg.InspectionFilter,
 		arg.PageOffset,
 		arg.PageLimit,
 	)
