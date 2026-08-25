@@ -25,9 +25,15 @@
       </div>
       <div class="flex gap-2">
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-placeholder">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-ghost btn-circle avatar avatar-placeholder"
+            hx-get="/account/header?org_id={{ .OrgID }}"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+            hx-select="#account-avatar">
             <div class="bg-primary text-primary-content w-24 rounded-full">
-              <span>gb</span>
             </div>
           </div>
           <ul
