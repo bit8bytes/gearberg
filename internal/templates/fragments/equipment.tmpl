@@ -77,10 +77,39 @@
         <ul tabindex="-1" class="menu dropdown-content bg-base-100 rounded-box z-10 mt-1 w-36 p-2 gap-1 shadow border border-base-300">
           <li>
             <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="flex items-center gap-2">
-              <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
-              Edit Details
+              <span class="w-4 h-4">{{ template "details-icon" . }}</span>
+              Details
             </a>
           </li>
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/pricing" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "pricing-icon" . }}</span>
+              Pricing
+            </a>
+          </li>
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/properties" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "properties-icon" . }}</span>
+              Properties
+            </a>
+          </li>
+          {{ if eq .TrackingType.String "serialized" }}
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "units-icon" . }}</span>
+              Units
+            </a>
+          </li>
+          {{ end }}
+          {{ if eq .Type.String "kit" }}
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/content" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "kit-icon" . }}</span>
+              Content
+            </a>
+          </li>
+          {{ end }}
+          <div class="border-b border-base-200"></div>
           <li>
             <button type="button" data-modal-target="delete-equipment-{{ .ID }}" class="flex items-center gap-2 text-error">
               <span class="w-4 h-4">{{ template "delete-icon" }}</span>
