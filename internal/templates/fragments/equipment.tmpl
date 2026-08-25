@@ -5,6 +5,7 @@
       <tr>
         <th class="w-20"></th>
         <th class="min-w-56">Name</th>
+        <th class="w-12 text-center">Status</th>
         <th>Category</th>
         <th class="text-right">Stock</th>
         <th class="text-right">Actions</th>
@@ -30,16 +31,22 @@
     </div>
   </td>
   <td class="py-3">
-    <div class="flex items-center gap-2">
-      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover leading-tight">{{ .Name }}</a>
-      {{ if .InspectionStatus.IsOverdue }}
-      <span class="tooltip tooltip-error tooltip-right badge badge-error badge-xs" data-tip="Inspection overdue"></span>
-      {{ else if .InspectionStatus.IsDueSoon }}
-      <span class="tooltip tooltip-warning tooltip-right badge badge-warning badge-xs" data-tip="Inspection due soon"></span>
-      {{ else if .InspectionStatus.IsUpToDate }}
-      <span class="tooltip tooltip-success tooltip-right badge badge-success badge-xs" data-tip="Inspection up to date"></span>
-      {{ end }}
-    </div>
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover leading-tight">{{ .Name }}</a>
+  </td>
+  <td class="py-3 text-center">
+    {{ if .InspectionStatus.IsOverdue }}
+    <span class="tooltip tooltip-error tooltip-right inline-flex" data-tip="Inspection overdue">
+      <span class="w-6 h-6 rounded-full bg-error text-error-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </span>
+    {{ else if .InspectionStatus.IsDueSoon }}
+    <span class="tooltip tooltip-warning tooltip-right inline-flex" data-tip="Inspection due soon">
+      <span class="w-6 h-6 rounded-full bg-warning text-warning-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </span>
+    {{ end }}
   </td>
   <td class="py-3">
     {{ if .CategoryName }}
@@ -88,7 +95,7 @@
 {{ end }}
 {{ else }}
 <tr>
-  <td colspan="5">
+  <td colspan="6">
     <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
       {{ if .Data.Query }}
         <p class="text-sm">No items found for "{{ .Data.Query }}".</p>
