@@ -121,6 +121,13 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 			},
 			UpdatedAt: row.UpdatedAt,
 			CreatedAt: row.CreatedAt,
+			InspectionStatus: func() InspectionStatus {
+				v, ok := row.MinNextInspectionAt.(int64)
+				if !ok {
+					return InspectionStatusNone
+				}
+				return NewInspectionStatus(&v)
+			}(),
 		})
 	}
 	return items, int(totalRecords), nil

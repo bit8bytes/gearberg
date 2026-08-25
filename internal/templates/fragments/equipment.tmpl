@@ -4,7 +4,7 @@
     <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
       <tr>
         <th class="w-20"></th>
-        <th>Name</th>
+        <th class="min-w-56">Name</th>
         <th>Category</th>
         <th class="text-right">Stock</th>
         <th class="text-right">Actions</th>
@@ -30,7 +30,16 @@
     </div>
   </td>
   <td class="py-3">
-    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
+    <div class="flex items-center gap-2">
+      <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover leading-tight">{{ .Name }}</a>
+      {{ if .InspectionStatus.IsOverdue }}
+      <span class="tooltip tooltip-error tooltip-right badge badge-error badge-xs" data-tip="Inspection overdue"></span>
+      {{ else if .InspectionStatus.IsDueSoon }}
+      <span class="tooltip tooltip-warning tooltip-right badge badge-warning badge-xs" data-tip="Inspection due soon"></span>
+      {{ else if .InspectionStatus.IsUpToDate }}
+      <span class="tooltip tooltip-success tooltip-right badge badge-success badge-xs" data-tip="Inspection up to date"></span>
+      {{ end }}
+    </div>
   </td>
   <td class="py-3">
     {{ if .CategoryName }}

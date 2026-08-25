@@ -449,19 +449,27 @@ SELECT
     e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at,
-    COUNT(*) OVER() AS total_records
+    COUNT(*) OVER() AS total_records,
+    insp.min_next_inspection_at
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
+LEFT JOIN (
+    SELECT equipment_id, MIN(next_inspection_at) AS min_next_inspection_at
+    FROM equipment_serialized_items
+    WHERE next_inspection_at IS NOT NULL
+    GROUP BY equipment_id
+) insp ON insp.equipment_id = e.id
 WHERE e.org_id = ?1
   AND (?2 = '' OR e.name LIKE '%' || ?2 || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || ?2 || '%'))
   AND (?3 = '' OR ec.name = ?3)
   AND (?4 = -1 OR e.is_archived = ?4)
   AND (?5 = ''
-    OR (?5 = 'overdue'  AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at < unixepoch()))
-    OR (?5 = 'due-30d'  AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at >= unixepoch() AND esi.next_inspection_at <= unixepoch() + 30 * 86400)))
+    OR (?5 = 'overdue'    AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at < unixepoch()))
+    OR (?5 = 'due-30d'    AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at >= unixepoch() AND esi.next_inspection_at <= unixepoch() + 30 * 86400))
+    OR (?5 = 'up-to-date' AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at > unixepoch() + 30 * 86400)))
 ORDER BY category_name ASC, e.name ASC
 LIMIT ?7 OFFSET ?6
 `
@@ -477,36 +485,37 @@ type ListParams struct {
 }
 
 type ListRow struct {
-	ID                string
-	OrgID             string
-	Name              string
-	CategoryID        sql.NullString
-	CategoryName      string
-	ManufacturerID    sql.NullString
-	LocationID        sql.NullString
-	LocationName      string
-	StorageObjectID   sql.NullString
-	EquipmentTypeID   int64
-	EquipmentTypeName string
-	TrackingTypeID    sql.NullInt64
-	TrackingTypeName  string
-	UsageTypeID       int64
-	TotalStock        int64
-	IsArchived        int64
-	RentalPrice       *units.Cents
-	ResalePrice       *units.Cents
-	Notes             sql.NullString
-	WeightG           *units.Grams
-	WidthMm           *units.Millimeters
-	HeightMm          *units.Millimeters
-	DepthMm           *units.Millimeters
-	VoltageMv         *units.Millivolts
-	CurrentMa         *units.Milliamps
-	PowerMw           *units.Milliwatts
-	WireGaugeMm2X100  *units.WireGauge
-	UpdatedAt         int64
-	CreatedAt         int64
-	TotalRecords      int64
+	ID                  string
+	OrgID               string
+	Name                string
+	CategoryID          sql.NullString
+	CategoryName        string
+	ManufacturerID      sql.NullString
+	LocationID          sql.NullString
+	LocationName        string
+	StorageObjectID     sql.NullString
+	EquipmentTypeID     int64
+	EquipmentTypeName   string
+	TrackingTypeID      sql.NullInt64
+	TrackingTypeName    string
+	UsageTypeID         int64
+	TotalStock          int64
+	IsArchived          int64
+	RentalPrice         *units.Cents
+	ResalePrice         *units.Cents
+	Notes               sql.NullString
+	WeightG             *units.Grams
+	WidthMm             *units.Millimeters
+	HeightMm            *units.Millimeters
+	DepthMm             *units.Millimeters
+	VoltageMv           *units.Millivolts
+	CurrentMa           *units.Milliamps
+	PowerMw             *units.Milliwatts
+	WireGaugeMm2X100    *units.WireGauge
+	UpdatedAt           int64
+	CreatedAt           int64
+	TotalRecords        int64
+	MinNextInspectionAt interface{}
 }
 
 func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
@@ -557,6 +566,7 @@ func (q *Queries) List(ctx context.Context, arg ListParams) ([]ListRow, error) {
 			&i.UpdatedAt,
 			&i.CreatedAt,
 			&i.TotalRecords,
+			&i.MinNextInspectionAt,
 		); err != nil {
 			return nil, err
 		}

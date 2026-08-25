@@ -197,6 +197,7 @@ type Equipment struct {
 	IsArchived             bool
 	Notes                  string
 	InspectionIntervalDays *int64
+	InspectionStatus       InspectionStatus
 	Pricing                Pricing
 	Properties             Properties
 	CreatedAt              int64
@@ -267,6 +268,47 @@ func (u *Unit) NextInspectionLabel() string {
 func (u *Unit) IsInspectionOverdue() bool {
 	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
 }
+
+// InspectionStatus is the traffic-light health state of an equipment item
+// derived from its units' inspection dates.
+type InspectionStatus string
+
+const (
+	// InspectionStatusNone means no inspection date is set on any unit.
+	InspectionStatusNone InspectionStatus = ""
+	// InspectionStatusOverdue means at least one unit's inspection date has passed.
+	InspectionStatusOverdue InspectionStatus = "overdue"
+	// InspectionStatusDueSoon means at least one unit's inspection is due within 30 days.
+	InspectionStatusDueSoon InspectionStatus = "due-30d"
+	// InspectionStatusUpToDate means all unit inspections are more than 30 days away.
+	InspectionStatusUpToDate InspectionStatus = "up-to-date"
+)
+
+// NewInspectionStatus derives the status from the earliest unit inspection
+// timestamp. Returns InspectionStatusNone when minNextAt is nil.
+func NewInspectionStatus(minNextAt *int64) InspectionStatus {
+	if minNextAt == nil {
+		return InspectionStatusNone
+	}
+	now := time.Now().Unix()
+	switch {
+	case *minNextAt < now:
+		return InspectionStatusOverdue
+	case *minNextAt <= now+30*86400:
+		return InspectionStatusDueSoon
+	default:
+		return InspectionStatusUpToDate
+	}
+}
+
+// IsOverdue reports whether the status is overdue.
+func (s InspectionStatus) IsOverdue() bool { return s == InspectionStatusOverdue }
+
+// IsDueSoon reports whether the status is due within 30 days.
+func (s InspectionStatus) IsDueSoon() bool { return s == InspectionStatusDueSoon }
+
+// IsUpToDate reports whether all inspections are more than 30 days away.
+func (s InspectionStatus) IsUpToDate() bool { return s == InspectionStatusUpToDate }
 
 // IsActive returns true when the unit's is_active flag is set.
 func (u *Unit) IsActive() bool { return u.StatusID == 1 }

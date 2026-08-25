@@ -108,9 +108,10 @@
           hx-indicator="#search-indicator"
           hx-push-url="true"
         >
-          <option value="">No inspection filter</option>
-          <option value="overdue" {{ if eq $.Data.Inspection "overdue" }}selected{{ end }}>Overdue</option>
-          <option value="due-30d" {{ if eq $.Data.Inspection "due-30d" }}selected{{ end }}>Due within 30 days</option>
+          <option value="">All</option>
+          <option value="overdue" {{ if eq $.Data.Inspection "overdue" }}selected{{ end }} class="text-error">Overdue</option>
+          <option value="due-30d" {{ if eq $.Data.Inspection "due-30d" }}selected{{ end }} class="text-warning">Due Soon</option>
+          <option value="up-to-date" {{ if eq $.Data.Inspection "up-to-date" }}selected{{ end }} class="text-success">Up to Date</option>
         </select>
         <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
       </div>
