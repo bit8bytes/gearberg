@@ -99,6 +99,7 @@ SELECT
     esi.id AS unit_id,
     esi.equipment_id,
     e.name AS equipment_name,
+    esi.serial_number,
     esi.next_inspection_at
 FROM equipment_serialized_items esi
 JOIN equipment e ON e.id = esi.equipment_id
@@ -113,6 +114,7 @@ SELECT
     esi.id AS unit_id,
     esi.equipment_id,
     e.name AS equipment_name,
+    esi.serial_number,
     esi.next_inspection_at
 FROM equipment_serialized_items esi
 JOIN equipment e ON e.id = esi.equipment_id

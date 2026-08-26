@@ -245,6 +245,7 @@ SELECT
     esi.id AS unit_id,
     esi.equipment_id,
     e.name AS equipment_name,
+    esi.serial_number,
     esi.next_inspection_at
 FROM equipment_serialized_items esi
 JOIN equipment e ON e.id = esi.equipment_id
@@ -259,6 +260,7 @@ type ListOverdueInspectionsRow struct {
 	UnitID           string
 	EquipmentID      string
 	EquipmentName    string
+	SerialNumber     string
 	NextInspectionAt sql.NullInt64
 }
 
@@ -275,6 +277,7 @@ func (q *Queries) ListOverdueInspections(ctx context.Context, orgID string) ([]L
 			&i.UnitID,
 			&i.EquipmentID,
 			&i.EquipmentName,
+			&i.SerialNumber,
 			&i.NextInspectionAt,
 		); err != nil {
 			return nil, err
@@ -295,6 +298,7 @@ SELECT
     esi.id AS unit_id,
     esi.equipment_id,
     e.name AS equipment_name,
+    esi.serial_number,
     esi.next_inspection_at
 FROM equipment_serialized_items esi
 JOIN equipment e ON e.id = esi.equipment_id
@@ -310,6 +314,7 @@ type ListSoonInspectionsRow struct {
 	UnitID           string
 	EquipmentID      string
 	EquipmentName    string
+	SerialNumber     string
 	NextInspectionAt sql.NullInt64
 }
 
@@ -326,6 +331,7 @@ func (q *Queries) ListSoonInspections(ctx context.Context, orgID string) ([]List
 			&i.UnitID,
 			&i.EquipmentID,
 			&i.EquipmentName,
+			&i.SerialNumber,
 			&i.NextInspectionAt,
 		); err != nil {
 			return nil, err

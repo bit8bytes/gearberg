@@ -710,6 +710,7 @@ func (r *Repository) ListOverdueInspections(ctx context.Context, orgID string) (
 			UnitID:           row.UnitID,
 			EquipmentID:      row.EquipmentID,
 			EquipmentName:    row.EquipmentName,
+			SerialNumber:     row.SerialNumber,
 			NextInspectionAt: row.NextInspectionAt.Int64,
 		})
 	}
@@ -729,6 +730,7 @@ func (r *Repository) ListSoonInspections(ctx context.Context, orgID string) ([]I
 			UnitID:           row.UnitID,
 			EquipmentID:      row.EquipmentID,
 			EquipmentName:    row.EquipmentName,
+			SerialNumber:     row.SerialNumber,
 			NextInspectionAt: row.NextInspectionAt.Int64,
 		})
 	}

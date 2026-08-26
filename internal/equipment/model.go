@@ -332,6 +332,7 @@ type InspectionSummary struct {
 	UnitID           string
 	EquipmentID      string
 	EquipmentName    string
+	SerialNumber     string
 	NextInspectionAt int64
 }
 
