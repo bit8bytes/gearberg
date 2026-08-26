@@ -46,6 +46,12 @@
         <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
       </span>
     </span>
+    {{ else if .InspectionStatus.IsUpToDate }}
+    <span class="tooltip tooltip-success tooltip-right inline-flex" data-tip="Inspections up to Date">
+      <span class="w-6 h-6 rounded-full bg-success text-success-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </span>
     {{ end }}
   </td>
   <td class="py-3">

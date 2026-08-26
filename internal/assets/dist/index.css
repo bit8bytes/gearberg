@@ -6882,9 +6882,6 @@
   .min-w-120 {
     min-width: calc(var(--spacing) * 120);
   }
-  .min-w-\[480px\] {
-    min-width: 480px;
-  }
   .flex-1 {
     flex: 1;
   }
@@ -7855,6 +7852,9 @@
   }
   .bg-red-500\! {
     background-color: var(--color-red-500) !important;
+  }
+  .bg-success {
+    background-color: var(--color-success);
   }
   .bg-teal-400 {
     background-color: var(--color-teal-400);
@@ -9153,6 +9153,9 @@
   }
   .text-success {
     color: var(--color-success);
+  }
+  .text-success-content {
+    color: var(--color-success-content);
   }
   .text-teal-800 {
     color: var(--color-teal-800);
