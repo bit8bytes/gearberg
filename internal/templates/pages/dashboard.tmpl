@@ -30,7 +30,7 @@
           <p class="text-xs font-semibold tracking-widest text-error uppercase mb-1">Overdue Inspections</p>
           <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=overdue" class="text-4xl font-bold text-error hover:underline">{{ .Data.EquipmentOverdue }}</a>
         </div>
-        <span class="w-8 h-8 text-error">{{ template "overdue-inspections-icon" }}</span>
+        <span class="w-8 h-8 text-error">{{ template "under-repair-icon" }}</span>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
           <p class="text-xs font-semibold tracking-widest text-warning uppercase mb-1">Inspections Due Within 30 Days</p>
           <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=due-30d" class="text-4xl font-bold text-warning hover:underline">{{ .Data.EquipmentOverdueSoon }}</a>
         </div>
-        <span class="w-8 h-8 text-warning">{{ template "soon-inspections-icon" }}</span>
+        <span class="w-8 h-8 text-warning">{{ template "under-repair-icon" }}</span>
       </div>
     </div>
 
