@@ -252,21 +252,41 @@ func (u *Unit) NextInspectionAtInput() string {
 	return time.Unix(*u.NextInspectionAt, 0).UTC().Format("2006-01-02")
 }
 
-// NextInspectionLabel returns a human-readable countdown: "Xd overdue", "in Xd", or "" when nil.
+// NextInspectionLabel returns a human-readable countdown based on calendar dates:
+// "Today", "Tomorrow", "in Xd", "Yesterday", or "Xd overdue". Returns "" when nil.
 func (u *Unit) NextInspectionLabel() string {
 	if u.NextInspectionAt == nil {
 		return ""
 	}
-	days := (*u.NextInspectionAt - time.Now().Unix()) / 86400
-	if days < 0 {
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	due := time.Unix(*u.NextInspectionAt, 0).UTC()
+	dueDay := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, time.UTC)
+	days := int(dueDay.Sub(today).Hours() / 24)
+	switch {
+	case days == 0:
+		return "Today"
+	case days == 1:
+		return "Tomorrow"
+	case days == -1:
+		return "Yesterday"
+	case days > 1:
+		return fmt.Sprintf("in %dd", days)
+	default:
 		return fmt.Sprintf("%dd overdue", -days)
 	}
-	return fmt.Sprintf("in %dd", days)
 }
 
-// IsInspectionOverdue returns true when the next inspection date has passed.
+// IsInspectionOverdue returns true when the next inspection calendar date is before today.
 func (u *Unit) IsInspectionOverdue() bool {
-	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
+	if u.NextInspectionAt == nil {
+		return false
+	}
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	due := time.Unix(*u.NextInspectionAt, 0).UTC()
+	dueDay := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, time.UTC)
+	return dueDay.Before(today)
 }
 
 // InspectionStatus is the traffic-light health state of an equipment item
