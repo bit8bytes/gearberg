@@ -322,36 +322,10 @@ type UnitStatusEntry struct {
 // DashboardStats holds aggregate inventory metrics shown on the dashboard.
 type DashboardStats struct {
 	// TotalValue is the sum of purchase_price × quantity for all units, in cents.
-	TotalValue units.Cents
-	TotalStock int64
-}
-
-// InspectionSummary is a lightweight projection used in dashboard widgets,
-// joining a serialized unit with its parent equipment name.
-type InspectionSummary struct {
-	UnitID           string
-	EquipmentID      string
-	EquipmentName    string
-	SerialNumber     string
-	NextInspectionAt int64
-}
-
-// DaysOverdue returns how many full days past the inspection date have elapsed.
-func (s *InspectionSummary) DaysOverdue() int64 {
-	d := (time.Now().Unix() - s.NextInspectionAt) / 86400
-	if d < 0 {
-		return 0
-	}
-	return d
-}
-
-// DaysUntil returns how many full days remain until the inspection date.
-func (s *InspectionSummary) DaysUntil() int64 {
-	d := (s.NextInspectionAt - time.Now().Unix()) / 86400
-	if d < 0 {
-		return 0
-	}
-	return d
+	TotalValue           units.Cents
+	TotalStock           int64
+	EquipmentOverdue     int64
+	EquipmentOverdueSoon int64
 }
 
 // Label converts the snake_case Name to Title Case (e.g. "under_repair" → "Under Repair").

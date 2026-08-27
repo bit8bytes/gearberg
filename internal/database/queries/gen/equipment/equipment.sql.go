@@ -736,18 +736,42 @@ SELECT
          FROM equipment_serialized_items esi
          WHERE esi.org_id = ?1),
         0
-    ) AS total_stock
+    ) AS total_stock,
+    CAST(COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = ?1
+           AND esi.next_inspection_at IS NOT NULL
+           AND esi.next_inspection_at < unixepoch()),
+        0
+    ) AS INTEGER) AS equipment_overdue,
+    CAST(COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = ?1
+           AND esi.next_inspection_at IS NOT NULL
+           AND esi.next_inspection_at >= unixepoch()
+           AND esi.next_inspection_at <= unixepoch() + 30 * 86400),
+        0
+    ) AS INTEGER) AS equipment_overdue_soon
 `
 
 type StatsRow struct {
-	TotalValue int64
-	TotalStock int64
+	TotalValue           int64
+	TotalStock           int64
+	EquipmentOverdue     int64
+	EquipmentOverdueSoon int64
 }
 
 func (q *Queries) Stats(ctx context.Context, orgID string) (StatsRow, error) {
 	row := q.db.QueryRowContext(ctx, stats, orgID)
 	var i StatsRow
-	err := row.Scan(&i.TotalValue, &i.TotalStock)
+	err := row.Scan(
+		&i.TotalValue,
+		&i.TotalStock,
+		&i.EquipmentOverdue,
+		&i.EquipmentOverdueSoon,
+	)
 	return i, err
 }
 

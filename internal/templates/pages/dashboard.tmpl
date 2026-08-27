@@ -2,13 +2,13 @@
 <div class="max-w-6xl mx-auto px-4 py-8 w-full">
 
   {{/* Stat cards */}}
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
     <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm p-5">
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-semibold tracking-widest text-base-content/50 uppercase mb-1">Total Value</p>
-          <p class="text-3xl font-bold">{{ .Data.TotalValue }}</p>
+          <p class="text-4xl font-bold">{{ .Data.TotalValue }}</p>
         </div>
         <span class="w-8 h-8">{{ template "pricing-icon" }}</span>
       </div>
@@ -18,7 +18,7 @@
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-semibold tracking-widest text-base-content/50 uppercase mb-1">Total Stock</p>
-          <p class="text-3xl font-bold">{{ .Data.TotalStock }}</p>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment" class="text-4xl font-bold hover:underline">{{ .Data.TotalStock }}</a>
         </div>
         <span class="w-8 h-8">{{ template "equipment-icon" }}</span>
       </div>
@@ -28,7 +28,7 @@
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-semibold tracking-widest text-error uppercase mb-1">Overdue Inspections</p>
-          <p class="text-3xl font-bold text-error">{{ .Data.OverdueCount }}</p>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=overdue" class="text-4xl font-bold text-error hover:underline">{{ .Data.EquipmentOverdue }}</a>
         </div>
         <span class="w-8 h-8 text-error">{{ template "overdue-inspections-icon" }}</span>
       </div>
@@ -37,80 +37,11 @@
     <div class="card bg-base-100 rounded-2xl border border-base-300 shadow-sm p-5">
       <div class="flex items-start justify-between">
         <div>
-          <p class="text-xs font-semibold tracking-widest text-warning uppercase mb-1">Due Within 30 Days</p>
-          <p class="text-3xl font-bold text-warning">{{ .Data.SoonCount }}</p>
+          <p class="text-xs font-semibold tracking-widest text-warning uppercase mb-1">Inspections Due Within 30 Days</p>
+          <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=due-30d" class="text-4xl font-bold text-warning hover:underline">{{ .Data.EquipmentOverdueSoon }}</a>
         </div>
         <span class="w-8 h-8 text-warning">{{ template "soon-inspections-icon" }}</span>
       </div>
-    </div>
-
-  </div>
-
-  {{/* Inspections */}}
-  <div class="bg-base-100 rounded-2xl border border-base-300 shadow-sm overflow-x-auto">
-
-    <div class="px-6 pt-6 pb-4 border-b border-base-300">
-      <p class="text-3xl font-bold leading-tight">Inspections</p>
-    </div>
-
-    <div role="tablist" class="tabs tabs-border">
-        <input type="radio" name="inspection_tabs" role="tab" class="tab" aria-label="Overdue" checked="checked" />
-        <div role="tabpanel" class="tab-content border-none pt-4">
-          <div class="overflow-x-auto">
-            <table class="table w-full min-w-120">
-              <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
-                <tr>
-                  <th>Name</th>
-                  <th>Serial</th>
-                  <th class="text-right">Overdue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{ range .Data.OverdueInspections }}
-                <tr class="border-b border-base-200 last:border-0">
-                  <td class="py-3"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .EquipmentID }}/units" class="font-semibold link link-hover leading-tight">{{ .EquipmentName }}</a></td>
-                  <td class="py-3 font-mono text-sm text-base-content/60">{{ .SerialNumber }}</td>
-                  <td class="py-3 text-right"><span class="badge badge-error badge-soft badge-sm">{{ .DaysOverdue }}d overdue</span></td>
-                </tr>
-                {{ else }}
-                <tr><td colspan="3" class="text-sm text-base-content/40 text-center py-8">No overdue inspections</td></tr>
-                {{ end }}
-              </tbody>
-            </table>
-          </div>
-          <div class="px-6 py-3 border-t border-base-300 flex justify-end">
-            <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=overdue" class="btn btn-sm">See All <span class="w-4 h-4">{{ template "arrow-right-icon" }}</span></a>
-          </div>
-        </div>
-
-        <input type="radio" name="inspection_tabs" role="tab" class="tab" aria-label="Due Soon" />
-        <div role="tabpanel" class="tab-content border-none pt-4">
-          <div class="overflow-x-auto">
-            <table class="table w-full min-w-120">
-              <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
-                <tr>
-                  <th>Name</th>
-                  <th>Serial</th>
-                  <th class="text-right">Due In</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{ range .Data.SoonInspections }}
-                <tr class="border-b border-base-200 last:border-0">
-                  <td class="py-3"><a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .EquipmentID }}/units" class="font-semibold link link-hover leading-tight">{{ .EquipmentName }}</a></td>
-                  <td class="py-3 font-mono text-sm text-base-content/60">{{ .SerialNumber }}</td>
-                  <td class="py-3 text-right"><span class="badge badge-warning badge-soft badge-sm">{{ .DaysUntil }}d left</span></td>
-                </tr>
-                {{ else }}
-                <tr><td colspan="3" class="text-sm text-base-content/40 text-center py-8">No upcoming inspections</td></tr>
-                {{ end }}
-              </tbody>
-            </table>
-          </div>
-          <div class="px-6 py-3 border-t border-base-300 flex justify-end">
-            <a href="/orgs/{{ .Data.OrgID }}/equipment?inspection=due-30d" class="btn btn-sm">See All <span class="w-4 h-4">{{ template "arrow-right-icon" }}</span></a>
-          </div>
-        </div>
     </div>
 
   </div>

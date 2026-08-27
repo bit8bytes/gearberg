@@ -13,8 +13,6 @@ type Querier interface {
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (GetByIDRow, error)
 	ListByEquipmentID(ctx context.Context, equipmentID string) ([]ListByEquipmentIDRow, error)
-	ListOverdueInspections(ctx context.Context, orgID string) ([]ListOverdueInspectionsRow, error)
-	ListSoonInspections(ctx context.Context, orgID string) ([]ListSoonInspectionsRow, error)
 	Update(ctx context.Context, arg UpdateParams) error
 	UpdateNextInspectionAt(ctx context.Context, arg UpdateNextInspectionAtParams) error
 }

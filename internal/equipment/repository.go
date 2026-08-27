@@ -686,53 +686,16 @@ func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID stri
 	return items, nil
 }
 
-// ListOverdueInspections returns up to 5 serialized units whose next_inspection_at
-// is in the past, ordered by most overdue first.
+// Stats returns dashboard aggregate counts and totals for the given org.
 func (r *Repository) Stats(ctx context.Context, orgID string) (DashboardStats, error) {
 	row, err := r.equipment.Stats(ctx, orgID)
 	if err != nil {
 		return DashboardStats{}, fmt.Errorf("Stats: %w", err)
 	}
 	return DashboardStats{
-		TotalValue: units.Cents(row.TotalValue),
-		TotalStock: row.TotalStock,
+		TotalValue:           units.Cents(row.TotalValue),
+		TotalStock:           row.TotalStock,
+		EquipmentOverdue:     row.EquipmentOverdue,
+		EquipmentOverdueSoon: row.EquipmentOverdueSoon,
 	}, nil
-}
-
-func (r *Repository) ListOverdueInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
-	rows, err := r.serializedItems.ListOverdueInspections(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("ListOverdueInspections: %w", err)
-	}
-	out := make([]InspectionSummary, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, InspectionSummary{
-			UnitID:           row.UnitID,
-			EquipmentID:      row.EquipmentID,
-			EquipmentName:    row.EquipmentName,
-			SerialNumber:     row.SerialNumber,
-			NextInspectionAt: row.NextInspectionAt.Int64,
-		})
-	}
-	return out, nil
-}
-
-// ListSoonInspections returns up to 5 serialized units whose next_inspection_at
-// falls within the next 30 days, ordered by soonest first.
-func (r *Repository) ListSoonInspections(ctx context.Context, orgID string) ([]InspectionSummary, error) {
-	rows, err := r.serializedItems.ListSoonInspections(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("ListSoonInspections: %w", err)
-	}
-	out := make([]InspectionSummary, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, InspectionSummary{
-			UnitID:           row.UnitID,
-			EquipmentID:      row.EquipmentID,
-			EquipmentName:    row.EquipmentName,
-			SerialNumber:     row.SerialNumber,
-			NextInspectionAt: row.NextInspectionAt.Int64,
-		})
-	}
-	return out, nil
 }

@@ -18,19 +18,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bit8bytes/gearberg/internal/equipment"
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
 type dashboardData struct {
-	OrgID              string
-	TotalValue         string
-	TotalStock         int64
-	OverdueCount       int
-	SoonCount          int
-	OverdueInspections []equipment.InspectionSummary
-	SoonInspections    []equipment.InspectionSummary
+	OrgID                string
+	TotalValue           string
+	TotalStock           int64
+	EquipmentOverdue     int64
+	EquipmentOverdueSoon int64
 }
 
 func (app *application) getDashboard(w http.ResponseWriter, r *http.Request) *httperr.Error {
@@ -46,16 +43,6 @@ func (app *application) getDashboard(w http.ResponseWriter, r *http.Request) *ht
 		return httperr.InternalServerError(err)
 	}
 
-	overdue, err := app.services.equipment.ListOverdueInspections(r.Context(), orgID)
-	if err != nil {
-		return httperr.InternalServerError(err)
-	}
-
-	soon, err := app.services.equipment.ListSoonInspections(r.Context(), orgID)
-	if err != nil {
-		return httperr.InternalServerError(err)
-	}
-
 	currency := ""
 	if orgSettings != nil {
 		currency = orgSettings.Currency.Symbol()
@@ -63,13 +50,11 @@ func (app *application) getDashboard(w http.ResponseWriter, r *http.Request) *ht
 
 	tmplData := app.html.TemplateData(r)
 	tmplData.Data = dashboardData{
-		OrgID:              orgID,
-		TotalValue:         fmt.Sprintf("%s %.2f", currency, float64(stats.TotalValue)/100),
-		TotalStock:         stats.TotalStock,
-		OverdueCount:       len(overdue),
-		SoonCount:          len(soon),
-		OverdueInspections: overdue,
-		SoonInspections:    soon,
+		OrgID:                orgID,
+		TotalValue:           fmt.Sprintf("%s %.2f", currency, float64(stats.TotalValue)/100),
+		TotalStock:           stats.TotalStock,
+		EquipmentOverdue:     stats.EquipmentOverdue,
+		EquipmentOverdueSoon: stats.EquipmentOverdueSoon,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Dashboard, tmplData)
 }
