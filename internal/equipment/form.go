@@ -39,8 +39,9 @@ type DetailsForm struct {
 	ManufacturerID   string
 	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
 	LocationID       string
-	LocationName     string // set when user typed a new location name not yet in the DB
-	TotalStock       int64  // only used for bulk items; 0 means blank/unprovided
+	LocationName     string       // set when user typed a new location name not yet in the DB
+	TotalStock       int64        // only used for bulk items; 0 means blank/unprovided
+	PurchasePrice    *units.Cents // only used for bulk items
 	Notes            string
 	Image            multipart.File
 	ImageHeader      *multipart.FileHeader
@@ -83,6 +84,7 @@ func ParseDetails(r *http.Request) (DetailsForm, error) {
 	f.LocationID = strings.TrimSpace(r.PostForm.Get("location_id"))
 	f.LocationName = strings.TrimSpace(r.PostForm.Get("location_name"))
 	f.TotalStock = ParseQuantity(r.PostForm.Get("total_stock"))
+	f.PurchasePrice = units.ParseCents(r.PostForm.Get("purchase_price"))
 	f.Notes = strings.TrimSpace(r.PostForm.Get("notes"))
 	file, header, err := r.FormFile("image")
 	if err == nil {
@@ -99,6 +101,9 @@ func (f *DetailsForm) Validate() bool {
 
 	if f.Type == tracking.Bulk {
 		f.Check(f.TotalStock >= 1, "total_stock", "Must be at least 1")
+		if f.PurchasePrice != nil {
+			f.Check(*f.PurchasePrice > 0, "purchase_price", "Must be greater than 0")
+		}
 	}
 
 	return f.Valid()
@@ -209,6 +214,7 @@ func (e *Equipment) DetailsForm() DetailsForm {
 		ManufacturerID: e.ManufacturerID,
 		LocationID:     e.LocationID,
 		TotalStock:     e.TotalStock,
+		PurchasePrice:  e.BulkPurchasePrice,
 		Notes:          e.Notes,
 	}
 	f.Errors = make(map[string]string)

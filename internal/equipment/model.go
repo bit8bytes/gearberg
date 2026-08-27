@@ -117,7 +117,8 @@ type UpdateEquipmentDetails struct {
 	ManufacturerID string
 	LocationID     string
 	Notes          string
-	TotalStock     int64 // TotalStock is only applied for bulk inventory items.
+	TotalStock     int64        // TotalStock is only applied for bulk inventory items.
+	PurchasePrice  *units.Cents // PurchasePrice is only applied for bulk inventory items.
 }
 
 // UpdateEquipmentPricing holds the data required to update the pricing tab fields.
@@ -199,6 +200,7 @@ type Equipment struct {
 	InspectionIntervalDays *int64
 	InspectionStatus       InspectionStatus
 	Pricing                Pricing
+	BulkPurchasePrice      *units.Cents // purchase_price from equipment_bulk_items; only set for bulk items
 	Properties             Properties
 	CreatedAt              int64
 	UpdatedAt              int64

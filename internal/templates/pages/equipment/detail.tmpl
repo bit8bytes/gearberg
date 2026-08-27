@@ -98,6 +98,25 @@
               <p class="text-error text-sm">{{ . }}</p>
             {{ end }}
           </div>
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label for="purchase_price" class="label">Purchase Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+            <label class="input w-full">
+              {{ if .Data.Currency }}<span class="opacity-50 w-6">{{ .Data.Currency.Symbol }}</span>{{ end }}
+              <input
+                id="purchase_price"
+                type="number"
+                inputmode="decimal"
+                step="0.01"
+                min="0"
+                name="purchase_price"
+                value="{{ .Form.PurchasePrice }}"
+                placeholder="—"
+              />
+            </label>
+            {{ with index .Form.Errors "purchase_price" }}
+              <p class="text-error text-sm">{{ . }}</p>
+            {{ end }}
+          </div>
           {{ end }}
 
           <div class="flex flex-col gap-1 md:col-span-4">

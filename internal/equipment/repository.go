@@ -175,6 +175,11 @@ func (r *Repository) Get(ctx context.Context, id string) (*Equipment, error) {
 		CreatedAt: row.CreatedAt,
 		UpdatedAt: row.UpdatedAt,
 	}
+	if tracking.Type(row.TrackingTypeID.Int64) == tracking.Bulk {
+		if bulk, err := r.bulkItems.GetByEquipmentID(ctx, row.ID); err == nil {
+			m.BulkPurchasePrice = database.NullAs[units.Cents](bulk.PurchasePrice)
+		}
+	}
 	return &m, nil
 }
 
@@ -223,9 +228,10 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		return nil, fmt.Errorf("createBulkWith: %w", normalized)
 	}
 	if _, err := bulkQ.Create(ctx, genbulk.CreateParams{
-		ID:          c.BulkItemID,
-		EquipmentID: row.ID,
-		Quantity:    c.TotalStock,
+		ID:            c.BulkItemID,
+		EquipmentID:   row.ID,
+		Quantity:      c.TotalStock,
+		PurchasePrice: database.NullOf(c.Pricing.PurchasePrice),
 	}); err != nil {
 		return nil, fmt.Errorf("createBulkWith: equipment_bulk_items: %w", database.NormalizeError(err))
 	}
@@ -395,6 +401,12 @@ func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateEquipmentDet
 		ID:       item.ID,
 	}); err != nil {
 		return fmt.Errorf("UpdateDetailsBulk: set quantity: %w", database.NormalizeError(err))
+	}
+	if err := r.bulkItems.WithTx(tx).SetPurchasePrice(ctx, genbulk.SetPurchasePriceParams{
+		PurchasePrice: database.NullOf(u.PurchasePrice),
+		ID:            item.ID,
+	}); err != nil {
+		return fmt.Errorf("UpdateDetailsBulk: set purchase price: %w", database.NormalizeError(err))
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("UpdateDetailsBulk: commit: %w", err)

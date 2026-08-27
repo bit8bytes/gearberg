@@ -116,6 +116,24 @@ func (q *Queries) GetByEquipmentID(ctx context.Context, equipmentID string) (Equ
 	return i, err
 }
 
+const setPurchasePrice = `-- name: SetPurchasePrice :exec
+UPDATE equipment_bulk_items
+SET
+    purchase_price = ?1,
+    updated_at = unixepoch()
+WHERE id = ?2
+`
+
+type SetPurchasePriceParams struct {
+	PurchasePrice sql.NullInt64
+	ID            string
+}
+
+func (q *Queries) SetPurchasePrice(ctx context.Context, arg SetPurchasePriceParams) error {
+	_, err := q.db.ExecContext(ctx, setPurchasePrice, arg.PurchasePrice, arg.ID)
+	return err
+}
+
 const setQuantity = `-- name: SetQuantity :exec
 UPDATE equipment_bulk_items
 SET

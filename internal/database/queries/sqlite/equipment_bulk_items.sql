@@ -42,6 +42,13 @@ SET
     updated_at = unixepoch()
 WHERE id = sqlc.arg(id);
 
+-- name: SetPurchasePrice :exec
+UPDATE equipment_bulk_items
+SET
+    purchase_price = sqlc.arg(purchase_price),
+    updated_at = unixepoch()
+WHERE id = sqlc.arg(id);
+
 -- name: Delete :exec
 DELETE FROM equipment_bulk_items
 WHERE id = ?;

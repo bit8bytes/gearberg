@@ -12,6 +12,7 @@ type Querier interface {
 	Create(ctx context.Context, arg CreateParams) (CreateRow, error)
 	Delete(ctx context.Context, id string) error
 	GetByEquipmentID(ctx context.Context, equipmentID string) (EquipmentBulkItem, error)
+	SetPurchasePrice(ctx context.Context, arg SetPurchasePriceParams) error
 	SetQuantity(ctx context.Context, arg SetQuantityParams) error
 }
 

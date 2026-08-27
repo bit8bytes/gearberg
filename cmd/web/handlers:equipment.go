@@ -287,6 +287,15 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 
 	app.resolveItemURLs(item)
 
+	orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+	var currency money.Currency
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
+
 	data := app.html.TemplateData(r)
 	f := item.DetailsForm()
 	data.Form = &f
@@ -295,6 +304,7 @@ func (app *application) getEquipmentItem(w http.ResponseWriter, r *http.Request)
 		Item:      item,
 		ID:        itemID,
 		ActiveTab: "details",
+		Currency:  currency,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentDetail, data)
 }
@@ -314,6 +324,15 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		return appErr
 	}
 
+	orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+	var currency money.Currency
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
+
 	fail := func(f *equipment.DetailsForm) *httperr.Error {
 		item, err := app.services.equipment.Get(ctx, itemID)
 		if err != nil {
@@ -326,6 +345,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 			Item:      item,
 			ID:        itemID,
 			ActiveTab: "details",
+			Currency:  currency,
 		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentDetail, data)
 	}
@@ -366,6 +386,7 @@ func (app *application) postEquipmentItemDetails(w http.ResponseWriter, r *http.
 		LocationID:     locID,
 		Notes:          form.Notes,
 		TotalStock:     form.TotalStock,
+		PurchasePrice:  form.PurchasePrice,
 	}); err != nil {
 		return httperr.InternalServerError(err)
 	}
