@@ -25,6 +25,5 @@ const (
 	EquipmentPartOf        = "equipment-part-of"
 	EquipmentSearch        = "equipment-search"
 	WarehouseLocations     = "warehouse-locations"
-	OrgCurrency            = "org-currency"
 	PasswordValidation     = "password-validation"
 )

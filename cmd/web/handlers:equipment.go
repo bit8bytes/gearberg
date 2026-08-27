@@ -155,13 +155,26 @@ type equipmentItemData struct {
 	Item      *equipment.Equipment
 	ID        string
 	ActiveTab string
+	Currency  money.Currency
 }
 
 func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	ctx := r.Context()
 	id := r.PathValue("org_id")
+
+	orgSettings, err := app.services.orgsettings.Get(ctx, id)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	var currency money.Currency
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
+
 	data := app.html.TemplateData(r)
 	data.Form = equipment.NewCreateForm()
-	data.Data = equipmentItemData{OrgID: id}
+	data.Data = equipmentItemData{OrgID: id, Currency: currency}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentNew, data)
 }
 
@@ -169,6 +182,16 @@ func (app *application) getEquipmentNew(w http.ResponseWriter, r *http.Request) 
 func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	ctx := r.Context()
 	id := r.PathValue("org_id")
+
+	orgSettings, err := app.services.orgsettings.Get(ctx, id)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	var currency money.Currency
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
 
 	form, err := equipment.ParseForm(r)
 	if err != nil {
@@ -178,7 +201,7 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 	fail := func(f *equipment.NewForm) *httperr.Error {
 		data := app.html.TemplateData(r)
 		data.Form = f
-		data.Data = equipmentItemData{OrgID: id}
+		data.Data = equipmentItemData{OrgID: id, Currency: currency}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentNew, data)
 	}
 
@@ -406,6 +429,16 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 
 	app.resolveItemURLs(item)
 
+	orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
+	if err != nil {
+		return httperr.InternalServerError(err)
+	}
+
+	var currency money.Currency
+	if orgSettings != nil {
+		currency = orgSettings.Currency
+	}
+
 	data := app.html.TemplateData(r)
 	f := item.PricingForm()
 	data.Form = &f
@@ -414,6 +447,7 @@ func (app *application) getEquipmentItemPricing(w http.ResponseWriter, r *http.R
 		Item:      item,
 		ID:        itemID,
 		ActiveTab: "pricing",
+		Currency:  currency,
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.EquipmentPricing, data)
 }
@@ -434,6 +468,16 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 			return httperr.InternalServerError(err)
 		}
 
+		orgSettings, err := app.services.orgsettings.Get(ctx, orgID)
+		if err != nil {
+			return httperr.InternalServerError(err)
+		}
+
+		var currency money.Currency
+		if orgSettings != nil {
+			currency = orgSettings.Currency
+		}
+
 		data := app.html.TemplateData(r)
 		data.Form = &form
 		data.Data = equipmentItemData{
@@ -441,6 +485,7 @@ func (app *application) postEquipmentItemPricing(w http.ResponseWriter, r *http.
 			Item:      item,
 			ID:        itemID,
 			ActiveTab: "pricing",
+			Currency:  currency,
 		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.EquipmentPricing, data)
 	}
