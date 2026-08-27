@@ -76,10 +76,6 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("POST /orgs/new", app.withLogin(app.html.Handle(app.postOrgsNew)))
 
 	// For any route that includes org_id, the permissions of the account must be checked via [app.withPermission]
-	mux.Handle("DELETE /orgs/{org_id}", app.withLogin(app.withPermission(app.html.Handle(app.deleteOrg))))
-	mux.Handle("GET /orgs/{org_id}", app.withLogin(app.withPermission(app.html.Handle(app.getSettingsOrg))))
-	mux.Handle("POST /orgs/{org_id}", app.withLogin(app.withPermission(app.html.Handle(app.postSettingsOrg))))
-
 	// Import
 	mux.Handle("GET /orgs/{org_id}/import", app.withLogin(app.withPermission(app.html.Handle(app.getImport))))
 	mux.Handle("GET /orgs/{org_id}/import/template", app.withLogin(app.withPermission(app.html.Handle(app.getImportTemplate))))
@@ -90,6 +86,7 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("POST /orgs/{org_id}/import/{id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postImportDelete))))
 
 	// Equipment
+	mux.Handle("GET /orgs/{org_id}/", app.withLogin(app.withPermission(app.html.Handle(app.getDashboard))))
 	mux.Handle("GET /orgs/{org_id}/equipment", app.withLogin(app.withPermission(app.html.Handle(app.getEquipment))))
 	mux.Handle("GET /orgs/{org_id}/equipment/export", app.withLogin(app.withPermission(app.html.Handle(app.getExport))))
 	mux.Handle("GET /orgs/{org_id}/equipment/print", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentPrint))))
@@ -113,7 +110,6 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/content", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentAssignContent))))
 	mux.Handle("POST /orgs/{org_id}/equipment/{id}/content/{content_id}/delete", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentRemoveContent))))
 	mux.Handle("GET /orgs/{org_id}/equipment/{id}/part-of", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentPartOfFragment))))
-	mux.Handle("GET /orgs/{org_id}/currency", app.withLogin(app.withPermission(app.html.Handle(app.getOrgCurrencyFragment))))
 	mux.Handle("GET /orgs/{org_id}/equipment-categories", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentCategoriesFragment))))
 	mux.Handle("GET /orgs/{org_id}/equipment-manufacturers", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentManufacturersFragment))))
 	mux.Handle("GET /orgs/{org_id}/warehouse-locations", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentLocationsFragment))))
@@ -127,8 +123,11 @@ func (app *application) routes() (http.Handler, error) {
 	mux.Handle("GET /settings/organizations", app.withLogin(app.html.Handle(app.getOrgs)))
 
 	// Org related settings
-	mux.Handle("GET /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.getOrgSettings))))
-	mux.Handle("POST /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.postOrgSettings))))
+	mux.Handle("DELETE /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.deleteOrg))))
+	mux.Handle("GET /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.getSettingsOrg))))
+	mux.Handle("POST /orgs/{org_id}/settings", app.withLogin(app.withPermission(app.html.Handle(app.postSettingsOrg))))
+	mux.Handle("GET /orgs/{org_id}/settings/localization", app.withLogin(app.withPermission(app.html.Handle(app.getOrgSettings))))
+	mux.Handle("POST /orgs/{org_id}/settings/localization", app.withLogin(app.withPermission(app.html.Handle(app.postOrgSettings))))
 	mux.Handle("GET /orgs/{org_id}/settings/equipment-categories", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentCategories))))
 	mux.Handle("GET /orgs/{org_id}/settings/equipment-categories/new", app.withLogin(app.withPermission(app.html.Handle(app.getEquipmentCategoryNew))))
 	mux.Handle("POST /orgs/{org_id}/settings/equipment-categories/new", app.withLogin(app.withPermission(app.html.Handle(app.postEquipmentCategoryNew))))

@@ -58,7 +58,10 @@ var (
 	// OrgSettingsDetails is the General settings page — edit org name.
 	OrgSettingsDetails = newPage("pages/orgs/details.tmpl", layouts.Settings)
 	// OrgSettings is the Billing & Tax settings page — currency, VAT rate, timezone.
-	OrgSettings = newPage("pages/orgs/settings.tmpl", layouts.Settings)
+	OrgSettings = newPage("pages/orgs/localization.tmpl", layouts.Settings)
+
+	Dashboard = newPage("pages/dashboard.tmpl", layouts.Equipment)
+
 	// EquipmentCategoriesIndex is the Equipment Categories settings page.
 	EquipmentCategoriesIndex = newPage("pages/orgs/categories/index.tmpl", layouts.Settings)
 	// EquipmentCategoriesNew is the create-category form page.

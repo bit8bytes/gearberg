@@ -197,6 +197,7 @@ type Equipment struct {
 	IsArchived             bool
 	Notes                  string
 	InspectionIntervalDays *int64
+	InspectionStatus       InspectionStatus
 	Pricing                Pricing
 	Properties             Properties
 	CreatedAt              int64
@@ -251,22 +252,83 @@ func (u *Unit) NextInspectionAtInput() string {
 	return time.Unix(*u.NextInspectionAt, 0).UTC().Format("2006-01-02")
 }
 
-// NextInspectionLabel returns a human-readable countdown: "Xd overdue", "in Xd", or "" when nil.
+// NextInspectionLabel returns a human-readable countdown based on calendar dates:
+// "Today", "Tomorrow", "in Xd", "Yesterday", or "Xd overdue". Returns "" when nil.
 func (u *Unit) NextInspectionLabel() string {
 	if u.NextInspectionAt == nil {
 		return ""
 	}
-	days := (*u.NextInspectionAt - time.Now().Unix()) / 86400
-	if days < 0 {
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	due := time.Unix(*u.NextInspectionAt, 0).UTC()
+	dueDay := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, time.UTC)
+	days := int(dueDay.Sub(today).Hours() / 24)
+	switch {
+	case days == 0:
+		return "Today"
+	case days == 1:
+		return "Tomorrow"
+	case days == -1:
+		return "Yesterday"
+	case days > 1:
+		return fmt.Sprintf("in %dd", days)
+	default:
 		return fmt.Sprintf("%dd overdue", -days)
 	}
-	return fmt.Sprintf("in %dd", days)
 }
 
-// IsInspectionOverdue returns true when the next inspection date has passed.
+// IsInspectionOverdue returns true when the next inspection calendar date is before today.
 func (u *Unit) IsInspectionOverdue() bool {
-	return u.NextInspectionAt != nil && *u.NextInspectionAt < time.Now().Unix()
+	if u.NextInspectionAt == nil {
+		return false
+	}
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	due := time.Unix(*u.NextInspectionAt, 0).UTC()
+	dueDay := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, time.UTC)
+	return dueDay.Before(today)
 }
+
+// InspectionStatus is the traffic-light health state of an equipment item
+// derived from its units' inspection dates.
+type InspectionStatus string
+
+const (
+	// InspectionStatusNone means no inspection date is set on any unit.
+	InspectionStatusNone InspectionStatus = ""
+	// InspectionStatusOverdue means at least one unit's inspection date has passed.
+	InspectionStatusOverdue InspectionStatus = "overdue"
+	// InspectionStatusDueSoon means at least one unit's inspection is due within 30 days.
+	InspectionStatusDueSoon InspectionStatus = "due-30d"
+	// InspectionStatusUpToDate means all unit inspections are more than 30 days away.
+	InspectionStatusUpToDate InspectionStatus = "up-to-date"
+)
+
+// NewInspectionStatus derives the status from the earliest unit inspection
+// timestamp. Returns InspectionStatusNone when minNextAt is nil.
+func NewInspectionStatus(minNextAt *int64) InspectionStatus {
+	if minNextAt == nil {
+		return InspectionStatusNone
+	}
+	now := time.Now().Unix()
+	switch {
+	case *minNextAt < now:
+		return InspectionStatusOverdue
+	case *minNextAt <= now+30*86400:
+		return InspectionStatusDueSoon
+	default:
+		return InspectionStatusUpToDate
+	}
+}
+
+// IsOverdue reports whether the status is overdue.
+func (s InspectionStatus) IsOverdue() bool { return s == InspectionStatusOverdue }
+
+// IsDueSoon reports whether the status is due within 30 days.
+func (s InspectionStatus) IsDueSoon() bool { return s == InspectionStatusDueSoon }
+
+// IsUpToDate reports whether all inspections are more than 30 days away.
+func (s InspectionStatus) IsUpToDate() bool { return s == InspectionStatusUpToDate }
 
 // IsActive returns true when the unit's is_active flag is set.
 func (u *Unit) IsActive() bool { return u.StatusID == 1 }
@@ -275,6 +337,15 @@ func (u *Unit) IsActive() bool { return u.StatusID == 1 }
 type UnitStatusEntry struct {
 	ID   int64
 	Name string
+}
+
+// DashboardStats holds aggregate inventory metrics shown on the dashboard.
+type DashboardStats struct {
+	// TotalValue is the sum of purchase_price × quantity for all units, in cents.
+	TotalValue           units.Cents
+	TotalStock           int64
+	EquipmentOverdue     int64
+	EquipmentOverdueSoon int64
 }
 
 // Label converts the snake_case Name to Title Case (e.g. "under_repair" → "Under Repair").

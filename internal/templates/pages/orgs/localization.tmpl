@@ -11,7 +11,7 @@
   <div class="px-6 py-6 max-w-xl">
   <p class="text-sm text-neutral mb-6">Regional defaults for currency, VAT rate, and timezone.</p>
 
-  <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings" class="flex flex-col gap-4" novalidate>
+  <form method="POST" action="/orgs/{{ .Data.OrgID }}/settings/localization" class="flex flex-col gap-4" novalidate>
     <div class="flex flex-col gap-1">
       <label for="currency">Currency</label>
       <select id="currency" name="currency" class="select">

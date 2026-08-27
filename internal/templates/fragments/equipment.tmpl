@@ -4,7 +4,8 @@
     <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
       <tr>
         <th class="w-20"></th>
-        <th>Name</th>
+        <th class="min-w-56">Name</th>
+        <th class="w-12 text-center">Status</th>
         <th>Category</th>
         <th class="text-right">Stock</th>
         <th class="text-right">Actions</th>
@@ -30,7 +31,28 @@
     </div>
   </td>
   <td class="py-3">
-    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover block leading-tight">{{ .Name }}</a>
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="font-semibold link link-hover leading-tight">{{ .Name }}</a>
+  </td>
+  <td class="py-3 text-center">
+    {{ if .InspectionStatus.IsOverdue }}
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-error tooltip-right inline-flex" data-tip="Inspection overdue">
+      <span class="w-6 h-6 rounded-full bg-error text-error-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </a>
+    {{ else if .InspectionStatus.IsDueSoon }}
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-warning tooltip-right inline-flex" data-tip="Inspection due soon">
+      <span class="w-6 h-6 rounded-full bg-warning text-warning-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </a>
+    {{ else if .InspectionStatus.IsUpToDate }}
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-success tooltip-right inline-flex" data-tip="Inspections up to Date">
+      <span class="w-6 h-6 rounded-full bg-success text-success-content inline-flex items-center justify-center">
+        <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
+      </span>
+    </a>
+    {{ end }}
   </td>
   <td class="py-3">
     {{ if .CategoryName }}
@@ -61,10 +83,39 @@
         <ul tabindex="-1" class="menu dropdown-content bg-base-100 rounded-box z-10 mt-1 w-36 p-2 gap-1 shadow border border-base-300">
           <li>
             <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}" class="flex items-center gap-2">
-              <span class="w-4 h-4">{{ template "edit-icon" . }}</span>
-              Edit Details
+              <span class="w-4 h-4">{{ template "details-icon" . }}</span>
+              Details
             </a>
           </li>
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/pricing" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "pricing-icon" . }}</span>
+              Pricing
+            </a>
+          </li>
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/properties" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "properties-icon" . }}</span>
+              Properties
+            </a>
+          </li>
+          {{ if eq .TrackingType.String "serialized" }}
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/units" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "units-icon" . }}</span>
+              Units
+            </a>
+          </li>
+          {{ end }}
+          {{ if eq .Type.String "kit" }}
+          <li>
+            <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}/content" class="flex items-center gap-2">
+              <span class="w-4 h-4">{{ template "kit-icon" . }}</span>
+              Content
+            </a>
+          </li>
+          {{ end }}
+          <div class="border-b border-base-200"></div>
           <li>
             <button type="button" data-modal-target="delete-equipment-{{ .ID }}" class="flex items-center gap-2 text-error">
               <span class="w-4 h-4">{{ template "delete-icon" }}</span>
@@ -79,7 +130,7 @@
 {{ end }}
 {{ else }}
 <tr>
-  <td colspan="5">
+  <td colspan="6">
     <div class="flex flex-col items-center gap-3 py-16 text-base-content/40">
       {{ if .Data.Query }}
         <p class="text-sm">No items found for "{{ .Data.Query }}".</p>

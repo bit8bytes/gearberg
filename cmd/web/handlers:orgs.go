@@ -60,6 +60,11 @@ func (app *application) getOrgPicker(w http.ResponseWriter, r *http.Request) *ht
 		return httperr.InternalServerError(err)
 	}
 
+	if len(allOrgs) == 1 {
+		http.Redirect(w, r, "/orgs/"+allOrgs[0].ID+"/equipment", http.StatusSeeOther)
+		return nil
+	}
+
 	data := app.html.TemplateData(r)
 	data.Data = orgsData{
 		Orgs: allOrgs,
@@ -159,7 +164,7 @@ func (app *application) postSettingsOrg(w http.ResponseWriter, r *http.Request) 
 		return httperr.InternalServerError(err)
 	}
 
-	http.Redirect(w, r, "/orgs/"+id, http.StatusSeeOther) //nolint:gosec // id is a parsed and validated KSUID, not an open redirect
+	http.Redirect(w, r, "/orgs/"+id+"/settings", http.StatusSeeOther) //nolint:gosec // id is a parsed and validated KSUID, not an open redirect
 	return nil
 }
 

@@ -16,46 +16,14 @@ package main
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/bit8bytes/gearberg/internal/httperr"
-	"github.com/bit8bytes/gearberg/internal/money"
 	"github.com/bit8bytes/gearberg/internal/orgs/settings"
-	"github.com/bit8bytes/gearberg/internal/templates/fragments"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
-	"github.com/bit8bytes/gearberg/pkg/htmx"
 )
 
 type orgSettingsData struct {
 	OrgID string
-}
-
-type orgCurrencyData struct {
-	Currency money.Currency
-}
-
-func (app *application) getOrgCurrencyFragment(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	ctx := r.Context()
-	orgID := r.PathValue("org_id")
-
-	if !htmx.IsRequest(r) {
-		http.Redirect(w, r, "/orgs/"+url.PathEscape(orgID)+"/settings", http.StatusSeeOther)
-		return nil
-	}
-
-	s, err := app.services.orgsettings.Get(ctx, orgID)
-	if err != nil {
-		return httperr.InternalServerError(err)
-	}
-
-	var currency money.Currency
-	if s != nil {
-		currency = s.Currency
-	}
-
-	tmplData := app.html.TemplateData(r)
-	tmplData.Data = orgCurrencyData{Currency: currency}
-	return app.html.RenderFragment(w, r, http.StatusOK, fragments.OrgCurrency, tmplData)
 }
 
 func (app *application) getOrgSettings(w http.ResponseWriter, r *http.Request) *httperr.Error {

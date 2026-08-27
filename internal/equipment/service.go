@@ -129,16 +129,17 @@ func (s *Service) CreateWithUnits(ctx context.Context, base Base, unitList []Cre
 
 // ListParams holds the parameters for listing equipment.
 type ListParams struct {
-	OrgID    string
-	Query    string
-	Category string
-	Filters  pagination.Filters
+	OrgID            string
+	Query            string
+	Category         string
+	InspectionFilter string
+	Filters          pagination.Filters
 }
 
 // List returns equipment for orgID filtered and paginated according to p.
 // Returns all items when p.Filters.PageSize is math.MaxInt32.
 func (s *Service) List(ctx context.Context, p ListParams) ([]Equipment, pagination.Metadata, error) {
-	items, total, err := s.repo.List(ctx, p.OrgID, p.Query, p.Category, false, p.Filters)
+	items, total, err := s.repo.List(ctx, p.OrgID, p.Query, p.Category, p.InspectionFilter, false, p.Filters)
 	if err != nil {
 		return nil, pagination.Metadata{}, fmt.Errorf("List: %w", err)
 	}
@@ -149,7 +150,7 @@ func (s *Service) List(ctx context.Context, p ListParams) ([]Equipment, paginati
 // ListNames returns the names of all equipment items belonging to orgID.
 // Used by the import conflict-detection step.
 func (s *Service) ListNames(ctx context.Context, orgID string) ([]string, error) {
-	items, _, err := s.repo.List(ctx, orgID, "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
+	items, _, err := s.repo.List(ctx, orgID, "", "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
 	if err != nil {
 		return nil, fmt.Errorf("ListNames: %w", err)
 	}
@@ -174,7 +175,7 @@ func findByName(items []Equipment, name string) *Equipment {
 // AssignContentByName resolves the member by name within the org then assigns it as content.
 // Returns ErrNotFound when no equipment matches name.
 func (s *Service) AssignContentByName(ctx context.Context, orgID, memberName string, a AssignContent) (*ContentItem, error) {
-	all, _, err := s.repo.List(ctx, orgID, "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
+	all, _, err := s.repo.List(ctx, orgID, "", "", "", false, pagination.Filters{Page: 1, PageSize: math.MaxInt32})
 	if err != nil {
 		return nil, fmt.Errorf("AssignContentByName: %w", err)
 	}
@@ -377,4 +378,9 @@ func (s *Service) ListContainers(ctx context.Context, memberID string) ([]PartOf
 		return nil, fmt.Errorf("ListContainers: %w", err)
 	}
 	return items, nil
+}
+
+// Stats returns basic equipments statistics.
+func (s *Service) Stats(ctx context.Context, orgID string) (DashboardStats, error) {
+	return s.repo.Stats(ctx, orgID)
 }

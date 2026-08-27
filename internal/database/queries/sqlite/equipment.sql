@@ -33,16 +33,27 @@ SELECT
     e.wire_gauge_mm2_x100,
     e.updated_at,
     e.created_at,
-    COUNT(*) OVER() AS total_records
+    COUNT(*) OVER() AS total_records,
+    insp.min_next_inspection_at
 FROM equipment e
 LEFT JOIN equipment_categories ec ON ec.id = e.category_id
 LEFT JOIN warehouse_locations wl ON wl.id = e.location_id
 LEFT JOIN equipment_types et ON et.id = e.equipment_type_id
 LEFT JOIN tracking_types tt ON tt.id = e.tracking_type_id
+LEFT JOIN (
+    SELECT equipment_id, MIN(next_inspection_at) AS min_next_inspection_at
+    FROM equipment_serialized_items
+    WHERE next_inspection_at IS NOT NULL
+    GROUP BY equipment_id
+) insp ON insp.equipment_id = e.id
 WHERE e.org_id = sqlc.arg(org_id)
   AND (sqlc.arg(name_query) = '' OR e.name LIKE '%' || sqlc.arg(name_query) || '%' OR EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.serial_number LIKE '%' || sqlc.arg(name_query) || '%'))
   AND (sqlc.arg(category) = '' OR ec.name = sqlc.arg(category))
   AND (sqlc.arg(is_archived) = -1 OR e.is_archived = sqlc.arg(is_archived))
+  AND (sqlc.arg(inspection_filter) = ''
+    OR (sqlc.arg(inspection_filter) = 'overdue'    AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at < unixepoch()))
+    OR (sqlc.arg(inspection_filter) = 'due-30d'    AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at >= unixepoch() AND esi.next_inspection_at <= unixepoch() + 30 * 86400))
+    OR (sqlc.arg(inspection_filter) = 'up-to-date' AND EXISTS (SELECT 1 FROM equipment_serialized_items esi WHERE esi.equipment_id = e.id AND esi.next_inspection_at IS NOT NULL AND esi.next_inspection_at > unixepoch() + 30 * 86400)))
 ORDER BY category_name ASC, e.name ASC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
@@ -89,6 +100,52 @@ LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 -- name: CountByOrgID :one
 SELECT COUNT(*) FROM equipment
 WHERE org_id = ?;
+
+-- name: Stats :one
+SELECT
+    COALESCE(
+        (SELECT SUM(ebi.purchase_price * ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = sqlc.arg(org_id) AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT SUM(esi.purchase_price)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)),
+        0
+    ) AS total_value,
+    COALESCE(
+        (SELECT SUM(ebi.quantity)
+         FROM equipment_bulk_items ebi
+         JOIN equipment e ON e.id = ebi.equipment_id
+         WHERE e.org_id = sqlc.arg(org_id) AND e.is_archived = 0),
+        0
+    ) +
+    COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)),
+        0
+    ) AS total_stock,
+    CAST(COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)
+           AND esi.next_inspection_at IS NOT NULL
+           AND esi.next_inspection_at < unixepoch()),
+        0
+    ) AS INTEGER) AS equipment_overdue,
+    CAST(COALESCE(
+        (SELECT COUNT(*)
+         FROM equipment_serialized_items esi
+         WHERE esi.org_id = sqlc.arg(org_id)
+           AND esi.next_inspection_at IS NOT NULL
+           AND esi.next_inspection_at >= unixepoch()
+           AND esi.next_inspection_at <= unixepoch() + 30 * 86400),
+        0
+    ) AS INTEGER) AS equipment_overdue_soon;
 
 -- name: Create :one
 INSERT INTO equipment (

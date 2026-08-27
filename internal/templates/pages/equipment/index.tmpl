@@ -76,7 +76,7 @@
             hx-trigger="input changed delay:300ms"
             hx-target="#equipment-results"
             hx-swap="innerHTML"
-            hx-include="[name='category']"
+            hx-include="[name='category'],[name='inspection']"
             hx-indicator="#search-indicator"
             hx-push-url="true"
           />
@@ -88,7 +88,7 @@
           hx-trigger="change"
           hx-target="#equipment-results"
           hx-swap="innerHTML"
-          hx-include="[name='q']"
+          hx-include="[name='q'],[name='inspection']"
           hx-indicator="#search-indicator"
           hx-push-url="true"
         >
@@ -96,6 +96,22 @@
           {{ range .Data.Categories }}
           <option value="{{ .Name }}" {{ if eq $.Data.Category .Name }}selected{{ end }}>{{ .Name }}</option>
           {{ end }}
+        </select>
+        <select
+          name="inspection"
+          class="select w-full sm:w-auto"
+          hx-get="/orgs/{{ .Data.OrgID }}/equipment"
+          hx-trigger="change"
+          hx-target="#equipment-results"
+          hx-swap="innerHTML"
+          hx-include="[name='q'],[name='category']"
+          hx-indicator="#search-indicator"
+          hx-push-url="true"
+        >
+          <option value="">All</option>
+          <option value="overdue" {{ if eq $.Data.Inspection "overdue" }}selected{{ end }} class="text-error">Overdue</option>
+          <option value="due-30d" {{ if eq $.Data.Inspection "due-30d" }}selected{{ end }} class="text-warning">Due Soon</option>
+          <option value="up-to-date" {{ if eq $.Data.Inspection "up-to-date" }}selected{{ end }} class="text-success">Up to Date</option>
         </select>
         <span id="search-indicator" class="htmx-indicator loading loading-spinner loading-xs text-primary"></span>
       </div>

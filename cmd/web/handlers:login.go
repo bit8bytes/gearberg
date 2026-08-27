@@ -33,11 +33,16 @@ import (
 // belong to exactly one org, otherwise to the organizations settings page.
 func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, accountID string) {
 	orgs, err := app.services.orgs.List(ctx, accountID)
-	if err == nil && len(orgs) == 1 {
-		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther) //nolint:gosec
-		return
+	if err != nil {
+		// It's better just warn in logs than breaking the login flow.
+		app.logger.Warn("redirectAfterLogin: list orgs", "error", err)
 	}
-	http.Redirect(w, r, "/orgs/pick", http.StatusSeeOther)
+
+	if len(orgs) == 1 {
+		http.Redirect(w, r, "/orgs/"+orgs[0].ID+"/equipment", http.StatusSeeOther) //nolint:gosec
+	} else {
+		http.Redirect(w, r, "/orgs/pick", http.StatusSeeOther)
+	}
 }
 
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {

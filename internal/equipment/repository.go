@@ -68,14 +68,15 @@ func (r *Repository) Count(ctx context.Context, orgID string) (int64, error) {
 // only archived items are returned; otherwise only active items are returned.
 // sortBy may be "code" to order by minimum unit code; otherwise orders by name.
 // Returns total matching count.
-func (r *Repository) List(ctx context.Context, orgID, query, category string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
+func (r *Repository) List(ctx context.Context, orgID, query, category, inspectionFilter string, showArchived bool, f pagination.Filters) ([]Equipment, int, error) {
 	rows, err := r.equipment.List(ctx, genequip.ListParams{
-		OrgID:      orgID,
-		NameQuery:  query,
-		Category:   category,
-		IsArchived: database.Bool(showArchived),
-		PageOffset: int64(f.Offset()),
-		PageLimit:  int64(f.Limit()),
+		OrgID:            orgID,
+		NameQuery:        query,
+		Category:         category,
+		InspectionFilter: inspectionFilter,
+		IsArchived:       database.Bool(showArchived),
+		PageOffset:       int64(f.Offset()),
+		PageLimit:        int64(f.Limit()),
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("List: %w", err)
@@ -120,6 +121,13 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 			},
 			UpdatedAt: row.UpdatedAt,
 			CreatedAt: row.CreatedAt,
+			InspectionStatus: func() InspectionStatus {
+				v, ok := row.MinNextInspectionAt.(int64)
+				if !ok {
+					return InspectionStatusNone
+				}
+				return NewInspectionStatus(&v)
+			}(),
 		})
 	}
 	return items, int(totalRecords), nil
@@ -676,4 +684,18 @@ func (r *Repository) ListContainersByMemberID(ctx context.Context, memberID stri
 		items = append(items, PartOf{ID: row.ID, Name: row.Name})
 	}
 	return items, nil
+}
+
+// Stats returns dashboard aggregate counts and totals for the given org.
+func (r *Repository) Stats(ctx context.Context, orgID string) (DashboardStats, error) {
+	row, err := r.equipment.Stats(ctx, orgID)
+	if err != nil {
+		return DashboardStats{}, fmt.Errorf("Stats: %w", err)
+	}
+	return DashboardStats{
+		TotalValue:           units.Cents(row.TotalValue),
+		TotalStock:           row.TotalStock,
+		EquipmentOverdue:     row.EquipmentOverdue,
+		EquipmentOverdueSoon: row.EquipmentOverdueSoon,
+	}, nil
 }

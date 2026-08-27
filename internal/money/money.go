@@ -35,6 +35,24 @@ type Currency string
 // String returns the currency code as a plain string.
 func (c Currency) String() string { return string(c) }
 
+var currencySymbols = map[Currency]string{
+	"USD": "$", "EUR": "€", "GBP": "£", "CHF": "Fr",
+	"CAD": "CA$", "AUD": "A$", "JPY": "¥", "CNY": "¥",
+	"INR": "₹", "BRL": "R$", "MXN": "MX$", "SEK": "kr",
+	"NOK": "kr", "DKK": "kr", "PLN": "zł", "CZK": "Kč",
+	"HUF": "Ft", "RON": "lei", "SGD": "S$", "HKD": "HK$",
+	"NZD": "NZ$", "ZAR": "R", "TRY": "₺", "AED": "د.إ",
+	"SAR": "﷼",
+}
+
+// Symbol returns the currency symbol (e.g. "€"), falling back to the ISO code when unknown.
+func (c Currency) Symbol() string {
+	if s, ok := currencySymbols[c]; ok {
+		return s
+	}
+	return string(c)
+}
+
 // VatRate is a VAT rate stored as basis points (e.g. 1900 = 19%).
 type VatRate int64
 
