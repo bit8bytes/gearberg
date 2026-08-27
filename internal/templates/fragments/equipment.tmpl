@@ -35,23 +35,23 @@
   </td>
   <td class="py-3 text-center">
     {{ if .InspectionStatus.IsOverdue }}
-    <span class="tooltip tooltip-error tooltip-right inline-flex" data-tip="Inspection overdue">
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-error tooltip-right inline-flex" data-tip="Inspection overdue">
       <span class="w-6 h-6 rounded-full bg-error text-error-content inline-flex items-center justify-center">
         <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
       </span>
-    </span>
+    </a>
     {{ else if .InspectionStatus.IsDueSoon }}
-    <span class="tooltip tooltip-warning tooltip-right inline-flex" data-tip="Inspection due soon">
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-warning tooltip-right inline-flex" data-tip="Inspection due soon">
       <span class="w-6 h-6 rounded-full bg-warning text-warning-content inline-flex items-center justify-center">
         <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
       </span>
-    </span>
+    </a>
     {{ else if .InspectionStatus.IsUpToDate }}
-    <span class="tooltip tooltip-success tooltip-right inline-flex" data-tip="Inspections up to Date">
+    <a href="/orgs/{{ $.Data.OrgID }}/equipment/{{ .ID }}{{ if eq .TrackingType.String "serialized" }}/units{{ end }}" class="tooltip tooltip-success tooltip-right inline-flex" data-tip="Inspections up to Date">
       <span class="w-6 h-6 rounded-full bg-success text-success-content inline-flex items-center justify-center">
         <span class="w-3 h-3">{{ template "wrench-icon" . }}</span>
       </span>
-    </span>
+    </a>
     {{ end }}
   </td>
   <td class="py-3">
