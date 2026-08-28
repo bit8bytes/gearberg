@@ -20,20 +20,20 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
 
         <div class="flex flex-col gap-1 md:col-span-2">
-          <label for="purchase_price" class="label">Resale Price <span class="text-base-content/40 text-xs">(optional)</span></label>
+          <label for="resale_price" class="label">Resale Price <span class="text-base-content/40 text-xs">(optional)</span></label>
           <label class="input w-full">
             {{ if .Data.Currency }}<span class="opacity-50 w-6">{{ .Data.Currency.Symbol }}</span>{{ end }}
             <input
-              id="purchase_price"
+              id="resale_price"
               type="number"
               inputmode="decimal"
               step="1"
               min="0"
-              name="purchase_price"
-              value="{{ .Form.PurchasePrice }}"
+              name="resale_price"
+              value="{{ .Form.ResalePrice }}"
             />
           </label>
-          {{ with index .Form.Errors "purchase_price" }}
+          {{ with index .Form.Errors "resale_price" }}
             <p class="text-error text-sm">{{ . }}</p>
           {{ end }}
         </div>

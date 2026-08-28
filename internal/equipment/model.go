@@ -65,17 +65,19 @@ type Base struct {
 // how many units are generated.
 type CreateEquipment struct {
 	Base
-	ItemType   string // "bulk", "serialized", or "kit" — maps to both equipment_type_id and tracking_type_id
-	TotalStock int64
-	UnitCount  int64
+	ItemType      string // "bulk", "serialized", or "kit" — maps to both equipment_type_id and tracking_type_id
+	TotalStock    int64
+	UnitCount     int64
+	PurchasePrice *units.Cents // only meaningful for bulk items; stored in equipment_bulk_items
 }
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
 type CreateBulkEquipment struct {
-	ID         string
-	BulkItemID string
+	ID            string
+	BulkItemID    string
 	Base
-	TotalStock int64
+	TotalStock    int64
+	PurchasePrice *units.Cents
 }
 
 // CreateSerializedEquipment holds the data required to create a serialized inventory item with units.
@@ -174,8 +176,8 @@ type Properties struct {
 
 // Pricing holds the price fields shown on the Pricing tab.
 type Pricing struct {
-	PurchasePrice *units.Cents
-	RentalPrice   *units.Cents
+	ResalePrice *units.Cents
+	RentalPrice *units.Cents
 }
 
 // Equipment represents a single inventory item.

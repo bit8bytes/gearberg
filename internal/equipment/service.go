@@ -61,11 +61,12 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	units := make([]CreateUnit, c.UnitCount)
 	for i := range units {
 		units[i] = CreateUnit{
-			ID:           uid.New(),
-			OrgID:        c.OrgID,
-			EquipmentID:  itemID,
-			SerialNumber: serial.New(),
-			IsActive:     true,
+			ID:            uid.New(),
+			OrgID:         c.OrgID,
+			EquipmentID:   itemID,
+			SerialNumber:  serial.New(),
+			IsActive:      true,
+			PurchasePrice: c.PurchasePrice,
 		}
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
@@ -80,10 +81,11 @@ func (s *Service) Create(ctx context.Context, c CreateEquipment) (*Equipment, er
 	switch trackingType {
 	case tracking.Bulk:
 		item, err = s.repo.CreateBulk(ctx, tx, CreateBulkEquipment{
-			ID:         itemID,
-			BulkItemID: uid.New(),
-			Base:       c.Base,
-			TotalStock: c.TotalStock,
+			ID:            itemID,
+			BulkItemID:    uid.New(),
+			Base:          c.Base,
+			TotalStock:    c.TotalStock,
+			PurchasePrice: c.PurchasePrice,
 		})
 	case tracking.Serialized:
 		item, err = s.repo.CreateSerialized(ctx, tx, CreateSerializedEquipment{

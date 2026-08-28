@@ -106,8 +106,8 @@ func listRowsToEquipment(rows []genequip.ListRow) ([]Equipment, int, error) {
 			IsArchived:      row.IsArchived == 1,
 			Notes:           database.String(row.Notes),
 			Pricing: Pricing{
-				PurchasePrice: row.ResalePrice,
-				RentalPrice:   row.RentalPrice,
+				ResalePrice: row.ResalePrice,
+				RentalPrice: row.RentalPrice,
 			},
 			Properties: Properties{
 				Weight:    row.WeightG,
@@ -159,8 +159,8 @@ func (r *Repository) Get(ctx context.Context, id string) (*Equipment, error) {
 		IsArchived:      row.IsArchived == 1,
 		Notes:           database.String(row.Notes),
 		Pricing: Pricing{
-			PurchasePrice: row.ResalePrice,
-			RentalPrice:   row.RentalPrice,
+			ResalePrice: row.ResalePrice,
+			RentalPrice: row.RentalPrice,
 		},
 		Properties: Properties{
 			Weight:    row.WeightG,
@@ -209,7 +209,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		Name:             c.Name,
 		IsArchived:       0,
 		RentalPrice:      c.Pricing.RentalPrice,
-		ResalePrice:      c.Pricing.PurchasePrice,
+		ResalePrice:      c.Pricing.ResalePrice,
 		Notes:            database.NullString(database.StringOrNil(c.Notes)),
 		WeightG:          c.Properties.Weight,
 		WidthMm:          c.Properties.Width,
@@ -231,7 +231,7 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		ID:            c.BulkItemID,
 		EquipmentID:   row.ID,
 		Quantity:      c.TotalStock,
-		PurchasePrice: database.NullOf(c.Pricing.PurchasePrice),
+		PurchasePrice: database.NullOf(c.PurchasePrice),
 	}); err != nil {
 		return nil, fmt.Errorf("createBulkWith: equipment_bulk_items: %w", database.NormalizeError(err))
 	}
@@ -249,8 +249,8 @@ func (r *Repository) createBulkWith(ctx context.Context, eqQ *genequip.Queries, 
 		TotalStock:      c.TotalStock,
 		Notes:           database.String(row.Notes),
 		Pricing: Pricing{
-			PurchasePrice: row.ResalePrice,
-			RentalPrice:   row.RentalPrice,
+			ResalePrice: row.ResalePrice,
+			RentalPrice: row.RentalPrice,
 		},
 		Properties: Properties{
 			Weight:    row.WeightG,
@@ -292,7 +292,7 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		Name:             c.Name,
 		IsArchived:       0,
 		RentalPrice:      c.Pricing.RentalPrice,
-		ResalePrice:      c.Pricing.PurchasePrice,
+		ResalePrice:      c.Pricing.ResalePrice,
 		Notes:            database.NullString(database.StringOrNil(c.Notes)),
 		WeightG:          c.Properties.Weight,
 		WidthMm:          c.Properties.Width,
@@ -342,8 +342,8 @@ func (r *Repository) CreateSerialized(ctx context.Context, tx *sql.Tx, c CreateS
 		TotalStock:      int64(len(c.Units)),
 		Notes:           database.String(row.Notes),
 		Pricing: Pricing{
-			PurchasePrice: row.ResalePrice,
-			RentalPrice:   row.RentalPrice,
+			ResalePrice: row.ResalePrice,
+			RentalPrice: row.RentalPrice,
 		},
 		Properties: Properties{
 			Weight:    row.WeightG,
@@ -418,7 +418,7 @@ func (r *Repository) UpdateDetailsBulk(ctx context.Context, u UpdateEquipmentDet
 func (r *Repository) UpdatePricing(ctx context.Context, u UpdateEquipmentPricing) error {
 	if err := r.equipment.UpdatePricing(ctx, genequip.UpdatePricingParams{
 		ID:          u.ID,
-		ResalePrice: u.Pricing.PurchasePrice,
+		ResalePrice: u.Pricing.ResalePrice,
 		RentalPrice: u.Pricing.RentalPrice,
 	}); err != nil {
 		return fmt.Errorf("UpdatePricing: %w", database.NormalizeError(err))

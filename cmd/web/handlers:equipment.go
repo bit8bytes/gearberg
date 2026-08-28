@@ -240,16 +240,17 @@ func (app *application) postEquipmentNew(w http.ResponseWriter, r *http.Request)
 		LocationID:     locID,
 		Notes:          form.Notes,
 		Pricing: equipment.Pricing{
-			PurchasePrice: form.PurchasePrice,
-			RentalPrice:   form.RentalPrice,
+			ResalePrice: form.ResalePrice,
+			RentalPrice: form.RentalPrice,
 		},
 	}
 
 	eq, err := app.services.equipment.Create(ctx, equipment.CreateEquipment{
-		ItemType:   form.ItemType,
-		Base:       base,
-		TotalStock: form.Count,
-		UnitCount:  form.Count,
+		ItemType:      form.ItemType,
+		Base:          base,
+		TotalStock:    form.Count,
+		UnitCount:     form.Count,
+		PurchasePrice: form.PurchasePrice,
 	})
 	if err != nil {
 		return httperr.InternalServerError(err)

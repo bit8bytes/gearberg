@@ -50,8 +50,8 @@ type DetailsForm struct {
 
 // PricingForm holds parsed input and validation state for the pricing tab.
 type PricingForm struct {
-	PurchasePrice *units.Cents
-	RentalPrice   *units.Cents
+	ResalePrice *units.Cents
+	RentalPrice *units.Cents
 	validator.Validator
 }
 
@@ -116,15 +116,15 @@ func ParsePricing(r *http.Request) (PricingForm, error) {
 	if err := r.ParseForm(); err != nil {
 		return f, fmt.Errorf("parse form: %w", err)
 	}
-	f.PurchasePrice = units.ParseCents(r.PostForm.Get("purchase_price"))
+	f.ResalePrice = units.ParseCents(r.PostForm.Get("resale_price"))
 	f.RentalPrice = units.ParseCents(r.PostForm.Get("rental_price"))
 	return f, nil
 }
 
 // Validate checks PricingForm fields and returns true when all pass.
 func (f *PricingForm) Validate() bool {
-	if f.PurchasePrice != nil {
-		f.Check(*f.PurchasePrice > 0, "purchase_price", "Must be greater than 0")
+	if f.ResalePrice != nil {
+		f.Check(*f.ResalePrice > 0, "resale_price", "Must be greater than 0")
 	}
 	if f.RentalPrice != nil {
 		f.Check(*f.RentalPrice > 0, "rental_price", "Must be greater than 0")
@@ -200,8 +200,8 @@ func (f *PropertiesForm) ToProperties() Properties {
 // ToPricing converts the form's parsed values into a Pricing sub-struct.
 func (f *PricingForm) ToPricing() Pricing {
 	return Pricing{
-		PurchasePrice: f.PurchasePrice,
-		RentalPrice:   f.RentalPrice,
+		ResalePrice: f.ResalePrice,
+		RentalPrice: f.RentalPrice,
 	}
 }
 
@@ -224,8 +224,8 @@ func (e *Equipment) DetailsForm() DetailsForm {
 // PricingForm pre-populates a PricingForm from the equipment's stored values.
 func (e *Equipment) PricingForm() PricingForm {
 	f := PricingForm{
-		PurchasePrice: e.Pricing.PurchasePrice,
-		RentalPrice:   e.Pricing.RentalPrice,
+		ResalePrice: e.Pricing.ResalePrice,
+		RentalPrice: e.Pricing.RentalPrice,
 	}
 	f.Errors = make(map[string]string)
 	return f
@@ -301,7 +301,8 @@ type NewForm struct {
 	LocationID       string
 	LocationName     string // set when user typed a new location name not yet in the DB
 	Count            int64  // total_stock for bulk; number of units to generate for serialized/kit
-	PurchasePrice    *units.Cents
+	PurchasePrice    *units.Cents // bulk only; stored in equipment_bulk_items
+	ResalePrice      *units.Cents
 	RentalPrice      *units.Cents
 	Notes            string
 	Image            multipart.File
@@ -334,6 +335,7 @@ func ParseForm(r *http.Request) (NewForm, error) {
 	f.LocationName = strings.TrimSpace(r.PostForm.Get("location_name"))
 	f.Count = ParseQuantity(r.PostForm.Get("count"))
 	f.PurchasePrice = units.ParseCents(r.PostForm.Get("purchase_price"))
+	f.ResalePrice = units.ParseCents(r.PostForm.Get("resale_price"))
 	f.RentalPrice = units.ParseCents(r.PostForm.Get("rental_price"))
 	f.Notes = strings.TrimSpace(r.PostForm.Get("notes"))
 	file, header, err := r.FormFile("image")
