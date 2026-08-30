@@ -201,6 +201,17 @@
       <pre data-prefix=""><code>  -base-url http://localhost:9000</code></pre>
     </div>
     <p>Repeat the env var for multiple providers.</p>
+
+    <h4 class="text-base font-semibold">require-email-verified</h4>
+    <p>
+      By default, Gearberg only allows login if the provider has verified the user's email address. If your provider does not set
+      <code class="badge badge-neutral font-mono">email_verified: true</code> in the ID token, you can disable this check by appending
+      <code class="badge badge-neutral font-mono">require-email-verified=false</code> to the provider string. We recommend doing this only in local development.
+      In production it allows anyone with an account in your OIDC provider to log in, regardless of whether their email was verified.
+    </p>
+    <div class="mockup-code" role="region" aria-label="OIDC require-email-verified=false example">
+      <pre data-prefix=""><code>OIDC_&lt;NAME&gt;_PROVIDER=&lt;name&gt;,issuer=&lt;URL&gt;,client-id=&lt;ID&gt;,client-secret=&lt;SECRET&gt;,require-email-verified=false</code></pre>
+    </div>
   </div>
 
   <div id="smtp" class="flex flex-col gap-2">
@@ -346,7 +357,13 @@
             <td><code class="badge badge-neutral font-mono">-oidc-provider</code></td>
             <td><code class="badge font-mono">OIDC_&lt;NAME&gt;_PROVIDER</code></td>
             <td>—</td>
-            <td>OIDC provider (repeatable)</td>
+            <td>OIDC provider (repeatable). Sub-options: <code class="font-mono text-xs">issuer</code>, <code class="font-mono text-xs">client-id</code>, <code class="font-mono text-xs">client-secret</code>, <code class="font-mono text-xs">require-email-verified</code></td>
+          </tr>
+          <tr>
+            <td class="pl-6"><code class="badge badge-ghost font-mono text-xs">require-email-verified</code></td>
+            <td>—</td>
+            <td><code class="font-mono text-xs">true</code></td>
+            <td>Reject login if the provider has not verified the user's email. Set to <code class="font-mono text-xs">false</code> only in dev/test environments — insecure in production.</td>
           </tr>
 
           <tr class="bg-base-200/50">
