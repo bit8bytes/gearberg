@@ -20,6 +20,7 @@ import (
 
 	gen "github.com/bit8bytes/gearberg/internal/api/gen"
 	"github.com/bit8bytes/gearberg/internal/assets"
+	"github.com/bit8bytes/gearberg/internal/httperr"
 )
 
 func (app *application) routes() (http.Handler, error) {
@@ -41,8 +42,8 @@ func (app *application) routes() (http.Handler, error) {
 		mux.Handle("GET /auth/oidc/"+name, app.withGuest(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			app.getAuthOIDC(w, r, name)
 		})))
-		mux.Handle("GET /auth/oidc/"+name+"/callback", app.withGuest(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			app.getAuthOIDCCallback(w, r, name)
+		mux.Handle("GET /auth/oidc/"+name+"/callback", app.withGuest(app.html.Handle(func(w http.ResponseWriter, r *http.Request) *httperr.Error {
+			return app.getAuthOIDCCallback(w, r, name)
 		})))
 	}
 

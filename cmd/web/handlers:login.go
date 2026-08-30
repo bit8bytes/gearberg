@@ -283,6 +283,7 @@ func (app *application) loginData() LoginData {
 func (app *application) getAuthOIDC(w http.ResponseWriter, r *http.Request, name string) {
 	p, ok := app.oidcProviders[name]
 	if !ok {
+		// Silent redirect: exposing an error leaks which provider names are valid.
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	}
@@ -295,42 +296,40 @@ func (app *application) getAuthOIDC(w http.ResponseWriter, r *http.Request, name
 // getAuthOIDCCallback handles the redirect from an OIDC provider after the user
 // authenticates. It verifies the CSRF state, exchanges the authorization code
 // for tokens, validates the ID token, then signs in or JIT-provisions an account.
-func (app *application) getAuthOIDCCallback(w http.ResponseWriter, r *http.Request, name string) {
+// Security-sensitive failures (unknown provider, state mismatch) redirect silently
+// to avoid leaking information to potential attackers.
+func (app *application) getAuthOIDCCallback(w http.ResponseWriter, r *http.Request, name string) *httperr.Error {
 	p, ok := app.oidcProviders[name]
 	if !ok {
+		// Silent redirect: exposing an error leaks which provider names are valid.
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	ctx := r.Context()
 
 	state := r.URL.Query().Get("state")
 	if state == "" || state != sessionOIDCState(ctx, app.session) {
+		// Silent redirect: exposing an error leaks CSRF flow details.
 		app.logger.WarnContext(ctx, "oidc: state mismatch", "provider", name)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	code := r.URL.Query().Get("code")
 	token, err := p.oauth2Config.Exchange(ctx, code)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: code exchange failed", "provider", name, "error", err)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return httperr.InternalServerError(err)
 	}
 
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		app.logger.ErrorContext(ctx, "oidc: id_token missing from token response", "provider", name)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return httperr.InternalServerError(errors.New("oidc: id_token missing"))
 	}
 
 	idToken, err := p.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: id_token verification failed", "provider", name, "error", err)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return httperr.InternalServerError(err)
 	}
 
 	var claims struct {
@@ -338,31 +337,31 @@ func (app *application) getAuthOIDCCallback(w http.ResponseWriter, r *http.Reque
 		EmailVerified bool   `json:"email_verified"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
-		app.logger.ErrorContext(ctx, "oidc: claims extraction failed", "provider", name, "error", err)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return httperr.InternalServerError(err)
 	}
 
-	if !claims.EmailVerified {
-		app.logger.WarnContext(ctx, "oidc: rejected login with unverified email", "provider", name, "subject", idToken.Subject)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+	if p.requireEmailVerified && !claims.EmailVerified {
+		return &httperr.Error{
+			Error:   errors.New("oidc: email not verified"),
+			Message: "Your email address has not been verified by the identity provider. Please verify your email and try again.",
+			Code:    http.StatusForbidden,
+		}
 	}
 
 	providerID, known := federated.ByName(name)
 	if !known {
+		// Silent redirect: internal misconfiguration — no actionable information for the user.
 		app.logger.ErrorContext(ctx, "oidc: unknown provider name", "provider", name)
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	accountID, err := app.services.accounts.SignInOrCreateWithOIDC(ctx, providerID.ID(), idToken.Subject, claims.Email, claims.EmailVerified)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "oidc: sign in or create failed", "provider", name, "error", err)
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
+		return httperr.InternalServerError(err)
 	}
 
 	sessionSetAccountID(r.Context(), app.session, accountID)
 	app.redirectAfterLogin(ctx, w, r, accountID)
+	return nil
 }

@@ -180,8 +180,9 @@ func sessionSetOIDCState(ctx context.Context, s sessionManager, state string) {
 
 // oidcProvider holds the runtime config for a single OIDC provider.
 type oidcProvider struct {
-	oauth2Config oauth2.Config
-	verifier     *gooidc.IDTokenVerifier
+	oauth2Config         oauth2.Config
+	verifier             *gooidc.IDTokenVerifier
+	requireEmailVerified bool
 }
 
 // setupOIDCProvider initialises the OIDC provider from the given config.
@@ -200,7 +201,8 @@ func setupOIDCProvider(ctx context.Context, cfg OIDCProvider, redirectURL string
 			RedirectURL:  redirectURL,
 			Scopes:       []string{gooidc.ScopeOpenID, "email"},
 		},
-		verifier: provider.Verifier(&gooidc.Config{ClientID: cfg.ClientID}),
+		verifier:             provider.Verifier(&gooidc.Config{ClientID: cfg.ClientID}),
+		requireEmailVerified: cfg.RequireEmailVerified,
 	}, nil
 }
 

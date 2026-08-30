@@ -299,8 +299,8 @@ type NewForm struct {
 	ManufacturerID   string
 	ManufacturerName string // set when user typed a new manufacturer name not yet in the DB
 	LocationID       string
-	LocationName     string // set when user typed a new location name not yet in the DB
-	Count            int64  // total_stock for bulk; number of units to generate for serialized/kit
+	LocationName     string       // set when user typed a new location name not yet in the DB
+	Count            int64        // total_stock for bulk; number of units to generate for serialized/kit
 	PurchasePrice    *units.Cents // bulk only; stored in equipment_bulk_items
 	ResalePrice      *units.Cents
 	RentalPrice      *units.Cents

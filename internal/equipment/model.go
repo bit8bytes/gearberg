@@ -73,8 +73,8 @@ type CreateEquipment struct {
 
 // CreateBulkEquipment holds the data required to create a bulk inventory item.
 type CreateBulkEquipment struct {
-	ID            string
-	BulkItemID    string
+	ID         string
+	BulkItemID string
 	Base
 	TotalStock    int64
 	PurchasePrice *units.Cents

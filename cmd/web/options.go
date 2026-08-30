@@ -278,9 +278,10 @@ func (s *SMTP) valid() error {
 }
 
 type OIDCProvider struct {
-	IssuerURL    string
-	ClientID     string
-	ClientSecret string // SECRET
+	IssuerURL            string
+	ClientID             string
+	ClientSecret         string // SECRET
+	RequireEmailVerified bool
 }
 
 // OIDCProviderMap implements flag.Value to allow --oidc-provider to be repeated.
@@ -295,7 +296,7 @@ func (m *OIDCProviderMap) Set(v string) error {
 		return fmt.Errorf("oidc-provider: expected name,issuer=URL,client-id=ID,client-secret=SECRET")
 	}
 	name := v[:idx]
-	p := OIDCProvider{}
+	p := OIDCProvider{RequireEmailVerified: true}
 	for kv := range strings.SplitSeq(v[idx+1:], ",") {
 		k, val, ok := strings.Cut(kv, "=")
 		if !ok {
@@ -308,6 +309,15 @@ func (m *OIDCProviderMap) Set(v string) error {
 			p.ClientID = val
 		case "client-secret":
 			p.ClientSecret = val
+		case "require-email-verified":
+			switch val {
+			case "true":
+				p.RequireEmailVerified = true
+			case "false":
+				p.RequireEmailVerified = false
+			default:
+				return fmt.Errorf("oidc-provider %s: require-email-verified must be true or false, got %q", name, val)
+			}
 		default:
 			return fmt.Errorf("oidc-provider %s: unknown key %q", name, k)
 		}
