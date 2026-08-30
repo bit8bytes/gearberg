@@ -161,20 +161,46 @@
     <h3 id="oidc-sso-heading" class="text-xl font-semibold">OIDC</h3>
 
     <p>
-      By default, Gearberg uses email/password login which does not require any configuration. To extend it with SSO, configure one or more OIDC providers.
+      By default, Gearberg uses email and password login, which requires no configuration. To add Single Sign-On (SSO), configure one or more OpenID Connect (OIDC) providers.
       Currently, only the <a href="https://goauthentik.io/" target="_blank" rel="noopener noreferrer" class="link">Authentik</a> provider is supported.
-      <code class="badge badge-neutral font-mono">-base-url</code> is required when OIDC is enabled. It is used as the redirect URI sent to the identity provider.
     </p>
 
-    <h4 class="text-base font-semibold">Env var format</h4>
-    <div class="mockup-code" role="region" aria-label="OIDC env var format">
-      <pre data-prefix=""><code>OIDC_&lt;NAME&gt;_PROVIDER=name,issuer=URL,client-id=ID,client-secret=SECRET</code></pre>
+    <h4 class="text-base font-semibold">Setup checklist</h4>
+    <ol class="list-decimal list-inside flex flex-col gap-1">
+      <li>In your OIDC provider, create an OAuth2/OIDC application and note the issuer URL, client ID, and client secret.</li>
+      <li>Set the callback URL in your OIDC provider to 
+        <code class="badge badge-neutral font-mono">&lt;base-url&gt;/auth/oidc/&lt;name&gt;/callback</code>, where 
+        <code class="badge badge-neutral font-mono">&lt;base-url&gt;</code> matches the <code class="badge badge-neutral font-mono">-base-url</code> 
+        flag and <code class="badge badge-neutral font-mono">&lt;name&gt;</code> is the provider name you choose 
+        e.g. <code class="badge badge-neutral font-mono">authentik</code>.</li>
+      <li>Start Gearberg with <code class="badge badge-neutral font-mono">-base-url</code> and the OIDC provider configured via env var (see below).</li>
+    </ol>
+
+    <h4 class="text-base font-semibold">Quick start (flag, local testing only)</h4>
+    <p>The <code class="badge badge-neutral font-mono">-oidc-provider</code> flag is the fastest way to get OIDC running locally. Add <code class="badge badge-neutral font-mono">-log-level warn</code> to surface OIDC warnings and errors in the server log.</p>
+    <div class="mockup-code" role="region" aria-label="OIDC quick start flag example">
+      <pre data-prefix="$"><code>docker run -p 9000:9000 \</code></pre>
+      <pre data-prefix=""><code>  -v gearberg-data:/data \</code></pre>
+      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url http://localhost:9000 \</code></pre>
+      <pre data-prefix=""><code>  -log-level warn \</code></pre>
+      <pre data-prefix=""><code>  -oidc-provider authentik,issuer=https://authentik.example.com/application/o/gearberg/,client-id=YOUR_CLIENT_ID,client-secret=YOUR_CLIENT_SECRET</code></pre>
     </div>
-    <p>
-      <code class="badge badge-neutral font-mono">&lt;NAME&gt;</code> becomes the provider name.
-      Repeat the variable for multiple providers. Flags take precedence over env vars. 
-      For authentik, the env var would look like this: <code class="badge font-mono">OIDC_AUTHENTIK_PROVIDER</code>.
-    </p>
+    <p>Flags appear in process listings and shell history. Do not use this approach in production.</p>
+
+    <h4 class="text-base font-semibold">Production (env var)</h4>
+    <p>Use the <code class="badge badge-neutral font-mono">OIDC_&lt;NAME&gt;_PROVIDER</code> env var in production, where <code class="badge badge-neutral font-mono">&lt;NAME&gt;</code> is the provider name.</p>
+    <div class="mockup-code" role="region" aria-label="OIDC env var format">
+      <pre data-prefix=""><code>OIDC_&lt;NAME&gt;_PROVIDER=&lt;name&gt;,issuer=&lt;URL&gt;,client-id=&lt;ID&gt;,client-secret=&lt;SECRET&gt;</code></pre>
+    </div>
+    <div class="mockup-code" role="region" aria-label="OIDC docker run example">
+      <pre data-prefix="$"><code>docker run -p 9000:9000 \</code></pre>
+      <pre data-prefix=""><code>  -v gearberg-data:/data \</code></pre>
+      <pre data-prefix=""><code>  -e OIDC_AUTHENTIK_PROVIDER=authentik,issuer=https://authentik.example.com/application/o/gearberg/,client-id=YOUR_CLIENT_ID,client-secret=YOUR_CLIENT_SECRET \</code></pre>
+      <pre data-prefix=""><code>  ghcr.io/bit8bytes/gearberg serve \</code></pre>
+      <pre data-prefix=""><code>  -base-url http://localhost:9000</code></pre>
+    </div>
+    <p>Repeat the env var for multiple providers.</p>
   </div>
 
   <div id="smtp" class="flex flex-col gap-2">
