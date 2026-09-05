@@ -13,6 +13,10 @@ nix/build/www:
 nix/build/docs:
 	nix build .#docs
 
+## nix/build: build all the Go binary with Nix
+.PHONY: nix/build
+nix/build: nix/build/www nix/build/docs nix/build/web
+
 ## build: build the application
 .PHONY: build
 build:
