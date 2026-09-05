@@ -15,13 +15,9 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/bit8bytes/gearberg/internal/assets"
-	"github.com/bit8bytes/gearberg/internal/httperr"
-	"github.com/bit8bytes/gearberg/internal/locale"
-	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
 func (app *application) routes() http.Handler {
@@ -29,16 +25,8 @@ func (app *application) routes() http.Handler {
 
 	mux.Handle("GET /dist/", assets.ServeStaticFiles())
 	mux.Handle("GET /favicon.ico", http.RedirectHandler("/dist/images/favicon.ico", http.StatusMovedPermanently))
-	mux.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Header().Set("Cache-Control", "public, max-age=86400")
-		_, _ = fmt.Fprint(w, "User-agent: *\nAllow: /\n")
-	})
-	mux.HandleFunc("GET /llms.txt", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Header().Set("Cache-Control", "public, max-age=86400")
-		_, _ = fmt.Fprint(w, "# Gearberg\n\nOpen-source equipment tracking and rental management. Self-host with Docker. Licensed under AGPL-3.0.\n\n## Links\n\n- [GitHub](https://github.com/bit8bytes/gearberg)\n- [Specification](https://github.com/bit8bytes/gearberg/blob/main/wiki/SPECS.md)\n- [License](https://www.gnu.org/licenses/agpl-3.0.html)\n")
-	})
+	mux.HandleFunc("GET /robots.txt", getRobotsTxt)
+	mux.HandleFunc("GET /llms.txt", getLLMsTxt)
 
 	mux.HandleFunc("/", app.html.Handle(app.getLanding))
 	mux.HandleFunc("GET /imprint", app.html.Handle(app.getImprint))
@@ -57,50 +45,4 @@ func (app *application) routes() http.Handler {
 						withMaxBodySize(
 							antiCSRF.Handler(
 								withLocale(mux))))))))
-}
-
-type landingPageData struct {
-	HeroTitle     string
-	HeroSubtitle  string
-	CTAQuickstart string
-	CTAPricing    string
-}
-
-func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	p := locale.PrinterFrom(r.Context())
-	data := app.html.TemplateData(r)
-	data.Data = landingPageData{
-		HeroTitle:     p.Sprintf("Open source equipment tracking software"),
-		HeroSubtitle:  p.Sprintf("Simple equipment tracking. No lock-in. Self-host with a single Docker command."),
-		CTAQuickstart: p.Sprintf("Quickstart"),
-		CTAPricing:    p.Sprintf("Pricing"),
-	}
-	return app.html.Render(w, r, http.StatusOK, pages.Landing, data)
-}
-
-func (app *application) postLocale(w http.ResponseWriter, r *http.Request) {
-	locale := r.FormValue("locale")
-	http.SetCookie(w, &http.Cookie{
-		Name:     localeCookieName,
-		Value:    locale,
-		Path:     "/",
-		MaxAge:   365 * 24 * 60 * 60,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-	ref := r.Referer()
-	if ref == "" {
-		ref = "/"
-	}
-	http.Redirect(w, r, ref, http.StatusSeeOther)
-}
-
-func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	data := app.html.TemplateData(r)
-	return app.html.Render(w, r, http.StatusOK, pages.Imprint, data)
-}
-
-func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	data := app.html.TemplateData(r)
-	return app.html.Render(w, r, http.StatusOK, pages.Privacy, data)
 }
