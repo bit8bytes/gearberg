@@ -216,7 +216,8 @@ func (app *application) withPermission(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		orgID := r.PathValue("org_id")
 		session := sessions.MustFromRequest(r)
-		if err := app.services.orgs.GetMember(r.Context(), orgID, session.AccountID); err != nil {
+		ok, err := app.enforcer.Enforce(r.Context(), session.AccountID, orgID, "")
+		if err != nil || !ok {
 			http.Redirect(w, r, "/forbidden", http.StatusSeeOther)
 			return
 		}

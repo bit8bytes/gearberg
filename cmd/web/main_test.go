@@ -23,6 +23,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/accounts"
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
+	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	mailerpkg "github.com/bit8bytes/gearberg/pkg/mailer"
@@ -146,6 +147,8 @@ func startTestServer() (*application, *testServer, func(), error) {
 		return nil, nil, nil, fmt.Errorf("startTestServer: setup services: %w", err)
 	}
 
+	enforcer := orgs.NewMemberEnforcer(services.orgs)
+
 	application := &application{
 		logger:   log,
 		options:  opts,
@@ -153,6 +156,7 @@ func startTestServer() (*application, *testServer, func(), error) {
 		db:       db,
 		session:  sessionMgr,
 		services: services,
+		enforcer: enforcer,
 	}
 
 	handler, err := application.routes()

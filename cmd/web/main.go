@@ -29,9 +29,14 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/flash"
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
+	"github.com/bit8bytes/gearberg/internal/orgs"
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
+
+type enforcer interface {
+	Enforce(ctx context.Context, sub, obj, act string) (bool, error)
+}
 
 // application is the dependency container for the web server. Fields are
 // initialized once in runServe and shared across all HTTP handlers via method
@@ -49,6 +54,11 @@ type application struct {
 	db *sql.DB
 
 	session sessionManager
+
+	// enforcer is used to enforce permissions.
+	// It is abstracted behind an interface to replace it
+	// with a more sophisticated policy engine in the future.
+	enforcer enforcer
 
 	services *services
 
@@ -154,6 +164,8 @@ func runServe(args []string) error {
 		return fmt.Errorf("setup oidc providers: %w", err)
 	}
 
+	enforcer := orgs.NewMemberEnforcer(services.orgs)
+
 	// glue together the dependencies
 	app := &application{
 		logger:        log,
@@ -161,6 +173,7 @@ func runServe(args []string) error {
 		html:          html,
 		db:            db,
 		session:       sessionManager,
+		enforcer:      enforcer,
 		flash:         flashManager,
 		services:      services,
 		oidcProviders: oidcProviders,
