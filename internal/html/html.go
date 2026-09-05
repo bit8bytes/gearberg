@@ -28,6 +28,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/flash"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/localizer"
 	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/internal/trace"
@@ -53,6 +54,8 @@ type TemplateData struct {
 	OrgID string
 	// Flash is a one-shot notification popped from the session and rendered as a toast.
 	Flash *flash.Flash
+	// Locale is the active locale tag string (e.g. "en-US", "de"), read from the locale cookie.
+	Locale string
 }
 
 // Option configures an HTML renderer.
@@ -157,5 +160,6 @@ func (rnd *HTML) TemplateData(r *http.Request) *TemplateData {
 		Revision: rnd.revision,
 		OrgID:    r.PathValue("org_id"),
 		Flash:    rnd.flash.Pop(r.Context()),
+		Locale:   localizer.TagFrom(r.Context()).String(),
 	}
 }
