@@ -38,31 +38,18 @@ func init() {
 	message.DefaultCatalog = cat
 }
 
-var messageKeyToIndex = map[string]int{
-	"Open source equipment tracking software": 0,
-	"Pricing":    3,
-	"Quickstart": 2,
-	"Simple equipment tracking. No lock-in. Self-host with a single Docker command.": 1,
-}
+var messageKeyToIndex = map[string]int{}
 
-var deIndex = []uint32{ // 5 elements
-	0x00000000, 0x0000002b, 0x00000084, 0x00000091,
-	0x00000098,
-} // Size: 44 bytes
+var deIndex = []uint32{ // 1 elements
+	0x00000000,
+} // Size: 28 bytes
 
-const deData string = "" + // Size: 152 bytes
-	"\x02Open-Source-Software zur Geräteverwaltung\x02Einfache Geräteverwaltu" +
-	"ng. Kein Lock-in. Self-Hosting mit einem einzigen Docker-Befehl.\x02Schn" +
-	"ellstart\x02Preise"
+const deData string = ""
 
-var en_USIndex = []uint32{ // 5 elements
-	0x00000000, 0x00000028, 0x00000077, 0x00000082,
-	0x0000008a,
-} // Size: 44 bytes
+var en_USIndex = []uint32{ // 1 elements
+	0x00000000,
+} // Size: 28 bytes
 
-const en_USData string = "" + // Size: 138 bytes
-	"\x02Open source equipment tracking software\x02Simple equipment tracking" +
-	". No lock-in. Self-host with a single Docker command.\x02Quickstart\x02P" +
-	"ricing"
+const en_USData string = ""
 
-	// Total table size 378 bytes (0KiB); checksum: CE4DDA2C
+// Total table size 56 bytes (0KiB); checksum: 32CC3CAD
