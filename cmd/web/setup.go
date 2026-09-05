@@ -22,9 +22,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"path/filepath"
-	"slices"
 	"strings"
 	"time"
 
@@ -72,9 +70,6 @@ func includeSourceFile(_ []string, a slog.Attr) slog.Attr {
 
 func templateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"inQuery": func(vals url.Values, key, val string) bool {
-			return slices.Contains(vals[key], val)
-		},
 		"inPath": func(currentPath, targetPath string) bool {
 			return currentPath == targetPath || strings.HasPrefix(currentPath, targetPath+"/")
 		},
