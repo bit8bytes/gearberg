@@ -23,6 +23,10 @@ pkgs.mkShellNoCC {
     addlicense
   ];
   shellHook = ''
+    # Manually install gotext because it is not available in nixpkgs yet.
+    export PATH="$PATH:$(go env GOPATH)/bin"
+    go install golang.org/x/text/cmd/gotext@latest
+
     echo "Welcome to the dev shell! All required tools are available."
   '';
 }
