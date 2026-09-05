@@ -48,7 +48,7 @@ goose/validate:
 
 ## verify: run tests, linters, and verify dependencies
 .PHONY: verify
-verify: fix lint license addlicense test
+verify: fix lint license test
 	go mod verify
 
 ## nix/check: check if the Nix build works
