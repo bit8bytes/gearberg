@@ -24,17 +24,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"golang.org/x/text/language"
-
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
-	"github.com/bit8bytes/gearberg/internal/localizer"
 )
 
 type application struct {
-	logger    *slog.Logger
-	options   *options
-	html      *htmlpkg.HTML
-	localizer *localizer.Localizer
+	logger  *slog.Logger
+	options *options
+	html    *htmlpkg.HTML
 }
 
 func main() {
@@ -68,10 +64,9 @@ func run() error {
 	}
 
 	app := &application{
-		logger:    log,
-		options:   options,
-		html:      htmlpkg.New(log, base, cache, revision),
-		localizer: localizer.New(language.English, language.German),
+		logger:  log,
+		options: options,
+		html:    htmlpkg.New(log, base, cache, revision),
 	}
 
 	return app.serve(ctx)
