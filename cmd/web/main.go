@@ -77,8 +77,9 @@ func run() error {
 	// This allows us to have different flags for different commands.
 	cmd, args := os.Args[1], os.Args[2:]
 	switch cmd {
-	// serve starts the server and listens on the configured port via options
+
 	case "serve":
+		// serve starts the server and listens on the configured port via options
 		return runServe(args)
 		// check verifies the provided configuration and returns nothing if successful.
 	case "check":
