@@ -21,6 +21,7 @@ import (
 	"log"
 	"log/slog"
 	"path/filepath"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -48,7 +49,11 @@ func includeSourceFile(_ []string, a slog.Attr) slog.Attr {
 }
 
 func templateFuncs() template.FuncMap {
-	return template.FuncMap{}
+	return template.FuncMap{
+		"year": func() int {
+			return time.Now().Year()
+		},
+	}
 }
 
 func parseTemplates() (*template.Template, map[string]*template.Template, error) {
@@ -57,7 +62,7 @@ func parseTemplates() (*template.Template, map[string]*template.Template, error)
 		return nil, nil, fmt.Errorf("base template: %w", err)
 	}
 
-	allPages := []pages.Page{pages.Landing, pages.Imprint, pages.Privacy, pages.Error, pages.NotFound}
+	allPages := []pages.Page{pages.Landing, pages.LandingDE, pages.Imprint, pages.Privacy, pages.Error, pages.NotFound}
 	tmpls := make(map[string]*template.Template, len(allPages))
 	for _, page := range allPages {
 		t, err := pageTemplate(templates.EmbedFS, base, page)

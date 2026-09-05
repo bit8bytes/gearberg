@@ -52,6 +52,11 @@ tailwind/build:
 generate/api:
 	go generate ./internal/api/
 
+## generate/translations: generate translation files
+.PHONY: generate/translations
+generate/translations:
+	go generate ./internal/translations/
+
 ## sqlc: generate source code from SQL
 .PHONY: sqlc
 sqlc:

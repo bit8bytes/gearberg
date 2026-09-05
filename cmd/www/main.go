@@ -25,7 +25,10 @@ import (
 	"syscall"
 
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
+	_ "github.com/bit8bytes/gearberg/internal/translations"
 )
+
+const localeCookieName = "locale"
 
 type application struct {
 	logger  *slog.Logger

@@ -3,7 +3,7 @@
   <div class="flex-1">
       {{ template "logo-with-text" . }}
   </div>
-  <div class="flex-none text-secondary-content">
+  <div class="flex-none">
     <ul class="menu menu-horizontal px-1 gap-2">
       <li>
         <a 
@@ -21,7 +21,20 @@
         {{ template "github-icon" . }}
         </a>
       </li>
+      <li>
+        <form id="locale-form" method="POST" action="/locale">
+          <select name="locale" class="select select-sm select-bordered">
+            <option value="en-US" {{ if eq .Locale "en-US" }}selected{{ end }}>EN</option>
+            <option value="de" {{ if eq .Locale "de" }}selected{{ end }}>DE</option>
+          </select>
+        </form>
+      </li>
     </ul>
   </div>
 </div>
+<script nonce="{{ .Nonce }}">
+  document.querySelector('#locale-form select').addEventListener('change', function() {
+    this.form.submit();
+  });
+</script>
 {{ end }}

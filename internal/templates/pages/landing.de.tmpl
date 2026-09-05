@@ -1,0 +1,282 @@
+{{ define "title" }}Equipment-Management-Software{{ end }}
+{{ define "description" }}Behalte den Überblick über dein AV-Equipment. Open-Source, kein Vendor-Lock-in.{{ end }}
+
+{{ define "seo" }}
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Gearberg: Weiss immer, wo dein Equipment ist." />
+<meta property="og:description" content="Behalte den Überblick über dein AV-Equipment. Open-Source, kein Vendor-Lock-in." />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Gearberg: Weiss immer, wo dein Equipment ist." />
+<meta name="twitter:description" content="Behalte den Überblick über dein AV-Equipment. Open-Source, kein Vendor-Lock-in." />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Gearberg",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Linux, macOS, Windows",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "url": "https://github.com/bit8bytes/gearberg",
+  "description": "Behalte den Überblick über dein AV-Equipment. Open-Source, kein Vendor-Lock-in.",
+  "keywords": "AV-Equipment-Verwaltung, Inventarverwaltung, Audio-Video-Equipment, Asset-Management, selbst gehostet, Open Source"
+}
+</script>
+{{ end }}
+
+{{ define "page" }}
+<main>
+{{/* Hero Section */}}
+<section class="hero min-h-[calc(100vh-65px)]" aria-labelledby="hero-heading">
+  <div class="hero-content flex-col gap-8 py-12 w-full max-w-5xl">
+    <div class="max-w-2xl text-center">
+      <h1 id="hero-heading" class="text-4xl sm:text-5xl font-bold leading-tight">
+        Open-Source <br>AV-Equipment-Software
+      </h1>
+      <p class="mt-6 text-lg text-base-content/70 max-w-lg mx-auto">
+        Einfache Equipment-Verwaltung für Einzelpersonen und kleine Teams. Keine Tabellen, kein Vendor-Risiko. Selbst hosten mit einem einzigen Docker-Befehl.
+      </p>
+      <nav aria-label="Seitenabschnitte" class="mt-8">
+        <div class="flex flex-wrap gap-3 justify-center">
+          <a href="#quickstart" class="btn btn-primary">Quickstart</a>
+          <a href="#pricing" class="btn btn-outline">Preise</a>
+        </div>
+      </nav>
+    </div>
+    <figure class="w-full">
+      <img
+        src="/dist/gearberg-1440.webp"
+        srcset="/dist/gearberg-680.webp 680w, /dist/gearberg-1440.webp 1440w"
+        sizes="(max-width: 768px) 680px, 1440px"
+        alt="Gearberg Equipment-Management-Oberfläche"
+        class="w-full rounded-xl shadow-xl border border-base-300"
+        width="1440"
+        height="755"
+        fetchpriority="high"
+      />
+    </figure>
+    </div>
+</section>
+
+{{/* Why use Gearberg? */}}
+<section id="why" class="py-24 bg-base-100" aria-labelledby="why-heading">
+  <div class="container mx-auto px-6 max-w-5xl">
+    <div class="text-center mb-16">
+      <h2 id="why-heading" class="text-3xl font-bold">Warum Gearberg?</h2>
+      <p class="mt-4 text-base-content/70 max-w-xl mx-auto">Die meisten Equipment-Programme sind für Grossunternehmen gemacht. Gearberg gibt Einzelpersonen und kleinen Teams genau das, was sie brauchen: klare, nützliche Übersicht ohne Komplexität, Schulungsaufwand oder hohe Kosten.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div class="flex items-start gap-4">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Immer wissen, was du hast</h3>
+          <p class="text-base-content/70 mt-1">Alle Geräte an einem Ort. Modell, Seriennummer, Standort – sofort abrufbar, ohne in Tabellen zu suchen.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Weiss, was dein Inventar wert ist</h3>
+          <p class="text-base-content/70 mt-1">Den Gesamtwert deines Equipments auf einen Blick. Hilfreich für Versicherungen, Kaufentscheidungen und Gespräche mit dem Steuerberater.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Deine Daten, deine Bedingungen</h3>
+          <p class="text-base-content/70 mt-1">Bestehende Equipment-Listen per CSV importieren und jederzeit exportieren. Nichts bleibt in Gearberg eingeschlossen.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Kits, die zusammen unterwegs sind</h3>
+          <p class="text-base-content/70 mt-1">Kabel, Stative und Scheinwerfer zu einem Kit zusammenfassen. Das ganze Set als Einheit verwalten und sofort sehen, ob etwas fehlt.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4" id="open-source">
+        <span class="text-success">{{ template "check-icon" . }}</span>
+        <div>
+          <h3 class="font-semibold">Open Source, selbst hostbar</h3>
+          <p class="text-base-content/70 mt-1">AGPL v3. Auf eigenem Server betreiben, den Code lesen, beitragen. Kein Vendor-Risiko. <a href="https://github.com/bit8bytes/gearberg" class="link link-hover" target="_blank" rel="noopener noreferrer">Auf GitHub ansehen.</a></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{{/* Pricing */}}
+<section id="pricing" class="py-24" aria-labelledby="pricing-heading">
+  <div class="container mx-auto px-6 max-w-3xl text-center">
+    <h2 id="pricing-heading" class="text-3xl font-bold mb-4">Preise</h2>
+    <p class="text-base-content/80 mb-12">Open Source ist kostenlos. Wenn du keinen Server verwalten möchtest, frag einfach bei uns an.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div class="card bg-base-100 shadow border border-base-300">
+        <div class="card-body text-left">
+          <h3 class="card-title font-bold">Selbst hosten</h3>
+          <p class="text-2xl font-bold mt-2 underline">Kostenlos</p>
+          <p class="text-base-content/80 text-sm mb-4">Auf eigenem Server mit Docker betreiben</p>
+          <ul class="space-y-2 text-sm flex-1">
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment-Verwaltung</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Kits &amp; Kombinationen</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
+          </ul>
+          <div class="card-actions mt-6">
+            <a href="#quickstart" class="btn btn-outline w-full">Mit Docker starten</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow border border-base-300">
+        <div class="card-body text-left">
+          <h3 class="card-title font-bold">Cloud</h3>
+          <p class="text-2xl font-bold mt-2 underline">Auf Anfrage</p>
+          <p class="text-base-content/80 text-sm mb-4">Die Software ist kostenlos. Du zahlst für den Komfort, sie nicht selbst betreiben zu müssen.</p>
+          <ul class="space-y-2 text-sm flex-1">
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment-Verwaltung</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Kits &amp; Kombinationen</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
+          </ul>
+          <div class="card-actions mt-6">
+            <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline w-full">Kontakt aufnehmen</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{{/* Quickstart */}}
+<section id="quickstart" class="py-24 bg-base-100" aria-labelledby="quickstart-heading">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <h2 id="quickstart-heading" class="text-3xl font-bold text-center mb-4">Quickstart</h2>
+    <p class="text-center mb-10">Mit einem einzigen <a href="https://docker.com" class="link link-primary" target="_blank" rel="noopener noreferrer">Docker</a>-Befehl ausprobieren:</p>
+
+    <div class="mockup-code relative" role="region" aria-label="Quickstart-Befehl">
+      <button
+        id="copy-quickstart"
+        class="absolute top-3 right-3 btn btn-xs btn-neutral"
+        aria-label="Befehl in die Zwischenablage kopieren"
+      >Kopieren</button>
+      <pre data-prefix="$"><code>docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve</code></pre>
+    </div>
+    <script nonce="{{ .Nonce }}">
+      document.getElementById('copy-quickstart').addEventListener('click', function() {
+        navigator.clipboard.writeText('docker run -p 8080:8080 ghcr.io/bit8bytes/gearberg serve');
+        this.textContent = 'Kopiert!';
+      });
+    </script>
+
+    <p class="text-center mt-6">Dann <a href="http://localhost:8080" class="badge badge-neutral font-mono" target="_blank" rel="noopener noreferrer">http://localhost:8080</a> im Browser öffnen.</p>
+  </div>
+</section>
+
+{{/* FAQ */}}
+<section id="faq" class="py-24 bg-base-100" aria-labelledby="faq-heading">
+  <div class="container mx-auto px-6 max-w-3xl">
+    <h2 id="faq-heading" class="text-3xl font-bold text-center mb-12">Häufige Fragen</h2>
+    <div class="space-y-3">
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Für wen ist Gearberg gedacht?</summary>
+        <div class="collapse-content">
+          <p>Einzelpersonen und kleine Teams, die einen klaren Überblick über ihr Equipment brauchen – ohne den Aufwand einer Enterprise-Asset-Management-Software.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Welche Probleme löst Gearberg?</summary>
+        <div class="collapse-content">
+          <p>Zu wissen, was man besitzt, wo es gerade ist, was es wert ist und ob es verfügbar ist. Ohne Tabellen und ohne teure Software.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Kann ich meine Daten exportieren?</summary>
+        <div class="collapse-content">
+          <p>Ja. Die Equipment-Liste lässt sich jederzeit als CSV exportieren. Die Daten gehören dir und werden nie in Gearberg eingeschlossen.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Unter welcher Lizenz steht Gearberg?</summary>
+        <div class="collapse-content">
+          <p>Gearberg steht unter der <a href="https://www.gnu.org/licenses/agpl-3.0.html" class="link link-primary" target="_blank" rel="noopener noreferrer">AGPL-3.0</a>. Nutzung, Studium, Änderung und Weitergabe sind erlaubt. Änderungen, die über ein Netzwerk bereitgestellt werden, müssen unter derselben Lizenz veröffentlicht werden.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">Was, wenn ich doch lieber wieder Tabellen nutzen möchte?</summary>
+        <div class="collapse-content">
+          <p>Kein Problem. Die vollständige Equipment-Liste lässt sich jederzeit als CSV exportieren und mitnehmen, auch zurück in eine Tabelle. Wir nennen das die Zurück-zur-Tabelle-Garantie, und wir meinen sie ernst.</p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Für wen ist Gearberg gedacht?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Einzelpersonen und kleine Teams, die einen klaren Überblick über ihr Equipment brauchen – ohne den Aufwand einer Enterprise-Asset-Management-Software." }
+      },
+      {
+        "@type": "Question",
+        "name": "Welche Probleme löst Gearberg?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Zu wissen, was man besitzt, wo es gerade ist, was es wert ist und ob es verfügbar ist. Ohne Tabellen und ohne teure Software." }
+      },
+      {
+        "@type": "Question",
+        "name": "Kann ich meine Daten exportieren?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Die Equipment-Liste lässt sich jederzeit als CSV exportieren. Die Daten gehören dir und werden nie in Gearberg eingeschlossen." }
+      },
+      {
+        "@type": "Question",
+        "name": "Kann ich Daten zwischen selbst gehostetem und verwaltetem Betrieb verschieben?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Equipment-Daten als CSV aus jeder Gearberg-Instanz exportieren und in eine andere importieren. Das funktioniert in beide Richtungen: von selbst gehostet zu verwaltet und umgekehrt. Die Daten sind nie eingeschlossen." }
+      },
+      {
+        "@type": "Question",
+        "name": "Unter welcher Lizenz steht Gearberg?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gearberg steht unter der AGPL-3.0. Nutzung, Studium, Änderung und Weitergabe sind erlaubt, sofern Änderungen, die über ein Netzwerk bereitgestellt werden, unter derselben Lizenz veröffentlicht werden." }
+      },
+      {
+        "@type": "Question",
+        "name": "Was, wenn ich doch lieber wieder Tabellen nutzen möchte?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Kein Problem. Die vollständige Equipment-Liste lässt sich jederzeit als CSV exportieren und mitnehmen, auch zurück in eine Tabelle. Wir nennen das die Zurück-zur-Tabelle-Garantie." }
+      }
+    ]
+  }
+  </script>
+</section>
+
+{{/* Closing CTA */}}
+<section class="py-24" aria-labelledby="cta-heading">
+  <div class="container mx-auto px-6 max-w-xl text-center">
+    <h2 id="cta-heading" class="text-3xl font-bold mb-4">Immer wissen, wo dein Equipment ist.</h2>
+    <p class="text-base-content/80 mb-8">Gearberg in unter einer Minute selbst starten – oder melde dich, wenn wir es für dich betreiben sollen.</p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="#quickstart" class="btn btn-primary">Mit Docker starten</a>
+      <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline">Kontakt aufnehmen</a>
+    </div>
+  </div>
+</section>
+
+<a href="#" class="btn btn-circle btn-primary fixed bottom-6 right-6 shadow-lg" aria-label="Nach oben scrollen">
+  {{ template "chevron-up" . }}
+</a>
+
+</main>
+{{ end }}

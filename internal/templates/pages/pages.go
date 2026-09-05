@@ -41,8 +41,13 @@ func newPage(file string, layout layouts.Layout) Page {
 	return p
 }
 
-// Landing is the public landing page.
-var Landing = newPage("pages/landing.tmpl", layouts.Landing)
+var (
+	// Landing is the public landing page (English).
+	Landing = newPage("pages/landing.tmpl", layouts.Landing)
+
+	// LandingDE is the German landing page.
+	LandingDE = newPage("pages/landing.de.tmpl", layouts.Landing)
+)
 
 // Docs is the public docs page.
 var Docs = newPage("pages/docs.tmpl", layouts.Docs)
