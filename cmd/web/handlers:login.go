@@ -45,10 +45,23 @@ func (app *application) redirectAfterLogin(ctx context.Context, w http.ResponseW
 	}
 }
 
+type signInData struct {
+	OIDCProviders             []string
+	EnableEmailPasswordSignup bool
+}
+
 func (app *application) getSignIn(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	names := make([]string, 0, len(app.oidcProviders))
+	for name := range app.oidcProviders {
+		names = append(names, name)
+	}
+
 	tmplData := app.html.TemplateData(r)
 	tmplData.Form = accounts.NewSignInForm()
-	tmplData.Data = app.loginData()
+	tmplData.Data = signInData{
+		EnableEmailPasswordSignup: app.options.EnableEmailPasswordSignup,
+		OIDCProviders:             names,
+	}
 	return app.html.Render(w, r, http.StatusOK, pages.SignIn, tmplData)
 }
 
@@ -56,9 +69,17 @@ func (app *application) postSignIn(w http.ResponseWriter, r *http.Request) *http
 	ctx := r.Context()
 
 	fail := func(formWithErrors *accounts.SignInForm) *httperr.Error {
+		names := make([]string, 0, len(app.oidcProviders))
+		for name := range app.oidcProviders {
+			names = append(names, name)
+		}
+
 		data := app.html.TemplateData(r)
 		data.Form = formWithErrors
-		data.Data = app.loginData()
+		data.Data = signInData{
+			EnableEmailPasswordSignup: app.options.EnableEmailPasswordSignup,
+			OIDCProviders:             names,
+		}
 		return app.html.Render(w, r, http.StatusUnprocessableEntity, pages.SignIn, data)
 	}
 
@@ -261,20 +282,6 @@ func (app *application) postSignOut(w http.ResponseWriter, r *http.Request) *htt
 		http.Redirect(w, r, url, http.StatusSeeOther)
 	}
 	return nil
-}
-
-// LoginData carries the set of enabled OIDC provider names to the sign-in and
-// sign-up templates so they can render the appropriate provider buttons.
-type LoginData struct {
-	OIDCProviders []string
-}
-
-func (app *application) loginData() LoginData {
-	names := make([]string, 0, len(app.oidcProviders))
-	for name := range app.oidcProviders {
-		names = append(names, name)
-	}
-	return LoginData{OIDCProviders: names}
 }
 
 // getAuthOIDC initiates the OIDC login flow for the named provider. It generates

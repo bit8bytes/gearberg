@@ -80,10 +80,12 @@
       {{ end }}
       {{ end }}
 
+      {{ if .Data.EnableEmailPasswordSignup }}
       <p class="label justify-center">
         Don't have an account?
         <a href="/signup" class="link link-hover">Sign up.</a>
       </p>
+      {{ end }}
     </fieldset>
   </form>
 </div>

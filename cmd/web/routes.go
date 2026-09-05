@@ -50,8 +50,10 @@ func (app *application) routes() (http.Handler, error) {
 	// Login related routes that are only accessible if the user is not logged in.
 	mux.Handle("GET /signin", app.withGuest(app.html.Handle(app.getSignIn)))
 	mux.Handle("POST /signin", app.withGuest(app.html.Handle(app.postSignIn)))
-	mux.Handle("GET /signup", app.withGuest(app.html.Handle(app.getSignUp)))
-	mux.Handle("POST /signup", app.withGuest(app.html.Handle(app.postSignUp)))
+	if app.options.EnableEmailPasswordSignup {
+		mux.Handle("GET /signup", app.withGuest(app.html.Handle(app.getSignUp)))
+		mux.Handle("POST /signup", app.withGuest(app.html.Handle(app.postSignUp)))
+	}
 	mux.Handle("GET /forgot-password", app.withGuest(app.html.Handle(app.getForgotPassword)))
 	mux.Handle("POST /forgot-password", app.withGuest(app.html.Handle(app.postForgotPassword)))
 	mux.Handle("GET /forgot-password/success", app.withGuest(app.html.Handle(app.getForgotPasswordSuccess)))
