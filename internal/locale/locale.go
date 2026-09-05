@@ -7,13 +7,11 @@ package locale
 import (
 	"context"
 
-	_ "github.com/bit8bytes/gearberg/internal/translations"
-
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
-// Context key for storing the resolved language tag.
+// Key for storing the resolved language tag.
 type Key struct{}
 
 // TagFrom returns the resolved tag stored in ctx, falling back to English.

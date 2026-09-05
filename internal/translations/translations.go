@@ -12,6 +12,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+// Package translations provides the application's translation catalog.
 package translations
 
 //go:generate gotext -srclang=en-US update -out=catalog.go -lang=en-US,de github.com/bit8bytes/gearberg/cmd/www

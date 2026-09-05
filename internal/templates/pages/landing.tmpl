@@ -1,13 +1,13 @@
-{{ define "title" }}Equipment &amp; Rental Management{{ end }}
-{{ define "description" }}Track your gear. Run your rentals. Open-source with no lock-in.{{ end }}
+{{ define "title" }}Equipment Management Software{{ end }}
+{{ define "description" }}Know what you own, where it is, and what it's worth. Open-source equipment tracking with no lock-in.{{ end }}
 
 {{ define "seo" }}
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Gearberg: Track your gear. Run your rentals." />
-<meta property="og:description" content="Track your gear. Run your rentals. Open-source with no lock-in." />
+<meta property="og:title" content="Gearberg: Know where your gear is." />
+<meta property="og:description" content="Know what you own, where it is, and what it's worth. Open-source equipment tracking with no lock-in." />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Gearberg: Track your gear. Run your rentals." />
-<meta name="twitter:description" content="Track your gear. Run your rentals. Open-source with no lock-in." />
+<meta name="twitter:title" content="Gearberg: Know where your gear is." />
+<meta name="twitter:description" content="Know what you own, where it is, and what it's worth. Open-source equipment tracking with no lock-in." />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -18,8 +18,8 @@
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "license": "https://www.gnu.org/licenses/agpl-3.0.html",
   "url": "https://github.com/bit8bytes/gearberg",
-  "description": "Track your gear. Run your rentals. Open-source with no lock-in.",
-  "keywords": "inventory management, rental management, self-hosted, open source, equipment tracking"
+  "description": "Know what you own, where it is, and what it's worth. Open-source equipment tracking with no lock-in.",
+  "keywords": "AV equipment tracking, inventory management, audio visual gear, asset management, self-hosted, open source"
 }
 </script>
 {{ end }}
@@ -31,15 +31,15 @@
   <div class="hero-content flex-col gap-8 py-12 w-full max-w-5xl">
     <div class="max-w-2xl text-center">
       <h1 id="hero-heading" class="text-4xl sm:text-5xl font-bold leading-tight">
-        {{ .Data.HeroTitle }}
+        Open-Source <br>AV Equipment Software
       </h1>
       <p class="mt-6 text-lg text-base-content/70 max-w-lg mx-auto">
-        {{ .Data.HeroSubtitle }}
+        Simple equipment tracking for individuals and small teams. No spreadsheets, no vendor risk. Self-host with a single Docker command.
       </p>
       <nav aria-label="Page sections" class="mt-8">
         <div class="flex flex-wrap gap-3 justify-center">
-          <a href="#quickstart" class="btn btn-primary">{{ .Data.CTAQuickstart }}</a>
-          <a href="#pricing" class="btn btn-outline">{{ .Data.CTAPricing }}</a>
+          <a href="#quickstart" class="btn btn-primary">Quickstart</a>
+          <a href="#pricing" class="btn btn-outline">Pricing</a>
         </div>
       </nav>
     </div>
@@ -63,7 +63,7 @@
   <div class="container mx-auto px-6 max-w-5xl">
     <div class="text-center mb-16">
       <h2 id="why-heading" class="text-3xl font-bold">Why use Gearberg?</h2>
-      <p class="mt-4 text-base-content/70 max-w-xl mx-auto">Rentman is overkill for most shops. Gearberg gives you clear, useful tracking without complexity, training or prior experience.</p>
+      <p class="mt-4 text-base-content/70 max-w-xl mx-auto">Most equipment software is built for enterprises. Gearberg gives AV freelancers and small production teams exactly what they need: clear, useful tracking without the complexity, training, or price tag.</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -71,15 +71,15 @@
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
           <h3 class="font-semibold">Know where your gear is</h3>
-          <p class="text-base-content/70 mt-1">You lent that lens out three weeks ago. Gearberg tells you who has it, when it's back, and what's still on the shelf.</p>
+          <p class="text-base-content/70 mt-1">That lens you lent out three weeks ago? Gearberg tells you exactly who has it, when it's due back, and what's still on the shelf.</p>
         </div>
       </div>
 
       <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold">Answer availability questions in seconds</h3>
-          <p class="text-base-content/70 mt-1">Pick a date range, see what's free. No spreadsheet, no back-and-forth, no double-booking a client.</p>
+          <h3 class="font-semibold">Always know what you have</h3>
+          <p class="text-base-content/70 mt-1">Every piece of gear in one place. Model, serial number, location — instantly searchable, no spreadsheet hunting.</p>
         </div>
       </div>
 
@@ -87,15 +87,15 @@
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
           <h3 class="font-semibold">Know what your inventory is worth</h3>
-          <p class="text-base-content/70 mt-1">See the total value of everything you own. Useful for insurance, purchasing decisions, and your accountant.</p>
+          <p class="text-base-content/70 mt-1">See the total value of everything you own at a glance. Useful for insurance coverage, purchasing decisions, and conversations with your accountant.</p>
         </div>
       </div>
 
       <div class="flex items-start gap-4">
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
-          <h3 class="font-semibold">Your data, no lock-in</h3>
-          <p class="text-base-content/70 mt-1">Import your existing gear list from CSV. Export it anytime. Nothing is trapped inside Gearberg.</p>
+          <h3 class="font-semibold">Your data, your terms</h3>
+          <p class="text-base-content/70 mt-1">Bring in your existing gear list from CSV and export it anytime. Nothing is ever trapped inside Gearberg.</p>
         </div>
       </div>
 
@@ -103,7 +103,7 @@
         <span class="text-success">{{ template "check-icon" . }}</span>
         <div>
           <h3 class="font-semibold">Kits that travel together</h3>
-          <p class="text-base-content/70 mt-1">Group your cables, stands, and lights into a kit. Check the whole thing out at once and know instantly if anything is missing.</p>
+          <p class="text-base-content/70 mt-1">Group your cables, stands, and lights into a kit. Track the whole set as one unit and know instantly if anything is missing.</p>
         </div>
       </div>
 
@@ -123,7 +123,7 @@
 <section id="pricing" class="py-24" aria-labelledby="pricing-heading">
   <div class="container mx-auto px-6 max-w-3xl text-center">
     <h2 id="pricing-heading" class="text-3xl font-bold mb-4">Pricing</h2>
-    <p class="text-base-content/80 mb-12">Self-host for free with all features included. Managed, worry-free cloud on request.</p>
+    <p class="text-base-content/80 mb-12">Open Source is free. Prefer not to manage a server? Just reach out.</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
       <div class="card bg-base-100 shadow border border-base-300">
@@ -132,8 +132,8 @@
           <p class="text-2xl font-bold mt-2 underline">Free</p>
           <p class="text-base-content/80 text-sm mb-4">Run on your own server with Docker</p>
           <ul class="space-y-2 text-sm flex-1">
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Rentals</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment tracking</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Kits &amp; combinations</li>
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
           </ul>
           <div class="card-actions mt-6">
@@ -146,12 +146,11 @@
         <div class="card-body text-left">
           <h3 class="card-title font-bold">Cloud</h3>
           <p class="text-2xl font-bold mt-2 underline">By request</p>
-          <p class="text-base-content/80 text-sm mb-4">The software is free. You pay for the convenience of not running it yourself</p>
+          <p class="text-base-content/80 text-sm mb-4">The software is free. You pay for the convenience of not running it yourself.</p>
           <ul class="space-y-2 text-sm flex-1">
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment</li>
-            <li class="flex items-center gap-2">{{ template "success-icon" . }} Rentals</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Equipment tracking</li>
+            <li class="flex items-center gap-2">{{ template "success-icon" . }} Kits &amp; combinations</li>
             <li class="flex items-center gap-2">{{ template "success-icon" . }} Import &amp; Export</li>
-
           </ul>
           <div class="card-actions mt-6">
             <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline w-full">Get in touch</a>
@@ -197,21 +196,21 @@
       <details class="collapse collapse-arrow bg-base-200">
         <summary class="collapse-title text-lg font-medium">Who is Gearberg for?</summary>
         <div class="collapse-content">
-          <p>Individuals, freelancers, and small businesses who need straightforward equipment tracking and rentals.</p>
+          <p>Individuals and small teams who need a clear overview of their equipment — without the complexity of enterprise asset management software.</p>
         </div>
       </details>
 
       <details class="collapse collapse-arrow bg-base-200">
         <summary class="collapse-title text-lg font-medium">What problems does Gearberg solve?</summary>
         <div class="collapse-content">
-          <p>Knowing what gear you own, where it is, and whether it's available. Without spreadsheets or expensive rental software.</p>
+          <p>Knowing what gear you own, where it is, what it's worth, and whether it's available. Without spreadsheets or expensive software.</p>
         </div>
       </details>
 
       <details class="collapse collapse-arrow bg-base-200">
         <summary class="collapse-title text-lg font-medium">Can I export my data?</summary>
         <div class="collapse-content">
-          <p>Yes. Export your equipment list as CSV at any time.</p>
+          <p>Yes. Export your equipment list as CSV at any time. Your data is yours and never gets locked inside Gearberg.</p>
         </div>
       </details>
 
@@ -219,6 +218,13 @@
         <summary class="collapse-title text-lg font-medium">What license is Gearberg released under?</summary>
         <div class="collapse-content">
           <p>Gearberg is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" class="link link-primary" target="_blank" rel="noopener noreferrer">AGPL-3.0</a>. You can use, study, modify, and distribute it. Any modifications you deploy over a network must be released under the same license.</p>
+        </div>
+      </details>
+
+      <details class="collapse collapse-arrow bg-base-200">
+        <summary class="collapse-title text-lg font-medium">What if I want to go back to spreadsheets?</summary>
+        <div class="collapse-content">
+          <p>We respect that. Export your full equipment list as CSV at any time and take it wherever you like, including back to a spreadsheet. We call it the Back-to-Spreadsheets Guarantee, and we mean it.</p>
         </div>
       </details>
 
@@ -232,17 +238,17 @@
       {
         "@type": "Question",
         "name": "Who is Gearberg for?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Small teams, clubs, schools, and studios that need to track shared equipment and rentals without spreadsheets or expensive SaaS tools." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Individuals and small teams who need a clear overview of their equipment — without the complexity of enterprise asset management software." }
       },
       {
         "@type": "Question",
         "name": "What problems does Gearberg solve?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Knowing what gear you own, where it is, and whether it's available. Without spreadsheets or expensive rental software." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Knowing what gear you own, where it is, what it's worth, and whether it's available. Without spreadsheets or expensive software." }
       },
       {
         "@type": "Question",
-        "name": "What's the difference between self-hosted and desktop?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Self-hosted is free. You run it on your own server with Docker and get all features, including rentals. The desktop app is also free and works without a server, but covers equipment tracking only. A cloud option with multi-device sync and rentals is planned for the future." }
+        "name": "Can I export my data?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Export your equipment list as CSV at any time. Your data is yours and never gets locked inside Gearberg." }
       },
       {
         "@type": "Question",
@@ -253,6 +259,11 @@
         "@type": "Question",
         "name": "What license is Gearberg released under?",
         "acceptedAnswer": { "@type": "Answer", "text": "Gearberg is licensed under the AGPL-3.0. You can use, study, modify, and distribute it, provided any modifications you deploy over a network are released under the same license." }
+      },
+      {
+        "@type": "Question",
+        "name": "What if I want to go back to spreadsheets?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Export your full equipment list as CSV at any time and take it wherever you like, including back to a spreadsheet. We call it the Back-to-Spreadsheets Guarantee." }
       }
     ]
   }
@@ -262,8 +273,8 @@
 {{/* Closing CTA */}}
 <section class="py-24" aria-labelledby="cta-heading">
   <div class="container mx-auto px-6 max-w-xl text-center">
-    <h2 id="cta-heading" class="text-3xl font-bold mb-4">Ready to ditch the spreadsheet?</h2>
-    <p class="text-base-content/80 mb-8">Run Gearberg yourself in under a minute, or get in touch if you want us to run it for you.</p>
+    <h2 id="cta-heading" class="text-3xl font-bold mb-4">Ready to finally know where your gear is?</h2>
+    <p class="text-base-content/80 mb-8">Run Gearberg in under a minute, or get in touch if you'd like us to run it for you.</p>
     <div class="flex flex-wrap gap-4 justify-center">
       <a href="#quickstart" class="btn btn-primary">Run with Docker</a>
       <a href="mailto:gearberg@bit8bytes.com" class="btn btn-outline">Get in touch</a>

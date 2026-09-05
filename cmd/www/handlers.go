@@ -17,27 +17,18 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/bit8bytes/gearberg/internal/httperr"
 	"github.com/bit8bytes/gearberg/internal/locale"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
+	"golang.org/x/text/language"
 )
 
-type landingPageData struct {
-	HeroTitle     string
-	HeroSubtitle  string
-	CTAQuickstart string
-	CTAPricing    string
-}
-
 func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *httperr.Error {
-	p := locale.PrinterFrom(r.Context())
 	data := app.html.TemplateData(r)
-	data.Data = landingPageData{
-		HeroTitle:     p.Sprintf("Open source equipment tracking software"),
-		HeroSubtitle:  p.Sprintf("Simple equipment tracking. No lock-in. Self-host with a single Docker command."),
-		CTAQuickstart: p.Sprintf("Quickstart"),
-		CTAPricing:    p.Sprintf("Pricing"),
+	if locale.TagFrom(r.Context()) == language.German {
+		return app.html.Render(w, r, http.StatusOK, pages.LandingDE, data)
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Landing, data)
 }
@@ -50,11 +41,13 @@ func (app *application) postLocale(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   365 * 24 * 60 * 60,
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
-	ref := r.Referer()
-	if ref == "" {
-		ref = "/"
+	ref := "/"
+	if u, err := url.Parse(r.Referer()); err == nil && u.Path != "" {
+		safe := url.URL{Path: u.Path, RawQuery: u.RawQuery}
+		ref = safe.String()
 	}
 	http.Redirect(w, r, ref, http.StatusSeeOther)
 }
