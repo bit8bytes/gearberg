@@ -34,6 +34,11 @@ type options struct {
 	SMTP          SMTP            // has SECRET
 	OIDCProviders OIDCProviderMap // has SECRET
 	Limits        Limits
+
+	// EnableEmailPasswordSignup controls whether users can sign up with email and password.
+	// Selfhosters can signup once to create an account and then disable email password signup
+	// to prevent further unwanted signups.
+	EnableEmailPasswordSignup bool
 }
 
 func parseOptions(args []string) (*options, error) {
@@ -59,6 +64,8 @@ func parseOptions(args []string) (*options, error) {
 	fs.StringVar(&cfg.SMTP.Username, "smtp-username", "", "SMTP username")
 	fs.StringVar(&cfg.SMTP.Password, "smtp-password", envOr("SMTP_PASSWORD", ""), "SMTP password (prefer SMTP_PASSWORD env var over flag)")
 	fs.StringVar(&cfg.SMTP.From, "smtp-from", "", "from address for outgoing mail")
+
+	fs.BoolVar(&cfg.EnableEmailPasswordSignup, "enable-email-password-signup", true, "enable email and password signup (default true)")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, fmt.Errorf("parseServeOptions: %w", err)
