@@ -21,7 +21,6 @@ import (
 	"log"
 	"log/slog"
 	"path/filepath"
-	"time"
 
 	"github.com/bit8bytes/gearberg/internal/templates"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
@@ -49,11 +48,7 @@ func includeSourceFile(_ []string, a slog.Attr) slog.Attr {
 }
 
 func templateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"year": func() int {
-			return time.Now().Year()
-		},
-	}
+	return template.FuncMap{}
 }
 
 func parseTemplates() (*template.Template, map[string]*template.Template, error) {

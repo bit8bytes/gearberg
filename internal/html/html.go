@@ -25,6 +25,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/bit8bytes/gearberg/internal/flash"
 	"github.com/bit8bytes/gearberg/internal/httperr"
@@ -56,6 +57,8 @@ type TemplateData struct {
 	Flash *flash.Flash
 	// Locale is the active locale tag string (e.g. "en-US", "de"), read from the locale cookie.
 	Locale string
+	// Year is the current year, used in the footer partial.
+	Year int
 }
 
 // Option configures an HTML renderer.
@@ -161,5 +164,6 @@ func (rnd *HTML) TemplateData(r *http.Request) *TemplateData {
 		OrgID:    r.PathValue("org_id"),
 		Flash:    rnd.flash.Pop(r.Context()),
 		Locale:   locale.TagFrom(r.Context()).String(),
+		Year:     time.Now().Year(),
 	}
 }
