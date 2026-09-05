@@ -1,14 +1,12 @@
 # Gearberg
 
-Easy to use and affordable Rentman alternative. Simple equipment tracking and rentals. No lock-in. Self-host with a single Docker command.
+Simple equipment tracking for individuals and small teams. No spreadsheets, no vendor risk. Self-host with a single Docker command.
 
 ![mockup](/mockup/gearberg-demo.gif)
 
 ## Features
 
 **Equipment**: Bulk quantities or serialized items, with categories and photos.
-
-**Rentals**: Check out gear to people, set due dates, track returns.
 
 **Import/Export**: CSV in, CSV out. Your data is never locked in.
 
