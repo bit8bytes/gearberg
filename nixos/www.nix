@@ -8,7 +8,7 @@ buildpkgs.buildGoModule {
   version = version;
   src = ./..;
 
-  vendorHash = "sha256-2euSX31xv24c5w9XcYJmKR2xM0PuegN6obGaNOr1g+E=";
+  vendorHash = "sha256-+Hd/61Ux1QSCM4rLM7SobM78YcyxM0s47CqgHQy8j6c=";
 
   subPackages = ["cmd/www"];
 
