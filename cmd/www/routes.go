@@ -17,10 +17,10 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/bit8bytes/gearberg/internal/assets"
 	"github.com/bit8bytes/gearberg/internal/httperr"
+	"github.com/bit8bytes/gearberg/internal/locale"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 )
 
@@ -43,6 +43,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/", app.html.Handle(app.getLanding))
 	mux.HandleFunc("GET /imprint", app.html.Handle(app.getImprint))
 	mux.HandleFunc("GET /privacy", app.html.Handle(app.getPrivacy))
+	mux.HandleFunc("POST /locale", app.postLocale)
 
 	antiCSRF := http.NewCrossOriginProtection()
 	logRequest := newRequestLogger(app.logger)
@@ -54,27 +55,52 @@ func (app *application) routes() http.Handler {
 				logRequest.handler(
 					withSecurityHeaders(
 						withMaxBodySize(
-							antiCSRF.Handler(mux)))))))
+							antiCSRF.Handler(
+								withLocale(mux))))))))
+}
+
+type landingPageData struct {
+	HeroTitle     string
+	HeroSubtitle  string
+	CTAQuickstart string
+	CTAPricing    string
 }
 
 func (app *application) getLanding(w http.ResponseWriter, r *http.Request) *httperr.Error {
+	p := locale.PrinterFrom(r.Context())
 	data := app.html.TemplateData(r)
-	data.Data = struct {
-		Year int
-	}{
-		Year: time.Now().Year(),
+	data.Data = landingPageData{
+		HeroTitle:     p.Sprintf("Open source equipment tracking software"),
+		HeroSubtitle:  p.Sprintf("Simple equipment tracking. No lock-in. Self-host with a single Docker command."),
+		CTAQuickstart: p.Sprintf("Quickstart"),
+		CTAPricing:    p.Sprintf("Pricing"),
 	}
 	return app.html.Render(w, r, http.StatusOK, pages.Landing, data)
 }
 
+func (app *application) postLocale(w http.ResponseWriter, r *http.Request) {
+	locale := r.FormValue("locale")
+	http.SetCookie(w, &http.Cookie{
+		Name:     localeCookieName,
+		Value:    locale,
+		Path:     "/",
+		MaxAge:   365 * 24 * 60 * 60,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	ref := r.Referer()
+	if ref == "" {
+		ref = "/"
+	}
+	http.Redirect(w, r, ref, http.StatusSeeOther)
+}
+
 func (app *application) getImprint(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	data := app.html.TemplateData(r)
-	data.Data = struct{ Year int }{Year: time.Now().Year()}
 	return app.html.Render(w, r, http.StatusOK, pages.Imprint, data)
 }
 
 func (app *application) getPrivacy(w http.ResponseWriter, r *http.Request) *httperr.Error {
 	data := app.html.TemplateData(r)
-	data.Data = struct{ Year int }{Year: time.Now().Year()}
 	return app.html.Render(w, r, http.StatusOK, pages.Privacy, data)
 }

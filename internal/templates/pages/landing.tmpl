@@ -31,17 +31,15 @@
   <div class="hero-content flex-col gap-8 py-12 w-full max-w-5xl">
     <div class="max-w-2xl text-center">
       <h1 id="hero-heading" class="text-4xl sm:text-5xl font-bold leading-tight">
-        Easy to use and<br class="sm:hidden"> affordable <span class="text-primary">Rentman alternative</span>
+        {{ .Data.HeroTitle }}
       </h1>
       <p class="mt-6 text-lg text-base-content/70 max-w-lg mx-auto">
-        Simple equipment tracking and rentals. 
-        No lock-in. 
-        Self-host with a single Docker command.
+        {{ .Data.HeroSubtitle }}
       </p>
       <nav aria-label="Page sections" class="mt-8">
         <div class="flex flex-wrap gap-3 justify-center">
-          <a href="#quickstart" class="btn btn-primary">Quickstart</a>
-          <a href="#pricing" class="btn btn-outline">Pricing</a>
+          <a href="#quickstart" class="btn btn-primary">{{ .Data.CTAQuickstart }}</a>
+          <a href="#pricing" class="btn btn-outline">{{ .Data.CTAPricing }}</a>
         </div>
       </nav>
     </div>

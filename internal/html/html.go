@@ -28,7 +28,7 @@ import (
 
 	"github.com/bit8bytes/gearberg/internal/flash"
 	"github.com/bit8bytes/gearberg/internal/httperr"
-	"github.com/bit8bytes/gearberg/internal/localizer"
+	"github.com/bit8bytes/gearberg/internal/locale"
 	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/templates/pages"
 	"github.com/bit8bytes/gearberg/internal/trace"
@@ -160,6 +160,6 @@ func (rnd *HTML) TemplateData(r *http.Request) *TemplateData {
 		Revision: rnd.revision,
 		OrgID:    r.PathValue("org_id"),
 		Flash:    rnd.flash.Pop(r.Context()),
-		Locale:   localizer.TagFrom(r.Context()).String(),
+		Locale:   locale.TagFrom(r.Context()).String(),
 	}
 }

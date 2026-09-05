@@ -27,6 +27,8 @@ import (
 	htmlpkg "github.com/bit8bytes/gearberg/internal/html"
 )
 
+const localeCookieName = "locale"
+
 type application struct {
 	logger  *slog.Logger
 	options *options

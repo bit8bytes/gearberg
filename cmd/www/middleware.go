@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -22,10 +23,26 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/bit8bytes/gearberg/internal/locale"
 	"github.com/bit8bytes/gearberg/internal/nonce"
 	"github.com/bit8bytes/gearberg/internal/trace"
 	"github.com/bit8bytes/gearberg/pkg/tokens"
+	"golang.org/x/text/language"
 )
+
+func withLocale(next http.Handler) http.Handler {
+	tags := []language.Tag{language.English, language.German}
+	matcher := language.NewMatcher(tags)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		loc := "en-US"
+		if c, err := r.Cookie(localeCookieName); err == nil {
+			loc = c.Value
+		}
+		tag, _ := language.MatchStrings(matcher, loc, r.Header.Get("Accept-Language"))
+		ctx := context.WithValue(r.Context(), locale.Key{}, tag)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func withTrace(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
