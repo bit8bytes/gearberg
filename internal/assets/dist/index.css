@@ -8070,9 +8070,6 @@
   .mask-repeat {
     mask-repeat: repeat;
   }
-  .stroke-current {
-    stroke: currentcolor;
-  }
   .object-contain {
     object-fit: contain;
   }

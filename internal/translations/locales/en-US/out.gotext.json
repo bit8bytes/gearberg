@@ -1,0 +1,33 @@
+{
+    "language": "en-US",
+    "messages": [
+        {
+            "id": "Open source equipment tracking software",
+            "message": "Open source equipment tracking software",
+            "translation": "Open source equipment tracking software",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Simple equipment tracking. No lock-in. Self-host with a single Docker command.",
+            "message": "Simple equipment tracking. No lock-in. Self-host with a single Docker command.",
+            "translation": "Simple equipment tracking. No lock-in. Self-host with a single Docker command.",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Quickstart",
+            "message": "Quickstart",
+            "translation": "Quickstart",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Pricing",
+            "message": "Pricing",
+            "translation": "Pricing",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        }
+    ]
+}
